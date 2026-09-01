@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Checklist Comprex — Tablet</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b6b34">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --navy:#1b6b34; --cream:#e8f5e9; --ok:#2e7d46; --at:#c79a3a; --ru:#c0392b; --na:#8a93a0;
+    --linha:#e2e0d8; --tinta:#1a2430; --cinza:#5b6570; --card:#fff; --fundo:#f4f5f3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--fundo);color:var(--tinta)}
+  button{font-family:inherit}
+  input,select,textarea{font-family:inherit;font-size:16px}
+  .tela{min-height:100vh;display:none}
+  .tela.ativa{display:block}
+  /* ---- Login ---- */
+  #tela-login.ativa{display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:var(--card);border-radius:18px;padding:36px 30px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .login-card h1{font-size:20px;color:var(--navy);margin:0 0 4px;text-align:center}
+  .login-card .sub{font-size:13px;color:var(--cinza);text-align:center;margin-bottom:24px}
+  .campo{margin-bottom:16px}
+  .campo label{display:block;font-size:12px;font-weight:700;color:var(--cinza);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+  .campo input, .campo select, .campo textarea{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;color:var(--tinta);background:#fff}
+  .campo textarea{resize:vertical;min-height:70px}
+  .btn-primario{width:100%;padding:15px;border:none;border-radius:11px;background:var(--navy);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+  .btn-primario:disabled{background:#b7bcc0}
+  .btn-secundario{padding:13px 18px;border:1.5px solid var(--linha);border-radius:11px;background:#fff;color:var(--tinta);font-size:14px;font-weight:700;cursor:pointer}
+  .erro-msg{background:#fbe9e7;color:var(--ru);border-radius:9px;padding:10px 12px;font-size:12.5px;margin-top:14px;display:none;font-weight:600}
+  .ok-msg{background:#e9f4ee;color:var(--ok);border-radius:9px;padding:10px 12px;font-size:12.5px;margin-top:14px;display:none;font-weight:600}
+  .login-offline-aviso{background:#fdf3e3;color:#8a6300;border-radius:9px;padding:10px 12px;font-size:12px;margin-top:14px;display:none}
+  /* ---- App ---- */
+  #tela-app header{background:var(--navy);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+  #tela-app header .titulo{font-weight:800;font-size:15px;flex:1}
+  .status-conexao{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px}
+  .status-conexao.online{background:rgba(255,255,255,.18)}
+  .status-conexao.offline{background:#c0392b}
+  .status-conexao .ponto{width:7px;height:7px;border-radius:50%;background:#6ee7a0}
+  .status-conexao.offline .ponto{background:#ffd54f}
+  .pendencias-badge{background:#c79a3a;color:#1a2430;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;cursor:pointer;display:none}
+  .btn-header{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer}
+  .abas{display:flex;background:#fff;border-bottom:1px solid var(--linha);position:sticky;top:56px;z-index:19}
+  .abas button{flex:1;padding:14px;border:none;background:none;font-size:13.5px;font-weight:700;color:var(--cinza);cursor:pointer;border-bottom:3px solid transparent}
+  .abas button.ativa{color:var(--navy);border-bottom-color:var(--navy)}
+  main{max-width:640px;margin:0 auto;padding:18px 16px 60px}
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);margin:0 0 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .item-check{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px}
+  .item-check .item-titulo{font-size:13px;font-weight:700;margin-bottom:10px}
+  .item-opcoes{display:flex;flex-wrap:wrap;gap:8px}
+  .opt{padding:9px 14px;border-radius:20px;border:1.5px solid var(--linha);background:#fff;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--tinta)}
+  .opt.sel-ok{background:var(--ok);border-color:var(--ok);color:#fff}
+  .opt.sel-at{background:var(--at);border-color:var(--at);color:#fff}
+  .opt.sel-ru{background:var(--ru);border-color:var(--ru);color:#fff}
+  .opt.sel-na{background:var(--na);border-color:var(--na);color:#fff}
+  .item-check.respondido{border-color:#cfe8d2}
+  .item-extra-data{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin:-2px 0 10px}
+  .item-extra-data label{display:block;font-size:12px;font-weight:700;color:var(--cinza);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+  .item-extra-data label .obrig{color:var(--ru)}
+  .item-extra-data input{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;color:var(--tinta);background:#fff}
+  .item-extra-data input:disabled{background:var(--fundo);color:var(--cinza)}
+  .equip-cabecalho{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .equip-cabecalho .campo{flex:1;margin-bottom:0}
+  .equip-foto-mini{width:52px;height:52px;border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0;border:1px solid var(--linha)}
+  .equip-foto-mini img{width:100%;height:100%;object-fit:cover;display:block}
+  #chk-enviar:disabled{opacity:.5;cursor:not-allowed}
+  .progresso-wrap{height:8px;background:#eef0f1;border-radius:5px;overflow:hidden;margin-bottom:16px}
+  .progresso-fill{height:100%;background:var(--navy);border-radius:5px;transition:width .2s}
+  .pd-linha-din{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px;position:relative}
+  .pd-linha-din .apagar{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--ru);font-size:16px;cursor:pointer}
+  .pd-add-btn{width:100%;padding:12px;border:1.5px dashed #8fb99a;border-radius:10px;background:var(--cream);color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;margin-bottom:6px}
+  .pd-totais{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0;border-top:1px solid var(--linha);margin-top:8px}
+  .pd-totais b{color:var(--tinta)}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--tinta);color:#fff;
+    padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:50;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+  .fila-lista{font-size:12px;color:var(--cinza)}
+  .fila-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--linha)}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div class="tela ativa" id="tela-login">
+  <div class="login-card">
+    <h1>🚜 Checklist Comprex</h1>
+    <div class="sub">Login do operador — tablet de campo</div>
+    <div class="campo">
+      <label>Usuário</label>
+      <input type="text" id="login-usuario" autocomplete="username" placeholder="ex: joao.silva">
+    </div>
+    <div class="campo">
+      <label>Senha</label>
+      <input type="password" id="login-senha" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <button class="btn-primario" id="login-btn">Entrar</button>
+    <div class="erro-msg" id="login-erro"></div>
+    <div class="login-offline-aviso" id="login-offline-aviso">📴 Sem internet no momento — o primeiro login de cada operador precisa de conexão. Depois de logar uma vez, o app continua funcionando offline.</div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="tela" id="tela-app">
+  <header>
+    <div class="titulo" id="app-titulo-operador">Operador</div>
+    <div class="pendencias-badge" id="pendencias-badge" title="Clique para sincronizar agora">⏳ 0 pendente(s)</div>
+    <div class="status-conexao online" id="status-conexao"><span class="ponto"></span><span id="status-conexao-txt">Online</span></div>
+    <button class="btn-header" id="btn-sair">Sair</button>
+  </header>
+  <div class="abas">
+    <button class="ativa" data-aba="checklist">✅ Checklist</button>
+    <button data-aba="partediaria">📋 Parte Diária</button>
+  </div>
+  <main>
+    <!-- -------- CHECKLIST -------- -->
+    <div id="aba-checklist">
+      <div class="card">
+        <h2>Dados do equipamento</h2>
+        <div class="equip-cabecalho">
+          <div class="equip-foto-mini" id="chk-equip-foto">🚜</div>
+          <div class="campo" style="margin-bottom:0">
+            <label>Equipamento</label>
+            <select id="chk-equipamento"><option value="">Selecione…</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="campo">
+            <label>Horímetro</label>
+            <input type="text" id="chk-horimetro" inputmode="numeric" placeholder="ex: 1024,5">
+          </div>
+          <div class="campo">
+            <label>Local</label>
+            <select id="chk-local"><option value="">Selecione…</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="campo">
+            <label>Data</label>
+            <input type="text" id="chk-data" readonly>
+          </div>
+          <div></div>
+        </div>
+        <div class="campo">
+          <label>Observação (opcional)</label>
+          <textarea id="chk-observacao" placeholder="Alguma observação geral sobre o equipamento…"></textarea>
+        </div>
+      </div>
+      <div class="progresso-wrap"><div class="progresso-fill" id="chk-progresso" style="width:0%"></div></div>
+      <div id="chk-itens"></div>
+      <div style="font-size:12px;color:var(--cinza);font-weight:600;margin:4px 0 8px" id="chk-aviso"></div>
+      <button class="btn-primario" id="chk-enviar" style="margin-top:6px" disabled>Finalizar inspeção</button>
+      <div class="erro-msg" id="chk-erro"></div>
+      <div class="ok-msg" id="chk-ok"></div>
+    </div>
+    <!-- -------- PARTE DIÁRIA -------- -->
+    <div id="aba-partediaria" style="display:none">
+      <div class="card">
+        <h2>Dados do dia</h2>
+        <div class="grid2">
+          <div class="campo">
+            <label>Equipamento</label>
+            <select id="pd-equipamento"><option value="">Selecione…</option></select>
+          </div>
+          <div class="campo">
+            <label>Data</label>
+            <input type="date" id="pd-data" disabled>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Local</label>
+          <select id="pd-local"><option value="">Selecione…</option></select>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Atividades</h2>
+        <div id="pd-lista-atividades"></div>
+        <button class="pd-add-btn" id="pd-add-atividade" type="button">+ Adicionar atividade</button>
+      </div>
+      <div class="card">
+        <h2>Paradas</h2>
+        <div id="pd-lista-paradas"></div>
+        <button class="pd-add-btn" id="pd-add-parada" type="button">+ Adicionar parada</button>
+        <div class="pd-totais"><span>Trabalhadas</span><b id="pd-total-trabalhadas">0,00 h</b></div>
+        <div class="pd-totais"><span>Paradas</span><b id="pd-total-paradas">0,00 h</b></div>
+        <div class="pd-totais"><span>Líquidas</span><b id="pd-total-liquidas">0,00 h</b></div>
+      </div>
+      <div class="card">
+        <div class="campo" style="margin:0">
+          <label>Observações (opcional)</label>
+          <textarea id="pd-observacoes"></textarea>
+        </div>
+      </div>
+      <button class="btn-primario" id="pd-enviar">Salvar parte diária</button>
+      <div class="erro-msg" id="pd-erro"></div>
+      <div class="ok-msg" id="pd-ok"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   CONFIGURAÇÃO — troque API_BASE pela URL do seu backend no Render/Railway
+   depois do deploy (ver DEPLOY.md). Ex.: 'https://comprex-tablet-api.onrender.com/api'
+   ===================================================================== */
+const API_BASE = 'https://comprex-tablet-backend.onrender.com/api';
+
+/* =====================================================================
+   BANCO LOCAL (IndexedDB) — fila de envios pendentes, funciona offline.
+   ===================================================================== */
+const DB_NOME = 'comprex-tablet-db';
+const DB_VERSAO = 1;
+function abrirDB(){
+  return new Promise(function(resolve, reject){
+    const req = indexedDB.open(DB_NOME, DB_VERSAO);
+    req.onupgradeneeded = function(){
+      const db = req.result;
+      if (!db.objectStoreNames.contains('fila')) {
+        db.createObjectStore('fila', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+async function filaAdicionar(registro){
+  const db = await abrirDB();
+  return new Promise(function(resolve, reject){
+    const tx = db.transaction('fila', 'readwrite');
+    tx.objectStore('fila').add(registro);
+    tx.oncomplete = function(){ resolve(); };
+    tx.onerror = function(){ reject(tx.error); };
+  });
+}
+async function filaListar(){
+  const db = await abrirDB();
+  return new Promise(function(resolve, reject){
+    const tx = db.transaction('fila', 'readonly');
+    const req = tx.objectStore('fila').getAll();
+    req.onsuccess = function(){ resolve(req.result || []); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+async function filaRemover(id){
+  const db = await abrirDB();
+  return new Promise(function(resolve, reject){
+    const tx = db.transaction('fila', 'readwrite');
+    tx.objectStore('fila').delete(id);
+    tx.oncomplete = function(){ resolve(); };
+    tx.onerror = function(){ reject(tx.error); };
+  });
+}
+
+/* =====================================================================
+   SESSÃO / LOGIN
+   ===================================================================== */
+function sessaoAtual(){
+  try { return JSON.parse(localStorage.getItem('sessaoOperador') || 'null'); } catch(e){ return null; }
+}
+function salvarSessao(s){ localStorage.setItem('sessaoOperador', JSON.stringify(s)); }
+function limparSessao(){ localStorage.removeItem('sessaoOperador'); }
+
+document.getElementById('login-btn').onclick = async function(){
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erroEl = document.getElementById('login-erro');
+  const avisoOffline = document.getElementById('login-offline-aviso');
+  erroEl.style.display = 'none';
+  avisoOffline.style.display = 'none';
+  if (!usuario || !senha) { erroEl.textContent = 'Informe usuário e senha.'; erroEl.style.display = 'block'; return; }
+  if (!navigator.onLine) { avisoOffline.style.display = 'block'; return; }
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, senha })
+    });
+    const dados = await r.json();
+    if (!r.ok) throw new Error(dados.erro || 'Usuário ou senha inválidos.');
+    salvarSessao({ token: dados.token, nome: dados.nome, logadoEm: Date.now() });
+    document.getElementById('login-senha').value = '';
+    await iniciarApp();
+  } catch (err) {
+    erroEl.textContent = err.message || 'Não foi possível entrar. Verifique a conexão.';
+    erroEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+};
+document.getElementById('btn-sair').onclick = function(){
+  if (!confirm('Sair? Envios ainda não sincronizados continuam guardados neste tablet.')) return;
+  limparSessao();
+  document.getElementById('tela-app').classList.remove('ativa');
+  document.getElementById('tela-login').classList.add('ativa');
+};
+
+/* =====================================================================
+   DADOS INICIAIS (frotas, locais, operadores, perguntas do checklist)
+   — carregados da API e guardados em cache local pra funcionar offline.
+   ===================================================================== */
+let dadosIniciais = null;
+function dadosCache(){
+  try { return JSON.parse(localStorage.getItem('dadosIniciaisCache') || 'null'); } catch(e){ return null; }
+}
+async function carregarDadosIniciais(){
+  const sessao = sessaoAtual();
+  if (navigator.onLine) {
+    try {
+      const r = await fetch(API_BASE + '/dados-iniciais', { headers: { Authorization: 'Bearer ' + sessao.token } });
+      if (r.ok) {
+        dadosIniciais = await r.json();
+        localStorage.setItem('dadosIniciaisCache', JSON.stringify(dadosIniciais));
+        localStorage.setItem('dadosIniciaisAtualizadoEm', String(Date.now()));
+        return;
+      }
+    } catch (e) { /* segue pro cache */ }
+  }
+  dadosIniciais = dadosCache();
+}
+function preencherSelects(){
+  if (!dadosIniciais) return;
+  const frotas = dadosIniciais.frotas || [];
+  const locais = dadosIniciais.locais || [];
+  ['chk-equipamento', 'pd-equipamento'].forEach(function(id){
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">Selecione…</option>' + frotas.map(function(f){
+      return '<option value="' + f.nome + '">' + f.nome + (f.descricao ? ' — ' + f.descricao : '') + '</option>';
+    }).join('');
+  });
+  ['chk-local', 'pd-local'].forEach(function(id){
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">Selecione…</option>' + locais.map(function(l){
+      return '<option value="' + l + '">' + l + '</option>';
+    }).join('');
+  });
+  document.getElementById('chk-equipamento').onchange = function(){
+    const f = frotas.find(function(x){ return x.nome === this.value; }.bind(this));
+    if (f && f.local) document.getElementById('chk-local').value = f.local;
+  };
+  document.getElementById('pd-equipamento').onchange = function(){
+    const f = frotas.find(function(x){ return x.nome === this.value; }.bind(this));
+    if (f && f.local) document.getElementById('pd-local').value = f.local;
+  };
+}
+
+/* =====================================================================
+   CHECKLIST
+   ===================================================================== */
+let chkRespostas = {}; // índice do item -> { valor, severidade }
+/** Igual ao portal_comprex.html: o campo de data (ex.: validade do extintor)
+ *  é inserido logo depois do item que o SharePoint marcou com
+ *  CampoExtraTipo = "data" (ver checklist.js no backend), em vez de ficar
+ *  fixo no topo do formulário — assim aparece junto da pergunta relacionada,
+ *  igual à página web. */
+/** Mostra sempre a data de hoje no checklist (campo só de exibição, travado
+ *  — igual à página web, onde o campo "Data" também é somente leitura). */
+function atualizarDataChecklist(){
+  const hoje = new Date();
+  const campo = document.getElementById('chk-data');
+  if (campo) campo.value = String(hoje.getDate()).padStart(2,'0') + '/' + String(hoje.getMonth()+1).padStart(2,'0') + '/' + hoje.getFullYear();
+}
+function renderizarItensChecklist(){
+  atualizarDataChecklist();
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [], extraData: null };
+  const extra = def.extraData;
+  const cont = document.getElementById('chk-itens');
+  chkRespostas = {};
+  cont.innerHTML = (def.itens || []).map(function(item, i){
+    const opcoes = item[1].map(function(op){
+      return '<button type="button" class="opt" data-idx="' + i + '" data-valor="' + op[0].replace(/"/g,'&quot;') + '" data-sev="' + op[1] + '">' + op[0] + '</button>';
+    }).join('');
+    let html = '<div class="item-check" id="chk-item-' + i + '"><div class="item-titulo">' + item[0] + '</div><div class="item-opcoes">' + opcoes + '</div></div>';
+    if (extra && extra.label === item[0]) {
+      html += '<div class="item-extra-data" id="chk-extra-data-wrap">' +
+        '<label>' + (extra.rotulo || 'Data') + ' <span class="obrig" id="chk-extra-data-obrig">*</span></label>' +
+        '<input type="date" id="chk-extra-data"></div>';
+    }
+    return html;
+  }).join('');
+  cont.querySelectorAll('.opt').forEach(function(btn){
+    btn.onclick = function(){
+      const i = btn.dataset.idx;
+      chkRespostas[i] = { valor: btn.dataset.valor, severidade: btn.dataset.sev };
+      const item = document.getElementById('chk-item-' + i);
+      item.classList.add('respondido');
+      item.querySelectorAll('.opt').forEach(function(b){ b.className = 'opt' + (b === btn ? ' sel-' + btn.dataset.sev : ''); });
+      if (extra && extra.label === item.querySelector('.item-titulo').textContent) atualizarCampoExtraData(btn.dataset.valor);
+      atualizarProgressoChecklist();
+    };
+  });
+  const campoExtra = document.getElementById('chk-extra-data');
+  if (campoExtra) campoExtra.addEventListener('input', atualizarProgressoChecklist);
+  atualizarProgressoChecklist();
+}
+/** Espelha atualizarCampoValidadeExtintor() do portal: se a resposta do item
+ *  ligado ao campo extra for igual a "opcionalSe" (ex.: "NÃO POSSUI"), o campo
+ *  de data fica desnecessário — limpa e desabilita. Caso contrário, exige. */
+function atualizarCampoExtraData(valorSelecionado){
+  const def = (dadosIniciais && dadosIniciais.checklist) || {};
+  const extra = def.extraData;
+  const campo = document.getElementById('chk-extra-data');
+  const obrig = document.getElementById('chk-extra-data-obrig');
+  if (!extra || !campo) return;
+  if (extra.opcionalSe && valorSelecionado === extra.opcionalSe) {
+    campo.value = '';
+    campo.disabled = true;
+    if (obrig) obrig.style.display = 'none';
+  } else {
+    campo.disabled = false;
+    if (obrig) obrig.style.display = '';
+  }
+}
+function atualizarProgressoChecklist(){
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [] };
+  const total = (def.itens || []).length;
+  const respondidos = Object.keys(chkRespostas).length;
+  const pct = total ? Math.round(respondidos / total * 100) : 0;
+  document.getElementById('chk-progresso').style.width = pct + '%';
+  atualizarValidacaoChecklist();
+}
+/** Só libera o botão "Finalizar inspeção" quando TUDO estiver preenchido —
+ *  equipamento, horímetro, local, todos os itens do checklist respondidos e
+ *  (quando existir) a data do campo extra — mesmo comportamento da página
+ *  web, onde o botão só "acende" quando o checklist está completo. */
+function validarChecklistCompleto(){
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [] };
+  const equipamento = document.getElementById('chk-equipamento').value;
+  const horimetro = document.getElementById('chk-horimetro').value.trim();
+  const local = document.getElementById('chk-local').value;
+  const totalItens = (def.itens || []).length;
+  const itensOk = totalItens > 0 && Object.keys(chkRespostas).length === totalItens;
+  let extraOk = true;
+  if (def.extraData) {
+    const campo = document.getElementById('chk-extra-data');
+    extraOk = !!(campo && (campo.disabled || campo.value));
+  }
+  let mensagem;
+  if (!equipamento) mensagem = 'Selecione o equipamento para começar.';
+  else if (!horimetro) mensagem = 'Informe o horímetro.';
+  else if (!local) mensagem = 'Selecione o local.';
+  else if (!itensOk) mensagem = 'Responda todos os itens do checklist (' + Object.keys(chkRespostas).length + '/' + totalItens + ').';
+  else if (!extraOk) mensagem = 'Informe ' + (def.extraData.rotulo || 'a data').toLowerCase() + '.';
+  else mensagem = 'Tudo pronto — pode finalizar a inspeção.';
+  const completo = !!(equipamento && horimetro && local && itensOk && extraOk);
+  return { completo: completo, mensagem: mensagem };
+}
+function atualizarValidacaoChecklist(){
+  const r = validarChecklistCompleto();
+  const aviso = document.getElementById('chk-aviso');
+  if (aviso) aviso.textContent = r.mensagem;
+  document.getElementById('chk-enviar').disabled = !r.completo;
+}
+/** Máscara automática de horímetro — o último dígito digitado sempre vira a
+ *  casa decimal (ex.: digitar 1,0,2,4,5 forma "1024,5" sozinho, sem precisar
+ *  digitar a vírgula). Mesma lógica do portal_comprex.html. */
+function aplicarMascaraHorimetro(campo){
+  const digitos = campo.value.replace(/[^0-9]/g, '');
+  if (!digitos) { campo.value = ''; return; }
+  if (digitos.length === 1) { campo.value = '0,' + digitos; return; }
+  const dec = digitos.slice(-1);
+  const inteiro = digitos.slice(0, -1).replace(/^0+/, '') || '0';
+  campo.value = inteiro + ',' + dec;
+  campo.setSelectionRange(campo.value.length, campo.value.length);
+}
+document.getElementById('chk-horimetro').addEventListener('input', function(){ aplicarMascaraHorimetro(this); atualizarValidacaoChecklist(); });
+document.getElementById('chk-local').addEventListener('change', atualizarValidacaoChecklist);
+
+/* ---- Foto do equipamento (mesma biblioteca "FotosEquipamentos" do SharePoint
+   usada no portal_comprex.html, só que buscada via backend em vez de direto
+   pelo Graph, já que o tablet não tem login Microsoft). ---- */
+const cacheFotoEquipamento = {};
+async function buscarFotoEquipamento(nomeEquip){
+  const chave = String(nomeEquip || '').toUpperCase();
+  if (!chave) return null;
+  if (cacheFotoEquipamento[chave] !== undefined) return cacheFotoEquipamento[chave];
+  try {
+    const sessao = sessaoAtual();
+    const r = await fetch(API_BASE + '/foto-equipamento/' + encodeURIComponent(chave), {
+      headers: { Authorization: 'Bearer ' + sessao.token }
+    });
+    if (!r.ok) { cacheFotoEquipamento[chave] = null; return null; }
+    const d = await r.json();
+    cacheFotoEquipamento[chave] = d.url || null;
+    return cacheFotoEquipamento[chave];
+  } catch (e) {
+    return null; // offline ou erro de rede — mostra só o ícone padrão, sem travar o checklist
+  }
+}
+function atualizarFotoEquipamentoChecklist(nomeEquip){
+  const el = document.getElementById('chk-equip-foto');
+  if (!el) return;
+  el.textContent = '🚜';
+  if (!nomeEquip) return;
+  buscarFotoEquipamento(nomeEquip).then(function(url){
+    if (document.getElementById('chk-equipamento').value !== nomeEquip) return; // trocou de equipamento enquanto buscava
+    el.innerHTML = url ? '<img src="' + url + '" alt="">' : '🚜';
+  });
+}
+document.getElementById('chk-equipamento').addEventListener('change', function(){
+  atualizarValidacaoChecklist();
+  atualizarFotoEquipamentoChecklist(this.value);
+});
+
+function limparFormularioChecklist(){
+  document.getElementById('chk-equipamento').value = '';
+  document.getElementById('chk-horimetro').value = '';
+  document.getElementById('chk-local').value = '';
+  document.getElementById('chk-observacao').value = '';
+  atualizarFotoEquipamentoChecklist('');
+  renderizarItensChecklist();
+}
+document.getElementById('chk-enviar').onclick = async function(){
+  const erroEl = document.getElementById('chk-erro');
+  const okEl = document.getElementById('chk-ok');
+  erroEl.style.display = 'none'; okEl.style.display = 'none';
+  const validacao = validarChecklistCompleto();
+  if (!validacao.completo) {
+    erroEl.textContent = validacao.mensagem;
+    erroEl.style.display = 'block';
+    return;
+  }
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [] };
+  const dadosPorRotulo = {
+    Equipamento: document.getElementById('chk-equipamento').value,
+    Horimetro: document.getElementById('chk-horimetro').value.trim(),
+    Local: document.getElementById('chk-local').value,
+    Observacao: document.getElementById('chk-observacao').value.trim()
+  };
+  if (def.extraData) {
+    const campoExtra = document.getElementById('chk-extra-data');
+    if (campoExtra && !campoExtra.disabled && campoExtra.value) {
+      // Mesmo rótulo fixo usado no portal_comprex.html — o MAPA_CAMPOS do
+      // backend sabe converter esse rótulo pra coluna real "Validade do extintor".
+      dadosPorRotulo['DATA DE VALIDADE DO EXTINTOR'] = campoExtra.value + 'T00:00:00Z';
+    }
+  }
+  (def.itens || []).forEach(function(item, i){
+    if (chkRespostas[i]) dadosPorRotulo[item[0]] = chkRespostas[i].valor;
+  });
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  const resultado = await enviarOuEnfileirar('checklist', { dadosPorRotulo: dadosPorRotulo });
+  btn.textContent = 'Finalizar inspeção';
+  if (resultado.ok) {
+    okEl.textContent = resultado.online ? '✅ Checklist enviado com sucesso!' : '💾 Sem internet — checklist salvo no tablet e será enviado automaticamente quando a conexão voltar.';
+    okEl.style.display = 'block';
+    limparFormularioChecklist();
+    setTimeout(function(){ okEl.style.display = 'none'; }, 6000);
+  } else {
+    btn.disabled = false;
+    erroEl.textContent = resultado.erro;
+    erroEl.style.display = 'block';
+  }
+};
+
+/* =====================================================================
+   PARTE DIÁRIA
+   ===================================================================== */
+let pdAtividades = [];
+let pdParadas = [];
+function pdCalcularHoras(ini, fim){
+  if (!ini || !fim) return 0;
+  const p1 = ini.split(':'), p2 = fim.split(':');
+  const h1 = parseInt(p1[0],10), m1 = parseInt(p1[1],10);
+  const h2 = parseInt(p2[0],10), m2 = parseInt(p2[1],10);
+  if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) return 0;
+  let minutos = (h2*60+m2) - (h1*60+m1);
+  if (minutos < 0) minutos += 24*60;
+  return minutos / 60;
+}
+function pdFormatarHoras(h){ return h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h'; }
+function pdRenderizarAtividades(){
+  const cont = document.getElementById('pd-lista-atividades');
+  if (!pdAtividades.length) { cont.innerHTML = '<div style="font-size:12px;color:var(--cinza);text-align:center;padding:10px">Nenhuma atividade adicionada.</div>'; return; }
+  cont.innerHTML = pdAtividades.map(function(a, i){
+    return '<div class="pd-linha-din"><button type="button" class="apagar" data-apagar-ativ="' + i + '">✕</button>' +
+      '<div class="grid2"><div class="campo" style="margin-bottom:8px"><label>Descrição</label><input type="text" data-ativ="' + i + '" data-campo="desc" value="' + (a.desc||'').replace(/"/g,'&quot;') + '"></div>' +
+      '<div class="campo" style="margin-bottom:8px"><label>Horímetro início</label><input type="text" inputmode="decimal" data-ativ="' + i + '" data-campo="horIni" value="' + (a.horIni||'') + '"></div></div>' +
+      '<div class="grid2"><div class="campo" style="margin-bottom:0"><label>Hora início</label><input type="time" data-ativ="' + i + '" data-campo="de" value="' + (a.de||'') + '"></div>' +
+      '<div class="campo" style="margin-bottom:0"><label>Hora fim</label><input type="time" data-ativ="' + i + '" data-campo="ate" value="' + (a.ate||'') + '"></div></div></div>';
+  }).join('');
+  cont.querySelectorAll('[data-ativ]').forEach(function(inp){
+    inp.oninput = function(){
+      if (inp.dataset.campo === 'horIni') aplicarMascaraHorimetro(inp);
+      pdAtividades[inp.dataset.ativ][inp.dataset.campo] = inp.value;
+      pdAtualizarTotais();
+    };
+  });
+  cont.querySelectorAll('[data-apagar-ativ]').forEach(function(btn){
+    btn.onclick = function(){ pdAtividades.splice(parseInt(btn.dataset.apagarAtiv,10), 1); pdRenderizarAtividades(); pdAtualizarTotais(); };
+  });
+}
+function pdRenderizarParadas(){
+  const cont = document.getElementById('pd-lista-paradas');
+  const tipos = (dadosIniciais && dadosIniciais.tiposParada) || ['ALMOÇO','REVISÃO PREVENTIVA','MANUTENÇÃO CORRETIVA','PARADA TÉCNICA','EM DISPONIBILIDADE'];
+  if (!pdParadas.length) { cont.innerHTML = '<div style="font-size:12px;color:var(--cinza);text-align:center;padding:10px">Nenhuma parada adicionada.</div>'; return; }
+  cont.innerHTML = pdParadas.map(function(p, i){
+    const opcoesTipo = tipos.map(function(t){ return '<option value="' + t + '" ' + (p.tipo===t?'selected':'') + '>' + t + '</option>'; }).join('');
+    return '<div class="pd-linha-din"><button type="button" class="apagar" data-apagar-par="' + i + '">✕</button>' +
+      '<div class="campo" style="margin-bottom:8px"><label>Tipo</label><select data-par="' + i + '" data-campo="tipo"><option value="">Selecione…</option>' + opcoesTipo + '</select></div>' +
+      '<div class="grid2"><div class="campo" style="margin-bottom:8px"><label>Horímetro início</label><input type="text" inputmode="decimal" data-par="' + i + '" data-campo="horIni" value="' + (p.horIni||'') + '"></div>' +
+      '<div class="campo" style="margin-bottom:8px"><label>Horímetro fim</label><input type="text" inputmode="decimal" data-par="' + i + '" data-campo="horFim" value="' + (p.horFim||'') + '"></div></div>' +
+      '<div class="grid2"><div class="campo" style="margin-bottom:0"><label>Hora início</label><input type="time" data-par="' + i + '" data-campo="ini" value="' + (p.ini||'') + '"></div>' +
+      '<div class="campo" style="margin-bottom:0"><label>Hora fim</label><input type="time" data-par="' + i + '" data-campo="fim" value="' + (p.fim||'') + '"></div></div></div>';
+  }).join('');
+  cont.querySelectorAll('[data-par]').forEach(function(el){
+    const ev = el.tagName === 'SELECT' ? 'onchange' : 'oninput';
+    el[ev] = function(){
+      if (el.dataset.campo === 'horIni' || el.dataset.campo === 'horFim') aplicarMascaraHorimetro(el);
+      pdParadas[el.dataset.par][el.dataset.campo] = el.value;
+      pdAtualizarTotais();
+    };
+  });
+  cont.querySelectorAll('[data-apagar-par]').forEach(function(btn){
+    btn.onclick = function(){ pdParadas.splice(parseInt(btn.dataset.apagarPar,10), 1); pdRenderizarParadas(); pdAtualizarTotais(); };
+  });
+}
+function pdCalcularTotais(){
+  const trabalhadas = pdAtividades.reduce(function(s,a){ return s + pdCalcularHoras(a.de, a.ate); }, 0);
+  const paradas = pdParadas.reduce(function(s,p){ return s + pdCalcularHoras(p.ini, p.fim); }, 0);
+  return { trabalhadas: trabalhadas, paradas: paradas, liquidas: trabalhadas - paradas };
+}
+function pdAtualizarTotais(){
+  const t = pdCalcularTotais();
+  document.getElementById('pd-total-trabalhadas').textContent = pdFormatarHoras(t.trabalhadas);
+  document.getElementById('pd-total-paradas').textContent = pdFormatarHoras(t.paradas);
+  document.getElementById('pd-total-liquidas').textContent = pdFormatarHoras(t.liquidas);
+}
+document.getElementById('pd-add-atividade').onclick = function(){
+  pdAtividades.push({ horIni: '', horFim: '', desc: 'OPERAÇÃO', de: '', ate: '' });
+  pdRenderizarAtividades(); pdAtualizarTotais();
+};
+document.getElementById('pd-add-parada').onclick = function(){
+  pdParadas.push({ tipo: '', horIni: '', horFim: '', ini: '', fim: '' });
+  pdRenderizarParadas(); pdAtualizarTotais();
+};
+function limparFormularioParteDiaria(){
+  document.getElementById('pd-equipamento').value = '';
+  const hoje = new Date();
+  document.getElementById('pd-data').value = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
+  document.getElementById('pd-local').value = '';
+  document.getElementById('pd-observacoes').value = '';
+  pdAtividades = []; pdParadas = [];
+  pdRenderizarAtividades(); pdRenderizarParadas(); pdAtualizarTotais();
+}
+document.getElementById('pd-enviar').onclick = async function(){
+  const erroEl = document.getElementById('pd-erro');
+  const okEl = document.getElementById('pd-ok');
+  erroEl.style.display = 'none'; okEl.style.display = 'none';
+  const equipamento = document.getElementById('pd-equipamento').value;
+  const data = document.getElementById('pd-data').value;
+  const local = document.getElementById('pd-local').value;
+  if (!equipamento || !data || !local) { erroEl.textContent = 'Preencha equipamento, data e local.'; erroEl.style.display = 'block'; return; }
+  if (!pdAtividades.length && !pdParadas.length) { erroEl.textContent = 'Adicione ao menos uma atividade ou uma parada.'; erroEl.style.display = 'block'; return; }
+  const horimetro = pdAtividades.length ? (pdAtividades[0].horIni || '').trim() : '';
+  if (!horimetro) { erroEl.textContent = 'Informe o horímetro inicial na primeira atividade.'; erroEl.style.display = 'block'; return; }
+  const totais = pdCalcularTotais();
+  const payload = {
+    equipamento: equipamento, data: data, local: local,
+    observacoes: document.getElementById('pd-observacoes').value.trim(),
+    atividades: pdAtividades, paradas: pdParadas, totais: totais
+  };
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  const resultado = await enviarOuEnfileirar('parte-diaria', payload);
+  btn.disabled = false; btn.textContent = 'Salvar parte diária';
+  if (resultado.ok) {
+    okEl.textContent = resultado.online ? '✅ Parte diária salva com sucesso!' : '💾 Sem internet — parte diária salva no tablet e será enviada quando a conexão voltar.';
+    okEl.style.display = 'block';
+    limparFormularioParteDiaria();
+    setTimeout(function(){ okEl.style.display = 'none'; }, 6000);
+  } else {
+    erroEl.textContent = resultado.erro;
+    erroEl.style.display = 'block';
+  }
+};
+
+/* =====================================================================
+   ENVIO — tenta na hora; se não der (offline ou erro de rede), guarda na
+   fila local e sincroniza sozinho quando a internet voltar.
+   ===================================================================== */
+async function enviarOuEnfileirar(rota, payload){
+  const sessao = sessaoAtual();
+  if (navigator.onLine) {
+    try {
+      const r = await fetch(API_BASE + '/' + rota, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessao.token },
+        body: JSON.stringify(payload)
+      });
+      if (r.ok) { atualizarBadgePendencias(); return { ok: true, online: true }; }
+      const dados = await r.json().catch(function(){ return {}; });
+      if (r.status === 401) {
+        // sessão expirada — guarda na fila e avisa; será reenviado depois de logar de novo
+        await filaAdicionar({ rota: rota, payload: payload, criadoEm: Date.now() });
+        atualizarBadgePendencias();
+        return { ok: true, online: false };
+      }
+      return { ok: false, erro: dados.erro || 'Não foi possível enviar (erro ' + r.status + ').' };
+    } catch (e) {
+      // falha de rede mesmo com navigator.onLine=true (rede instável) -> enfileira
+      await filaAdicionar({ rota: rota, payload: payload, criadoEm: Date.now() });
+      atualizarBadgePendencias();
+      return { ok: true, online: false };
+    }
+  } else {
+    await filaAdicionar({ rota: rota, payload: payload, criadoEm: Date.now() });
+    atualizarBadgePendencias();
+    return { ok: true, online: false };
+  }
+}
+let sincronizando = false;
+async function processarFila(mostrarToast){
+  if (sincronizando || !navigator.onLine) return;
+  const sessao = sessaoAtual();
+  if (!sessao) return;
+  sincronizando = true;
+  try {
+    const itens = await filaListar();
+    let enviados = 0;
+    for (const registro of itens) {
+      try {
+        const r = await fetch(API_BASE + '/' + registro.rota, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessao.token },
+          body: JSON.stringify(registro.payload)
+        });
+        if (r.ok) { await filaRemover(registro.id); enviados++; }
+        else if (r.status === 401) { break; } // precisa logar de novo — para e tenta depois
+        else { await filaRemover(registro.id); } // erro de validação — não adianta tentar de novo
+      } catch (e) { break; } // sem rede — para e tenta na próxima vez
+    }
+    if (enviados > 0 && mostrarToast) mostrarToastMsg('✅ ' + enviados + ' envio(s) pendente(s) sincronizado(s) com sucesso.');
+  } finally {
+    sincronizando = false;
+    atualizarBadgePendencias();
+  }
+}
+async function atualizarBadgePendencias(){
+  const itens = await filaListar().catch(function(){ return []; });
+  const badge = document.getElementById('pendencias-badge');
+  if (itens.length) { badge.style.display = 'inline-flex'; badge.textContent = '⏳ ' + itens.length + ' pendente(s)'; }
+  else { badge.style.display = 'none'; }
+}
+document.getElementById('pendencias-badge').onclick = function(){ processarFila(true); };
+
+function mostrarToastMsg(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 5000);
+}
+
+/* =====================================================================
+   STATUS DE CONEXÃO
+   ===================================================================== */
+function atualizarStatusConexao(){
+  const el = document.getElementById('status-conexao');
+  const txt = document.getElementById('status-conexao-txt');
+  if (navigator.onLine) { el.className = 'status-conexao online'; txt.textContent = 'Online'; }
+  else { el.className = 'status-conexao offline'; txt.textContent = 'Offline'; }
+}
+window.addEventListener('online', function(){ atualizarStatusConexao(); processarFila(true); });
+window.addEventListener('offline', atualizarStatusConexao);
+setInterval(function(){ processarFila(false); }, 45000);
+
+/* =====================================================================
+   ABAS
+   ===================================================================== */
+document.querySelectorAll('.abas button').forEach(function(btn){
+  btn.onclick = function(){
+    document.querySelectorAll('.abas button').forEach(function(b){ b.classList.remove('ativa'); });
+    btn.classList.add('ativa');
+    document.getElementById('aba-checklist').style.display = btn.dataset.aba === 'checklist' ? 'block' : 'none';
+    document.getElementById('aba-partediaria').style.display = btn.dataset.aba === 'partediaria' ? 'block' : 'none';
+  };
+});
+
+/* =====================================================================
+   INICIALIZAÇÃO
+   ===================================================================== */
+async function iniciarApp(){
+  const sessao = sessaoAtual();
+  if (!sessao) return;
+  document.getElementById('tela-login').classList.remove('ativa');
+  document.getElementById('tela-app').classList.add('ativa');
+  document.getElementById('app-titulo-operador').textContent = '👷 ' + sessao.nome;
+  atualizarStatusConexao();
+  await carregarDadosIniciais();
+  preencherSelects();
+  renderizarItensChecklist();
+  limparFormularioParteDiaria();
+  atualizarBadgePendencias();
+  processarFila(false);
+}
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
+(function iniciar(){
+  const sessao = sessaoAtual();
+  if (sessao) iniciarApp();
+})();
+</script>
+</body>
+</html>
