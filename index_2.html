@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Checklist Comprex — Tablet</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b6b34">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --navy:#1b6b34; --cream:#e8f5e9; --ok:#2e7d46; --at:#c79a3a; --ru:#c0392b; --na:#8a93a0;
+    --linha:#e2e0d8; --tinta:#1a2430; --cinza:#5b6570; --card:#fff; --fundo:#f4f5f3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--fundo);color:var(--tinta)}
+  button{font-family:inherit}
+  input,select,textarea{font-family:inherit;font-size:16px}
+  .tela{min-height:100vh;display:none}
+  .tela.ativa{display:block}
+  /* ---- Login ---- */
+  #tela-login.ativa{display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:var(--card);border-radius:18px;padding:36px 30px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .login-card h1{font-size:20px;color:var(--navy);margin:0 0 4px;text-align:center}
+  .login-card .sub{font-size:13px;color:var(--cinza);text-align:center;margin-bottom:24px}
+  .campo{margin-bottom:16px}
+  .campo label{display:block;font-size:12px;font-weight:700;color:var(--cinza);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+  .campo input, .campo select, .campo textarea{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;color:var(--tinta);background:#fff}
+  .campo textarea{resize:vertical;min-height:70px}
+  .btn-primario{width:100%;padding:15px;border:none;border-radius:11px;background:var(--navy);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+  .btn-primario:disabled{background:#b7bcc0}
+  .btn-secundario{padding:13px 18px;border:1.5px solid var(--linha);border-radius:11px;background:#fff;color:var(--tinta);font-size:14px;font-weight:700;cursor:pointer}
+  .erro-msg{background:#fbe9e7;color:var(--ru);border-radius:9px;padding:10px 12px;font-size:12.5px;margin-top:14px;display:none;font-weight:600}
+  .ok-msg{background:#e9f4ee;color:var(--ok);border-radius:9px;padding:10px 12px;font-size:12.5px;margin-top:14px;display:none;font-weight:600}
+  .login-offline-aviso{background:#fdf3e3;color:#8a6300;border-radius:9px;padding:10px 12px;font-size:12px;margin-top:14px;display:none}
+  /* ---- App ---- */
+  #tela-app header{background:var(--navy);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+  #tela-app header .titulo{font-weight:800;font-size:15px;flex:1}
+  .status-conexao{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px}
+  .status-conexao.online{background:rgba(255,255,255,.18)}
+  .status-conexao.offline{background:#c0392b}
+  .status-conexao .ponto{width:7px;height:7px;border-radius:50%;background:#6ee7a0}
+  .status-conexao.offline .ponto{background:#ffd54f}
+  .pendencias-badge{background:#c79a3a;color:#1a2430;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;cursor:pointer;display:none}
+  .btn-header{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer}
+  .abas{display:flex;background:#fff;border-bottom:1px solid var(--linha);position:sticky;top:56px;z-index:19}
+  .abas button{flex:1;padding:14px;border:none;background:none;font-size:13.5px;font-weight:700;color:var(--cinza);cursor:pointer;border-bottom:3px solid transparent}
+  .abas button.ativa{color:var(--navy);border-bottom-color:var(--navy)}
+  main{max-width:640px;margin:0 auto;padding:18px 16px 60px}
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);margin:0 0 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .item-check{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px}
+  .item-check .item-titulo{font-size:13px;font-weight:700;margin-bottom:10px}
+  .item-opcoes{display:flex;flex-wrap:wrap;gap:8px}
+  .opt{padding:9px 14px;border-radius:20px;border:1.5px solid var(--linha);background:#fff;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--tinta)}
+  .opt.sel-ok{background:var(--ok);border-color:var(--ok);color:#fff}
+  .opt.sel-at{background:var(--at);border-color:var(--at);color:#fff}
+  .opt.sel-ru{background:var(--ru);border-color:var(--ru);color:#fff}
+  .opt.sel-na{background:var(--na);border-color:var(--na);color:#fff}
+  .item-check.respondido{border-color:#cfe8d2}
+  .item-extra-data{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin:-2px 0 10px}
+  .item-extra-data label{display:block;font-size:12px;font-weight:700;color:var(--cinza);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+  .item-extra-data label .obrig{color:var(--ru)}
+  .item-extra-data input{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;color:var(--tinta);background:#fff}
+  .item-extra-data input:disabled{background:var(--fundo);color:var(--cinza)}
+  .equip-cabecalho{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .equip-cabecalho .campo{flex:1;margin-bottom:0}
+  .equip-foto-mini{width:52px;height:52px;border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0;border:1px solid var(--linha)}
+  .equip-foto-mini img{width:100%;height:100%;object-fit:cover;display:block}
+  #chk-enviar:disabled{opacity:.5;cursor:not-allowed}
+  .progresso-wrap{height:8px;background:#eef0f1;border-radius:5px;overflow:hidden;margin-bottom:16px}
+  .progresso-fill{height:100%;background:var(--navy);border-radius:5px;transition:width .2s}
+  .pd-linha-din{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px;position:relative}
+  .pd-linha-din .apagar{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--ru);font-size:16px;cursor:pointer}
+  .pd-add-btn{width:100%;padding:12px;border:1.5px dashed #8fb99a;border-radius:10px;background:var(--cream);color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;margin-bottom:6px}
+  .pd-totais{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0;border-top:1px solid var(--linha);margin-top:8px}
+  .pd-totais b{color:var(--tinta)}
+  .pd-status-badge{display:inline-block;font-size:11px;font-weight:800;padding:4px 11px;border-radius:20px;margin-bottom:10px}
+  .pd-status-badge.rodando{background:var(--cream);color:var(--navy)}
+  .pd-status-badge.pausado{background:#fdf3e3;color:#8a6300}
+  .pd-timer{font-size:32px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:.5px;margin-bottom:4px}
+  .pd-timer.pausado{color:#8a6300}
+  .pd-mini-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:6px}
+  .pd-mini-form .campo{flex:1;margin-bottom:0;min-width:140px}
+  .pd-parada-box{border:1.5px dashed var(--at);border-radius:12px;padding:12px;margin-top:12px;background:#fffdf5}
+  .pd-hist-card{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px}
+  .pd-hist-card .pd-hist-topo{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--navy)}
+  .pd-hist-parada{font-size:12px;color:var(--cinza);padding:6px 0;border-top:1px dashed var(--linha);margin-top:6px}
+  .pd-aviso-div{background:#fdf3e3;color:#8a6300;border-radius:9px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--tinta);color:#fff;
+    padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:50;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+  .fila-lista{font-size:12px;color:var(--cinza)}
+  .fila-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--linha)}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div class="tela ativa" id="tela-login">
+  <div class="login-card">
+    <h1>🚜 Portal Comprex</h1>
+    <div class="sub">Login do operador — tablet de campo</div>
+    <div class="campo">
+      <label>Usuário</label>
+      <input type="text" id="login-usuario" autocomplete="username" placeholder="ex: joao.silva">
+    </div>
+    <div class="campo">
+      <label>Senha</label>
+      <input type="password" id="login-senha" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <button class="btn-primario" id="login-btn">Entrar</button>
+    <div class="erro-msg" id="login-erro"></div>
+    <div class="login-offline-aviso" id="login-offline-aviso">📴 Sem internet no momento — o primeiro login de cada operador precisa de conexão. Depois de logar uma vez, o app continua funcionando offline.</div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="tela" id="tela-app">
+  <header>
+    <div class="titulo" id="app-titulo-operador">Operador</div>
+    <div class="pendencias-badge" id="pendencias-badge" title="Clique para sincronizar agora">⏳ 0 pendente(s)</div>
+    <div class="status-conexao online" id="status-conexao"><span class="ponto"></span><span id="status-conexao-txt">Online</span></div>
+    <button class="btn-header" id="btn-sair">Sair</button>
+  </header>
+  <div class="abas">
+    <button class="ativa" data-aba="checklist">✅ Checklist</button>
+    <button data-aba="partediaria">📋 Parte Diária</button>
+  </div>
+  <main>
+    <!-- -------- CHECKLIST -------- -->
+    <div id="aba-checklist">
+      <div class="card">
+        <h2>Dados do equipamento</h2>
+        <div class="equip-cabecalho">
+          <div class="equip-foto-mini" id="chk-equip-foto">🚜</div>
+          <div class="campo" style="margin-bottom:0">
+            <label>Equipamento</label>
+            <select id="chk-equipamento"><option value="">Selecione…</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="campo">
+            <label>Horímetro</label>
+            <input type="text" id="chk-horimetro" inputmode="numeric" placeholder="ex: 1024,5">
+          </div>
+          <div class="campo">
+            <label>Local</label>
+            <select id="chk-local"><option value="">Selecione…</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="campo">
+            <label>Data</label>
+            <input type="text" id="chk-data" readonly>
+          </div>
+          <div></div>
+        </div>
+        <div class="campo">
+          <label>Observação (opcional)</label>
+          <textarea id="chk-observacao" placeholder="Alguma observação geral sobre o equipamento…"></textarea>
+        </div>
+      </div>
+      <div class="progresso-wrap"><div class="progresso-fill" id="chk-progresso" style="width:0%"></div></div>
+      <div id="chk-itens"></div>
+      <div style="font-size:12px;color:var(--cinza);font-weight:600;margin:4px 0 8px" id="chk-aviso"></div>
+      <button class="btn-primario" id="chk-enviar" style="margin-top:6px" disabled>Finalizar inspeção</button>
+      <div class="erro-msg" id="chk-erro"></div>
+      <div class="ok-msg" id="chk-ok"></div>
+    </div>
+    <!-- -------- PARTE DIÁRIA -------- -->
+    <div id="aba-partediaria" style="display:none">
+      <div class="card">
+        <h2>Dados do dia</h2>
+        <div class="equip-cabecalho">
+          <div class="equip-foto-mini" id="pd-equip-foto">🚜</div>
+          <div class="campo" style="margin-bottom:0">
+            <label>Equipamento</label>
+            <select id="pd-equipamento"><option value="">Selecione…</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="campo">
+            <label>Local</label>
+            <select id="pd-local"><option value="">Selecione…</option></select>
+          </div>
+          <div class="campo">
+            <label>Data</label>
+            <input type="date" id="pd-data" disabled>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Atividade</h2>
+        <div class="pd-aviso-div" id="pd-aviso-horimetro"></div>
+        <div id="pd-area-atividade"></div>
+        <div class="pd-totais"><span>Trabalhadas</span><b id="pd-total-trabalhadas">0,00 h</b></div>
+        <div class="pd-totais"><span>Paradas</span><b id="pd-total-paradas">0,00 h</b></div>
+        <div class="pd-totais"><span>Líquidas</span><b id="pd-total-liquidas">0,00 h</b></div>
+      </div>
+      <div class="card" id="pd-card-historico" style="display:none">
+        <h2>Atividades do dia</h2>
+        <div id="pd-lista-historico"></div>
+      </div>
+      <div class="card">
+        <div class="campo" style="margin:0">
+          <label>Observações (opcional)</label>
+          <textarea id="pd-observacoes"></textarea>
+        </div>
+      </div>
+      <button class="btn-primario" id="pd-enviar">Salvar parte diária</button>
+      <div class="erro-msg" id="pd-erro"></div>
+      <div class="ok-msg" id="pd-ok"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   CONFIGURAÇÃO — troque API_BASE pela URL do seu backend no Render/Railway
+   depois do deploy (ver DEPLOY.md). Ex.: 'https://comprex-tablet-api.onrender.com/api'
+   ===================================================================== */
+const API_BASE = 'https://comprex-tablet-backend.onrender.com/api';
+
+/* =====================================================================
+   BANCO LOCAL (IndexedDB) — fila de envios pendentes, funciona offline.
+   ===================================================================== */
+const DB_NOME = 'comprex-tablet-db';
+const DB_VERSAO = 1;
+function abrirDB(){
+  return new Promise(function(resolve, reject){
+    const req = indexedDB.open(DB_NOME, DB_VERSAO);
+    req.onupgradeneeded = function(){
+      const db = req.result;
+      if (!db.objectStoreNames.contains('fila')) {
+        db.createObjectStore('fila', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+async function filaAdicionar(registro){
+  const db = await abrirDB();
+  return new Promise(function(resolve, reject){
+    const tx = db.transaction('fila', 'readwrite');
+    tx.objectStore('fila').add(registro);
+    tx.oncomplete = function(){ resolve(); };
+    tx.onerror = function(){ reject(tx.error); };
+  });
+}
+async function filaListar(){
+  const db = await abrirDB();
+  return new Promise(function(resolve, reject){
+    const tx = db.transaction('fila', 'readonly');
+    const req = tx.objectStore('fila').getAll();
+    req.onsuccess = function(){ resolve(req.result || []); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+async function filaRemover(id){
+  const db = await abrirDB();
+  return new Promise(function(resolve, reject){
+    const tx = db.transaction('fila', 'readwrite');
+    tx.objectStore('fila').delete(id);
+    tx.oncomplete = function(){ resolve(); };
+    tx.onerror = function(){ reject(tx.error); };
+  });
+}
+
+/* =====================================================================
+   SESSÃO / LOGIN
+   ===================================================================== */
+function sessaoAtual(){
+  try { return JSON.parse(localStorage.getItem('sessaoOperador') || 'null'); } catch(e){ return null; }
+}
+function salvarSessao(s){ localStorage.setItem('sessaoOperador', JSON.stringify(s)); }
+function limparSessao(){ localStorage.removeItem('sessaoOperador'); }
+
+document.getElementById('login-btn').onclick = async function(){
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erroEl = document.getElementById('login-erro');
+  const avisoOffline = document.getElementById('login-offline-aviso');
+  erroEl.style.display = 'none';
+  avisoOffline.style.display = 'none';
+  if (!usuario || !senha) { erroEl.textContent = 'Informe usuário e senha.'; erroEl.style.display = 'block'; return; }
+  if (!navigator.onLine) { avisoOffline.style.display = 'block'; return; }
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  try {
+    const r = await fetch(API_BASE + '/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, senha })
+    });
+    const dados = await r.json();
+    if (!r.ok) throw new Error(dados.erro || 'Usuário ou senha inválidos.');
+    salvarSessao({ token: dados.token, nome: dados.nome, logadoEm: Date.now() });
+    document.getElementById('login-senha').value = '';
+    await iniciarApp();
+  } catch (err) {
+    erroEl.textContent = err.message || 'Não foi possível entrar. Verifique a conexão.';
+    erroEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+};
+document.getElementById('btn-sair').onclick = function(){
+  if (!confirm('Sair? Envios ainda não sincronizados continuam guardados neste tablet.')) return;
+  limparSessao();
+  document.getElementById('tela-app').classList.remove('ativa');
+  document.getElementById('tela-login').classList.add('ativa');
+};
+
+/* =====================================================================
+   DADOS INICIAIS (frotas, locais, operadores, perguntas do checklist)
+   — carregados da API e guardados em cache local pra funcionar offline.
+   ===================================================================== */
+let dadosIniciais = null;
+function dadosCache(){
+  try { return JSON.parse(localStorage.getItem('dadosIniciaisCache') || 'null'); } catch(e){ return null; }
+}
+async function carregarDadosIniciais(){
+  const sessao = sessaoAtual();
+  if (navigator.onLine) {
+    try {
+      const r = await fetch(API_BASE + '/dados-iniciais', { headers: { Authorization: 'Bearer ' + sessao.token } });
+      if (r.ok) {
+        dadosIniciais = await r.json();
+        localStorage.setItem('dadosIniciaisCache', JSON.stringify(dadosIniciais));
+        localStorage.setItem('dadosIniciaisAtualizadoEm', String(Date.now()));
+        return;
+      }
+    } catch (e) { /* segue pro cache */ }
+  }
+  dadosIniciais = dadosCache();
+}
+function preencherSelects(){
+  if (!dadosIniciais) return;
+  const frotas = dadosIniciais.frotas || [];
+  const locais = dadosIniciais.locais || [];
+  ['chk-equipamento', 'pd-equipamento'].forEach(function(id){
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">Selecione…</option>' + frotas.map(function(f){
+      return '<option value="' + f.nome + '">' + f.nome + (f.descricao ? ' — ' + f.descricao : '') + '</option>';
+    }).join('');
+  });
+  ['chk-local', 'pd-local'].forEach(function(id){
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">Selecione…</option>' + locais.map(function(l){
+      return '<option value="' + l + '">' + l + '</option>';
+    }).join('');
+  });
+  document.getElementById('chk-equipamento').onchange = function(){
+    const f = frotas.find(function(x){ return x.nome === this.value; }.bind(this));
+    if (f && f.local) document.getElementById('chk-local').value = f.local;
+  };
+  document.getElementById('pd-equipamento').onchange = function(){
+    const f = frotas.find(function(x){ return x.nome === this.value; }.bind(this));
+    if (f && f.local) document.getElementById('pd-local').value = f.local;
+  };
+}
+
+/* =====================================================================
+   CHECKLIST
+   ===================================================================== */
+let chkRespostas = {}; // índice do item -> { valor, severidade }
+/** Igual ao portal_comprex.html: o campo de data (ex.: validade do extintor)
+ *  é inserido logo depois do item que o SharePoint marcou com
+ *  CampoExtraTipo = "data" (ver checklist.js no backend), em vez de ficar
+ *  fixo no topo do formulário — assim aparece junto da pergunta relacionada,
+ *  igual à página web. */
+/** Mostra sempre a data de hoje no checklist (campo só de exibição, travado
+ *  — igual à página web, onde o campo "Data" também é somente leitura). */
+function atualizarDataChecklist(){
+  const hoje = new Date();
+  const campo = document.getElementById('chk-data');
+  if (campo) campo.value = String(hoje.getDate()).padStart(2,'0') + '/' + String(hoje.getMonth()+1).padStart(2,'0') + '/' + hoje.getFullYear();
+}
+function renderizarItensChecklist(){
+  atualizarDataChecklist();
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [], extraData: null };
+  const extra = def.extraData;
+  const cont = document.getElementById('chk-itens');
+  chkRespostas = {};
+  cont.innerHTML = (def.itens || []).map(function(item, i){
+    const opcoes = item[1].map(function(op){
+      return '<button type="button" class="opt" data-idx="' + i + '" data-valor="' + op[0].replace(/"/g,'&quot;') + '" data-sev="' + op[1] + '">' + op[0] + '</button>';
+    }).join('');
+    let html = '<div class="item-check" id="chk-item-' + i + '"><div class="item-titulo">' + item[0] + '</div><div class="item-opcoes">' + opcoes + '</div></div>';
+    if (extra && extra.label === item[0]) {
+      html += '<div class="item-extra-data" id="chk-extra-data-wrap">' +
+        '<label>' + (extra.rotulo || 'Data') + ' <span class="obrig" id="chk-extra-data-obrig">*</span></label>' +
+        '<input type="date" id="chk-extra-data"></div>';
+    }
+    return html;
+  }).join('');
+  cont.querySelectorAll('.opt').forEach(function(btn){
+    btn.onclick = function(){
+      const i = btn.dataset.idx;
+      chkRespostas[i] = { valor: btn.dataset.valor, severidade: btn.dataset.sev };
+      const item = document.getElementById('chk-item-' + i);
+      item.classList.add('respondido');
+      item.querySelectorAll('.opt').forEach(function(b){ b.className = 'opt' + (b === btn ? ' sel-' + btn.dataset.sev : ''); });
+      if (extra && extra.label === item.querySelector('.item-titulo').textContent) atualizarCampoExtraData(btn.dataset.valor);
+      atualizarProgressoChecklist();
+    };
+  });
+  const campoExtra = document.getElementById('chk-extra-data');
+  if (campoExtra) campoExtra.addEventListener('input', atualizarProgressoChecklist);
+  atualizarProgressoChecklist();
+}
+/** Espelha atualizarCampoValidadeExtintor() do portal: se a resposta do item
+ *  ligado ao campo extra for igual a "opcionalSe" (ex.: "NÃO POSSUI"), o campo
+ *  de data fica desnecessário — limpa e desabilita. Caso contrário, exige. */
+function atualizarCampoExtraData(valorSelecionado){
+  const def = (dadosIniciais && dadosIniciais.checklist) || {};
+  const extra = def.extraData;
+  const campo = document.getElementById('chk-extra-data');
+  const obrig = document.getElementById('chk-extra-data-obrig');
+  if (!extra || !campo) return;
+  if (extra.opcionalSe && valorSelecionado === extra.opcionalSe) {
+    campo.value = '';
+    campo.disabled = true;
+    if (obrig) obrig.style.display = 'none';
+  } else {
+    campo.disabled = false;
+    if (obrig) obrig.style.display = '';
+  }
+}
+function atualizarProgressoChecklist(){
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [] };
+  const total = (def.itens || []).length;
+  const respondidos = Object.keys(chkRespostas).length;
+  const pct = total ? Math.round(respondidos / total * 100) : 0;
+  document.getElementById('chk-progresso').style.width = pct + '%';
+  atualizarValidacaoChecklist();
+}
+/** Só libera o botão "Finalizar inspeção" quando TUDO estiver preenchido —
+ *  equipamento, horímetro, local, todos os itens do checklist respondidos e
+ *  (quando existir) a data do campo extra — mesmo comportamento da página
+ *  web, onde o botão só "acende" quando o checklist está completo. */
+function validarChecklistCompleto(){
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [] };
+  const equipamento = document.getElementById('chk-equipamento').value;
+  const horimetro = document.getElementById('chk-horimetro').value.trim();
+  const local = document.getElementById('chk-local').value;
+  const totalItens = (def.itens || []).length;
+  const itensOk = totalItens > 0 && Object.keys(chkRespostas).length === totalItens;
+  let extraOk = true;
+  if (def.extraData) {
+    const campo = document.getElementById('chk-extra-data');
+    extraOk = !!(campo && (campo.disabled || campo.value));
+  }
+  let mensagem;
+  if (!equipamento) mensagem = 'Selecione o equipamento para começar.';
+  else if (!horimetro) mensagem = 'Informe o horímetro.';
+  else if (!local) mensagem = 'Selecione o local.';
+  else if (!itensOk) mensagem = 'Responda todos os itens do checklist (' + Object.keys(chkRespostas).length + '/' + totalItens + ').';
+  else if (!extraOk) mensagem = 'Informe ' + (def.extraData.rotulo || 'a data').toLowerCase() + '.';
+  else mensagem = 'Tudo pronto — pode finalizar a inspeção.';
+  const completo = !!(equipamento && horimetro && local && itensOk && extraOk);
+  return { completo: completo, mensagem: mensagem };
+}
+function atualizarValidacaoChecklist(){
+  const r = validarChecklistCompleto();
+  const aviso = document.getElementById('chk-aviso');
+  if (aviso) aviso.textContent = r.mensagem;
+  document.getElementById('chk-enviar').disabled = !r.completo;
+}
+/** Máscara automática de horímetro — o último dígito digitado sempre vira a
+ *  casa decimal (ex.: digitar 1,0,2,4,5 forma "1024,5" sozinho, sem precisar
+ *  digitar a vírgula). Mesma lógica do portal_comprex.html. */
+function aplicarMascaraHorimetro(campo){
+  const digitos = campo.value.replace(/[^0-9]/g, '');
+  if (!digitos) { campo.value = ''; return; }
+  if (digitos.length === 1) { campo.value = '0,' + digitos; return; }
+  const dec = digitos.slice(-1);
+  const inteiro = digitos.slice(0, -1).replace(/^0+/, '') || '0';
+  campo.value = inteiro + ',' + dec;
+  campo.setSelectionRange(campo.value.length, campo.value.length);
+}
+document.getElementById('chk-horimetro').addEventListener('input', function(){ aplicarMascaraHorimetro(this); atualizarValidacaoChecklist(); });
+document.getElementById('chk-local').addEventListener('change', atualizarValidacaoChecklist);
+
+/* ---- Foto do equipamento (mesma biblioteca "FotosEquipamentos" do SharePoint
+   usada no portal_comprex.html, só que buscada via backend em vez de direto
+   pelo Graph, já que o tablet não tem login Microsoft). ---- */
+const cacheFotoEquipamento = {};
+async function buscarFotoEquipamento(nomeEquip){
+  const chave = String(nomeEquip || '').toUpperCase();
+  if (!chave) return null;
+  if (cacheFotoEquipamento[chave] !== undefined) return cacheFotoEquipamento[chave];
+  try {
+    const sessao = sessaoAtual();
+    const r = await fetch(API_BASE + '/foto-equipamento/' + encodeURIComponent(chave), {
+      headers: { Authorization: 'Bearer ' + sessao.token }
+    });
+    if (!r.ok) { cacheFotoEquipamento[chave] = null; return null; }
+    const d = await r.json();
+    cacheFotoEquipamento[chave] = d.url || null;
+    return cacheFotoEquipamento[chave];
+  } catch (e) {
+    return null; // offline ou erro de rede — mostra só o ícone padrão, sem travar o checklist
+  }
+}
+/** Genérica — usada tanto pelo Checklist ('chk-equip-foto'/'chk-equipamento')
+ *  quanto pela Parte Diária ('pd-equip-foto'/'pd-equipamento'). */
+function atualizarFotoEquipamento(elFotoId, selectId, nomeEquip){
+  const el = document.getElementById(elFotoId);
+  if (!el) return;
+  el.textContent = '🚜';
+  if (!nomeEquip) return;
+  buscarFotoEquipamento(nomeEquip).then(function(url){
+    const sel = document.getElementById(selectId);
+    if (sel && sel.value !== nomeEquip) return; // trocou de equipamento enquanto buscava
+    el.innerHTML = url ? '<img src="' + url + '" alt="">' : '🚜';
+  });
+}
+function atualizarFotoEquipamentoChecklist(nomeEquip){ atualizarFotoEquipamento('chk-equip-foto', 'chk-equipamento', nomeEquip); }
+function atualizarFotoEquipamentoParteDiaria(nomeEquip){ atualizarFotoEquipamento('pd-equip-foto', 'pd-equipamento', nomeEquip); }
+document.getElementById('chk-equipamento').addEventListener('change', function(){
+  atualizarValidacaoChecklist();
+  atualizarFotoEquipamentoChecklist(this.value);
+});
+document.getElementById('pd-equipamento').addEventListener('change', function(){
+  atualizarFotoEquipamentoParteDiaria(this.value);
+});
+
+function limparFormularioChecklist(){
+  document.getElementById('chk-equipamento').value = '';
+  document.getElementById('chk-horimetro').value = '';
+  document.getElementById('chk-local').value = '';
+  document.getElementById('chk-observacao').value = '';
+  atualizarFotoEquipamentoChecklist('');
+  renderizarItensChecklist();
+}
+document.getElementById('chk-enviar').onclick = async function(){
+  const erroEl = document.getElementById('chk-erro');
+  const okEl = document.getElementById('chk-ok');
+  erroEl.style.display = 'none'; okEl.style.display = 'none';
+  const validacao = validarChecklistCompleto();
+  if (!validacao.completo) {
+    erroEl.textContent = validacao.mensagem;
+    erroEl.style.display = 'block';
+    return;
+  }
+  const def = (dadosIniciais && dadosIniciais.checklist) || { itens: [] };
+  const dadosPorRotulo = {
+    Equipamento: document.getElementById('chk-equipamento').value,
+    Horimetro: document.getElementById('chk-horimetro').value.trim(),
+    Local: document.getElementById('chk-local').value,
+    Observacao: document.getElementById('chk-observacao').value.trim()
+  };
+  if (def.extraData) {
+    const campoExtra = document.getElementById('chk-extra-data');
+    if (campoExtra && !campoExtra.disabled && campoExtra.value) {
+      // Mesmo rótulo fixo usado no portal_comprex.html — o MAPA_CAMPOS do
+      // backend sabe converter esse rótulo pra coluna real "Validade do extintor".
+      dadosPorRotulo['DATA DE VALIDADE DO EXTINTOR'] = campoExtra.value + 'T00:00:00Z';
+    }
+  }
+  (def.itens || []).forEach(function(item, i){
+    if (chkRespostas[i]) dadosPorRotulo[item[0]] = chkRespostas[i].valor;
+  });
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  const resultado = await enviarOuEnfileirar('checklist', { dadosPorRotulo: dadosPorRotulo });
+  btn.textContent = 'Finalizar inspeção';
+  if (resultado.ok) {
+    okEl.textContent = resultado.online ? '✅ Checklist enviado com sucesso!' : '💾 Sem internet — checklist salvo no tablet e será enviado automaticamente quando a conexão voltar.';
+    okEl.style.display = 'block';
+    limparFormularioChecklist();
+    setTimeout(function(){ okEl.style.display = 'none'; }, 6000);
+  } else {
+    btn.disabled = false;
+    erroEl.textContent = resultado.erro;
+    erroEl.style.display = 'block';
+  }
+};
+
+/* =====================================================================
+   PARTE DIÁRIA
+   Modelo novo: em vez de digitar horários manualmente, cada atividade e
+   cada parada guardam o instante real (timestamp) em que começaram/
+   terminaram. O "contador" na tela é só a leitura desses timestamps
+   contra o relógio do aparelho — por isso ele funciona mesmo offline e
+   sobrevive a reiniciar o tablet ou trocar de aba/logout: o estado inteiro
+   é salvo no localStorage ('pdEstadoAtual') a cada mudança e recarregado
+   ao abrir o app de novo (iniciarApp -> pdInicializarTab).
+   ===================================================================== */
+let pdAtividades = []; // cada item: { desc, horIni, horFim, inicioTs, fimTs, finalizada, paradas:[{tipo,horIni,horFim,obs,inicioTs,fimTs}] }
+let pdFormAberto = null; // null | 'nova' | 'parada' | 'finalizarAtividade' | 'finalizarParada'
+let pdIntervaloTick = null;
+
+function pdFormatarHoras(h){ return h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h'; }
+function pdFormatarDuracao(ms){
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function horimetroFloat(str){ return parseFloat(String(str||'').replace(',', '.')); }
+
+/* ---- estado (persistência local — sobrevive a logout/reload/bateria) ---- */
+function pdSalvarEstado(){
+  try {
+    localStorage.setItem('pdEstadoAtual', JSON.stringify({
+      equipamento: document.getElementById('pd-equipamento').value,
+      local: document.getElementById('pd-local').value,
+      observacoes: document.getElementById('pd-observacoes').value,
+      atividades: pdAtividades
+    }));
+  } catch (e) { /* localStorage indisponível — segue só em memória */ }
+}
+function pdCarregarEstado(){
+  try {
+    const salvo = JSON.parse(localStorage.getItem('pdEstadoAtual') || 'null');
+    if (!salvo) return false;
+    document.getElementById('pd-equipamento').value = salvo.equipamento || '';
+    document.getElementById('pd-local').value = salvo.local || '';
+    document.getElementById('pd-observacoes').value = salvo.observacoes || '';
+    pdAtividades = Array.isArray(salvo.atividades) ? salvo.atividades : [];
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---- helpers de estado da atividade/parada em andamento ---- */
+function pdAtividadeAberta(){
+  const ultima = pdAtividades[pdAtividades.length - 1];
+  return (ultima && !ultima.finalizada) ? ultima : null;
+}
+function pdParadaAberta(a){
+  if (!a || !a.paradas || !a.paradas.length) return null;
+  const ultima = a.paradas[a.paradas.length - 1];
+  return ultima.fimTs ? null : ultima;
+}
+function pdDuracaoParadaMs(p){ return (p.fimTs || Date.now()) - p.inicioTs; }
+function pdParadasMs(a){ return (a.paradas || []).reduce(function(s, p){ return s + pdDuracaoParadaMs(p); }, 0); }
+function pdBrutoMs(a){ return (a.fimTs || Date.now()) - a.inicioTs; }
+/** Tempo líquido (descontando paradas). Enquanto uma parada está aberta, o
+ *  bruto e as paradas crescem no mesmo ritmo (o relógio real), então essa
+ *  conta fica naturalmente CONGELADA — não precisa de nenhum código especial
+ *  pra "pausar" o contador, ele só para de crescer sozinho. */
+function pdLiquidoMs(a){ return Math.max(0, pdBrutoMs(a) - pdParadasMs(a)); }
+
+function pdUltimoHorimetroConhecido(){
+  let ultimo = '';
+  pdAtividades.forEach(function(a){
+    if (a.horIni) ultimo = a.horIni;
+    (a.paradas || []).forEach(function(p){ if (p.horIni) ultimo = p.horIni; if (p.horFim) ultimo = p.horFim; });
+    if (a.horFim) ultimo = a.horFim;
+  });
+  return ultimo;
+}
+
+/** Confere se os horímetros informados fazem sentido em sequência ao longo
+ *  do dia (nunca deveria diminuir). Não bloqueia o salvamento — só avisa,
+ *  igual ao portal_comprex.html, porque pode ser um erro de digitação
+ *  legítimo que o operador quer corrigir depois. */
+function pdVerificarDivergenciaHorimetro(){
+  const alerta = document.getElementById('pd-aviso-horimetro');
+  const avisos = [];
+  const sequencia = [];
+  pdAtividades.forEach(function(a, i){
+    const vIni = horimetroFloat(a.horIni);
+    if (!isNaN(vIni)) sequencia.push({ label: 'Atividade ' + (i+1) + ' (início)', valor: vIni });
+    (a.paradas || []).forEach(function(p, j){
+      const pIni = horimetroFloat(p.horIni), pFim = horimetroFloat(p.horFim);
+      if (!isNaN(pIni)) sequencia.push({ label: 'parada ' + (j+1) + ' da atividade ' + (i+1) + ' (início)', valor: pIni });
+      if (!isNaN(pFim)) sequencia.push({ label: 'parada ' + (j+1) + ' da atividade ' + (i+1) + ' (fim)', valor: pFim });
+    });
+    const vFim = horimetroFloat(a.horFim);
+    if (!isNaN(vFim)) sequencia.push({ label: 'Atividade ' + (i+1) + ' (fim)', valor: vFim });
+  });
+  for (let i = 1; i < sequencia.length; i++){
+    if (sequencia[i].valor < sequencia[i-1].valor) {
+      avisos.push('O horímetro de <b>' + sequencia[i].label + '</b> (' + sequencia[i].valor.toString().replace('.', ',') + ') é menor que o de <b>' + sequencia[i-1].label + '</b> (' + sequencia[i-1].valor.toString().replace('.', ',') + ') — confira se não houve erro de digitação.');
+    }
+  }
+  if (avisos.length) {
+    alerta.innerHTML = '<b>⚠️ Possível divergência no horímetro</b><br>' + avisos.map(function(a){ return '• ' + a; }).join('<br>');
+    alerta.style.display = 'block';
+  } else {
+    alerta.style.display = 'none';
+  }
+}
+
+function pdCalcularTotais(){
+  let brutoMs = 0, paradasMs = 0;
+  pdAtividades.forEach(function(a){ brutoMs += pdBrutoMs(a); paradasMs += pdParadasMs(a); });
+  const trabalhadas = brutoMs / 3600000, paradas = paradasMs / 3600000;
+  return { trabalhadas: trabalhadas, paradas: paradas, liquidas: Math.max(0, trabalhadas - paradas) };
+}
+function pdAtualizarTotais(){
+  const t = pdCalcularTotais();
+  document.getElementById('pd-total-trabalhadas').textContent = pdFormatarHoras(t.trabalhadas);
+  document.getElementById('pd-total-paradas').textContent = pdFormatarHoras(t.paradas);
+  document.getElementById('pd-total-liquidas').textContent = pdFormatarHoras(t.liquidas);
+}
+
+/* ---- histórico (atividades já finalizadas no dia) ---- */
+function pdRenderizarHistorico(){
+  const card = document.getElementById('pd-card-historico');
+  const cont = document.getElementById('pd-lista-historico');
+  const finalizadas = pdAtividades.filter(function(a){ return a.finalizada; });
+  if (!finalizadas.length) { card.style.display = 'none'; cont.innerHTML = ''; return; }
+  card.style.display = 'block';
+  cont.innerHTML = finalizadas.map(function(a, i){
+    const liquidas = pdLiquidoMs(a) / 3600000;
+    const paradasHtml = (a.paradas || []).map(function(p){
+      const dur = pdDuracaoParadaMs(p) / 3600000;
+      return '<div class="pd-hist-parada">⏸ ' + (p.tipo || 'Parada') + ' — ' + (p.horIni || '—') + ' → ' + (p.horFim || '—') + ' (' + pdFormatarHoras(dur) + ')' +
+        (p.obs ? '<br><i>' + p.obs.replace(/</g,'&lt;') + '</i>' : '') + '</div>';
+    }).join('');
+    return '<div class="pd-hist-card"><div class="pd-hist-topo"><span>Atividade ' + (i+1) + '</span><span>' + pdFormatarHoras(liquidas) + ' líquidas</span></div>' +
+      '<div style="font-size:12px;color:var(--cinza)">Horímetro: ' + (a.horIni || '—') + ' → ' + (a.horFim || '—') + '</div>' + paradasHtml + '</div>';
+  }).join('');
+}
+
+/* ---- renderização da área principal (atividade em andamento / formulários) ---- */
+function pdRenderizar(){
+  const area = document.getElementById('pd-area-atividade');
+  const aberta = pdAtividadeAberta();
+  let html = '';
+  if (!aberta) {
+    if (pdFormAberto === 'nova') {
+      html += '<div class="pd-mini-form">' +
+        '<div class="campo"><label>Horímetro atual</label><input type="text" inputmode="decimal" id="pd-input-nova-horimetro" placeholder="ex: 1024,5" value="' + pdUltimoHorimetroConhecido() + '"></div>' +
+        '<button type="button" class="btn-secundario" id="pd-btn-cancelar-nova">Cancelar</button>' +
+        '<button type="button" class="btn-primario" style="width:auto" id="pd-btn-confirmar-nova">Iniciar</button></div>';
+    } else if (pdFormAberto === 'novaParada') {
+      const tiposNova = (dadosIniciais && dadosIniciais.tiposParada) || ['ALMOÇO','REVISÃO PREVENTIVA','MANUTENÇÃO CORRETIVA','PARADA TÉCNICA','EM DISPONIBILIDADE'];
+      html += '<div class="pd-parada-box">' +
+        '<div class="campo"><label>Tipo de parada</label><select id="pd-input-novaparada-tipo"><option value="">Selecione…</option>' +
+        tiposNova.map(function(t){ return '<option value="' + t + '">' + t + '</option>'; }).join('') + '</select></div>' +
+        '<div class="campo"><label>Horímetro atual</label><input type="text" inputmode="decimal" id="pd-input-novaparada-horimetro" placeholder="ex: 1024,5" value="' + pdUltimoHorimetroConhecido() + '"></div>' +
+        '<div style="display:flex;gap:10px"><button type="button" class="btn-secundario" style="flex:1" id="pd-btn-cancelar-novaparada">Cancelar</button>' +
+        '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-confirmar-novaparada">Iniciar já em parada</button></div></div>';
+    } else {
+      html += '<div style="display:flex;gap:10px">' +
+        '<button class="pd-add-btn" type="button" style="flex:1;margin-bottom:0" id="pd-btn-nova-atividade">+ Iniciar atividade</button>' +
+        '<button class="pd-add-btn" type="button" style="flex:1;margin-bottom:0" id="pd-btn-nova-parada-avulsa">+ Iniciar já em parada</button></div>';
+    }
+  } else {
+    const parada = pdParadaAberta(aberta);
+    const pausado = !!parada;
+    html += '<div class="pd-status-badge ' + (pausado ? 'pausado' : 'rodando') + '">' + (pausado ? '⏸ Atividade pausada' : '▶ Atividade em andamento') + '</div>';
+    html += '<div class="pd-timer' + (pausado ? ' pausado' : '') + '" id="pd-timer-atividade">' + pdFormatarDuracao(pdLiquidoMs(aberta)) + '</div>';
+    html += '<div style="font-size:12px;color:var(--cinza);margin-bottom:12px">Horímetro início: <b>' + (aberta.horIni || '—') + '</b></div>';
+    if (!pausado) {
+      if (pdFormAberto === 'parada') {
+        const tipos = (dadosIniciais && dadosIniciais.tiposParada) || ['ALMOÇO','REVISÃO PREVENTIVA','MANUTENÇÃO CORRETIVA','PARADA TÉCNICA','EM DISPONIBILIDADE'];
+        html += '<div class="pd-parada-box">' +
+          '<div class="campo"><label>Tipo de parada</label><select id="pd-input-parada-tipo"><option value="">Selecione…</option>' +
+          tipos.map(function(t){ return '<option value="' + t + '">' + t + '</option>'; }).join('') + '</select></div>' +
+          '<div class="campo"><label>Horímetro atual</label><input type="text" inputmode="decimal" id="pd-input-parada-horimetro" placeholder="ex: 1024,5" value="' + (aberta.horIni || '') + '"></div>' +
+          '<div style="display:flex;gap:10px"><button type="button" class="btn-secundario" style="flex:1" id="pd-btn-cancelar-parada">Cancelar</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-confirmar-parada">Iniciar parada</button></div></div>';
+      } else if (pdFormAberto === 'finalizarAtividade') {
+        html += '<div class="pd-parada-box">' +
+          '<div class="campo"><label>Horímetro final</label><input type="text" inputmode="decimal" id="pd-input-final-horimetro" placeholder="ex: 1024,5"></div>' +
+          '<div style="display:flex;gap:10px"><button type="button" class="btn-secundario" style="flex:1" id="pd-btn-cancelar-final">Cancelar</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-confirmar-final">Finalizar atividade</button></div></div>';
+      } else {
+        html += '<div style="display:flex;gap:10px">' +
+          '<button type="button" class="btn-secundario" style="flex:1" id="pd-btn-nova-parada">+ Adicionar parada</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-abrir-finalizar">Finalizar atividade</button></div>';
+      }
+    } else {
+      html += '<div class="pd-parada-box">' +
+        '<div class="pd-status-badge pausado">⏸ Parada em andamento' + (parada.tipo ? ' — ' + parada.tipo : '') + '</div>' +
+        '<div class="pd-timer pausado" id="pd-timer-parada">' + pdFormatarDuracao(Date.now() - parada.inicioTs) + '</div>' +
+        '<div class="campo" style="margin:8px 0"><label>Observação (opcional)</label><textarea id="pd-input-parada-obs" style="min-height:44px" placeholder="ex: parada pra almoço">' + (parada.obs || '') + '</textarea></div>';
+      if (pdFormAberto === 'finalizarParada') {
+        html += '<div class="campo"><label>Horímetro atual</label><input type="text" inputmode="decimal" id="pd-input-parada-fim-horimetro" placeholder="ex: 1024,5"></div>' +
+          '<div style="display:flex;gap:10px"><button type="button" class="btn-secundario" style="flex:1" id="pd-btn-cancelar-fim-parada">Cancelar</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-confirmar-fim-parada">Finalizar parada</button></div>';
+      } else {
+        html += '<button type="button" class="btn-primario" id="pd-btn-abrir-finalizar-parada">Finalizar parada</button>';
+      }
+      html += '</div>';
+    }
+  }
+  area.innerHTML = html;
+  pdLigarEventosArea();
+  pdRenderizarHistorico();
+  pdAtualizarTotais();
+  pdVerificarDivergenciaHorimetro();
+}
+
+function pdLigarEventosArea(){
+  const aberta = pdAtividadeAberta();
+  ['pd-input-nova-horimetro','pd-input-parada-horimetro','pd-input-final-horimetro','pd-input-parada-fim-horimetro','pd-input-novaparada-horimetro'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', function(){ aplicarMascaraHorimetro(el); });
+  });
+  const btnNova = document.getElementById('pd-btn-nova-atividade');
+  if (btnNova) btnNova.onclick = function(){ pdFormAberto = 'nova'; pdRenderizar(); };
+  const btnCancelarNova = document.getElementById('pd-btn-cancelar-nova');
+  if (btnCancelarNova) btnCancelarNova.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+  const btnConfirmarNova = document.getElementById('pd-btn-confirmar-nova');
+  if (btnConfirmarNova) btnConfirmarNova.onclick = function(){
+    const campo = document.getElementById('pd-input-nova-horimetro');
+    const valor = campo.value.trim();
+    if (!valor) { campo.focus(); return; }
+    pdAtividades.push({ desc: 'OPERAÇÃO', horIni: valor, horFim: '', inicioTs: Date.now(), fimTs: null, finalizada: false, paradas: [] });
+    pdFormAberto = null;
+    pdSalvarEstado(); pdRenderizar();
+  };
+  /* ---- iniciar o dia direto numa parada (sem atividade rodando ainda) ----
+     Por baixo dos panos isso cria a atividade normalmente (mesmo horímetro),
+     só que já com a primeira parada aberta dentro dela — então o contador
+     de trabalho começa em 00:00:00 e fica congelado até essa parada acabar,
+     exatamente como se o operador tivesse "chegado parado". */
+  const btnNovaParadaAvulsa = document.getElementById('pd-btn-nova-parada-avulsa');
+  if (btnNovaParadaAvulsa) btnNovaParadaAvulsa.onclick = function(){ pdFormAberto = 'novaParada'; pdRenderizar(); };
+  const btnCancelarNovaParada = document.getElementById('pd-btn-cancelar-novaparada');
+  if (btnCancelarNovaParada) btnCancelarNovaParada.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+  const btnConfirmarNovaParada = document.getElementById('pd-btn-confirmar-novaparada');
+  if (btnConfirmarNovaParada) btnConfirmarNovaParada.onclick = function(){
+    const tipoEl = document.getElementById('pd-input-novaparada-tipo');
+    const campoH = document.getElementById('pd-input-novaparada-horimetro');
+    if (!tipoEl.value) { tipoEl.focus(); return; }
+    if (!campoH.value.trim()) { campoH.focus(); return; }
+    const agora = Date.now();
+    const valor = campoH.value.trim();
+    pdAtividades.push({
+      desc: 'OPERAÇÃO', horIni: valor, horFim: '', inicioTs: agora, fimTs: null, finalizada: false,
+      paradas: [{ tipo: tipoEl.value, horIni: valor, horFim: '', obs: '', inicioTs: agora, fimTs: null }]
+    });
+    pdFormAberto = null;
+    pdSalvarEstado(); pdRenderizar();
+  };
+  if (!aberta) return;
+  const parada = pdParadaAberta(aberta);
+  if (!parada) {
+    const btnNovaParada = document.getElementById('pd-btn-nova-parada');
+    if (btnNovaParada) btnNovaParada.onclick = function(){ pdFormAberto = 'parada'; pdRenderizar(); };
+    const btnAbrirFinal = document.getElementById('pd-btn-abrir-finalizar');
+    if (btnAbrirFinal) btnAbrirFinal.onclick = function(){ pdFormAberto = 'finalizarAtividade'; pdRenderizar(); };
+    const btnCancelarParada = document.getElementById('pd-btn-cancelar-parada');
+    if (btnCancelarParada) btnCancelarParada.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+    const btnConfirmarParada = document.getElementById('pd-btn-confirmar-parada');
+    if (btnConfirmarParada) btnConfirmarParada.onclick = function(){
+      const tipoEl = document.getElementById('pd-input-parada-tipo');
+      const campoH = document.getElementById('pd-input-parada-horimetro');
+      if (!tipoEl.value) { tipoEl.focus(); return; }
+      if (!campoH.value.trim()) { campoH.focus(); return; }
+      aberta.paradas = aberta.paradas || [];
+      aberta.paradas.push({ tipo: tipoEl.value, horIni: campoH.value.trim(), horFim: '', obs: '', inicioTs: Date.now(), fimTs: null });
+      pdFormAberto = null;
+      pdSalvarEstado(); pdRenderizar();
+    };
+    const btnCancelarFinal = document.getElementById('pd-btn-cancelar-final');
+    if (btnCancelarFinal) btnCancelarFinal.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+    const btnConfirmarFinal = document.getElementById('pd-btn-confirmar-final');
+    if (btnConfirmarFinal) btnConfirmarFinal.onclick = function(){
+      const campoH = document.getElementById('pd-input-final-horimetro');
+      if (!campoH.value.trim()) { campoH.focus(); return; }
+      aberta.horFim = campoH.value.trim();
+      aberta.fimTs = Date.now();
+      aberta.finalizada = true;
+      pdFormAberto = null;
+      pdSalvarEstado(); pdRenderizar();
+    };
+  } else {
+    const obsEl = document.getElementById('pd-input-parada-obs');
+    if (obsEl) obsEl.oninput = function(){ parada.obs = obsEl.value; pdSalvarEstado(); };
+    const btnAbrirFinalParada = document.getElementById('pd-btn-abrir-finalizar-parada');
+    if (btnAbrirFinalParada) btnAbrirFinalParada.onclick = function(){ pdFormAberto = 'finalizarParada'; pdRenderizar(); };
+    const btnCancelarFimParada = document.getElementById('pd-btn-cancelar-fim-parada');
+    if (btnCancelarFimParada) btnCancelarFimParada.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+    const btnConfirmarFimParada = document.getElementById('pd-btn-confirmar-fim-parada');
+    if (btnConfirmarFimParada) btnConfirmarFimParada.onclick = function(){
+      const campoH = document.getElementById('pd-input-parada-fim-horimetro');
+      if (!campoH.value.trim()) { campoH.focus(); return; }
+      parada.horFim = campoH.value.trim();
+      parada.fimTs = Date.now();
+      pdFormAberto = null;
+      pdSalvarEstado(); pdRenderizar();
+    };
+  }
+}
+
+/* ---- contador ao vivo: só atualiza o texto do timer, sem re-renderizar
+   tudo (pra não perder foco/cursor de quem estiver digitando a observação
+   da parada). Funciona offline e sobrevive a app fechado porque recalcula
+   sempre a partir dos timestamps salvos, nunca soma "tick a tick". ---- */
+function pdTick(){
+  const aberta = pdAtividadeAberta();
+  if (!aberta) return;
+  const elA = document.getElementById('pd-timer-atividade');
+  if (elA) elA.textContent = pdFormatarDuracao(pdLiquidoMs(aberta));
+  const parada = pdParadaAberta(aberta);
+  if (parada) {
+    const elP = document.getElementById('pd-timer-parada');
+    if (elP) elP.textContent = pdFormatarDuracao(Date.now() - parada.inicioTs);
+  }
+  pdAtualizarTotais();
+}
+if (pdIntervaloTick) clearInterval(pdIntervaloTick);
+pdIntervaloTick = setInterval(pdTick, 1000);
+
+function pdResetarTudo(){
+  document.getElementById('pd-equipamento').value = '';
+  const hoje = new Date();
+  document.getElementById('pd-data').value = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
+  document.getElementById('pd-local').value = '';
+  document.getElementById('pd-observacoes').value = '';
+  pdAtividades = [];
+  pdFormAberto = null;
+  localStorage.removeItem('pdEstadoAtual');
+  atualizarFotoEquipamentoParteDiaria('');
+  pdRenderizar();
+}
+function pdInicializarTab(){
+  const hoje = new Date();
+  document.getElementById('pd-data').value = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
+  if (!pdCarregarEstado()) pdAtividades = [];
+  atualizarFotoEquipamentoParteDiaria(document.getElementById('pd-equipamento').value);
+  pdRenderizar();
+}
+document.getElementById('pd-enviar').onclick = async function(){
+  const erroEl = document.getElementById('pd-erro');
+  const okEl = document.getElementById('pd-ok');
+  erroEl.style.display = 'none'; okEl.style.display = 'none';
+  const equipamento = document.getElementById('pd-equipamento').value;
+  const data = document.getElementById('pd-data').value;
+  const local = document.getElementById('pd-local').value;
+  if (!equipamento || !data || !local) { erroEl.textContent = 'Preencha equipamento, data e local.'; erroEl.style.display = 'block'; return; }
+  if (pdAtividadeAberta()) { erroEl.textContent = 'Finalize a atividade em andamento antes de salvar.'; erroEl.style.display = 'block'; return; }
+  const finalizadas = pdAtividades.filter(function(a){ return a.finalizada; });
+  if (!finalizadas.length) { erroEl.textContent = 'Adicione e finalize ao menos uma atividade.'; erroEl.style.display = 'block'; return; }
+  const horimetro = (finalizadas[0].horIni || '').trim();
+  if (!horimetro) { erroEl.textContent = 'Informe o horímetro inicial na primeira atividade.'; erroEl.style.display = 'block'; return; }
+  const paradasTodas = finalizadas.reduce(function(lista, a){ return lista.concat(a.paradas || []); }, []);
+  const totais = pdCalcularTotais();
+  const payload = {
+    equipamento: equipamento, data: data, local: local,
+    observacoes: document.getElementById('pd-observacoes').value.trim(),
+    atividades: finalizadas, paradas: paradasTodas, totais: totais
+  };
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  const resultado = await enviarOuEnfileirar('parte-diaria', payload);
+  btn.disabled = false; btn.textContent = 'Salvar parte diária';
+  if (resultado.ok) {
+    okEl.textContent = resultado.online ? '✅ Parte diária salva com sucesso!' : '💾 Sem internet — parte diária salva no tablet e será enviada quando a conexão voltar.';
+    okEl.style.display = 'block';
+    pdResetarTudo();
+    setTimeout(function(){ okEl.style.display = 'none'; }, 6000);
+  } else {
+    erroEl.textContent = resultado.erro;
+    erroEl.style.display = 'block';
+  }
+};
+
+/* =====================================================================
+   ENVIO — tenta na hora; se não der (offline ou erro de rede), guarda na
+   fila local e sincroniza sozinho quando a internet voltar.
+   ===================================================================== */
+async function enviarOuEnfileirar(rota, payload){
+  const sessao = sessaoAtual();
+  if (navigator.onLine) {
+    try {
+      const r = await fetch(API_BASE + '/' + rota, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessao.token },
+        body: JSON.stringify(payload)
+      });
+      if (r.ok) { atualizarBadgePendencias(); return { ok: true, online: true }; }
+      const dados = await r.json().catch(function(){ return {}; });
+      if (r.status === 401) {
+        // sessão expirada — guarda na fila e avisa; será reenviado depois de logar de novo
+        await filaAdicionar({ rota: rota, payload: payload, criadoEm: Date.now() });
+        atualizarBadgePendencias();
+        return { ok: true, online: false };
+      }
+      return { ok: false, erro: dados.erro || 'Não foi possível enviar (erro ' + r.status + ').' };
+    } catch (e) {
+      // falha de rede mesmo com navigator.onLine=true (rede instável) -> enfileira
+      await filaAdicionar({ rota: rota, payload: payload, criadoEm: Date.now() });
+      atualizarBadgePendencias();
+      return { ok: true, online: false };
+    }
+  } else {
+    await filaAdicionar({ rota: rota, payload: payload, criadoEm: Date.now() });
+    atualizarBadgePendencias();
+    return { ok: true, online: false };
+  }
+}
+let sincronizando = false;
+async function processarFila(mostrarToast){
+  if (sincronizando || !navigator.onLine) return;
+  const sessao = sessaoAtual();
+  if (!sessao) return;
+  sincronizando = true;
+  let ultimoErro = null;
+  try {
+    const itens = await filaListar();
+    let enviados = 0, descartados = 0;
+    for (const registro of itens) {
+      try {
+        const r = await fetch(API_BASE + '/' + registro.rota, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessao.token },
+          body: JSON.stringify(registro.payload)
+        });
+        if (r.ok) { await filaRemover(registro.id); enviados++; }
+        else if (r.status === 401) {
+          ultimoErro = 'Sessão expirada — saia do sistema (Sair) e entre de novo pra reenviar o(s) pendente(s).';
+          break; // precisa logar de novo — para e tenta depois
+        } else {
+          // erro de validação — não adianta tentar de novo, mas avisa o que aconteceu
+          const dados = await r.json().catch(function(){ return {}; });
+          ultimoErro = 'Um envio pendente (' + registro.rota + ') foi rejeitado e descartado: ' + (dados.erro || ('erro ' + r.status)) + '.';
+          await filaRemover(registro.id);
+          descartados++;
+        }
+      } catch (e) {
+        ultimoErro = 'Não foi possível falar com o servidor agora (rede instável ou fora do ar). Vai tentar de novo sozinho em instantes.';
+        break; // sem rede/servidor — para e tenta na próxima vez
+      }
+    }
+    if (mostrarToast) {
+      if (enviados > 0) mostrarToastMsg('✅ ' + enviados + ' envio(s) pendente(s) sincronizado(s) com sucesso.' + (descartados ? ' (' + descartados + ' descartado(s) — veja o motivo no próximo toque.)' : ''));
+      else if (ultimoErro) mostrarToastMsg('⚠️ ' + ultimoErro);
+    }
+  } finally {
+    sincronizando = false;
+    atualizarBadgePendencias();
+  }
+}
+async function atualizarBadgePendencias(){
+  const itens = await filaListar().catch(function(){ return []; });
+  const badge = document.getElementById('pendencias-badge');
+  if (itens.length) { badge.style.display = 'inline-flex'; badge.textContent = '⏳ ' + itens.length + ' pendente(s)'; }
+  else { badge.style.display = 'none'; }
+}
+document.getElementById('pendencias-badge').onclick = function(){ processarFila(true); };
+
+function mostrarToastMsg(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 5000);
+}
+
+/* =====================================================================
+   STATUS DE CONEXÃO
+   ===================================================================== */
+function atualizarStatusConexao(){
+  const el = document.getElementById('status-conexao');
+  const txt = document.getElementById('status-conexao-txt');
+  if (navigator.onLine) { el.className = 'status-conexao online'; txt.textContent = 'Online'; }
+  else { el.className = 'status-conexao offline'; txt.textContent = 'Offline'; }
+}
+window.addEventListener('online', function(){ atualizarStatusConexao(); processarFila(true); });
+window.addEventListener('offline', atualizarStatusConexao);
+setInterval(function(){ processarFila(false); }, 45000);
+
+/* =====================================================================
+   ABAS
+   ===================================================================== */
+document.querySelectorAll('.abas button').forEach(function(btn){
+  btn.onclick = function(){
+    document.querySelectorAll('.abas button').forEach(function(b){ b.classList.remove('ativa'); });
+    btn.classList.add('ativa');
+    document.getElementById('aba-checklist').style.display = btn.dataset.aba === 'checklist' ? 'block' : 'none';
+    document.getElementById('aba-partediaria').style.display = btn.dataset.aba === 'partediaria' ? 'block' : 'none';
+  };
+});
+
+/* =====================================================================
+   INICIALIZAÇÃO
+   ===================================================================== */
+async function iniciarApp(){
+  const sessao = sessaoAtual();
+  if (!sessao) return;
+  document.getElementById('tela-login').classList.remove('ativa');
+  document.getElementById('tela-app').classList.add('ativa');
+  document.getElementById('app-titulo-operador').textContent = '👷 ' + sessao.nome;
+  atualizarStatusConexao();
+  await carregarDadosIniciais();
+  preencherSelects();
+  renderizarItensChecklist();
+  pdInicializarTab();
+  atualizarBadgePendencias();
+  processarFila(false);
+}
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
+(function iniciar(){
+  const sessao = sessaoAtual();
+  if (sessao) iniciarApp();
+})();
+</script>
+</body>
+</html>
