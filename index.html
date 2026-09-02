@@ -76,6 +76,18 @@
   .pd-add-btn{width:100%;padding:12px;border:1.5px dashed #8fb99a;border-radius:10px;background:var(--cream);color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;margin-bottom:6px}
   .pd-totais{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0;border-top:1px solid var(--linha);margin-top:8px}
   .pd-totais b{color:var(--tinta)}
+  .pd-status-badge{display:inline-block;font-size:11px;font-weight:800;padding:4px 11px;border-radius:20px;margin-bottom:10px}
+  .pd-status-badge.rodando{background:var(--cream);color:var(--navy)}
+  .pd-status-badge.pausado{background:#fdf3e3;color:#8a6300}
+  .pd-timer{font-size:32px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:.5px;margin-bottom:4px}
+  .pd-timer.pausado{color:#8a6300}
+  .pd-mini-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:6px}
+  .pd-mini-form .campo{flex:1;margin-bottom:0;min-width:140px}
+  .pd-parada-box{border:1.5px dashed var(--at);border-radius:12px;padding:12px;margin-top:12px;background:#fffdf5}
+  .pd-hist-card{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px}
+  .pd-hist-card .pd-hist-topo{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--navy)}
+  .pd-hist-parada{font-size:12px;color:var(--cinza);padding:6px 0;border-top:1px dashed var(--linha);margin-top:6px}
+  .pd-aviso-div{background:#fdf3e3;color:#8a6300;border-radius:9px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none}
   .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--tinta);color:#fff;
     padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:50;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
   .fila-lista{font-size:12px;color:var(--cinza)}
@@ -176,17 +188,16 @@
         </div>
       </div>
       <div class="card">
-        <h2>Atividades</h2>
-        <div id="pd-lista-atividades"></div>
-        <button class="pd-add-btn" id="pd-add-atividade" type="button">+ Adicionar atividade</button>
-      </div>
-      <div class="card">
-        <h2>Paradas</h2>
-        <div id="pd-lista-paradas"></div>
-        <button class="pd-add-btn" id="pd-add-parada" type="button">+ Adicionar parada</button>
+        <h2>Atividade</h2>
+        <div class="pd-aviso-div" id="pd-aviso-horimetro"></div>
+        <div id="pd-area-atividade"></div>
         <div class="pd-totais"><span>Trabalhadas</span><b id="pd-total-trabalhadas">0,00 h</b></div>
         <div class="pd-totais"><span>Paradas</span><b id="pd-total-paradas">0,00 h</b></div>
         <div class="pd-totais"><span>Líquidas</span><b id="pd-total-liquidas">0,00 h</b></div>
+      </div>
+      <div class="card" id="pd-card-historico" style="display:none">
+        <h2>Atividades do dia</h2>
+        <div id="pd-lista-historico"></div>
       </div>
       <div class="card">
         <div class="campo" style="margin:0">
@@ -562,70 +573,115 @@ document.getElementById('chk-enviar').onclick = async function(){
 
 /* =====================================================================
    PARTE DIÁRIA
+   Modelo novo: em vez de digitar horários manualmente, cada atividade e
+   cada parada guardam o instante real (timestamp) em que começaram/
+   terminaram. O "contador" na tela é só a leitura desses timestamps
+   contra o relógio do aparelho — por isso ele funciona mesmo offline e
+   sobrevive a reiniciar o tablet ou trocar de aba/logout: o estado inteiro
+   é salvo no localStorage ('pdEstadoAtual') a cada mudança e recarregado
+   ao abrir o app de novo (iniciarApp -> pdInicializarTab).
    ===================================================================== */
-let pdAtividades = [];
-let pdParadas = [];
-function pdCalcularHoras(ini, fim){
-  if (!ini || !fim) return 0;
-  const p1 = ini.split(':'), p2 = fim.split(':');
-  const h1 = parseInt(p1[0],10), m1 = parseInt(p1[1],10);
-  const h2 = parseInt(p2[0],10), m2 = parseInt(p2[1],10);
-  if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) return 0;
-  let minutos = (h2*60+m2) - (h1*60+m1);
-  if (minutos < 0) minutos += 24*60;
-  return minutos / 60;
-}
+let pdAtividades = []; // cada item: { desc, horIni, horFim, inicioTs, fimTs, finalizada, paradas:[{tipo,horIni,horFim,obs,inicioTs,fimTs}] }
+let pdFormAberto = null; // null | 'nova' | 'parada' | 'finalizarAtividade' | 'finalizarParada'
+let pdIntervaloTick = null;
+
 function pdFormatarHoras(h){ return h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h'; }
-function pdRenderizarAtividades(){
-  const cont = document.getElementById('pd-lista-atividades');
-  if (!pdAtividades.length) { cont.innerHTML = '<div style="font-size:12px;color:var(--cinza);text-align:center;padding:10px">Nenhuma atividade adicionada.</div>'; return; }
-  cont.innerHTML = pdAtividades.map(function(a, i){
-    return '<div class="pd-linha-din"><button type="button" class="apagar" data-apagar-ativ="' + i + '">✕</button>' +
-      '<div class="grid2"><div class="campo" style="margin-bottom:8px"><label>Descrição</label><input type="text" data-ativ="' + i + '" data-campo="desc" value="' + (a.desc||'').replace(/"/g,'&quot;') + '"></div>' +
-      '<div class="campo" style="margin-bottom:8px"><label>Horímetro início</label><input type="text" inputmode="decimal" data-ativ="' + i + '" data-campo="horIni" value="' + (a.horIni||'') + '"></div></div>' +
-      '<div class="grid2"><div class="campo" style="margin-bottom:0"><label>Hora início</label><input type="time" data-ativ="' + i + '" data-campo="de" value="' + (a.de||'') + '"></div>' +
-      '<div class="campo" style="margin-bottom:0"><label>Hora fim</label><input type="time" data-ativ="' + i + '" data-campo="ate" value="' + (a.ate||'') + '"></div></div></div>';
-  }).join('');
-  cont.querySelectorAll('[data-ativ]').forEach(function(inp){
-    inp.oninput = function(){
-      if (inp.dataset.campo === 'horIni') aplicarMascaraHorimetro(inp);
-      pdAtividades[inp.dataset.ativ][inp.dataset.campo] = inp.value;
-      pdAtualizarTotais();
-    };
-  });
-  cont.querySelectorAll('[data-apagar-ativ]').forEach(function(btn){
-    btn.onclick = function(){ pdAtividades.splice(parseInt(btn.dataset.apagarAtiv,10), 1); pdRenderizarAtividades(); pdAtualizarTotais(); };
-  });
+function pdFormatarDuracao(ms){
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
-function pdRenderizarParadas(){
-  const cont = document.getElementById('pd-lista-paradas');
-  const tipos = (dadosIniciais && dadosIniciais.tiposParada) || ['ALMOÇO','REVISÃO PREVENTIVA','MANUTENÇÃO CORRETIVA','PARADA TÉCNICA','EM DISPONIBILIDADE'];
-  if (!pdParadas.length) { cont.innerHTML = '<div style="font-size:12px;color:var(--cinza);text-align:center;padding:10px">Nenhuma parada adicionada.</div>'; return; }
-  cont.innerHTML = pdParadas.map(function(p, i){
-    const opcoesTipo = tipos.map(function(t){ return '<option value="' + t + '" ' + (p.tipo===t?'selected':'') + '>' + t + '</option>'; }).join('');
-    return '<div class="pd-linha-din"><button type="button" class="apagar" data-apagar-par="' + i + '">✕</button>' +
-      '<div class="campo" style="margin-bottom:8px"><label>Tipo</label><select data-par="' + i + '" data-campo="tipo"><option value="">Selecione…</option>' + opcoesTipo + '</select></div>' +
-      '<div class="grid2"><div class="campo" style="margin-bottom:8px"><label>Horímetro início</label><input type="text" inputmode="decimal" data-par="' + i + '" data-campo="horIni" value="' + (p.horIni||'') + '"></div>' +
-      '<div class="campo" style="margin-bottom:8px"><label>Horímetro fim</label><input type="text" inputmode="decimal" data-par="' + i + '" data-campo="horFim" value="' + (p.horFim||'') + '"></div></div>' +
-      '<div class="grid2"><div class="campo" style="margin-bottom:0"><label>Hora início</label><input type="time" data-par="' + i + '" data-campo="ini" value="' + (p.ini||'') + '"></div>' +
-      '<div class="campo" style="margin-bottom:0"><label>Hora fim</label><input type="time" data-par="' + i + '" data-campo="fim" value="' + (p.fim||'') + '"></div></div></div>';
-  }).join('');
-  cont.querySelectorAll('[data-par]').forEach(function(el){
-    const ev = el.tagName === 'SELECT' ? 'onchange' : 'oninput';
-    el[ev] = function(){
-      if (el.dataset.campo === 'horIni' || el.dataset.campo === 'horFim') aplicarMascaraHorimetro(el);
-      pdParadas[el.dataset.par][el.dataset.campo] = el.value;
-      pdAtualizarTotais();
-    };
-  });
-  cont.querySelectorAll('[data-apagar-par]').forEach(function(btn){
-    btn.onclick = function(){ pdParadas.splice(parseInt(btn.dataset.apagarPar,10), 1); pdRenderizarParadas(); pdAtualizarTotais(); };
-  });
+function horimetroFloat(str){ return parseFloat(String(str||'').replace(',', '.')); }
+
+/* ---- estado (persistência local — sobrevive a logout/reload/bateria) ---- */
+function pdSalvarEstado(){
+  try {
+    localStorage.setItem('pdEstadoAtual', JSON.stringify({
+      equipamento: document.getElementById('pd-equipamento').value,
+      local: document.getElementById('pd-local').value,
+      observacoes: document.getElementById('pd-observacoes').value,
+      atividades: pdAtividades
+    }));
+  } catch (e) { /* localStorage indisponível — segue só em memória */ }
 }
+function pdCarregarEstado(){
+  try {
+    const salvo = JSON.parse(localStorage.getItem('pdEstadoAtual') || 'null');
+    if (!salvo) return false;
+    document.getElementById('pd-equipamento').value = salvo.equipamento || '';
+    document.getElementById('pd-local').value = salvo.local || '';
+    document.getElementById('pd-observacoes').value = salvo.observacoes || '';
+    pdAtividades = Array.isArray(salvo.atividades) ? salvo.atividades : [];
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---- helpers de estado da atividade/parada em andamento ---- */
+function pdAtividadeAberta(){
+  const ultima = pdAtividades[pdAtividades.length - 1];
+  return (ultima && !ultima.finalizada) ? ultima : null;
+}
+function pdParadaAberta(a){
+  if (!a || !a.paradas || !a.paradas.length) return null;
+  const ultima = a.paradas[a.paradas.length - 1];
+  return ultima.fimTs ? null : ultima;
+}
+function pdDuracaoParadaMs(p){ return (p.fimTs || Date.now()) - p.inicioTs; }
+function pdParadasMs(a){ return (a.paradas || []).reduce(function(s, p){ return s + pdDuracaoParadaMs(p); }, 0); }
+function pdBrutoMs(a){ return (a.fimTs || Date.now()) - a.inicioTs; }
+/** Tempo líquido (descontando paradas). Enquanto uma parada está aberta, o
+ *  bruto e as paradas crescem no mesmo ritmo (o relógio real), então essa
+ *  conta fica naturalmente CONGELADA — não precisa de nenhum código especial
+ *  pra "pausar" o contador, ele só para de crescer sozinho. */
+function pdLiquidoMs(a){ return Math.max(0, pdBrutoMs(a) - pdParadasMs(a)); }
+
+function pdUltimoHorimetroConhecido(){
+  let ultimo = '';
+  pdAtividades.forEach(function(a){
+    if (a.horIni) ultimo = a.horIni;
+    (a.paradas || []).forEach(function(p){ if (p.horIni) ultimo = p.horIni; if (p.horFim) ultimo = p.horFim; });
+    if (a.horFim) ultimo = a.horFim;
+  });
+  return ultimo;
+}
+
+/** Confere se os horímetros informados fazem sentido em sequência ao longo
+ *  do dia (nunca deveria diminuir). Não bloqueia o salvamento — só avisa,
+ *  igual ao portal_comprex.html, porque pode ser um erro de digitação
+ *  legítimo que o operador quer corrigir depois. */
+function pdVerificarDivergenciaHorimetro(){
+  const alerta = document.getElementById('pd-aviso-horimetro');
+  const avisos = [];
+  const sequencia = [];
+  pdAtividades.forEach(function(a, i){
+    const vIni = horimetroFloat(a.horIni);
+    if (!isNaN(vIni)) sequencia.push({ label: 'Atividade ' + (i+1) + ' (início)', valor: vIni });
+    (a.paradas || []).forEach(function(p, j){
+      const pIni = horimetroFloat(p.horIni), pFim = horimetroFloat(p.horFim);
+      if (!isNaN(pIni)) sequencia.push({ label: 'parada ' + (j+1) + ' da atividade ' + (i+1) + ' (início)', valor: pIni });
+      if (!isNaN(pFim)) sequencia.push({ label: 'parada ' + (j+1) + ' da atividade ' + (i+1) + ' (fim)', valor: pFim });
+    });
+    const vFim = horimetroFloat(a.horFim);
+    if (!isNaN(vFim)) sequencia.push({ label: 'Atividade ' + (i+1) + ' (fim)', valor: vFim });
+  });
+  for (let i = 1; i < sequencia.length; i++){
+    if (sequencia[i].valor < sequencia[i-1].valor) {
+      avisos.push('O horímetro de <b>' + sequencia[i].label + '</b> (' + sequencia[i].valor.toString().replace('.', ',') + ') é menor que o de <b>' + sequencia[i-1].label + '</b> (' + sequencia[i-1].valor.toString().replace('.', ',') + ') — confira se não houve erro de digitação.');
+    }
+  }
+  if (avisos.length) {
+    alerta.innerHTML = '<b>⚠️ Possível divergência no horímetro</b><br>' + avisos.map(function(a){ return '• ' + a; }).join('<br>');
+    alerta.style.display = 'block';
+  } else {
+    alerta.style.display = 'none';
+  }
+}
+
 function pdCalcularTotais(){
-  const trabalhadas = pdAtividades.reduce(function(s,a){ return s + pdCalcularHoras(a.de, a.ate); }, 0);
-  const paradas = pdParadas.reduce(function(s,p){ return s + pdCalcularHoras(p.ini, p.fim); }, 0);
-  return { trabalhadas: trabalhadas, paradas: paradas, liquidas: trabalhadas - paradas };
+  let brutoMs = 0, paradasMs = 0;
+  pdAtividades.forEach(function(a){ brutoMs += pdBrutoMs(a); paradasMs += pdParadasMs(a); });
+  const trabalhadas = brutoMs / 3600000, paradas = paradasMs / 3600000;
+  return { trabalhadas: trabalhadas, paradas: paradas, liquidas: Math.max(0, trabalhadas - paradas) };
 }
 function pdAtualizarTotais(){
   const t = pdCalcularTotais();
@@ -633,22 +689,192 @@ function pdAtualizarTotais(){
   document.getElementById('pd-total-paradas').textContent = pdFormatarHoras(t.paradas);
   document.getElementById('pd-total-liquidas').textContent = pdFormatarHoras(t.liquidas);
 }
-document.getElementById('pd-add-atividade').onclick = function(){
-  pdAtividades.push({ horIni: '', horFim: '', desc: 'OPERAÇÃO', de: '', ate: '' });
-  pdRenderizarAtividades(); pdAtualizarTotais();
-};
-document.getElementById('pd-add-parada').onclick = function(){
-  pdParadas.push({ tipo: '', horIni: '', horFim: '', ini: '', fim: '' });
-  pdRenderizarParadas(); pdAtualizarTotais();
-};
-function limparFormularioParteDiaria(){
+
+/* ---- histórico (atividades já finalizadas no dia) ---- */
+function pdRenderizarHistorico(){
+  const card = document.getElementById('pd-card-historico');
+  const cont = document.getElementById('pd-lista-historico');
+  const finalizadas = pdAtividades.filter(function(a){ return a.finalizada; });
+  if (!finalizadas.length) { card.style.display = 'none'; cont.innerHTML = ''; return; }
+  card.style.display = 'block';
+  cont.innerHTML = finalizadas.map(function(a, i){
+    const liquidas = pdLiquidoMs(a) / 3600000;
+    const paradasHtml = (a.paradas || []).map(function(p){
+      const dur = pdDuracaoParadaMs(p) / 3600000;
+      return '<div class="pd-hist-parada">⏸ ' + (p.tipo || 'Parada') + ' — ' + (p.horIni || '—') + ' → ' + (p.horFim || '—') + ' (' + pdFormatarHoras(dur) + ')' +
+        (p.obs ? '<br><i>' + p.obs.replace(/</g,'&lt;') + '</i>' : '') + '</div>';
+    }).join('');
+    return '<div class="pd-hist-card"><div class="pd-hist-topo"><span>Atividade ' + (i+1) + '</span><span>' + pdFormatarHoras(liquidas) + ' líquidas</span></div>' +
+      '<div style="font-size:12px;color:var(--cinza)">Horímetro: ' + (a.horIni || '—') + ' → ' + (a.horFim || '—') + '</div>' + paradasHtml + '</div>';
+  }).join('');
+}
+
+/* ---- renderização da área principal (atividade em andamento / formulários) ---- */
+function pdRenderizar(){
+  const area = document.getElementById('pd-area-atividade');
+  const aberta = pdAtividadeAberta();
+  let html = '';
+  if (!aberta) {
+    if (pdFormAberto === 'nova') {
+      html += '<div class="pd-mini-form">' +
+        '<div class="campo"><label>Horímetro atual</label><input type="text" inputmode="decimal" id="pd-input-nova-horimetro" placeholder="ex: 1024,5" value="' + pdUltimoHorimetroConhecido() + '"></div>' +
+        '<button type="button" class="btn-secundario" id="pd-btn-cancelar-nova">Cancelar</button>' +
+        '<button type="button" class="btn-primario" style="width:auto" id="pd-btn-confirmar-nova">Iniciar</button></div>';
+    } else {
+      html += '<button class="pd-add-btn" type="button" id="pd-btn-nova-atividade">+ Iniciar atividade</button>';
+    }
+  } else {
+    const parada = pdParadaAberta(aberta);
+    const pausado = !!parada;
+    html += '<div class="pd-status-badge ' + (pausado ? 'pausado' : 'rodando') + '">' + (pausado ? '⏸ Atividade pausada' : '▶ Atividade em andamento') + '</div>';
+    html += '<div class="pd-timer' + (pausado ? ' pausado' : '') + '" id="pd-timer-atividade">' + pdFormatarDuracao(pdLiquidoMs(aberta)) + '</div>';
+    html += '<div style="font-size:12px;color:var(--cinza);margin-bottom:12px">Horímetro início: <b>' + (aberta.horIni || '—') + '</b></div>';
+    if (!pausado) {
+      if (pdFormAberto === 'parada') {
+        const tipos = (dadosIniciais && dadosIniciais.tiposParada) || ['ALMOÇO','REVISÃO PREVENTIVA','MANUTENÇÃO CORRETIVA','PARADA TÉCNICA','EM DISPONIBILIDADE'];
+        html += '<div class="pd-parada-box">' +
+          '<div class="campo"><label>Tipo de parada</label><select id="pd-input-parada-tipo"><option value="">Selecione…</option>' +
+          tipos.map(function(t){ return '<option value="' + t + '">' + t + '</option>'; }).join('') + '</select></div>' +
+          '<div class="campo"><label>Horímetro atual</label><input type="text" inputmode="decimal" id="pd-input-parada-horimetro" placeholder="ex: 1024,5" value="' + (aberta.horIni || '') + '"></div>' +
+          '<div style="display:flex;gap:10px"><button type="button" class="btn-secundario" style="flex:1" id="pd-btn-cancelar-parada">Cancelar</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-confirmar-parada">Iniciar parada</button></div></div>';
+      } else if (pdFormAberto === 'finalizarAtividade') {
+        html += '<div class="pd-parada-box">' +
+          '<div class="campo"><label>Horímetro final</label><input type="text" inputmode="decimal" id="pd-input-final-horimetro" placeholder="ex: 1024,5"></div>' +
+          '<div style="display:flex;gap:10px"><button type="button" class="btn-secundario" style="flex:1" id="pd-btn-cancelar-final">Cancelar</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-confirmar-final">Finalizar atividade</button></div></div>';
+      } else {
+        html += '<div style="display:flex;gap:10px">' +
+          '<button type="button" class="btn-secundario" style="flex:1" id="pd-btn-nova-parada">+ Adicionar parada</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-abrir-finalizar">Finalizar atividade</button></div>';
+      }
+    } else {
+      html += '<div class="pd-parada-box">' +
+        '<div class="pd-status-badge pausado">⏸ Parada em andamento' + (parada.tipo ? ' — ' + parada.tipo : '') + '</div>' +
+        '<div class="pd-timer pausado" id="pd-timer-parada">' + pdFormatarDuracao(Date.now() - parada.inicioTs) + '</div>' +
+        '<div class="campo" style="margin:8px 0"><label>Observação (opcional)</label><textarea id="pd-input-parada-obs" style="min-height:44px" placeholder="ex: parada pra almoço">' + (parada.obs || '') + '</textarea></div>';
+      if (pdFormAberto === 'finalizarParada') {
+        html += '<div class="campo"><label>Horímetro atual</label><input type="text" inputmode="decimal" id="pd-input-parada-fim-horimetro" placeholder="ex: 1024,5"></div>' +
+          '<div style="display:flex;gap:10px"><button type="button" class="btn-secundario" style="flex:1" id="pd-btn-cancelar-fim-parada">Cancelar</button>' +
+          '<button type="button" class="btn-primario" style="flex:1" id="pd-btn-confirmar-fim-parada">Finalizar parada</button></div>';
+      } else {
+        html += '<button type="button" class="btn-primario" id="pd-btn-abrir-finalizar-parada">Finalizar parada</button>';
+      }
+      html += '</div>';
+    }
+  }
+  area.innerHTML = html;
+  pdLigarEventosArea();
+  pdRenderizarHistorico();
+  pdAtualizarTotais();
+  pdVerificarDivergenciaHorimetro();
+}
+
+function pdLigarEventosArea(){
+  const aberta = pdAtividadeAberta();
+  ['pd-input-nova-horimetro','pd-input-parada-horimetro','pd-input-final-horimetro','pd-input-parada-fim-horimetro'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', function(){ aplicarMascaraHorimetro(el); });
+  });
+  const btnNova = document.getElementById('pd-btn-nova-atividade');
+  if (btnNova) btnNova.onclick = function(){ pdFormAberto = 'nova'; pdRenderizar(); };
+  const btnCancelarNova = document.getElementById('pd-btn-cancelar-nova');
+  if (btnCancelarNova) btnCancelarNova.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+  const btnConfirmarNova = document.getElementById('pd-btn-confirmar-nova');
+  if (btnConfirmarNova) btnConfirmarNova.onclick = function(){
+    const campo = document.getElementById('pd-input-nova-horimetro');
+    const valor = campo.value.trim();
+    if (!valor) { campo.focus(); return; }
+    pdAtividades.push({ desc: 'OPERAÇÃO', horIni: valor, horFim: '', inicioTs: Date.now(), fimTs: null, finalizada: false, paradas: [] });
+    pdFormAberto = null;
+    pdSalvarEstado(); pdRenderizar();
+  };
+  if (!aberta) return;
+  const parada = pdParadaAberta(aberta);
+  if (!parada) {
+    const btnNovaParada = document.getElementById('pd-btn-nova-parada');
+    if (btnNovaParada) btnNovaParada.onclick = function(){ pdFormAberto = 'parada'; pdRenderizar(); };
+    const btnAbrirFinal = document.getElementById('pd-btn-abrir-finalizar');
+    if (btnAbrirFinal) btnAbrirFinal.onclick = function(){ pdFormAberto = 'finalizarAtividade'; pdRenderizar(); };
+    const btnCancelarParada = document.getElementById('pd-btn-cancelar-parada');
+    if (btnCancelarParada) btnCancelarParada.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+    const btnConfirmarParada = document.getElementById('pd-btn-confirmar-parada');
+    if (btnConfirmarParada) btnConfirmarParada.onclick = function(){
+      const tipoEl = document.getElementById('pd-input-parada-tipo');
+      const campoH = document.getElementById('pd-input-parada-horimetro');
+      if (!tipoEl.value) { tipoEl.focus(); return; }
+      if (!campoH.value.trim()) { campoH.focus(); return; }
+      aberta.paradas = aberta.paradas || [];
+      aberta.paradas.push({ tipo: tipoEl.value, horIni: campoH.value.trim(), horFim: '', obs: '', inicioTs: Date.now(), fimTs: null });
+      pdFormAberto = null;
+      pdSalvarEstado(); pdRenderizar();
+    };
+    const btnCancelarFinal = document.getElementById('pd-btn-cancelar-final');
+    if (btnCancelarFinal) btnCancelarFinal.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+    const btnConfirmarFinal = document.getElementById('pd-btn-confirmar-final');
+    if (btnConfirmarFinal) btnConfirmarFinal.onclick = function(){
+      const campoH = document.getElementById('pd-input-final-horimetro');
+      if (!campoH.value.trim()) { campoH.focus(); return; }
+      aberta.horFim = campoH.value.trim();
+      aberta.fimTs = Date.now();
+      aberta.finalizada = true;
+      pdFormAberto = null;
+      pdSalvarEstado(); pdRenderizar();
+    };
+  } else {
+    const obsEl = document.getElementById('pd-input-parada-obs');
+    if (obsEl) obsEl.oninput = function(){ parada.obs = obsEl.value; pdSalvarEstado(); };
+    const btnAbrirFinalParada = document.getElementById('pd-btn-abrir-finalizar-parada');
+    if (btnAbrirFinalParada) btnAbrirFinalParada.onclick = function(){ pdFormAberto = 'finalizarParada'; pdRenderizar(); };
+    const btnCancelarFimParada = document.getElementById('pd-btn-cancelar-fim-parada');
+    if (btnCancelarFimParada) btnCancelarFimParada.onclick = function(){ pdFormAberto = null; pdRenderizar(); };
+    const btnConfirmarFimParada = document.getElementById('pd-btn-confirmar-fim-parada');
+    if (btnConfirmarFimParada) btnConfirmarFimParada.onclick = function(){
+      const campoH = document.getElementById('pd-input-parada-fim-horimetro');
+      if (!campoH.value.trim()) { campoH.focus(); return; }
+      parada.horFim = campoH.value.trim();
+      parada.fimTs = Date.now();
+      pdFormAberto = null;
+      pdSalvarEstado(); pdRenderizar();
+    };
+  }
+}
+
+/* ---- contador ao vivo: só atualiza o texto do timer, sem re-renderizar
+   tudo (pra não perder foco/cursor de quem estiver digitando a observação
+   da parada). Funciona offline e sobrevive a app fechado porque recalcula
+   sempre a partir dos timestamps salvos, nunca soma "tick a tick". ---- */
+function pdTick(){
+  const aberta = pdAtividadeAberta();
+  if (!aberta) return;
+  const elA = document.getElementById('pd-timer-atividade');
+  if (elA) elA.textContent = pdFormatarDuracao(pdLiquidoMs(aberta));
+  const parada = pdParadaAberta(aberta);
+  if (parada) {
+    const elP = document.getElementById('pd-timer-parada');
+    if (elP) elP.textContent = pdFormatarDuracao(Date.now() - parada.inicioTs);
+  }
+  pdAtualizarTotais();
+}
+if (pdIntervaloTick) clearInterval(pdIntervaloTick);
+pdIntervaloTick = setInterval(pdTick, 1000);
+
+function pdResetarTudo(){
   document.getElementById('pd-equipamento').value = '';
   const hoje = new Date();
   document.getElementById('pd-data').value = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
   document.getElementById('pd-local').value = '';
   document.getElementById('pd-observacoes').value = '';
-  pdAtividades = []; pdParadas = [];
-  pdRenderizarAtividades(); pdRenderizarParadas(); pdAtualizarTotais();
+  pdAtividades = [];
+  pdFormAberto = null;
+  localStorage.removeItem('pdEstadoAtual');
+  pdRenderizar();
+}
+function pdInicializarTab(){
+  const hoje = new Date();
+  document.getElementById('pd-data').value = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
+  if (!pdCarregarEstado()) pdAtividades = [];
+  pdRenderizar();
 }
 document.getElementById('pd-enviar').onclick = async function(){
   const erroEl = document.getElementById('pd-erro');
@@ -658,14 +884,17 @@ document.getElementById('pd-enviar').onclick = async function(){
   const data = document.getElementById('pd-data').value;
   const local = document.getElementById('pd-local').value;
   if (!equipamento || !data || !local) { erroEl.textContent = 'Preencha equipamento, data e local.'; erroEl.style.display = 'block'; return; }
-  if (!pdAtividades.length && !pdParadas.length) { erroEl.textContent = 'Adicione ao menos uma atividade ou uma parada.'; erroEl.style.display = 'block'; return; }
-  const horimetro = pdAtividades.length ? (pdAtividades[0].horIni || '').trim() : '';
+  if (pdAtividadeAberta()) { erroEl.textContent = 'Finalize a atividade em andamento antes de salvar.'; erroEl.style.display = 'block'; return; }
+  const finalizadas = pdAtividades.filter(function(a){ return a.finalizada; });
+  if (!finalizadas.length) { erroEl.textContent = 'Adicione e finalize ao menos uma atividade.'; erroEl.style.display = 'block'; return; }
+  const horimetro = (finalizadas[0].horIni || '').trim();
   if (!horimetro) { erroEl.textContent = 'Informe o horímetro inicial na primeira atividade.'; erroEl.style.display = 'block'; return; }
+  const paradasTodas = finalizadas.reduce(function(lista, a){ return lista.concat(a.paradas || []); }, []);
   const totais = pdCalcularTotais();
   const payload = {
     equipamento: equipamento, data: data, local: local,
     observacoes: document.getElementById('pd-observacoes').value.trim(),
-    atividades: pdAtividades, paradas: pdParadas, totais: totais
+    atividades: finalizadas, paradas: paradasTodas, totais: totais
   };
   const btn = this;
   btn.disabled = true; btn.textContent = 'Salvando…';
@@ -674,7 +903,7 @@ document.getElementById('pd-enviar').onclick = async function(){
   if (resultado.ok) {
     okEl.textContent = resultado.online ? '✅ Parte diária salva com sucesso!' : '💾 Sem internet — parte diária salva no tablet e será enviada quando a conexão voltar.';
     okEl.style.display = 'block';
-    limparFormularioParteDiaria();
+    pdResetarTudo();
     setTimeout(function(){ okEl.style.display = 'none'; }, 6000);
   } else {
     erroEl.textContent = resultado.erro;
@@ -795,7 +1024,7 @@ async function iniciarApp(){
   await carregarDadosIniciais();
   preencherSelects();
   renderizarItensChecklist();
-  limparFormularioParteDiaria();
+  pdInicializarTab();
   atualizarBadgePendencias();
   processarFila(false);
 }
