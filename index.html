@@ -311,6 +311,7 @@ document.getElementById('login-btn').onclick = async function(){
 document.getElementById('btn-sair').onclick = function(){
   if (!confirm('Sair? Envios ainda não sincronizados continuam guardados neste tablet.')) return;
   limparSessao();
+  pararPing();
   document.getElementById('tela-app').classList.remove('ativa');
   document.getElementById('tela-login').classList.add('ativa');
 };
@@ -660,6 +661,21 @@ function pdUltimoHorimetroConhecido(){
  *  do dia (nunca deveria diminuir). Não bloqueia o salvamento — só avisa,
  *  igual ao portal_comprex.html, porque pode ser um erro de digitação
  *  legítimo que o operador quer corrigir depois. */
+/** Diferença máxima tolerada (em horas) entre o quanto o horímetro avançou
+ *  num trecho e o tempo real que esse trecho durou (medido pelo relógio do
+ *  tablet). Passar disso só avisa — não bloqueia — porque motor em marcha
+ *  lenta/rotação variável faz o horímetro andar num ritmo levemente
+ *  diferente do relógio, então uma pequena folga é normal. */
+const LIMITE_DIVERGENCIA_HORIMETRO_HORAS = 1;
+function pdChecarDivergenciaSegmento(avisos, label, horIniStr, horFimStr, horasReais){
+  const hi = horimetroFloat(horIniStr), hf = horimetroFloat(horFimStr);
+  if (isNaN(hi) || isNaN(hf) || horasReais == null || isNaN(horasReais)) return;
+  const horasHorimetro = hf - hi;
+  const diff = Math.abs(horasHorimetro - horasReais);
+  if (diff > LIMITE_DIVERGENCIA_HORIMETRO_HORAS) {
+    avisos.push('Em <b>' + label + '</b>, o horímetro avançou ' + horasHorimetro.toFixed(2).replace('.', ',') + 'h, mas o tempo real registrado foi ' + horasReais.toFixed(2).replace('.', ',') + 'h (diferença de ' + diff.toFixed(2).replace('.', ',') + 'h) — confira se o horímetro foi digitado certo.');
+  }
+}
 function pdVerificarDivergenciaHorimetro(){
   const alerta = document.getElementById('pd-aviso-horimetro');
   const avisos = [];
@@ -671,9 +687,11 @@ function pdVerificarDivergenciaHorimetro(){
       const pIni = horimetroFloat(p.horIni), pFim = horimetroFloat(p.horFim);
       if (!isNaN(pIni)) sequencia.push({ label: 'parada ' + (j+1) + ' da atividade ' + (i+1) + ' (início)', valor: pIni });
       if (!isNaN(pFim)) sequencia.push({ label: 'parada ' + (j+1) + ' da atividade ' + (i+1) + ' (fim)', valor: pFim });
+      if (p.fimTs) pdChecarDivergenciaSegmento(avisos, 'parada ' + (j+1) + ' da atividade ' + (i+1), p.horIni, p.horFim, (p.fimTs - p.inicioTs) / 3600000);
     });
     const vFim = horimetroFloat(a.horFim);
     if (!isNaN(vFim)) sequencia.push({ label: 'Atividade ' + (i+1) + ' (fim)', valor: vFim });
+    if (a.fimTs) pdChecarDivergenciaSegmento(avisos, 'Atividade ' + (i+1), a.horIni, a.horFim, (a.fimTs - a.inicioTs) / 3600000);
   });
   for (let i = 1; i < sequencia.length; i++){
     if (sequencia[i].valor < sequencia[i-1].valor) {
@@ -1062,6 +1080,29 @@ window.addEventListener('offline', atualizarStatusConexao);
 setInterval(function(){ processarFila(false); }, 45000);
 
 /* =====================================================================
+   "PING" DE PRESENÇA — avisa o backend a cada ~60s que esse operador
+   ainda está com o app aberto, só pra aparecer como "online agora" no
+   painel de Login Tablet do Portal Comprex. Não faz nada se estiver
+   offline (o próprio backend nem saberia).
+   ===================================================================== */
+let intervaloPing = null;
+async function enviarPing(){
+  const sessao = sessaoAtual();
+  if (!sessao || !navigator.onLine) return;
+  try {
+    await fetch(API_BASE + '/ping', { headers: { Authorization: 'Bearer ' + sessao.token } });
+  } catch (e) { /* sem rede agora — tenta de novo no próximo ping */ }
+}
+function iniciarPing(){
+  if (intervaloPing) return;
+  enviarPing();
+  intervaloPing = setInterval(enviarPing, 60000);
+}
+function pararPing(){
+  if (intervaloPing) { clearInterval(intervaloPing); intervaloPing = null; }
+}
+
+/* =====================================================================
    ABAS
    ===================================================================== */
 document.querySelectorAll('.abas button').forEach(function(btn){
@@ -1089,6 +1130,7 @@ async function iniciarApp(){
   pdInicializarTab();
   atualizarBadgePendencias();
   processarFila(false);
+  iniciarPing();
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
