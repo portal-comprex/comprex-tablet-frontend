@@ -46,6 +46,21 @@
   .abas{display:flex;background:#fff;border-bottom:1px solid var(--linha);position:sticky;top:56px;z-index:19}
   .abas button{flex:1;padding:14px;border:none;background:none;font-size:13.5px;font-weight:700;color:var(--cinza);cursor:pointer;border-bottom:3px solid transparent}
   .abas button.ativa{color:var(--navy);border-bottom-color:var(--navy)}
+  .ctrl-aviso-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .ctrl-aviso{background:var(--cream);border:1px solid #cfe8d2;border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--tinta);line-height:1.5;flex:1;margin-bottom:0}
+  .ctrl-aviso a{color:var(--navy);font-weight:700}
+  .ctrl-voltar-btn{background:none;border:1.5px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:700;
+    padding:9px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
+  .ctrl-voltar-btn:active{background:var(--cream)}
+  .ctrl-iframe-wrap{border:1px solid var(--linha);border-radius:14px;overflow:hidden;background:#fff;height:calc(100vh - 210px);min-height:380px}
+  #ctrl-iframe{width:100%;height:100%;border:none;display:block}
+  /* ---- Controladoria em tela cheia: some com o cabeçalho e as abas, o
+     iframe ocupa a tela toda do tablet, como se fosse um app à parte. ---- */
+  body.controladoria-cheia #tela-app header{display:none}
+  body.controladoria-cheia .abas{display:none}
+  body.controladoria-cheia #aba-controladoria{position:fixed;inset:0;z-index:500;background:var(--fundo);
+    padding:12px;display:flex;flex-direction:column}
+  body.controladoria-cheia #aba-controladoria .ctrl-iframe-wrap{flex:1;height:auto;min-height:0}
   main{max-width:640px;margin:0 auto;padding:18px 16px 60px}
   .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px;margin-bottom:16px}
   .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);margin:0 0 14px}
@@ -126,6 +141,7 @@
   <div class="abas">
     <button class="ativa" data-aba="checklist">✅ Checklist</button>
     <button data-aba="partediaria">📋 Parte Diária</button>
+    <button data-aba="controladoria">🧮 Controladoria</button>
   </div>
   <main>
     <!-- -------- CHECKLIST -------- -->
@@ -211,6 +227,16 @@
       <button class="btn-primario" id="pd-enviar">Salvar parte diária</button>
       <div class="erro-msg" id="pd-erro"></div>
       <div class="ok-msg" id="pd-ok"></div>
+    </div>
+    <!-- -------- CONTROLADORIA (sistema externo embutido) -------- -->
+    <div id="aba-controladoria" style="display:none">
+      <div class="ctrl-aviso-row">
+        <div class="ctrl-aviso">🔒 Esse é outro sistema, com login próprio (diferente do login do tablet). Se pedir usuário e senha, use os dados desse sistema, não os do Portal Comprex.</div>
+        <button type="button" class="ctrl-voltar-btn" id="ctrl-voltar-btn">← Voltar</button>
+      </div>
+      <div class="ctrl-iframe-wrap">
+        <iframe id="ctrl-iframe" src="about:blank" title="Sistema de Controladoria" loading="lazy"></iframe>
+      </div>
     </div>
   </main>
 </div>
@@ -1111,8 +1137,22 @@ document.querySelectorAll('.abas button').forEach(function(btn){
     btn.classList.add('ativa');
     document.getElementById('aba-checklist').style.display = btn.dataset.aba === 'checklist' ? 'block' : 'none';
     document.getElementById('aba-partediaria').style.display = btn.dataset.aba === 'partediaria' ? 'block' : 'none';
+    document.getElementById('aba-controladoria').style.display = btn.dataset.aba === 'controladoria' ? 'block' : 'none';
+    document.body.classList.toggle('controladoria-cheia', btn.dataset.aba === 'controladoria');
+    if (btn.dataset.aba === 'controladoria') carregarControladoria();
   };
 });
+/** Só carrega o iframe na primeira vez que o operador abre essa aba —
+ *  assim não gasta dado/carregamento à toa pra quem nunca usa. */
+function carregarControladoria(){
+  const iframe = document.getElementById('ctrl-iframe');
+  if (iframe && iframe.getAttribute('src') === 'about:blank') {
+    iframe.src = 'https://sys-poc.vercel.app/';
+  }
+}
+document.getElementById('ctrl-voltar-btn').onclick = function(){
+  document.querySelector('.abas button[data-aba="checklist"]').click();
+};
 
 /* =====================================================================
    INICIALIZAÇÃO
