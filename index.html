@@ -1137,7 +1137,10 @@ document.querySelectorAll('.abas button').forEach(function(btn){
     btn.classList.add('ativa');
     document.getElementById('aba-checklist').style.display = btn.dataset.aba === 'checklist' ? 'block' : 'none';
     document.getElementById('aba-partediaria').style.display = btn.dataset.aba === 'partediaria' ? 'block' : 'none';
-    document.getElementById('aba-controladoria').style.display = btn.dataset.aba === 'controladoria' ? 'block' : 'none';
+    // Quando ativa, limpa o style inline (deixa a regra CSS de tela cheia
+    // aplicar o "display:flex" — se fosse 'block' aqui, o inline style
+    // ganharia da regra do CSS e o iframe não esticaria direito).
+    document.getElementById('aba-controladoria').style.display = btn.dataset.aba === 'controladoria' ? '' : 'none';
     document.body.classList.toggle('controladoria-cheia', btn.dataset.aba === 'controladoria');
     if (btn.dataset.aba === 'controladoria') carregarControladoria();
   };
