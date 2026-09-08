@@ -46,21 +46,25 @@
   .abas{display:flex;background:#fff;border-bottom:1px solid var(--linha);position:sticky;top:56px;z-index:19}
   .abas button{flex:1;padding:14px;border:none;background:none;font-size:13.5px;font-weight:700;color:var(--cinza);cursor:pointer;border-bottom:3px solid transparent}
   .abas button.ativa{color:var(--navy);border-bottom-color:var(--navy)}
-  .ctrl-aviso-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-  .ctrl-aviso{background:var(--cream);border:1px solid #cfe8d2;border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--tinta);line-height:1.5;flex:1;margin-bottom:0}
-  .ctrl-aviso a{color:var(--navy);font-weight:700}
-  .ctrl-voltar-btn{background:none;border:1.5px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:700;
+  .apr-aviso-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .apr-titulo{flex:1;font-size:14px;font-weight:800;color:var(--navy)}
+  /* Recado que aparece no lugar da tela quando o operador não consegue lançar
+     agora (sem cadastro no sistema de apropriação, sem internet, etc.). */
+  .apr-bloqueio{background:#fdf3e3;border:1px solid #f0dcb4;border-radius:12px;padding:18px 16px;
+    font-size:13px;color:#8a6300;line-height:1.55}
+  .apr-bloqueio b{display:block;font-size:14px;color:#6b4d00;margin-bottom:6px}
+  .apr-voltar-btn{background:none;border:1.5px solid var(--linha);color:var(--tinta);font-size:12.5px;font-weight:700;
     padding:9px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
-  .ctrl-voltar-btn:active{background:var(--cream)}
-  .ctrl-iframe-wrap{border:1px solid var(--linha);border-radius:14px;overflow:hidden;background:#fff;height:calc(100vh - 210px);min-height:380px}
-  #ctrl-iframe{width:100%;height:100%;border:none;display:block}
-  /* ---- Controladoria em tela cheia: some com o cabeçalho e as abas, o
+  .apr-voltar-btn:active{background:var(--cream)}
+  .apr-iframe-wrap{border:1px solid var(--linha);border-radius:14px;overflow:hidden;background:#fff;height:calc(100vh - 210px);min-height:380px}
+  #apr-iframe{width:100%;height:100%;border:none;display:block}
+  /* ---- Apropriação em tela cheia: some com o cabeçalho e as abas, o
      iframe ocupa a tela toda do tablet, como se fosse um app à parte. ---- */
-  body.controladoria-cheia #tela-app header{display:none}
-  body.controladoria-cheia .abas{display:none}
-  body.controladoria-cheia #aba-controladoria{position:fixed;inset:0;z-index:500;background:var(--fundo);
+  body.apropriacao-cheia #tela-app header{display:none}
+  body.apropriacao-cheia .abas{display:none}
+  body.apropriacao-cheia #aba-apropriacao{position:fixed;inset:0;z-index:500;background:var(--fundo);
     padding:12px;display:flex;flex-direction:column}
-  body.controladoria-cheia #aba-controladoria .ctrl-iframe-wrap{flex:1;height:auto;min-height:0}
+  body.apropriacao-cheia #aba-apropriacao .apr-iframe-wrap{flex:1;height:auto;min-height:0}
   main{max-width:640px;margin:0 auto;padding:18px 16px 60px}
   .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px;margin-bottom:16px}
   .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);margin:0 0 14px}
@@ -140,7 +144,7 @@
   </header>
   <div class="abas">
     <button class="ativa" data-aba="checklist">✅ Checklist</button>
-    <button data-aba="controladoria">🧮 Controladoria</button>
+    <button data-aba="apropriacao">🧮 Apropriação</button>
     <button data-aba="partediaria">📋 TESTE</button>
   </div>
   <main>
@@ -228,20 +232,30 @@
       <div class="erro-msg" id="pd-erro"></div>
       <div class="ok-msg" id="pd-ok"></div>
     </div>
-    <!-- -------- CONTROLADORIA (sistema externo embutido) -------- -->
-    <div id="aba-controladoria" style="display:none">
-      <div class="ctrl-aviso-row">
-        <div class="ctrl-aviso">🔒 Esse é outro sistema, com login próprio (diferente do login do tablet). Se pedir usuário e senha, use os dados desse sistema, não os do Portal Comprex.</div>
-        <button type="button" class="ctrl-voltar-btn" id="ctrl-voltar-btn">← Voltar</button>
+    <!-- -------- APROPRIAÇÃO --------
+         Tela de lançamento do sistema de controladoria, servida do nosso
+         próprio site (apropriacao.html) e já autenticada pelo login do tablet.
+         O operador não vê menu nem segundo login. -->
+    <div id="aba-apropriacao" style="display:none">
+      <div class="apr-aviso-row">
+        <div class="apr-titulo">Lançar apropriação</div>
+        <button type="button" class="apr-voltar-btn" id="apr-voltar-btn">← Voltar</button>
       </div>
-      <div class="ctrl-iframe-wrap">
-        <iframe id="ctrl-iframe" src="about:blank" title="Sistema de Controladoria" loading="lazy"></iframe>
+      <div class="apr-bloqueio" id="apr-bloqueio" style="display:none"></div>
+      <div class="apr-iframe-wrap" id="apr-iframe-wrap">
+        <iframe id="apr-iframe" src="about:blank" title="Lançar apropriação" loading="lazy"></iframe>
       </div>
     </div>
   </main>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Cliente do Supabase — usado só para abrir a sessão do sistema de
+     apropriação em segundo plano, com a mesma senha que o operador já digitou
+     aqui. É a mesma biblioteca (e a mesma versão) que o sistema de
+     controladoria usa, para as duas páginas compartilharem a sessão. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <script>
 "use strict";
@@ -250,6 +264,100 @@
    depois do deploy (ver DEPLOY.md). Ex.: 'https://comprex-tablet-api.onrender.com/api'
    ===================================================================== */
 const API_BASE = 'https://comprex-tablet-backend.onrender.com/api';
+
+/* =====================================================================
+   PONTE COM O SISTEMA DE APROPRIAÇÃO (SISPOC / Supabase)
+   ---------------------------------------------------------------------
+   A tela de lançar apropriação (apropriacao.html) é uma cópia do sistema de
+   controladoria servida do NOSSO site, e por isso divide o mesmo armazenamento
+   do navegador que esta página. Aproveitando isso: assim que o operador entra
+   aqui, abrimos também a sessão dele no Supabase, usando o MESMO usuário e a
+   MESMA senha que ele acabou de digitar. Quando a outra tela carregar, ela
+   encontra essa sessão pronta e vai direto pro lançamento — sem segundo login.
+
+   Nenhuma senha é guardada em lugar nenhum: ela é usada na hora e descartada.
+   Para isso funcionar, cada operador precisa existir NOS DOIS sistemas com o
+   mesmo usuário e a mesma senha (ex.: kione aqui = kione@sispoc.local lá).
+   ===================================================================== */
+const SUPABASE_URL = 'https://klpgnaefqhsjbreiqjwe.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_gDdp4YFLFyggngUronBBsQ_7IawVcmO';
+const SISPOC_DOMINIO = '@sispoc.local';
+
+let clienteSupabase = null;
+function obterSupabase(){
+  if (clienteSupabase) return clienteSupabase;
+  if (!window.supabase) return null; // CDN não carregou (primeiro acesso offline)
+  clienteSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  return clienteSupabase;
+}
+
+/* 'ok' | 'sem-conta' | 'sem-rede' | 'expirada' */
+let statusApropriacao = 'expirada';
+let loginApropriacaoEmAndamento = null;
+function lembrarStatusApropriacao(valor){
+  statusApropriacao = valor;
+  try { localStorage.setItem('statusApropriacao', valor); } catch(e){}
+}
+
+/** Entra no Supabase com a credencial que o operador digitou no login daqui.
+ *  Sempre encerra a sessão anterior ANTES de tentar: o tablet fica no
+ *  equipamento e troca de mão várias vezes por dia — se a entrada do operador
+ *  novo falhasse e a sessão do anterior continuasse aberta, o lançamento sairia
+ *  no nome da pessoa errada. */
+async function entrarNoSistemaApropriacao(usuario, senha){
+  const sb = obterSupabase();
+  try { localStorage.removeItem('perfil_v1'); } catch(e){}
+  if (!sb) { lembrarStatusApropriacao('sem-rede'); return; }
+  try { await sb.auth.signOut({ scope: 'local' }); } catch(e){}
+  const email = usuario.indexOf('@') > -1 ? usuario.toLowerCase() : usuario.toLowerCase() + SISPOC_DOMINIO;
+  try {
+    const r = await sb.auth.signInWithPassword({ email: email, password: senha });
+    if (r.error) { lembrarStatusApropriacao('sem-conta'); return; }
+    // O sistema de apropriação lê esse valor pra saber que é perfil de campo e
+    // abrir direto na tela de lançamento.
+    try { localStorage.setItem('perfil_v1', 'campo'); } catch(e){}
+    lembrarStatusApropriacao('ok');
+  } catch (e) {
+    lembrarStatusApropriacao('sem-rede');
+  }
+}
+
+/** Fecha a sessão do sistema de apropriação junto com a saída do tablet.
+ *  Não mexe em 'operador_ordem_atual': essa é a ordem/obra deste tablet, que
+ *  vale pro equipamento e não pra pessoa — ela deve continuar valendo pro
+ *  próximo operador que entrar. */
+async function sairDoSistemaApropriacao(){
+  const sb = obterSupabase();
+  try { if (sb) await sb.auth.signOut({ scope: 'local' }); } catch(e){}
+  try { localStorage.removeItem('perfil_v1'); } catch(e){}
+  lembrarStatusApropriacao('expirada');
+  resetarTelaApropriacao();
+}
+
+/** Confere se a sessão do Supabase ainda está de pé — usado quando o app
+ *  reabre já logado (aí a senha não passou por aqui, mas a sessão pode ter
+ *  sobrevivido no navegador). */
+async function conferirSessaoApropriacao(){
+  const sb = obterSupabase();
+  if (!sb) { statusApropriacao = 'sem-rede'; return; }
+  try {
+    const r = await sb.auth.getSession();
+    const temSessao = !!(r && r.data && r.data.session);
+    if (temSessao) { lembrarStatusApropriacao('ok'); return; }
+    let anterior = null;
+    try { anterior = localStorage.getItem('statusApropriacao'); } catch(e){}
+    statusApropriacao = anterior === 'sem-conta' ? 'sem-conta' : 'expirada';
+  } catch (e) {
+    statusApropriacao = 'sem-rede';
+  }
+}
+
+/** Descarrega a tela embutida, pra próxima abertura vir do zero com a sessão
+ *  de quem estiver logado agora. */
+function resetarTelaApropriacao(){
+  const iframe = document.getElementById('apr-iframe');
+  if (iframe) iframe.src = 'about:blank';
+}
 
 /* =====================================================================
    BANCO LOCAL (IndexedDB) — fila de envios pendentes, funciona offline.
@@ -325,6 +433,12 @@ document.getElementById('login-btn').onclick = async function(){
     const dados = await r.json();
     if (!r.ok) throw new Error(dados.erro || 'Usuário ou senha inválidos.');
     salvarSessao({ token: dados.token, nome: dados.nome, logadoEm: Date.now() });
+    // Abre a sessão do sistema de apropriação em paralelo, com a mesma senha.
+    // De propósito NÃO esperamos aqui: o checklist precisa funcionar mesmo com
+    // o outro sistema fora do ar. Quem espera essa promessa é a aba de
+    // Apropriação, e só na hora em que o operador abrir ela.
+    resetarTelaApropriacao();
+    loginApropriacaoEmAndamento = entrarNoSistemaApropriacao(usuario, senha);
     document.getElementById('login-senha').value = '';
     await iniciarApp();
   } catch (err) {
@@ -337,6 +451,7 @@ document.getElementById('login-btn').onclick = async function(){
 document.getElementById('btn-sair').onclick = function(){
   if (!confirm('Sair? Envios ainda não sincronizados continuam guardados neste tablet.')) return;
   limparSessao();
+  sairDoSistemaApropriacao();
   pararPing();
   document.getElementById('tela-app').classList.remove('ativa');
   document.getElementById('tela-login').classList.add('ativa');
@@ -1140,20 +1255,52 @@ document.querySelectorAll('.abas button').forEach(function(btn){
     // Quando ativa, limpa o style inline (deixa a regra CSS de tela cheia
     // aplicar o "display:flex" — se fosse 'block' aqui, o inline style
     // ganharia da regra do CSS e o iframe não esticaria direito).
-    document.getElementById('aba-controladoria').style.display = btn.dataset.aba === 'controladoria' ? '' : 'none';
-    document.body.classList.toggle('controladoria-cheia', btn.dataset.aba === 'controladoria');
-    if (btn.dataset.aba === 'controladoria') carregarControladoria();
+    document.getElementById('aba-apropriacao').style.display = btn.dataset.aba === 'apropriacao' ? '' : 'none';
+    document.body.classList.toggle('apropriacao-cheia', btn.dataset.aba === 'apropriacao');
+    if (btn.dataset.aba === 'apropriacao') carregarApropriacao();
   };
 });
-/** Só carrega o iframe na primeira vez que o operador abre essa aba —
- *  assim não gasta dado/carregamento à toa pra quem nunca usa. */
-function carregarControladoria(){
-  const iframe = document.getElementById('ctrl-iframe');
+/** Abre a tela de lançamento. Primeiro espera o login em segundo plano no
+ *  sistema de apropriação terminar (se ainda estiver rodando) e só então
+ *  decide: mostra a tela, ou explica por que não dá pra lançar agora. O iframe
+ *  só é carregado na primeira abertura, pra não gastar dado à toa com quem
+ *  nunca usa essa aba. */
+const RECADOS_APROPRIACAO = {
+  'sem-conta':
+    '<b>Você ainda não tem acesso ao lançamento</b>' +
+    'Seu usuário funciona aqui no Portal, mas o sistema de apropriação não reconheceu ' +
+    'essa senha — ou seu acesso ainda não foi criado lá. Peça à Controladoria para cadastrar ' +
+    'seu usuário com a MESMA senha que você usa aqui, e entre de novo.',
+  'sem-rede':
+    '<b>Sem conexão com o sistema de apropriação</b>' +
+    'O lançamento precisa de internet para funcionar. O checklist continua normal e envia ' +
+    'sozinho assim que a conexão voltar.',
+  'expirada':
+    '<b>Sua sessão expirou</b>' +
+    'Toque em Sair, lá no alto da tela, e entre de novo com seu usuário e senha para ' +
+    'liberar o lançamento.'
+};
+async function carregarApropriacao(){
+  const iframe = document.getElementById('apr-iframe');
+  const moldura = document.getElementById('apr-iframe-wrap');
+  const bloqueio = document.getElementById('apr-bloqueio');
+  if (loginApropriacaoEmAndamento) {
+    try { await loginApropriacaoEmAndamento; } catch (e) {}
+    loginApropriacaoEmAndamento = null;
+  }
+  if (statusApropriacao !== 'ok') {
+    moldura.style.display = 'none';
+    bloqueio.style.display = 'block';
+    bloqueio.innerHTML = RECADOS_APROPRIACAO[statusApropriacao] || RECADOS_APROPRIACAO['expirada'];
+    return;
+  }
+  bloqueio.style.display = 'none';
+  moldura.style.display = '';
   if (iframe && iframe.getAttribute('src') === 'about:blank') {
-    iframe.src = 'https://sys-poc.vercel.app/';
+    iframe.src = 'apropriacao.html';
   }
 }
-document.getElementById('ctrl-voltar-btn').onclick = function(){
+document.getElementById('apr-voltar-btn').onclick = function(){
   document.querySelector('.abas button[data-aba="checklist"]').click();
 };
 
@@ -1167,6 +1314,10 @@ async function iniciarApp(){
   document.getElementById('tela-app').classList.add('ativa');
   document.getElementById('app-titulo-operador').textContent = '👷 ' + sessao.nome;
   atualizarStatusConexao();
+  // App reaberto com o operador já logado: a senha não passou por aqui desta
+  // vez, mas a sessão do sistema de apropriação pode ter sobrevivido no
+  // navegador. Confere sem travar a abertura do app.
+  if (!loginApropriacaoEmAndamento) loginApropriacaoEmAndamento = conferirSessaoApropriacao();
   await carregarDadosIniciais();
   preencherSelects();
   renderizarItensChecklist();
