@@ -2,10 +2,11 @@
 // app) disponível offline. O envio dos checklists/parte diária é feito pela
 // própria página, que guarda tudo numa fila local (IndexedDB) quando não há
 // internet e tenta reenviar sozinha quando a conexão volta (ver index.html).
-const CACHE_NAME = 'comprex-tablet-v2';
+const CACHE_NAME = 'comprex-tablet-v3';
 const ARQUIVOS_DO_CASCO = [
   './',
   './index.html',
+  './apropriacao.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
