@@ -2,11 +2,14 @@
 // app) disponível offline. O envio dos checklists/parte diária é feito pela
 // própria página, que guarda tudo numa fila local (IndexedDB) quando não há
 // internet e tenta reenviar sozinha quando a conexão volta (ver index.html).
-const CACHE_NAME = 'comprex-tablet-v3';
+// A tela de apropriação saiu daqui de propósito: ela agora é carregada ao vivo
+// do site da Controladoria, e não mais de uma cópia nossa. O arquivo
+// apropriacao.html continua no repositório só como plano B, e por isso não
+// precisa mais ocupar espaço no cache do tablet.
+const CACHE_NAME = 'comprex-tablet-v4';
 const ARQUIVOS_DO_CASCO = [
   './',
   './index.html',
-  './apropriacao.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
