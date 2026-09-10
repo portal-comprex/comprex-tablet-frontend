@@ -283,6 +283,13 @@ const SUPABASE_URL = 'https://klpgnaefqhsjbreiqjwe.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_gDdp4YFLFyggngUronBBsQ_7IawVcmO';
 const SISPOC_DOMINIO = '@sispoc.local';
 
+/* Endereço do sistema de apropriação. O tablet abre o site DELES ao vivo, com
+   ?embed=comprex — assim toda atualização que a Controladoria publica chega ao
+   campo na hora, sem cópia nossa para ficar defasada. A sessão do operador vai
+   daqui para lá por mensagem entre as duas páginas (ver aperto de mão abaixo). */
+const SISPOC_ORIGEM = 'https://sys-poc.vercel.app';
+const SISPOC_URL = SISPOC_ORIGEM + '/?embed=comprex';
+
 let clienteSupabase = null;
 function obterSupabase(){
   if (clienteSupabase) return clienteSupabase;
@@ -357,7 +364,42 @@ async function conferirSessaoApropriacao(){
 function resetarTelaApropriacao(){
   const iframe = document.getElementById('apr-iframe');
   if (iframe) iframe.src = 'about:blank';
+  if (relogioHandshake) { clearTimeout(relogioHandshake); relogioHandshake = null; }
 }
+
+/* ---------------------------------------------------------------------
+   APERTO DE MÃO COM O SISTEMA DE APROPRIAÇÃO
+   A tela deles avisa "estou de pé" e nós respondemos com a sessão do
+   operador. Duas travas de segurança aqui, e as duas importam:
+   - só damos ouvido a mensagem que venha do endereço deles;
+   - a sessão vai com destinatário fixo (nunca '*'), porque a mensagem
+     carrega o token do operador e um curinga entregaria esse token a
+     qualquer página que o iframe tivesse carregado.
+   --------------------------------------------------------------------- */
+let relogioHandshake = null;
+
+window.addEventListener('message', async function(evento){
+  if (evento.origin !== SISPOC_ORIGEM) return;
+  if (!evento.data || evento.data.tipo !== 'sispoc-pronto') return;
+  if (relogioHandshake) { clearTimeout(relogioHandshake); relogioHandshake = null; }
+
+  const sb = obterSupabase();
+  if (!sb) return;
+  let sessao = null;
+  try {
+    const r = await sb.auth.getSession();
+    sessao = r && r.data ? r.data.session : null;
+  } catch (e) { /* segue sem sessão */ }
+  if (!sessao) { mostrarBloqueioApropriacao('expirada'); return; }
+
+  const iframe = document.getElementById('apr-iframe');
+  if (!iframe || !iframe.contentWindow) return;
+  iframe.contentWindow.postMessage({
+    tipo: 'comprex-sessao',
+    access_token: sessao.access_token,
+    refresh_token: sessao.refresh_token
+  }, SISPOC_ORIGEM);
+});
 
 /* =====================================================================
    BANCO LOCAL (IndexedDB) — fila de envios pendentes, funciona offline.
@@ -1278,8 +1320,21 @@ const RECADOS_APROPRIACAO = {
   'expirada':
     '<b>Sua sessão expirou</b>' +
     'Toque em Sair, lá no alto da tela, e entre de novo com seu usuário e senha para ' +
-    'liberar o lançamento.'
+    'liberar o lançamento.',
+  'sem-resposta':
+    '<b>O sistema de apropriação não respondeu</b>' +
+    'A tela de lançamento abriu, mas não completou a entrada automática. Se isso ' +
+    'continuar, avise a TI — pode ser que uma atualização do sistema de apropriação ' +
+    'ainda não tenha sido publicada.'
 };
+function mostrarBloqueioApropriacao(motivo){
+  const moldura = document.getElementById('apr-iframe-wrap');
+  const bloqueio = document.getElementById('apr-bloqueio');
+  if (!moldura || !bloqueio) return;
+  moldura.style.display = 'none';
+  bloqueio.style.display = 'block';
+  bloqueio.innerHTML = RECADOS_APROPRIACAO[motivo] || RECADOS_APROPRIACAO['expirada'];
+}
 async function carregarApropriacao(){
   const iframe = document.getElementById('apr-iframe');
   const moldura = document.getElementById('apr-iframe-wrap');
@@ -1289,15 +1344,21 @@ async function carregarApropriacao(){
     loginApropriacaoEmAndamento = null;
   }
   if (statusApropriacao !== 'ok') {
-    moldura.style.display = 'none';
-    bloqueio.style.display = 'block';
-    bloqueio.innerHTML = RECADOS_APROPRIACAO[statusApropriacao] || RECADOS_APROPRIACAO['expirada'];
+    mostrarBloqueioApropriacao(statusApropriacao);
     return;
   }
   bloqueio.style.display = 'none';
   moldura.style.display = '';
   if (iframe && iframe.getAttribute('src') === 'about:blank') {
-    iframe.src = 'apropriacao.html';
+    iframe.src = SISPOC_URL;
+    // Se o aperto de mão não acontecer, o operador ficaria olhando a tela de
+    // login do outro sistema sem entender. Preferimos dizer o que houve.
+    // 25s é folgado de propósito: tablet em obra, com sinal ruim, demora.
+    if (relogioHandshake) clearTimeout(relogioHandshake);
+    relogioHandshake = setTimeout(function(){
+      relogioHandshake = null;
+      mostrarBloqueioApropriacao('sem-resposta');
+    }, 25000);
   }
 }
 document.getElementById('apr-voltar-btn').onclick = function(){
