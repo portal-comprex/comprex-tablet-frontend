@@ -144,7 +144,7 @@
   </header>
   <div class="abas">
     <button class="ativa" data-aba="checklist">✅ Checklist</button>
-    <button data-aba="apropriacao">🧮 Apropriação</button>
+    <button data-aba="apropriacao">🧮 Parte Diária</button>
     <button data-aba="partediaria">📋 TESTE</button>
   </div>
   <main>
@@ -238,12 +238,12 @@
          O operador não vê menu nem segundo login. -->
     <div id="aba-apropriacao" style="display:none">
       <div class="apr-aviso-row">
-        <div class="apr-titulo">Lançar apropriação</div>
+        <div class="apr-titulo">Lançar parte diária</div>
         <button type="button" class="apr-voltar-btn" id="apr-voltar-btn">← Voltar</button>
       </div>
       <div class="apr-bloqueio" id="apr-bloqueio" style="display:none"></div>
       <div class="apr-iframe-wrap" id="apr-iframe-wrap">
-        <iframe id="apr-iframe" src="about:blank" title="Lançar apropriação" loading="lazy"></iframe>
+        <iframe id="apr-iframe" src="about:blank" title="Lançar parte diária" loading="lazy"></iframe>
       </div>
     </div>
   </main>
@@ -1309,22 +1309,22 @@ document.querySelectorAll('.abas button').forEach(function(btn){
  *  nunca usa essa aba. */
 const RECADOS_APROPRIACAO = {
   'sem-conta':
-    '<b>Você ainda não tem acesso ao lançamento</b>' +
-    'Seu usuário funciona aqui no Portal, mas o sistema de apropriação não reconheceu ' +
+    '<b>Você ainda não tem acesso à parte diária</b>' +
+    'Seu usuário funciona aqui no Portal, mas o sistema da parte diária não reconheceu ' +
     'essa senha — ou seu acesso ainda não foi criado lá. Peça à Controladoria para cadastrar ' +
     'seu usuário com a MESMA senha que você usa aqui, e entre de novo.',
   'sem-rede':
-    '<b>Sem conexão com o sistema de apropriação</b>' +
+    '<b>Sem conexão com o sistema da parte diária</b>' +
     'O lançamento precisa de internet para funcionar. O checklist continua normal e envia ' +
     'sozinho assim que a conexão voltar.',
   'expirada':
     '<b>Sua sessão expirou</b>' +
     'Toque em Sair, lá no alto da tela, e entre de novo com seu usuário e senha para ' +
-    'liberar o lançamento.',
+    'liberar a parte diária.',
   'sem-resposta':
-    '<b>O sistema de apropriação não respondeu</b>' +
+    '<b>O sistema da parte diária não respondeu</b>' +
     'A tela de lançamento abriu, mas não completou a entrada automática. Se isso ' +
-    'continuar, avise a TI — pode ser que uma atualização do sistema de apropriação ' +
+    'continuar, avise a TI — pode ser que uma atualização do sistema da parte diária ' +
     'ainda não tenha sido publicada.'
 };
 function mostrarBloqueioApropriacao(motivo){
