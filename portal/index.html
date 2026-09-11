@@ -536,13 +536,13 @@
   .ctrl-voltar-btn{background:none;border:1.5px solid var(--linha);color:var(--tinta);font-size:11px;
     font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;font-family:inherit}
   .ctrl-voltar-btn:hover{background:var(--cream)}
-  /* ---- Controladoria em tela cheia: some com o menu/topo do Portal e o
-     iframe ocupa a janela inteira, como se fosse um app à parte. ---- */
+  /* ---- Controladoria como aba do Portal: o cabeçalho e as abas do topo
+     continuam à vista, para ficar claro que você está dentro do Portal. Só o
+     menu lateral sai, porque os itens dele são da seção de Checklist — quem
+     navega pelas telas da Controladoria é o menu que vem dentro dela. ---- */
   .shell.controladoria-cheia .sidebar{display:none}
-  .shell.controladoria-cheia .topbar{display:none}
-  .shell.controladoria-cheia #view-controladoria.ativo{position:fixed;inset:0;z-index:500;
-    background:var(--fundo);padding:16px 20px;display:flex;flex-direction:column}
-  .shell.controladoria-cheia #view-controladoria .ctrl-iframe-wrap{flex:1;height:auto}
+  .shell.controladoria-cheia #view-controladoria.ativo{display:flex;flex-direction:column;padding:0}
+  .shell.controladoria-cheia #view-controladoria .ctrl-iframe-wrap{flex:1;height:calc(100vh - 96px)}
   .arv-btn-detalhe{background:var(--cream);border:1px solid var(--linha);border-radius:6px;
     font-size:12px;padding:2px 6px;cursor:pointer;flex-shrink:0}
   .arv-btn-detalhe:hover{background:var(--navy);color:#fff}
