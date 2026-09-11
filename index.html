@@ -287,8 +287,11 @@ const SISPOC_DOMINIO = '@sispoc.local';
    ?embed=comprex — assim toda atualização que a Controladoria publica chega ao
    campo na hora, sem cópia nossa para ficar defasada. A sessão do operador vai
    daqui para lá por mensagem entre as duas páginas (ver aperto de mão abaixo). */
-const SISPOC_ORIGEM = 'https://sys-poc.vercel.app';
-const SISPOC_URL = SISPOC_ORIGEM + '/?embed=comprex';
+// A tela de parte diária agora mora neste mesmo site (parte-diaria.html), e não
+// mais num endereço de fora. Mesma origem quer dizer: mesma sessão, mesmo código,
+// e nada para sincronizar entre dois lugares.
+const SISPOC_ORIGEM = window.location.origin;
+const SISPOC_URL = 'parte-diaria.html?embed=comprex';
 
 let clienteSupabase = null;
 function obterSupabase(){

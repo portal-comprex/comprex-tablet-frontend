@@ -6,7 +6,7 @@
 // do site da Controladoria, e não mais de uma cópia nossa. O arquivo
 // apropriacao.html continua no repositório só como plano B, e por isso não
 // precisa mais ocupar espaço no cache do tablet.
-const CACHE_NAME = 'comprex-tablet-v4';
+const CACHE_NAME = 'comprex-tablet-v5';
 const ARQUIVOS_DO_CASCO = [
   './',
   './index.html',
@@ -44,6 +44,9 @@ self.addEventListener('fetch', function (evento) {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // O portal do escritório (/portal/) fica de fora: ele é outro app, com login
+  // da Microsoft por redirecionamento, e não precisa de nada offline.
+  if (url.pathname.indexOf('/portal/') !== -1) return;
 
   evento.respondWith(
     fetch(req).then(function (respostaRede) {
