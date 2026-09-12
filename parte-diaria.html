@@ -1703,7 +1703,11 @@
       '.hazard{display:none!important}' +
       '#app{display:flex}.main{flex:1;min-width:0}' +
       '.view{padding:14px 16px 30px 16px}' +
-      '.cadastro-hero{display:none!important}';
+      '.cadastro-hero{display:none!important}' +
+      /* A tela de login tem cabeçalho e marca próprios — outro papel de parede
+         dentro do Portal. Fica só o formulário, sem moldura. */
+      '.p-header,.p-hazard{display:none!important}' +
+      '.profile-screen{background:transparent!important}';
     document.head.appendChild(estiloPortal);
 
     /* O menu de navegação é o do Portal. Ele manda por mensagem qual tela
