@@ -540,7 +540,6 @@
      continuam à vista, para ficar claro que você está dentro do Portal. Só o
      menu lateral sai, porque os itens dele são da seção de Checklist — quem
      navega pelas telas da Controladoria é o menu que vem dentro dela. ---- */
-  .shell.controladoria-cheia .sidebar{display:none}
   .shell.controladoria-cheia #view-controladoria.ativo{padding:10px 14px}
   /* Sem "flex" aqui de propósito: num contêiner em coluna o flex-basis passa
      por cima da altura, e a moldura encolhia até o mínimo, cortando a tela. */
@@ -1290,6 +1289,13 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sidebar-item" data-view="dashboard-mov" data-secao="rastreamento"><i>📊</i> Dashboard</div>
       <div class="sidebar-item" data-view="status-equipamentos" data-secao="rastreamento"><i>🖥️</i> Status dos Equipamentos</div>
       <div class="sidebar-item" data-view="frota" data-secao="rastreamento"><i>🚚</i> Frota</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="apropriacao"><i>🕐</i> Lançar Parte Diária</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="historico"><i>🕒</i> Histórico de Lançamentos</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="producao"><i>📦</i> Produção</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="dashboard"><i>📊</i> Dashboard</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="cadastro"><i>🗂️</i> Cadastros</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="consolidado"><i>📈</i> Consolidado</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="medicao"><i>📐</i> Medição</div>
       <div class="sidebar-item acao" id="btn-toggle-cadastrar"><i>🛠️</i> CADASTRAR <span id="seta-cadastrar" style="margin-left:auto">▾</span></div>
       <div id="submenu-cadastrar">
         <div class="sidebar-item acao" id="btn-abrir-cadastro-local" style="padding-left:32px"><i>📍</i> Local</div>
@@ -6731,12 +6737,16 @@ const INFO_PAGINA = {
     partediaria: ['partediaria', 'historico-pd', 'dashboard-pd', 'indicadores-pd'],
     rastreamento: ['rastreamento', 'localizacao-atual', 'historico-mov', 'dashboard-mov', 'status-equipamentos', 'frota']
   };
-  const secaoAtiva = VIEWS_POR_SECAO.partediaria.indexOf(nome) !== -1 ? 'partediaria'
+  const secaoAtiva = nome === 'controladoria' ? 'controladoria'
+    : VIEWS_POR_SECAO.partediaria.indexOf(nome) !== -1 ? 'partediaria'
     : VIEWS_POR_SECAO.rastreamento.indexOf(nome) !== -1 ? 'rastreamento'
     : 'checklist';
-  ['checklist', 'partediaria', 'rastreamento'].forEach(function(secao){
+  ['checklist', 'partediaria', 'rastreamento', 'controladoria'].forEach(function(secao){
     document.querySelectorAll('.sidebar-item[data-secao="' + secao + '"]').forEach(function(el){
       if (secao !== secaoAtiva) { el.style.display = 'none'; return; }
+      // A Controladoria já é limitada na aba do topo (só administrador chega
+      // nela), então não há um segundo filtro de permissão a aplicar aqui.
+      if (secao === 'controladoria') { el.style.display = 'flex'; return; }
       if (tokensAcessoAtual === null) { el.style.display = 'flex'; return; } // admin, sem restrição
       const permitido = tokensAcessoAtual.indexOf(secao) !== -1 || tokensAcessoAtual.indexOf(secao + '/' + el.dataset.view) !== -1;
       el.style.display = permitido ? 'flex' : 'none';
@@ -6777,6 +6787,37 @@ function carregarControladoria(){
 document.getElementById('ctrl-voltar-btn').onclick = function(){ mostrarView('painel'); };
 document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
   item.onclick = function(){ mostrarView(item.dataset.view); };
+});
+/* ---- Menu da Controladoria -------------------------------------------------
+   Os itens da seção Controladoria não trocam de tela no Portal: a tela é
+   sempre a mesma (o quadro com parte-diaria.html). O que muda é qual
+   funcionalidade aparece dentro dele, e é isso que mandamos por mensagem.
+   --------------------------------------------------------------------------- */
+let telaControladoriaAtual = 'apropriacao';
+function marcarItemControladoria(chave){
+  document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(el){
+    el.classList.toggle('ativo', el.dataset.ctrl === chave);
+  });
+}
+function enviarTelaControladoria(chave){
+  const quadro = document.getElementById('ctrl-iframe');
+  if (!quadro || !quadro.contentWindow) return;
+  quadro.contentWindow.postMessage({ tipo: 'ctrl-ir', view: chave }, window.location.origin);
+}
+document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(item){
+  item.onclick = function(){
+    telaControladoriaAtual = item.dataset.ctrl;
+    mostrarView('controladoria');
+    marcarItemControladoria(telaControladoriaAtual);
+    enviarTelaControladoria(telaControladoriaAtual);
+  };
+});
+// O quadro avisa quando terminou de carregar; só então adianta mandar a tela.
+window.addEventListener('message', function(evento){
+  if (evento.origin !== window.location.origin) return;
+  if (!evento.data || evento.data.tipo !== 'ctrl-pronto') return;
+  marcarItemControladoria(telaControladoriaAtual);
+  enviarTelaControladoria(telaControladoriaAtual);
 });
 document.querySelectorAll('.topo-toggle-opt').forEach(function(btn){
   btn.onclick = function(){ mostrarView(btn.dataset.ir); };

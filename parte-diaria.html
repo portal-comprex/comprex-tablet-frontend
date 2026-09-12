@@ -1693,13 +1693,49 @@
      Só some a moldura que o Portal já tem: a barra de topo e a marca, que
      apareceriam duas vezes e fariam isto parecer um site dentro de outro. */
   if (modo === 'portal') {
+    window.__comprexEmbedPortal = true;
+
+    /* Quem dá a moldura aqui é o Portal: menu, cabeçalho e marca são dele.
+       Daqui fica só a funcionalidade. */
     var estiloPortal = document.createElement('style');
     estiloPortal.textContent =
-      '.topbar{display:none!important}' +
-      '.brand{display:none!important}' +
-      '.sidebar{padding-top:10px}' +
-      '.view{padding:16px 18px 40px 18px}';
+      '.sidebar,.sidebar-backdrop,.topbar,.mobile-menu-btn{display:none!important}' +
+      '.hazard{display:none!important}' +
+      '#app{display:flex}.main{flex:1;min-width:0}' +
+      '.view{padding:14px 16px 30px 16px}' +
+      '.cadastro-hero{display:none!important}';
     document.head.appendChild(estiloPortal);
+
+    /* O menu de navegação é o do Portal. Ele manda por mensagem qual tela
+       mostrar, e aqui só repassamos para a troca de tela do próprio sistema. */
+    window.addEventListener('message', function(evento){
+      if (ORIGENS_AUTORIZADAS.indexOf(evento.origin) === -1) return;
+      var dados = evento.data;
+      if (!dados || dados.tipo !== 'ctrl-ir') return;
+      if (typeof window.__comprexTrocarTela === 'function') {
+        window.__comprexTrocarTela(dados.view);
+      }
+    });
+
+    /* Avisa o Portal quando o sistema realmente subiu — e não quando o HTML
+       terminou de carregar. Enquanto o usuário está na tela de login não existe
+       tela nenhuma para trocar, e uma mensagem antes disso se perderia. */
+    var tentativasPortal = 0;
+    var relogioPortal = setInterval(function(){
+      tentativasPortal++;
+      var appEl = document.getElementById('app');
+      var pronto = appEl && appEl.style.display !== 'none' &&
+                   typeof window.__comprexTrocarTela === 'function';
+      if (pronto) {
+        clearInterval(relogioPortal);
+        for (var i = 0; i < ORIGENS_AUTORIZADAS.length; i++){
+          try { window.parent.postMessage({tipo:'ctrl-pronto'}, ORIGENS_AUTORIZADAS[i]); }
+          catch(e){ /* origem não confere — segue para a próxima */ }
+        }
+      } else if (tentativasPortal > 600) {
+        clearInterval(relogioPortal);   // desiste depois de 10 minutos
+      }
+    }, 1000);
     return;
   }
 
@@ -9852,6 +9888,9 @@
     applyPerfil(perfil);
     renderAll();
   }
+  // Embutido no Portal Comprex: a troca de tela fica acessível de fora, porque
+  // quem navega passa a ser o menu do Portal, não o menu daqui.
+  if (window.__comprexEmbed || window.__comprexEmbedPortal) { window.__comprexTrocarTela = switchView; }
   if (window.__comprexEmbed) { window.__comprexIniciar = init; } else { init(); }
 
 })();
