@@ -3706,11 +3706,36 @@
         '<div class="field"><label>Nome</label><input type="text" id="fOperNome" value="'+esc(op.nome)+'" placeholder="Nome completo"></div>' +
       '</div>' +
       '<div class="field"><label>Cargo</label><input type="text" id="fOperCargo" value="'+esc(op.cargo||'')+'" placeholder="Ex: Operador Máquinas Móveis III"></div>' +
+      (isEdit && state.perfil==='admin' ? (
+      '<div class="field" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">' +
+        '<label>Login do tablet (Parte Diária)</label>' +
+        '<div id="operSenhaWrap" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">' +
+          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">Usuário</label><input type="text" id="fOperUsuario" placeholder="ex: joao.silva" style="width:160px;"></div>' +
+          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">Nova senha</label><input type="password" id="fOperSenha" placeholder="Mínimo 6 caracteres" style="width:160px;"></div>' +
+          '<button type="button" class="btn btn-outline btn-sm" id="operSenhaBtn">Definir login</button>' +
+        '</div>' +
+        '<div class="shared-note" style="display:block;margin-top:6px;">Deixe em branco se não quiser mexer no login do tablet agora. Se ele já tem um login, só preencha a senha pra trocá-la (o usuário atual é mantido).</div>' +
+        '<div id="operSenhaMsg"></div>' +
+      '</div>') : '') +
       '<div class="modal-actions">' +
         '<button class="btn btn-outline" id="operCancel">Cancelar</button>' +
         '<button class="btn btn-primary" id="operSave">Salvar</button>' +
       '</div>'
     );
+    if(isEdit && document.getElementById('operSenhaBtn')){
+      document.getElementById('operSenhaBtn').addEventListener('click', async function(){
+        var usuario = document.getElementById('fOperUsuario').value.trim();
+        var senha = document.getElementById('fOperSenha').value;
+        var msg = document.getElementById('operSenhaMsg');
+        if(!senha){ msg.innerHTML = '<div class="form-error">Informe a nova senha.</div>'; return; }
+        if(senha.length < 6){ msg.innerHTML = '<div class="form-error">A senha precisa ter pelo menos 6 caracteres.</div>'; return; }
+        try{
+          await ctrlFetch('/api/ctrl/operadores/'+op.id+'/senha', { method:'PATCH', headers: ctrlCabecalhos(), body: JSON.stringify({ usuario: usuario, senha: senha }) });
+          msg.innerHTML = '<div class="muted-tag">✔ Login do tablet definido/atualizado.</div>';
+          document.getElementById('fOperSenha').value = '';
+        }catch(e){ msg.innerHTML = '<div class="form-error">'+esc(e.message)+'</div>'; }
+      });
+    }
     document.getElementById('operCancel').onclick = closeModal;
     document.getElementById('operSave').onclick = async function(){
       var nome = capitalizarNomePessoa(document.getElementById('fOperNome').value);
@@ -4189,6 +4214,7 @@
         '<div class="field-row">' +
           '<div class="field"><label>Horímetro inicial</label><input type="number" step="0.1" id="apHi" placeholder="0,0"></div>' +
           '<div class="field"><label>Horímetro final</label><input type="number" step="0.1" id="apHf" placeholder="0,0"></div>' +
+          '<div class="field"><label>Iniciou em</label><select id="apSituacaoInicial">'+optionsList(['Operação','À disposição'], (editRecord&&editRecord.situacaoInicial)||'Operação')+'</select></div>' +
         '</div>' +
         '<div id="apHorimetroWarn"></div>' +
         '<div class="field-row" id="apServicoRow" style="display:none;">' +
@@ -4370,6 +4396,11 @@
     document.getElementById('apEntradaAgoraBtn').addEventListener('click', function(){
       document.getElementById('apEntrada').value = horaAtualHHMM();
       updateConsolidacao();
+      // Depois de marcar a entrada, leva o operador direto pro horímetro
+      // inicial — é o próximo dado que ele precisa informar pra "iniciar"
+      // de verdade (junto com a situação: Operação ou À disposição).
+      var campoHi = document.getElementById('apHi');
+      if(campoHi){ campoHi.scrollIntoView({behavior:'smooth', block:'center'}); campoHi.focus(); }
     });
     // Ao terminar de digitar o Horímetro final (saiu do campo), preenche a Saída com a hora atual
     // — o operador ainda pode ajustar manualmente depois, se precisar.
@@ -4410,6 +4441,8 @@
       var hi = parseFloat(document.getElementById('apHi').value);
       var hfTexto = document.getElementById('apHf').value.trim();
       var hf = hfTexto==='' ? null : parseFloat(hfTexto);
+      var situacaoInicialEl = document.getElementById('apSituacaoInicial');
+      var situacaoInicial = situacaoInicialEl ? situacaoInicialEl.value : 'Operação';
       // Lançamento em etapas: Identificação + Entrada + Horímetro inicial são sempre exigidos.
       // Saída + Horímetro final (e tudo que depende deles) só são exigidos quando os dois já
       // estão preenchidos juntos — isso "fecha" o lançamento — ou quando está editando um
@@ -4436,10 +4469,11 @@
       // Um operador pode lançar mais de uma vez no mesmo dia quando troca de equipamento.
       // O que continua barrado é repetir o MESMO equipamento no MESMO dia — esse é o caso do
       // salvamento duplicado sem querer, que entraria com horas dobradas no faturamento.
-      var duplicadoOperadorData = todosParaChecagem.some(function(a){
-        return a.operador===operador && a.data===data && a.equipamentoId===equipamentoId && a.id!==idEmEdicao;
-      });
-      if(duplicadoOperadorData){ errBox.innerHTML = '<div class="form-error">Já existe um lançamento de '+esc(operador)+' em '+brDate(data)+' <b>neste equipamento</b>. Use "Continuar lançamento" pra abrir esse lançamento, ou escolha outro equipamento.</div>'; return; }
+      // Bloqueio removido a pedido: antes não deixava lançar duas vezes o
+      // mesmo operador + data + equipamento (pra cobrir, por exemplo, um
+      // período em "Operação" e outro "À disposição" no mesmo dia, no
+      // mesmo equipamento). Os outros lançamentos do dia continuam
+      // aparecendo normalmente na tela "Seus lançamentos de hoje".
       if(!escala){ errBox.innerHTML = '<div class="form-error">Selecione a escala (jornada de trabalho) do operador.</div>'; return; }
       if(!entrada){ errBox.innerHTML = '<div class="form-error">Informe a entrada do operador.</div>'; return; }
       if(isNaN(hi)){ errBox.innerHTML = '<div class="form-error">Informe o horímetro inicial.</div>'; return; }
@@ -4471,7 +4505,7 @@
           intervaloInicio: tipoIntervalo==='Sem intervalo' ? '' : intIni,
           intervaloFim: tipoIntervalo==='Sem intervalo' ? '' : intFim,
           saida: saida || '',
-          horimetroInicial: hi, horimetroFinal: hf,
+          horimetroInicial: hi, horimetroFinal: hf, situacaoInicial: situacaoInicial,
           paradas: formParadas.filter(function(p){ return p.horas>0; }), observacao: '',
           status: 'em_andamento',
           rodadas: rascunhoExistente ? (rascunhoExistente.rodadas||1)+1 : 1
@@ -4557,7 +4591,7 @@
         intervaloInicio: tipoIntervalo==='Sem intervalo' ? '' : intIni,
         intervaloFim: tipoIntervalo==='Sem intervalo' ? '' : intFim,
         saida: saida, horasOperador: horasOperador,
-        horimetroInicial: hi, horimetroFinal: hf, horasHorimetro: horasHorimetro,
+        horimetroInicial: hi, horimetroFinal: hf, horasHorimetro: horasHorimetro, situacaoInicial: situacaoInicial,
         servicoTarifa: servicoTarifa, valorUnitarioTarifa: valorUnitarioTarifa, valorProducaoCalculado: valorProducaoCalculado,
         servicoHora: servicoHora,
         paradas: formParadas.filter(function(p){ return p.horas>0; }), observacao: '',
