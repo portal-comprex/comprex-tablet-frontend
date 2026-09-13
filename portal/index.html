@@ -40,6 +40,8 @@
     font-size:13px;font-weight:600;color:#c7dde0;cursor:pointer;transition:all .15s;margin-bottom:2px;
     border-left:3px solid transparent}
   .sidebar-item[data-secao="partediaria"]{display:none}
+  /* Aba TESTE escondida: a tela existe no código, mas não aparece pra quem usa. */
+  .topo-toggle-opt[data-ir="partediaria"]{display:none}
   .sidebar-item[data-secao="rastreamento"]{display:none}
   .sidebar-item i{font-style:normal;font-size:16px;width:18px;text-align:center}
   .sidebar-item:hover{background:rgba(255,255,255,.08);color:#fff}
@@ -526,7 +528,7 @@
   .ctrl-abrir-nova-aba{background:var(--navy);color:#fff;text-decoration:none;font-size:11px;font-weight:700;
     padding:5px 11px;border-radius:7px;white-space:nowrap}
   .ctrl-abrir-nova-aba:hover{opacity:.9}
-  .ctrl-iframe-wrap{position:relative;height:calc(100vh - 160px);min-height:420px;border:1px solid var(--linha);
+  .ctrl-iframe-wrap{position:relative;height:calc(100vh - 118px);min-height:420px;border:1px solid var(--linha);
     border-radius:12px;overflow:hidden;background:#fff}
   #ctrl-iframe{width:100%;height:100%;border:none;display:block}
   .ctrl-erro{display:none;position:absolute;inset:0;background:var(--card);color:var(--tinta);
@@ -534,13 +536,20 @@
   .ctrl-voltar-btn{background:none;border:1.5px solid var(--linha);color:var(--tinta);font-size:11px;
     font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;font-family:inherit}
   .ctrl-voltar-btn:hover{background:var(--cream)}
-  /* ---- Controladoria em tela cheia: some com o menu/topo do Portal e o
-     iframe ocupa a janela inteira, como se fosse um app à parte. ---- */
-  .shell.controladoria-cheia .sidebar{display:none}
-  .shell.controladoria-cheia .topbar{display:none}
-  .shell.controladoria-cheia #view-controladoria.ativo{position:fixed;inset:0;z-index:500;
-    background:var(--fundo);padding:16px 20px;display:flex;flex-direction:column}
-  .shell.controladoria-cheia #view-controladoria .ctrl-iframe-wrap{flex:1;height:auto}
+  /* ---- Controladoria como aba do Portal: o cabeçalho e as abas do topo
+     continuam à vista, para ficar claro que você está dentro do Portal. Só o
+     menu lateral sai, porque os itens dele são da seção de Checklist — quem
+     navega pelas telas da Controladoria é o menu que vem dentro dela. ---- */
+  .shell.controladoria-cheia #view-controladoria.ativo{padding:10px 14px}
+  /* CADASTRAR, Gerenciar Acessos e Login Tablet não têm marcação de seção no
+     HTML, então a troca de seção nunca os escondia e eles vazavam para dentro
+     da Controladoria. Escondidos por CSS: ao sair da aba, a regra deixa de
+     valer e cada um volta ao que a permissão do usuário já tinha definido. */
+  .shell.controladoria-cheia .sidebar-item.acao,
+  .shell.controladoria-cheia #submenu-cadastrar{display:none!important}
+  /* Sem "flex" aqui de propósito: num contêiner em coluna o flex-basis passa
+     por cima da altura, e a moldura encolhia até o mínimo, cortando a tela. */
+  .shell.controladoria-cheia #view-controladoria .ctrl-iframe-wrap{height:calc(100vh - 184px)}
   .arv-btn-detalhe{background:var(--cream);border:1px solid var(--linha);border-radius:6px;
     font-size:12px;padding:2px 6px;cursor:pointer;flex-shrink:0}
   .arv-btn-detalhe:hover{background:var(--navy);color:#fff}
@@ -1286,6 +1295,13 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sidebar-item" data-view="dashboard-mov" data-secao="rastreamento"><i>📊</i> Dashboard</div>
       <div class="sidebar-item" data-view="status-equipamentos" data-secao="rastreamento"><i>🖥️</i> Status dos Equipamentos</div>
       <div class="sidebar-item" data-view="frota" data-secao="rastreamento"><i>🚚</i> Frota</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="apropriacao"><i>🕐</i> Lançar Parte Diária</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="historico"><i>🕒</i> Histórico de Lançamentos</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="producao"><i>📦</i> Produção</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="dashboard"><i>📊</i> Dashboard</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="cadastro"><i>🗂️</i> Cadastros</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="consolidado"><i>📈</i> Consolidado</div>
+      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="medicao"><i>📐</i> Medição</div>
       <div class="sidebar-item acao" id="btn-toggle-cadastrar"><i>🛠️</i> CADASTRAR <span id="seta-cadastrar" style="margin-left:auto">▾</span></div>
       <div id="submenu-cadastrar">
         <div class="sidebar-item acao" id="btn-abrir-cadastro-local" style="padding-left:32px"><i>📍</i> Local</div>
@@ -2508,15 +2524,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   </div>
 </div>
 <div class="view" id="view-controladoria">
-  <div class="ctrl-toolbar">
-    <div class="ctrl-toolbar-info">
-      <b>Sistema de Controladoria</b> — login próprio (separado do Portal Comprex), exibido aqui só para facilitar o acesso.
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0">
-      <button type="button" class="ctrl-voltar-btn" id="ctrl-voltar-btn">← Voltar ao Portal</button>
-      <a href="https://sys-poc.vercel.app/" target="_blank" rel="noopener" class="ctrl-abrir-nova-aba">Abrir em nova aba ↗</a>
-    </div>
-  </div>
+  <button type="button" id="ctrl-voltar-btn" style="display:none"></button>
   <div class="ctrl-iframe-wrap">
     <iframe id="ctrl-iframe" src="about:blank" title="Sistema de Controladoria" loading="lazy"></iframe>
   </div>
@@ -6758,12 +6766,16 @@ const INFO_PAGINA = {
     partediaria: ['partediaria', 'historico-pd', 'dashboard-pd', 'indicadores-pd'],
     rastreamento: ['rastreamento', 'localizacao-atual', 'historico-mov', 'dashboard-mov', 'status-equipamentos', 'frota']
   };
-  const secaoAtiva = VIEWS_POR_SECAO.partediaria.indexOf(nome) !== -1 ? 'partediaria'
+  const secaoAtiva = nome === 'controladoria' ? 'controladoria'
+    : VIEWS_POR_SECAO.partediaria.indexOf(nome) !== -1 ? 'partediaria'
     : VIEWS_POR_SECAO.rastreamento.indexOf(nome) !== -1 ? 'rastreamento'
     : 'checklist';
-  ['checklist', 'partediaria', 'rastreamento'].forEach(function(secao){
+  ['checklist', 'partediaria', 'rastreamento', 'controladoria'].forEach(function(secao){
     document.querySelectorAll('.sidebar-item[data-secao="' + secao + '"]').forEach(function(el){
       if (secao !== secaoAtiva) { el.style.display = 'none'; return; }
+      // A Controladoria já é limitada na aba do topo (só administrador chega
+      // nela), então não há um segundo filtro de permissão a aplicar aqui.
+      if (secao === 'controladoria') { el.style.display = 'flex'; return; }
       if (tokensAcessoAtual === null) { el.style.display = 'flex'; return; } // admin, sem restrição
       const permitido = tokensAcessoAtual.indexOf(secao) !== -1 || tokensAcessoAtual.indexOf(secao + '/' + el.dataset.view) !== -1;
       el.style.display = permitido ? 'flex' : 'none';
@@ -6798,13 +6810,72 @@ const INFO_PAGINA = {
 function carregarControladoria(){
   const iframe = document.getElementById('ctrl-iframe');
   if (iframe && iframe.getAttribute('src') === 'about:blank') {
-    iframe.src = 'https://sys-poc.vercel.app/';
+    iframe.src = '../controladoria/index.html?embed=portal';
   }
 }
 document.getElementById('ctrl-voltar-btn').onclick = function(){ mostrarView('painel'); };
 document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
   item.onclick = function(){ mostrarView(item.dataset.view); };
 });
+/* ---- Menu da Controladoria -------------------------------------------------
+   Os itens da seção Controladoria não trocam de tela no Portal: a tela é
+   sempre a mesma (o quadro com controladoria/index.html). O que muda é qual
+   funcionalidade aparece dentro dele, e é isso que mandamos por mensagem.
+   --------------------------------------------------------------------------- */
+let telaControladoriaAtual = 'apropriacao';
+function marcarItemControladoria(chave){
+  document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(el){
+    el.classList.toggle('ativo', el.dataset.ctrl === chave);
+  });
+}
+function enviarTelaControladoria(chave){
+  const quadro = document.getElementById('ctrl-iframe');
+  if (!quadro || !quadro.contentWindow) return;
+  quadro.contentWindow.postMessage({ tipo: 'ctrl-ir', view: chave }, window.location.origin);
+}
+/* Login único (Etapa 2): a Controladoria não pede senha própria — usa a
+   MESMA sessão Microsoft que já está aberta aqui no Portal. Pegamos o ID
+   token (sempre "endereçado" para o nosso próprio app, não para o Graph) e
+   mandamos pro quadro; o backend confere a assinatura e diz quem é essa
+   pessoa e com qual perfil. */
+async function tokenControladoriaAtual(){
+  try {
+    const resp = await msalInstance.acquireTokenSilent({ scopes: ['openid', 'profile'], account: contaAtual });
+    return resp.idToken;
+  } catch (err) {
+    console.warn('Falha ao obter token da Controladoria:', err.message);
+    return null;
+  }
+}
+async function enviarTokenControladoria(){
+  const quadro = document.getElementById('ctrl-iframe');
+  if (!quadro || !quadro.contentWindow) return;
+  const token = await tokenControladoriaAtual();
+  if (!token) return;
+  quadro.contentWindow.postMessage({ tipo: 'ctrl-token', token: token }, window.location.origin);
+}
+document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(item){
+  item.onclick = function(){
+    telaControladoriaAtual = item.dataset.ctrl;
+    mostrarView('controladoria');
+    marcarItemControladoria(telaControladoriaAtual);
+    enviarTokenControladoria();
+    enviarTelaControladoria(telaControladoriaAtual);
+  };
+});
+// O quadro avisa quando terminou de carregar (ou quando precisa renovar o
+// token); só então adianta mandar a tela/token.
+window.addEventListener('message', function(evento){
+  if (evento.origin !== window.location.origin) return;
+  if (!evento.data) return;
+  if (evento.data.tipo === 'ctrl-pedir-token') { enviarTokenControladoria(); return; }
+  if (evento.data.tipo !== 'ctrl-pronto') return;
+  marcarItemControladoria(telaControladoriaAtual);
+  enviarTelaControladoria(telaControladoriaAtual);
+});
+// O ID token do MSAL dura pouco (~1h) — renova sozinho de tempos em tempos
+// pra quem deixar a aba da Controladoria aberta o dia inteiro não cair.
+setInterval(enviarTokenControladoria, 20 * 60 * 1000);
 document.querySelectorAll('.topo-toggle-opt').forEach(function(btn){
   btn.onclick = function(){ mostrarView(btn.dataset.ir); };
 });
