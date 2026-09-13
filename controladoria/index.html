@@ -1962,7 +1962,7 @@
   /* ============ STATE ============ */
   var SEED_OPERADORES = [];
 
-  var state = { equipamentos: [], ordens: [], operadores: [], apropriacoes: [], apropriacoesRascunhos: [], tarifasHora: [], tarifasProducao: [], tarifasVerba: [], motivosParada: [], escalas: [], usuarios: [], usuarioLogado: null, logAuditoria: [], producoes: [], producaoNotas: [], statusFaturamento: [], custosOrdem: [], metasMensais: [], descricoesBoletim: [], usuariosOrdensRestritas: [], currentView: 'dashboard', currentSubtab:'equip', perfil: null, telas: null, operadorOrdemId: null, operadorOrdemAdminLock: false, operadorClienteRestrito: null, editingApropriacaoId: null, editingRascunhoId: null };
+  var state = { equipamentos: [], locais: [], ordens: [], operadores: [], apropriacoes: [], apropriacoesRascunhos: [], tarifasHora: [], tarifasProducao: [], tarifasVerba: [], motivosParada: [], escalas: [], usuarios: [], usuarioLogado: null, logAuditoria: [], producoes: [], producaoNotas: [], statusFaturamento: [], custosOrdem: [], metasMensais: [], descricoesBoletim: [], usuariosOrdensRestritas: [], currentView: 'dashboard', currentSubtab:'equip', perfil: null, telas: null, operadorOrdemId: null, operadorOrdemAdminLock: false, operadorClienteRestrito: null, editingApropriacaoId: null, editingRascunhoId: null };
   var formParadas = [];
 
   /* ============ STORAGE ============ */
@@ -2015,7 +2015,7 @@
   // Chave interna (com sufixo de versão, ex. "apropriacoes_v7") -> nome
   // lógico que o backend entende (ex. "apropriacoes").
   var CTRL_MAPA_CHAVES = {
-    equipamentos_v6: 'equipamentos', operadores_v4: 'operadores', ordens_v9: 'ordens',
+    equipamentos_v6: 'equipamentos', operadores_v4: 'operadores', locais_v1: 'locais', ordens_v9: 'ordens',
     apropriacoes_v7: 'apropriacoes', apropriacoes_rascunhos_v1: 'apropriacoesRascunhos',
     tarifas_hora_v2: 'tarifasHora', tarifas_producao_v3: 'tarifasProducao', tarifas_verba_v1: 'tarifasVerba',
     motivos_parada_v1: 'motivosParada', escalas_v1: 'escalas', usuarios_v1: 'usuarios',
@@ -2112,11 +2112,12 @@
       // sem isso, um equipamento/operador recém-criado ficaria com um id que
       // não bate com o do servidor, e a próxima edição/exclusão criaria um
       // registro duplicado em vez de alterar o existente.
-      if(nomeLogico === 'equipamentos' || nomeLogico === 'operadores'){
+      if(nomeLogico === 'equipamentos' || nomeLogico === 'operadores' || nomeLogico === 'locais'){
         try{
           var respFresca = await ctrlFetch('/api/ctrl/' + nomeLogico, { headers: ctrlCabecalhos() });
           var listaFresca = respFresca.itens || [];
           if(nomeLogico === 'equipamentos'){ state.equipamentos = listaFresca; }
+          else if(nomeLogico === 'locais'){ state.locais = listaFresca; }
           else { state.operadores = listaFresca; }
           CTRL_BASELINE[key] = JSON.parse(JSON.stringify(listaFresca));
           return true;
@@ -3537,6 +3538,20 @@
     if(totalEl) totalEl.textContent = MATERIAIS_PESAGEM.length + SERVICOS_HORA.length + SERVICOS_VERBA.length;
   }
 
+  /** Opções do dropdown "Local" da Ordem — vem da lista compartilhada
+   *  Locais (state.locais, mesma do Frota/Checklist). Se a ordem já tinha um
+   *  valor de texto livre (de antes desta tela virar dropdown) que não bate
+   *  com nenhum local cadastrado, mantém ele como opção extra pra não sumir
+   *  silenciosamente do registro. */
+  function ordemLocalOptions(selecionado){
+    var nomes = (state.locais||[]).map(function(l){ return l.nome; }).sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
+    var out = '<option value="">Nenhum</option>';
+    if(selecionado && nomes.indexOf(selecionado)===-1){
+      out += '<option value="'+esc(selecionado)+'" selected>'+esc(selecionado)+' (fora da lista de Locais)</option>';
+    }
+    out += optionsList(nomes, selecionado);
+    return out;
+  }
   function openOrdemModal(existing){
     var isEdit = !!existing;
     var o = existing || {nome:'', numero:'', cliente:CLIENTES[0], local:'', vendedor:'', modeloContrato:'', cnpj:'', vigenciaContratoInicio:'', vigenciaContratoFim:'', medicaoPesagem:false, medicaoHora:false};
@@ -3560,7 +3575,9 @@
         '<div class="field"><label>Nome da ordem</label><input type="text" id="fOrdNome" value="'+esc(o.nome)+'" placeholder="Ex: Mina de Cauê"></div>' +
       '</div>' +
       '<div class="field-row">' +
-        '<div class="field"><label>Local</label><input type="text" id="fOrdLocal" value="'+esc(o.local||'')+'" placeholder="Ex: Serra/ES"></div>' +
+        '<div class="field"><label>Local</label><select id="fOrdLocal">'+ordemLocalOptions(o.local)+'</select>' +
+          '<div class="shared-note" style="display:block;margin-top:6px;">Mesma lista de locais do Checklist/Frota — cadastre um local novo por lá se não encontrar aqui.</div>' +
+        '</div>' +
         '<div class="field"><label>Segmento</label><input type="text" id="fOrdVendedor" value="'+esc(o.vendedor||'')+'" placeholder="Ex: Siderurgia, Descomissionamento"></div>' +
       '</div>' +
       '<div class="field"><label>Modelo de contrato</label><input type="text" id="fOrdModelo" value="'+esc(o.modeloContrato||'')+'" placeholder="Ex: Hora"></div>' +
@@ -3584,6 +3601,21 @@
         '<button class="btn btn-primary" id="ordSave">Salvar</button>' +
       '</div>'
     );
+    // O nome de um Local já costuma vir no formato "Nome - Nome - Número"
+    // (ex.: "AMT - Sucata - 500010") — se ainda não preencheram Número/Nome
+    // da ordem na mão, aproveita e sugere os dois a partir do Local
+    // escolhido (a pessoa pode ajustar/apagar à vontade depois).
+    document.getElementById('fOrdLocal').addEventListener('change', function(){
+      if(isEdit) return;
+      var partes = this.value.split(' - ').map(function(p){ return p.trim(); }).filter(Boolean);
+      if(partes.length < 2) return;
+      var possivelNumero = partes[partes.length-1];
+      if(!/^\d+$/.test(possivelNumero)) return; // só sugere se o último pedaço for mesmo um número
+      var campoNumero = document.getElementById('fOrdNumero');
+      var campoNome = document.getElementById('fOrdNome');
+      if(!campoNumero.value.trim()) campoNumero.value = possivelNumero;
+      if(!campoNome.value.trim()) campoNome.value = partes.slice(0,-1).join(' - ');
+    });
     document.getElementById('fOrdCliente').addEventListener('change', function(){
       var isNovo = this.value==='__novo__';
       document.getElementById('novoClienteWrap').style.display = isNovo ? 'block' : 'none';
@@ -4110,7 +4142,7 @@
       '<div class="form-section form-section-ident">' +
         '<div class="form-section-title"><span class="dot"></span>Identificação</div>' +
         '<div class="field-row"><div class="field"><label>Data</label><input type="date" id="apData" value="'+todayISO()+'"'+(travarHorarios?' readonly':'')+'>'+(travarHorarios?'<div class="muted-tag" style="margin-top:4px;">Data de hoje. Para alterar, peça ao Escritório.</div>':'')+'</div></div>' +
-        '<div class="field"><label>Equipamento</label><div class="combo-wrap"><input type="text" id="apEquip" autocomplete="off" value="'+esc(equipValorInicial)+'" placeholder="Digite ou selecione o código…"><div class="combo-list" id="apEquipList"></div></div><div id="apEquipError"></div></div>' +
+        '<div class="field"><label>Equipamento</label><div style="display:flex;align-items:center;gap:10px;"><div id="apEquipFoto" style="width:40px;height:40px;flex-shrink:0;border-radius:8px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;">🚜</div><div class="combo-wrap" style="flex:1;"><input type="text" id="apEquip" autocomplete="off" value="'+esc(equipValorInicial)+'" placeholder="Digite ou selecione o código…"><div class="combo-list" id="apEquipList"></div></div></div><div id="apEquipError"></div></div>' +
         '<div class="field-row-ordem">' +
           '<div class="field"><label>Nº Ordem</label><div class="combo-wrap"><input type="text" id="apOrdemNumero" autocomplete="off" value="'+esc(ordemNumeroValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apOrdemNumeroList"></div></div></div>' +
           '<div class="field"><label>Descrição Ordem</label><div class="combo-wrap"><input type="text" id="apOrdem" autocomplete="off" value="'+esc(ordemValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Digite ou selecione a ordem…"><div class="combo-list" id="apOrdemList"></div></div>'+(restringirOrdem?('<div class="muted-tag" style="margin-top:4px;">Você está restrito a esta ordem.'+(state.operadorOrdemAdminLock?'':' <button type="button" class="btn-ghost" id="trocarOrdemBtn" style="padding:0;">Trocar ordem</button>')+'</div>'):(clienteRestrito?'<div class="muted-tag" style="margin-top:4px;">Você está restrito ao cliente '+esc(clienteRestrito)+' — escolha entre as ordens dele acima.</div>':''))+'<div id="apOrdemError"></div></div>' +
@@ -4179,6 +4211,52 @@
     updateConsolidacao();
     wireComboBox('apEquip', 'apEquipList', function(){ return equipamentosOrdenados.map(function(e){ return equipLabel(e); }); });
     wireOrdemTrio('apOrdemNumero', 'apOrdem', 'apNCliente', function(){ return ordensOrdenadas; }, function(){ atualizarServicoTarifa(); atualizarServicoHora(); }, ordemDescricao);
+    // Mesma ideia do Checklist do tablet: ao escolher o equipamento, já busca a
+    // foto dele, e — já que cada Ordem tem um "Local" (a mesma lista Locais do
+    // Frota) — acha sozinho a ordem cujo Local bate com onde esse equipamento
+    // está alocado agora, preenchendo Nº Ordem/Descrição/Nº Cliente sozinho.
+    // Só entra em ação numa ordem nova (não em edição) e só se a pessoa ainda
+    // não tiver escolhido uma ordem na mão — nunca atropela uma escolha manual.
+    var cacheFotoEquipamentoAp = {};
+    async function buscarFotoEquipamentoAp(codigo){
+      var chave = String(codigo||'').toUpperCase();
+      if(!chave) return null;
+      if(cacheFotoEquipamentoAp[chave]!==undefined) return cacheFotoEquipamentoAp[chave];
+      try{
+        var resp = await ctrlFetch('/api/foto-equipamento/'+encodeURIComponent(chave), { headers: ctrlCabecalhos() });
+        cacheFotoEquipamentoAp[chave] = resp.url || null;
+      }catch(e){ cacheFotoEquipamentoAp[chave] = null; }
+      return cacheFotoEquipamentoAp[chave];
+    }
+    function atualizarFotoEquipamentoAp(codigo){
+      var el = document.getElementById('apEquipFoto');
+      if(!el) return;
+      el.innerHTML = '🚜';
+      if(!codigo) return;
+      buscarFotoEquipamentoAp(codigo).then(function(url){
+        if(document.getElementById('apEquip').value.indexOf(codigo)!==0) return; // trocou de novo enquanto buscava
+        el.innerHTML = url ? '<img src="'+esc(url)+'" style="width:100%;height:100%;object-fit:cover;" alt="">' : '🚜';
+      });
+    }
+    function autoPreencherPorEquipamentoAp(){
+      var equipTexto = document.getElementById('apEquip').value.trim();
+      var equipObj = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTexto; })[0];
+      atualizarFotoEquipamentoAp(equipObj ? equipObj.codigo : null);
+      if(restringirOrdem) return; // já travado numa ordem específica — não mexe
+      if(!equipObj || !equipObj.local) return;
+      if(document.getElementById('apOrdem').value.trim()) return; // já tem ordem escolhida — não atropela
+      var alvo = String(equipObj.local).trim().toLowerCase();
+      var candidatas = ordensOrdenadas.filter(function(o){ return String(o.local||'').trim().toLowerCase()===alvo; });
+      if(candidatas.length !== 1) return; // sem ordem com esse local, ou mais de uma (ambíguo) — deixa pra escolher na mão
+      var achada = candidatas[0];
+      document.getElementById('apOrdemNumero').value = achada.numero || '';
+      document.getElementById('apOrdem').value = ordemDescricao(achada);
+      document.getElementById('apNCliente').value = CLIENTE_NUMEROS[achada.cliente] || '';
+      atualizarServicoTarifa(); atualizarServicoHora();
+    }
+    document.getElementById('apEquip').addEventListener('change', autoPreencherPorEquipamentoAp);
+    if(!editRecord) autoPreencherPorEquipamentoAp();
+    else { var equipInicialEdicao = getEquip(editRecord.equipamentoId); atualizarFotoEquipamentoAp(equipInicialEdicao ? equipInicialEdicao.codigo : null); }
     document.getElementById('apOrdem').addEventListener('change', function(){ atualizarServicoTarifa(); atualizarServicoHora(); });
     document.getElementById('apServico').addEventListener('change', updateConsolidacao);
     document.getElementById('apServicoHora').addEventListener('change', updateConsolidacao);
@@ -9824,6 +9902,12 @@
     if(producaoNotas===null){ producaoNotas = []; await saveList('producao_notas_v1', producaoNotas); }
     var logAud = await loadList('log_auditoria_v1');
     if(logAud===null){ logAud = []; await saveList('log_auditoria_v1', logAud); }
+    // Locais é cadastro COMPARTILHADO com o Frota/Portal (mesma lista Locais
+    // do SharePoint) — igual Equipamentos/Operadores. Se der erro de rede,
+    // só fica sem opções no dropdown de Local da Ordem; não é motivo pra
+    // acionar o aviso de "erro ao carregar" (não é dado próprio da Controladoria).
+    var locaisCarregados = await loadList('locais_v1');
+    state.locais = locaisCarregados || [];
     if(cli===null){ cli = SEED_CLIENTES.slice(); erroCarregamento = true; }
     if(cliDetalhes===null){ cliDetalhes = {}; await saveList('cliente_detalhes_v1', cliDetalhes); }
     if(cliNum===null){ cliNum = Object.assign({}, SEED_CLIENTE_NUMEROS); erroCarregamento = true; }
