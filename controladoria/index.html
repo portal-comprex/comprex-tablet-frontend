@@ -1877,7 +1877,18 @@
   function getEscala(escalaKey){ return state.escalas.filter(function(e){ return e.key===escalaKey; })[0] || null; }
   // "Controladoria", no sentido de nível de VISUALIZAÇÃO, agora cobre Escritório e Administrador
   // (a diferença entre os dois é se pode ou não editar/excluir — isso é tratado à parte).
-  function isControladoriaLevel(){ return state.perfil==='escritorio' || state.perfil==='administrador'; }
+  function isControladoriaLevel(){ return state.perfil==='admin' || state.perfil==='limitado'; }
+  /** Diz se o perfil atual pode ver/usar uma tela específica da Controladoria
+   *  (mesmos nomes de "view" usados no menu lateral e no switchView).
+   *  'admin' = tudo liberado; 'campo' (tablet) só as 3 telas de sempre;
+   *  'limitado' = só as telas marcadas pra essa pessoa em "Gerenciar Acessos"
+   *  no Portal (state.telas), do mesmo jeito que já funciona pra
+   *  Checklists/Movimentações. */
+  function podeVerTela(view){
+    if(state.perfil==='admin') return true;
+    if(state.perfil==='campo') return view==='apropriacao' || view==='historico' || view==='producao';
+    return !!(state.telas && state.telas.indexOf(view)!==-1);
+  }
   function getEscalaHorario(escalaKey, turnoKey){
     var esc = getEscala(escalaKey);
     if(!esc) return null;
@@ -1951,7 +1962,7 @@
   /* ============ STATE ============ */
   var SEED_OPERADORES = [];
 
-  var state = { equipamentos: [], ordens: [], operadores: [], apropriacoes: [], apropriacoesRascunhos: [], tarifasHora: [], tarifasProducao: [], tarifasVerba: [], motivosParada: [], escalas: [], usuarios: [], usuarioLogado: null, logAuditoria: [], producoes: [], producaoNotas: [], statusFaturamento: [], custosOrdem: [], metasMensais: [], descricoesBoletim: [], usuariosOrdensRestritas: [], currentView: 'dashboard', currentSubtab:'equip', perfil: null, operadorOrdemId: null, operadorOrdemAdminLock: false, operadorClienteRestrito: null, editingApropriacaoId: null, editingRascunhoId: null };
+  var state = { equipamentos: [], ordens: [], operadores: [], apropriacoes: [], apropriacoesRascunhos: [], tarifasHora: [], tarifasProducao: [], tarifasVerba: [], motivosParada: [], escalas: [], usuarios: [], usuarioLogado: null, logAuditoria: [], producoes: [], producaoNotas: [], statusFaturamento: [], custosOrdem: [], metasMensais: [], descricoesBoletim: [], usuariosOrdensRestritas: [], currentView: 'dashboard', currentSubtab:'equip', perfil: null, telas: null, operadorOrdemId: null, operadorOrdemAdminLock: false, operadorClienteRestrito: null, editingApropriacaoId: null, editingRascunhoId: null };
   var formParadas = [];
 
   /* ============ STORAGE ============ */
@@ -9593,16 +9604,23 @@
   /* ============ INIT ============ */
   function applyPerfil(perfil){
     state.perfil = perfil;
-    var labels = {campo:'Campo', escritorio:'Escritório', administrador:'Administrador'};
+    var labels = {campo:'Campo', limitado:'Acesso limitado', admin:'Administrador'};
     var nomeTag = state.usuarioLogado ? ' · '+state.usuarioLogado.nome : '';
     document.getElementById('perfilLabel').textContent = 'Perfil: '+(labels[perfil]||perfil)+nomeTag;
-    document.querySelectorAll('[data-role-only="controladoria"]').forEach(function(el){
-      el.style.display = (perfil==='escritorio' || perfil==='administrador') ? '' : 'none';
+    // Esconde do menu lateral qualquer tela que essa pessoa não tenha
+    // permissão de ver — "Backup e Limpeza" continua exclusiva de
+    // administrador (não é liberável por checkbox); as demais seguem
+    // podeVerTela(), que já olha pras telas marcadas em "Gerenciar Acessos".
+    document.querySelectorAll('.nav-item[data-view]').forEach(function(el){
+      var view = el.dataset.view;
+      if(view === 'manutencao'){ el.style.display = (perfil==='admin') ? '' : 'none'; return; }
+      el.style.display = podeVerTela(view) ? '' : 'none';
     });
-    document.querySelectorAll('[data-role-only="administrador"]').forEach(function(el){
-      el.style.display = (perfil==='administrador') ? '' : 'none';
-    });
-    switchView(perfil === 'campo' ? 'apropriacao' : 'dashboard');
+    var ordemPreferencia = perfil==='campo'
+      ? ['apropriacao','historico','producao']
+      : ['dashboard','apropriacao','historico','producao','cadastro','consolidado','medicao'];
+    var primeiraPermitida = ordemPreferencia.filter(podeVerTela)[0] || 'apropriacao';
+    switchView(primeiraPermitida);
   }
 
   async function saveOperadorOrdem(ordemId){
@@ -9758,18 +9776,23 @@
     toast('Você saiu do sistema.');
   });
   document.addEventListener('click', function(e){
-    if(state.perfil !== 'escritorio') return;
+    // Só entra em jogo pra quem tem acesso limitado E não tem a tela
+    // "Cadastros" marcada em Gerenciar Acessos — quem já vê o menu Cadastros
+    // (admin, ou limitado com essa tela liberada) tem CRUD completo nela,
+    // do mesmo jeito que já funciona pra Checklists/Movimentações.
+    if(state.perfil !== 'limitado' || podeVerTela('cadastro')) return;
     var btn = e.target.closest('button');
     if(!btn) return;
     var bloqueados = ['novoClienteCadastroBtn','importarEquipBtn','novoEquipamentoBtn','importarOrdensBtn','novaOrdemBtn','importarOperadoresBtn','novoOperadorBtn','novaTarifaProducaoBtn','novaTarifaVerbaBtn','novaTarifaHoraBtn','novoMotivoParadaBtn','novaEscalaBtn','novoUsuarioBtn'];
-    // Editar/excluir lançamento de apropriação (data-edit-ap / data-del-ap) é liberado pro
-    // perfil Escritório — os demais cadastros (equipamentos, ordens, tarifas, etc.) continuam bloqueados.
-    var liberadosParaEscritorio = ['data-edit-ap','data-del-ap'];
+    // Editar/excluir lançamento de apropriação (data-edit-ap / data-del-ap) fica de fora
+    // daqui — pertence à tela "Histórico de Apropriações", não a "Cadastros", e é
+    // controlado pela visibilidade dessa outra tela (podeVerTela('historico')).
+    var liberadosDoBloqueioCadastro = ['data-edit-ap','data-del-ap'];
     var attrs = btn.getAttributeNames();
-    var isCrud = attrs.some(function(a){ return (a.indexOf('data-edit-')===0 || a.indexOf('data-del-')===0) && liberadosParaEscritorio.indexOf(a)===-1; }) || bloqueados.indexOf(btn.id)>-1;
+    var isCrud = attrs.some(function(a){ return (a.indexOf('data-edit-')===0 || a.indexOf('data-del-')===0) && liberadosDoBloqueioCadastro.indexOf(a)===-1; }) || bloqueados.indexOf(btn.id)>-1;
     if(isCrud){
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-      toast('Seu perfil (Escritório) tem acesso de visualização — não permite alterações no sistema.');
+      toast('Você não tem permissão de alterar Cadastros — peça pra um administrador liberar essa tela em "Gerenciar Acessos".');
     }
   }, true);
 
@@ -9842,6 +9865,11 @@
       return;
     }
     state.usuarioLogado = {id: sessaoCtrl.email || 'tablet', nome: sessaoCtrl.nome || '', login: sessaoCtrl.email || '', nivel: perfil.toUpperCase(), status:'Ativo'};
+    // Telas liberadas pra esse perfil (só importa pra 'limitado' — vem do
+    // /api/ctrl/sessao, calculado no backend a partir do "Gerenciar Acessos"
+    // do Portal). null = sem restrição de tela (admin, ou 'controladoria'
+    // inteiro marcado pra essa pessoa).
+    state.telas = sessaoCtrl.telas || null;
     var erroCarregamento = await carregarDadosDoServidor();
     document.getElementById('loadingScreen').style.display = 'none';
     if(erroCarregamento) mostrarAvisoErroCarregamento();
