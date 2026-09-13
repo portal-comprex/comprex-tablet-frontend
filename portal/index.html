@@ -4063,7 +4063,7 @@ function acessosRenderizarArvoreMenus(){
 document.getElementById('btn-abrir-acessos').onclick = acessosAbrirTela;
 document.getElementById('acessos-fechar').onclick = function(){ document.getElementById('acessos-overlay').classList.remove('aberto'); };
 document.getElementById('acessos-overlay').onclick = function(e){ if (e.target === this) this.classList.remove('aberto'); };
-const NOMES_SECAO = { checklist: 'Checklists', partediaria: 'TESTE', rastreamento: 'Movimentações' };
+const NOMES_SECAO = { checklist: 'Checklists', partediaria: 'TESTE', rastreamento: 'Movimentações', controladoria: 'Controladoria' };
 /** Todas as telas que existem, agrupadas por seção — usado pra montar os
  *  checkboxes de permissão granular na tela "Gerenciar Acessos". */
 const MENUS_POR_SECAO = {
@@ -4088,6 +4088,18 @@ const MENUS_POR_SECAO = {
     { view: 'dashboard-mov', label: 'Dashboard' },
     { view: 'status-equipamentos', label: 'Status dos Equipamentos' },
     { view: 'frota', label: 'Frota' }
+  ],
+  // Telas da Controladoria (sistema da Nalva, embutido no Portal). "Backup e
+  // Limpeza" fica de fora de propósito — mexe/apaga dados e continua exclusiva
+  // de quem já é Administrador (não aparece aqui pra liberar por checkbox).
+  controladoria: [
+    { view: 'apropriacao', label: 'Lançar Parte Diária' },
+    { view: 'historico', label: 'Histórico de Apropriações' },
+    { view: 'producao', label: 'Produção' },
+    { view: 'dashboard', label: 'Dashboard' },
+    { view: 'cadastro', label: 'Cadastros' },
+    { view: 'consolidado', label: 'Consolidado' },
+    { view: 'medicao', label: 'Medição' }
   ]
 };
 function acessosRenderizar(){
