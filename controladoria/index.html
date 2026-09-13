@@ -4143,6 +4143,14 @@
     state.editingApropriacaoId = editRecord && !isRascunho ? editRecord.id : null;
     state.editingRascunhoId = editRecord && isRascunho ? editRecord.id : null;
     formParadas = editRecord ? JSON.parse(JSON.stringify(editRecord.paradas||[])) : [];
+    // Linha do tempo do lançamento em tempo real (modo operador simplificado, ver
+    // modoOperadorSimplificado abaixo) — cada evento é {tipo:'atividade'|'parada',
+    // situacao (só atividade), motivo (só parada), horimetroIni, horimetroFim,
+    // inicio, fim}. Guardada à parte de formParadas/horários, que continuam sendo
+    // a "fonte da verdade" pros cálculos — a linha do tempo só existe pra pilotar
+    // esses campos e pra poder retomar um rascunho em andamento do jeito que a
+    // pessoa parou.
+    var apEventos = editRecord ? JSON.parse(JSON.stringify(editRecord.timelineEventos||[])) : [];
     var equipamentosOrdenados = state.equipamentos.slice().sort(function(a,b){ return a.codigo.localeCompare(b.codigo,'pt-BR'); });
     var ordensOrdenadas = state.ordens.slice().sort(function(a,b){
       var c = a.cliente.localeCompare(b.cliente,'pt-BR');
@@ -4163,6 +4171,12 @@
     // Só trava o campo quando é uma apropriação do próprio operador (nova, ou uma que já é dele) —
     // nunca quando ele está editando o lançamento de outro colega (ex: via Histórico).
     var operadorTravado = !!operadorAuto && (!editRecord || editRecord.operador===operadorAuto.nome);
+    // Modo simplificado (tablet): o próprio operador lançando o dia dele, em tempo
+    // real — troca os campos de horário/horímetro por uma "linha do tempo" com
+    // Iniciar/Adicionar parada/Finalizar, parecido com a Parte Diária antiga.
+    // Escritório/Administrador (ou alguém editando o lançamento de outra pessoa)
+    // continuam vendo o formulário de sempre, com todos os campos abertos.
+    var modoOperadorSimplificado = travarHorarios && operadorTravado;
     var equipValorInicial = editRecord ? equipLabel(getEquip(editRecord.equipamentoId)) : equipLabel(equipamentosOrdenados[0]);
     var ordemValorInicial = editRecord ? ordemDescricao(getOrdem(editRecord.ordemId)) : (restringirOrdem && ordensOrdenadas[0] ? ordemDescricao(ordensOrdenadas[0]) : '');
     var ordemNumeroValorInicial = editRecord ? (getOrdem(editRecord.ordemId)||{}).numero||'' : (restringirOrdem && ordensOrdenadas[0] ? (ordensOrdenadas[0].numero||'') : '');
@@ -4186,7 +4200,13 @@
         '<div class="field" id="apTurnoWrap" style="display:none;"><label>Turno</label><select id="apTurno"></select></div>' +
       '</div>' +
 
-      '<div class="form-section form-section-operador">' +
+      (modoOperadorSimplificado ? (
+      '<div class="form-section form-section-timeline">' +
+        '<div class="form-section-title"><span class="dot"></span>Lançamento do dia</div>' +
+        '<div id="apTimelineWrap"></div>' +
+      '</div>') : '') +
+
+      '<div class="form-section form-section-operador"'+(modoOperadorSimplificado?' style="display:none"':'')+'>' +
         '<div class="form-section-title"><span class="dot"></span>Horas do operador</div>' +
         '<div class="operador-subheader">OPERADOR</div>' +
         '<div class="field-row-timeline-wrap">' +
@@ -4203,13 +4223,13 @@
         '<div id="apOvernightNote"></div>' +
       '</div>' +
 
-      '<div class="form-section form-section-paradas">' +
+      '<div class="form-section form-section-paradas"'+(modoOperadorSimplificado?' style="display:none"':'')+'>' +
         '<div class="form-section-title"><span class="dot"></span>Paradas</div>' +
         '<div id="paradasEditor"></div>' +
         '<button type="button" class="add-parada-btn" id="addParadaBtn">+ Adicionar parada</button>' +
       '</div>' +
 
-      '<div class="form-section form-section-equip">' +
+      '<div class="form-section form-section-equip"'+(modoOperadorSimplificado?' style="display:none"':'')+'>' +
         '<div class="form-section-title"><span class="dot"></span>Horas do equipamento</div>' +
         '<div class="field-row">' +
           '<div class="field"><label>Horímetro inicial</label><input type="number" step="0.1" id="apHi" placeholder="0,0"></div>' +
@@ -4227,7 +4247,7 @@
 
       '<div class="consol-box" id="consolBox"></div>' +
       '<div id="apFormError"></div>' +
-      '<button class="btn btn-primary" id="apSalvarBtn">'+(editRecord ? 'Salvar alterações' : 'Salvar lançamento')+'</button>';
+      '<button class="btn btn-primary" id="apSalvarBtn"'+(modoOperadorSimplificado?' style="display:none"':'')+'>'+(editRecord ? 'Salvar alterações' : 'Salvar lançamento')+'</button>';
 
     if(editRecord){
       document.getElementById('apEquip').value = equipLabel(getEquip(editRecord.equipamentoId));
@@ -4241,6 +4261,7 @@
 
     renderParadasEditor();
     updateConsolidacao();
+    if(modoOperadorSimplificado) renderApTimeline();
     wireComboBox('apEquip', 'apEquipList', function(){ return equipamentosOrdenados.map(function(e){ return equipLabel(e); }); });
     wireOrdemTrio('apOrdemNumero', 'apOrdem', 'apNCliente', function(){ return ordensOrdenadas; }, function(){ atualizarServicoTarifa(); atualizarServicoHora(); }, ordemDescricao);
     // Mesma ideia do Checklist do tablet: ao escolher o equipamento, já busca a
@@ -4596,7 +4617,8 @@
         servicoHora: servicoHora,
         paradas: formParadas.filter(function(p){ return p.horas>0; }), observacao: '',
         status: 'concluido',
-        saltoHorimetro: saltoHorimetro, excedeuJornada: excedeuJornada
+        saltoHorimetro: saltoHorimetro, excedeuJornada: excedeuJornada,
+        timelineEventos: apEventos
       };
       return (async function(){
       var jaExisteEmApropriacoes = state.apropriacoes.some(function(x){ return x.id===record.id; });
@@ -4656,6 +4678,193 @@
       }
       finalizarSalvamentoApropriacao();
     };
+
+    // ================= LINHA DO TEMPO (modo operador simplificado) =================
+    // Guarda o progresso como rascunho a cada passo (Iniciar/Adicionar parada/
+    // Finalizar parada) — assim ninguém perde o que já fez se fechar a aba no
+    // meio do turno. Lê os mesmos campos (escondidos) que o formulário normal
+    // usa, então não precisa duplicar nenhuma regra de cálculo.
+    async function persistirRascunhoTimeline(){
+      try{
+        var equipTextoTl = document.getElementById('apEquip').value.trim();
+        var equipObjTl = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTextoTl; })[0];
+        var ordemTextoTl = document.getElementById('apOrdem').value.trim();
+        var ordemObjTl = state.ordens.filter(function(o){ return ordemDescricao(o)===ordemTextoTl; })[0];
+        if(!equipObjTl || !ordemObjTl) return; // ainda incompleto — não força salvar
+        var operadorNomeTl = operadorAuto ? operadorAuto.nome : document.getElementById('apOperador').value.trim();
+        var idAtualTl = state.editingRascunhoId || uid();
+        state.editingRascunhoId = idAtualTl;
+        var rascunhoExistenteTl = state.apropriacoesRascunhos.filter(function(x){ return x.id===idAtualTl; })[0];
+        var primeiraAtividadeTl = apEventos.filter(function(e){ return e.tipo==='atividade'; })[0];
+        var recordTl = {
+          id: idAtualTl, equipamentoId: equipObjTl.id, ordemId: ordemObjTl.id, data: document.getElementById('apData').value,
+          operador: operadorNomeTl,
+          escala: document.getElementById('apEscala').value || null,
+          turno: document.getElementById('apTurnoWrap').style.display!=='none' ? document.getElementById('apTurno').value : null,
+          entrada: document.getElementById('apEntrada').value || '', tipoIntervalo: 'Sem intervalo', intervaloInicio: '', intervaloFim: '',
+          saida: '',
+          horimetroInicial: parseFloat(document.getElementById('apHi').value) || 0, horimetroFinal: null,
+          situacaoInicial: primeiraAtividadeTl ? primeiraAtividadeTl.situacao : 'Operação',
+          timelineEventos: apEventos,
+          paradas: formParadas, observacao: '',
+          status: 'em_andamento',
+          rodadas: rascunhoExistenteTl ? (rascunhoExistenteTl.rodadas||1)+1 : 1
+        };
+        if(rascunhoExistenteTl){ state.apropriacoesRascunhos = state.apropriacoesRascunhos.map(function(x){ return x.id===recordTl.id ? recordTl : x; }); }
+        else { state.apropriacoesRascunhos.push(recordTl); }
+        await saveList('apropriacoes_rascunhos_v1', state.apropriacoesRascunhos);
+      }catch(e){ console.error('Falha ao salvar rascunho da linha do tempo', e); }
+    }
+
+    function renderApTimeline(){
+      var wrapT = document.getElementById('apTimelineWrap');
+      if(!wrapT) return;
+      var ultimoTl = apEventos[apEventos.length-1];
+      var abertoAtividadeTl = ultimoTl && ultimoTl.tipo==='atividade' && !ultimoTl.fim;
+      var abertoParadaTl = ultimoTl && ultimoTl.tipo==='parada' && !ultimoTl.fim;
+
+      function linhaFechadaTl(ev){
+        if(ev.tipo==='atividade'){
+          return '<div class="consol-line" style="border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">' +
+            '<span>🟢 '+esc(ev.situacao)+' · '+esc(ev.inicio)+'–'+esc(ev.fim||'…')+'</span>' +
+            '<b>'+brNum(ev.horimetroIni,1)+' → '+(ev.horimetroFim!=null&&ev.horimetroFim!==''?brNum(ev.horimetroFim,1):'—')+'</b>' +
+          '</div>';
+        }
+        return '<div class="consol-line" style="border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">' +
+          '<span>⏸ '+esc(ev.motivo)+' · '+esc(ev.inicio)+'–'+esc(ev.fim||'…')+'</span>' +
+          '<b style="color:var(--text-muted);">parada</b>' +
+        '</div>';
+      }
+
+      var historicoHtmlTl = apEventos.length
+        ? '<div class="consol-box" style="margin-bottom:12px;">'+apEventos.map(linhaFechadaTl).join('')+'</div>'
+        : '<div class="muted-tag" style="margin-bottom:8px;">Nada lançado ainda hoje neste equipamento.</div>';
+
+      var acaoHtmlTl = '';
+      if(!ultimoTl || ultimoTl.fim){
+        acaoHtmlTl =
+          '<div class="field-row">' +
+            '<div class="field"><label>Horímetro</label><input type="number" step="0.1" id="apTlHorimetro" placeholder="0,0"></div>' +
+            '<div class="field"><label>Iniciar em</label><select id="apTlSituacao">'+optionsList(['Operação','À disposição'],'Operação')+'</select></div>' +
+          '</div>' +
+          '<div id="apTlErro"></div>' +
+          '<button type="button" class="btn btn-primary" id="apTlIniciarBtn">Iniciar</button>';
+      } else if(abertoAtividadeTl){
+        acaoHtmlTl =
+          '<div class="muted-tag" style="margin-bottom:8px;">Em '+esc(ultimoTl.situacao)+' desde '+esc(ultimoTl.inicio)+' (horímetro '+brNum(ultimoTl.horimetroIni,1)+').</div>' +
+          '<div id="apTlParadaForm" style="display:none;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--border);">' +
+            '<div class="field-row">' +
+              '<div class="field"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
+              '<div class="field"><label>Serviço</label><select id="apTlParadaServico"><option value="">Escolha o motivo primeiro…</option></select></div>' +
+              '<div class="field"><label>Horímetro</label><input type="number" step="0.1" id="apTlParadaHorimetro" placeholder="0,0"></div>' +
+            '</div>' +
+            '<div id="apTlParadaErro"></div>' +
+            '<button type="button" class="btn btn-outline btn-sm" id="apTlParadaIniciarBtn">Iniciar parada</button>' +
+          '</div>' +
+          '<div id="apTlFinalForm" style="display:none;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--border);">' +
+            '<div class="field"><label>Horímetro final</label><input type="number" step="0.1" id="apTlHorimetroFinal" placeholder="0,0"></div>' +
+            '<div id="apTlFinalErro"></div>' +
+            '<button type="button" class="btn btn-primary btn-sm" id="apTlFinalConfirmarBtn">Salvar lançamento</button>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<button type="button" class="btn btn-outline" id="apTlAddParadaBtn">+ Adicionar parada</button>' +
+            '<button type="button" class="btn btn-outline" id="apTlFinalizarBtn">Finalizar lançamento</button>' +
+          '</div>';
+      } else if(abertoParadaTl){
+        acaoHtmlTl =
+          '<div class="muted-tag" style="margin-bottom:8px;">Parado — '+esc(ultimoTl.motivo)+' — desde '+esc(ultimoTl.inicio)+'.</div>' +
+          '<button type="button" class="btn btn-primary" id="apTlFinalizarParadaBtn">Finalizar parada</button>';
+      }
+
+      wrapT.innerHTML = historicoHtmlTl + acaoHtmlTl;
+
+      if(!ultimoTl || ultimoTl.fim){
+        document.getElementById('apTlIniciarBtn').onclick = function(){
+          var hRaw = document.getElementById('apTlHorimetro').value;
+          var h = parseFloat(hRaw);
+          var erroEl = document.getElementById('apTlErro');
+          if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro.</div>'; return; }
+          var situacaoTl = document.getElementById('apTlSituacao').value;
+          var agoraTl = horaAtualHHMM();
+          if(apEventos.length===0){
+            document.getElementById('apEntrada').value = agoraTl;
+            document.getElementById('apHi').value = h;
+          }
+          apEventos.push({ tipo:'atividade', situacao: situacaoTl, horimetroIni: h, inicio: agoraTl, fim: null, horimetroFim: null });
+          persistirRascunhoTimeline();
+          renderApTimeline();
+          updateConsolidacao();
+        };
+      } else if(abertoAtividadeTl){
+        document.getElementById('apTlAddParadaBtn').onclick = function(){
+          document.getElementById('apTlParadaForm').style.display = 'block';
+          document.getElementById('apTlFinalForm').style.display = 'none';
+        };
+        document.getElementById('apTlFinalizarBtn').onclick = function(){
+          document.getElementById('apTlFinalForm').style.display = 'block';
+          document.getElementById('apTlParadaForm').style.display = 'none';
+        };
+        document.getElementById('apTlParadaCategoria').addEventListener('change', function(){
+          var servSel = document.getElementById('apTlParadaServico');
+          var categoria = this.value;
+          servSel.innerHTML = categoria ? ('<option value="">Selecione…</option>'+optionsList(servicosDaCategoria(categoria),'')) : '<option value="">Escolha o motivo primeiro…</option>';
+        });
+        document.getElementById('apTlParadaIniciarBtn').onclick = function(){
+          var servico = document.getElementById('apTlParadaServico').value;
+          var hRaw = document.getElementById('apTlParadaHorimetro').value;
+          var h = parseFloat(hRaw);
+          var erroEl = document.getElementById('apTlParadaErro');
+          if(!servico){ erroEl.innerHTML = '<div class="form-error">Selecione o motivo/serviço da parada.</div>'; return; }
+          if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro.</div>'; return; }
+          var agoraTl = horaAtualHHMM();
+          ultimoTl.horimetroFim = h; ultimoTl.fim = agoraTl;
+          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null });
+          formParadas.push({ motivo: servico, inicio: agoraTl, termino: '', horas: 0, tipoServico: '' });
+          persistirRascunhoTimeline();
+          renderApTimeline();
+          updateConsolidacao();
+        };
+      } else if(abertoParadaTl){
+        document.getElementById('apTlFinalizarParadaBtn').onclick = function(){
+          var agoraTl = horaAtualHHMM();
+          ultimoTl.fim = agoraTl;
+          var abertasFormParadasTl = formParadas.filter(function(p){ return !p.termino; });
+          var alvoFormParadaTl = abertasFormParadasTl[abertasFormParadasTl.length-1];
+          if(alvoFormParadaTl){
+            alvoFormParadaTl.termino = agoraTl;
+            alvoFormParadaTl.horas = paradaHoras(alvoFormParadaTl);
+          }
+          persistirRascunhoTimeline();
+          renderParadasEditor();
+          renderApTimeline();
+          updateConsolidacao();
+        };
+      }
+
+      // O botão real de salvar (apSalvarBtn) fica escondido nesse modo, mas
+      // continua existindo e com todas as regras de negócio de sempre — só
+      // preenchemos os campos escondidos (Hf, Saída, Intervalo, Situação) e
+      // disparamos o clique dele, em vez de duplicar a validação aqui.
+      var finalConfirmarBtnTl = document.getElementById('apTlFinalConfirmarBtn');
+      if(finalConfirmarBtnTl){
+        finalConfirmarBtnTl.onclick = function(){
+          var hRaw = document.getElementById('apTlHorimetroFinal').value;
+          var h = parseFloat(hRaw);
+          var erroEl = document.getElementById('apTlFinalErro');
+          if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro final.</div>'; return; }
+          if(h < ultimoTl.horimetroIni){ erroEl.innerHTML = '<div class="form-error">O horímetro final não pode ser menor que o horímetro deste período em operação ('+brNum(ultimoTl.horimetroIni,1)+').</div>'; return; }
+          var agoraTl = horaAtualHHMM();
+          ultimoTl.horimetroFim = h; ultimoTl.fim = agoraTl;
+          document.getElementById('apSaida').value = agoraTl;
+          document.getElementById('apHf').value = h;
+          document.getElementById('apTipoIntervalo').value = 'Sem intervalo';
+          var primeiraAtividadeSalvarTl = apEventos.filter(function(e){ return e.tipo==='atividade'; })[0];
+          if(primeiraAtividadeSalvarTl) document.getElementById('apSituacaoInicial').value = primeiraAtividadeSalvarTl.situacao;
+          persistirRascunhoTimeline();
+          document.getElementById('apSalvarBtn').click();
+        };
+      }
+    }
   }
 
   /* ============ IMPORTAR PARTE DIÁRIA (PLANILHA) ============
