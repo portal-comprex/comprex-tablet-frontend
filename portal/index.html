@@ -4335,6 +4335,11 @@ async function tabletLoginCarregarLista(){
         if (!confirm('Remover o login do tablet de "' + nome + '"? Isso não apaga checklists/partes diárias já lançados por ele, só o acesso de login — pra criar de novo, cadastre um novo login.')) return;
         try {
           await tabletFetchAdmin('/admin/operadores/' + btn.dataset.tabletRemover, { method: 'DELETE' });
+          // Tira a linha da tela na hora, sem esperar a próxima atualização
+          // automática (o SharePoint às vezes demora um instante pra
+          // refletir a mudança numa releitura imediata).
+          var linha = btn.closest('.acessos-linha');
+          if (linha) linha.remove();
           tabletLoginCarregarLista();
         } catch (err) { alert('Erro: ' + err.message); }
       };
