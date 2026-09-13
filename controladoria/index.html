@@ -9809,9 +9809,9 @@
     // usa state.ordens.
     document.getElementById('profileScreen').style.display = 'none';
     document.getElementById('loadingScreen').style.display = 'flex';
-    var erroCarregamentoLogin = await carregarDadosDoServidor();
+    var resultadoCarregamentoLogin = await carregarDadosDoServidor();
     document.getElementById('loadingScreen').style.display = 'none';
-    if(erroCarregamentoLogin) mostrarAvisoErroCarregamento();
+    if(resultadoCarregamentoLogin.erro) mostrarAvisoErroCarregamento(resultadoCarregamentoLogin.listas);
     function entrar(){
       state.usuarioLogado = match;
       document.getElementById('app').style.display = 'flex';
@@ -9886,24 +9886,25 @@
   // falharem por permissão, mesmo com o usuário já "logado" na tela.
   async function carregarDadosDoServidor(){
     var erroCarregamento = false;
+    var listasComFalha = []; // nomes legíveis das listas que realmente falharam (pra diagnóstico, não pra assustar)
     var chaves = ['equipamentos_v6','ordens_v9','apropriacoes_v7','apropriacoes_rascunhos_v1','operadores_v4','tarifas_hora_v2','tarifas_producao_v3','tarifas_verba_v1','motivos_parada_v1','escalas_v1','usuarios_v1','producoes_v1','producao_notas_v1','status_faturamento_v1','custos_ordem_v1','clientes_v2','cliente_detalhes_v1','cliente_numeros_v3','materiais_pesagem_v1','servicos_hora_v1','servicos_verba_v1','metas_mensais_v1','descricoes_boletim_v1','usuarios_ordens_restritas_v2'];
     var resultados = await Promise.all(chaves.map(function(k){ return loadList(k); }));
     var eq = resultados[0], ord = resultados[1], ap = resultados[2], apRascunhos = resultados[3], oper = resultados[4], tarH = resultados[5], tarP = resultados[6], tarV = resultados[7], motParada = resultados[8], escalas = resultados[9], usuarios = resultados[10], producoes = resultados[11], producaoNotas = resultados[12], statusFaturamento = resultados[13], custosOrdem = resultados[14], cli = resultados[15], cliDetalhes = resultados[16], cliNum = resultados[17], matPesagem = resultados[18], servHora = resultados[19], servVerba = resultados[20], metasMensais = resultados[21], descricoesBoletim = resultados[22], usuariosOrdensRestritas = resultados[23];
-    if(eq===null){ eq = JSON.parse(JSON.stringify(SEED_EQUIPAMENTOS)); erroCarregamento = true; }
-    if(ord===null){ ord = JSON.parse(JSON.stringify(SEED_ORDENS)); erroCarregamento = true; }
-    if(ap===null){ ap = JSON.parse(JSON.stringify(SEED_APROPRIACOES)); erroCarregamento = true; }
+    if(eq===null){ eq = JSON.parse(JSON.stringify(SEED_EQUIPAMENTOS)); erroCarregamento = true; listasComFalha.push('Equipamentos'); }
+    if(ord===null){ ord = JSON.parse(JSON.stringify(SEED_ORDENS)); erroCarregamento = true; listasComFalha.push('Ordens (LISTA_CTRL_ORDENS_ID)'); }
+    if(ap===null){ ap = JSON.parse(JSON.stringify(SEED_APROPRIACOES)); erroCarregamento = true; listasComFalha.push('Apropriações'); }
     if(apRascunhos===null){ apRascunhos = []; await saveList('apropriacoes_rascunhos_v1', apRascunhos); }
-    if(oper===null){ oper = JSON.parse(JSON.stringify(SEED_OPERADORES)); erroCarregamento = true; }
-    if(tarH===null){ tarH = JSON.parse(JSON.stringify(SEED_TARIFAS_HORA)); erroCarregamento = true; }
-    if(tarP===null){ tarP = JSON.parse(JSON.stringify(SEED_TARIFAS_PRODUCAO)); erroCarregamento = true; }
+    if(oper===null){ oper = JSON.parse(JSON.stringify(SEED_OPERADORES)); erroCarregamento = true; listasComFalha.push('Operadores'); }
+    if(tarH===null){ tarH = JSON.parse(JSON.stringify(SEED_TARIFAS_HORA)); erroCarregamento = true; listasComFalha.push('Tarifas por hora'); }
+    if(tarP===null){ tarP = JSON.parse(JSON.stringify(SEED_TARIFAS_PRODUCAO)); erroCarregamento = true; listasComFalha.push('Tarifas de produção'); }
     if(tarV===null){ tarV = []; await saveList('tarifas_verba_v1', tarV); }
-    if(motParada===null){ motParada = JSON.parse(JSON.stringify(SEED_MOTIVOS_PARADA)); erroCarregamento = true; }
+    if(motParada===null){ motParada = JSON.parse(JSON.stringify(SEED_MOTIVOS_PARADA)); erroCarregamento = true; listasComFalha.push('Motivos de parada'); }
     else {
       var motParadaSemOutro = motParada.filter(function(m){ return m.descricao!=='Outro'; });
       if(motParadaSemOutro.length !== motParada.length){ motParada = motParadaSemOutro; await saveList('motivos_parada_v1', motParada); }
     }
-    if(escalas===null){ escalas = JSON.parse(JSON.stringify(SEED_ESCALAS)); erroCarregamento = true; }
-    if(usuarios===null){ usuarios = JSON.parse(JSON.stringify(SEED_USUARIOS)); erroCarregamento = true; }
+    if(escalas===null){ escalas = JSON.parse(JSON.stringify(SEED_ESCALAS)); erroCarregamento = true; listasComFalha.push('Escalas'); }
+    if(usuarios===null){ usuarios = JSON.parse(JSON.stringify(SEED_USUARIOS)); erroCarregamento = true; listasComFalha.push('Usuários'); }
     if(producoes===null){ producoes = []; await saveList('producoes_v1', producoes); }
     if(producaoNotas===null){ producaoNotas = []; await saveList('producao_notas_v1', producaoNotas); }
     var logAud = await loadList('log_auditoria_v1');
@@ -9914,9 +9915,9 @@
     // acionar o aviso de "erro ao carregar" (não é dado próprio da Controladoria).
     var locaisCarregados = await loadList('locais_v1');
     state.locais = locaisCarregados || [];
-    if(cli===null){ cli = SEED_CLIENTES.slice(); erroCarregamento = true; }
+    if(cli===null){ cli = SEED_CLIENTES.slice(); erroCarregamento = true; listasComFalha.push('Clientes'); }
     if(cliDetalhes===null){ cliDetalhes = {}; await saveList('cliente_detalhes_v1', cliDetalhes); }
-    if(cliNum===null){ cliNum = Object.assign({}, SEED_CLIENTE_NUMEROS); erroCarregamento = true; }
+    if(cliNum===null){ cliNum = Object.assign({}, SEED_CLIENTE_NUMEROS); erroCarregamento = true; listasComFalha.push('Números de cliente'); }
     if(matPesagem===null){ matPesagem = SEED_MATERIAIS_PESAGEM.slice(); await saveList('materiais_pesagem_v1', matPesagem); }
     if(servHora===null){ servHora = SEED_SERVICOS_HORA.slice(); await saveList('servicos_hora_v1', servHora); }
     if(servVerba===null){ servVerba = SEED_SERVICOS_VERBA.slice(); await saveList('servicos_verba_v1', servVerba); }
@@ -9932,14 +9933,22 @@
     await backfillCategoriaMotivosParada();
     await seedMetasMensaisIniciais();
     await normalizarFormatacaoCadastrosExistentes();
-    return erroCarregamento;
+    return { erro: erroCarregamento, listas: listasComFalha };
   }
 
-  function mostrarAvisoErroCarregamento(){
+  // Antes isso era uma faixa vermelha fixa no topo da tela, cobrindo tudo —
+  // trocado por um aviso pequeno, discreto, no canto, que já fecha sozinho e
+  // pode ser fechado na hora. Continua existindo (mesmo que discreto) porque
+  // se uma lista de verdade falhou ao carregar, é importante alguém perceber
+  // — mas sem travar/assustar quem só está tentando trabalhar.
+  function mostrarAvisoErroCarregamento(listas){
     var avisoErro = document.createElement('div');
-    avisoErro.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:#B42318;color:#fff;padding:12px 20px;text-align:center;font-weight:700;font-size:13px;';
-    avisoErro.textContent = '⚠ Não foi possível carregar alguns dados do servidor agora. Para sua segurança, NADA foi salvo/sobrescrito — tente recarregar a página (F5). Se persistir, avise a Nalva/TI antes de continuar usando o sistema.';
+    avisoErro.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:999;background:#fff;color:#333;border:1px solid #e0b4b4;border-left:4px solid #B42318;border-radius:8px;padding:10px 14px;max-width:340px;font-size:12px;line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.15);cursor:pointer';
+    var detalhe = (listas && listas.length) ? ('<br><span style="color:#888">Não carregou: ' + listas.join(', ') + '</span>') : '';
+    avisoErro.innerHTML = '<b style="color:#B42318">⚠ Alguns dados não carregaram do servidor agora.</b> Nada foi salvo/sobrescrito — recarregue a página (F5); se persistir, avise a TI.' + detalhe + '<br><span style="color:#888;font-size:11px">(toque pra fechar)</span>';
+    avisoErro.onclick = function(){ avisoErro.remove(); };
     document.body.appendChild(avisoErro);
+    setTimeout(function(){ if (avisoErro.parentNode) avisoErro.remove(); }, 20000);
   }
 
   async function init(){
@@ -9960,9 +9969,9 @@
     // do Portal). null = sem restrição de tela (admin, ou 'controladoria'
     // inteiro marcado pra essa pessoa).
     state.telas = sessaoCtrl.telas || null;
-    var erroCarregamento = await carregarDadosDoServidor();
+    var resultadoCarregamento = await carregarDadosDoServidor();
     document.getElementById('loadingScreen').style.display = 'none';
-    if(erroCarregamento) mostrarAvisoErroCarregamento();
+    if(resultadoCarregamento.erro) mostrarAvisoErroCarregamento(resultadoCarregamento.listas);
     if(perfil === 'campo'){
       state.operadorOrdemAdminLock = false;
       state.operadorOrdemId = await loadOperadorOrdem();
