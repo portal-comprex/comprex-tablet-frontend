@@ -2092,6 +2092,30 @@
         }
       });
       await Promise.all(operacoes);
+
+      // Equipamentos e Operadores são cadastro COMPARTILHADO com o tablet/Portal
+      // (mesmas listas Frota/Operadores no SharePoint) — o "id" de um item novo
+      // só existe de verdade depois que o backend cria o item lá (é o ID real
+      // do SharePoint, não mais um id inventado aqui no navegador). Por isso,
+      // pra estes dois, recarrega a lista do servidor logo depois de salvar —
+      // sem isso, um equipamento/operador recém-criado ficaria com um id que
+      // não bate com o do servidor, e a próxima edição/exclusão criaria um
+      // registro duplicado em vez de alterar o existente.
+      if(nomeLogico === 'equipamentos' || nomeLogico === 'operadores'){
+        try{
+          var respFresca = await ctrlFetch('/api/ctrl/' + nomeLogico, { headers: ctrlCabecalhos() });
+          var listaFresca = respFresca.itens || [];
+          if(nomeLogico === 'equipamentos'){ state.equipamentos = listaFresca; }
+          else { state.operadores = listaFresca; }
+          CTRL_BASELINE[key] = JSON.parse(JSON.stringify(listaFresca));
+          return true;
+        }catch(e){
+          // Sem conexão pra recarregar: mantém o array local (com o id
+          // provisório) — na próxima vez que a tela carregar do zero, os ids
+          // corretos vêm do servidor normalmente.
+        }
+      }
+
       CTRL_BASELINE[key] = JSON.parse(JSON.stringify(arrItens));
       return true;
     }catch(e){
