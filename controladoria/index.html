@@ -1693,10 +1693,16 @@
         }
       } catch (erro) {
         console.error('Modo embutido (portal): sessão recusada.', erro);
+        // O #app ainda está escondido (display:none) até o init() rodar — se o
+        // erro acontece ANTES disso (aqui), escrever só nele deixava a tela de
+        // carregamento girando pra sempre, sem mostrar nada. Agora troca
+        // também a mensagem da tela de carregamento (essa sim está visível).
+        var msgErro = 'Não foi possível confirmar sua conta na Controladoria: ' + (erro.message || '') +
+          ' Peça pra alguém do time te cadastrar, ou saia do Portal e entre de novo.';
+        var loadingMsgEl = document.querySelector('#loadingScreen .msg');
+        if (loadingMsgEl) loadingMsgEl.textContent = msgErro;
         var appEl = document.getElementById('app');
-        if (appEl) appEl.innerHTML = '<div style="padding:30px;font-size:14px;color:#8a6300;">' +
-          'Não foi possível confirmar sua conta na Controladoria: ' + (erro.message || '') +
-          '<br>Peça pra alguém do time te cadastrar, ou saia do Portal e entre de novo.</div>';
+        if (appEl) appEl.innerHTML = '<div style="padding:30px;font-size:14px;color:#8a6300;">' + msgErro + '</div>';
       }
     }
 
