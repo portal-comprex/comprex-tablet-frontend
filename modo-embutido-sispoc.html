@@ -1,0 +1,183 @@
+<!-- =====================================================================
+     MODO EMBUTIDO — Portal Comprex
+     =====================================================================
+     Cole este bloco LOGO DEPOIS do trecho que cria o supabaseClient (ou,
+     depois da Etapa 3, no lugar dele — o Supabase deixou de ser usado para
+     os dados; ver build_storage_sharepoint.py) e ANTES do bloco grande com
+     o código do sistema.
+
+     Dois modos, dois usos:
+     - ?embed=comprex — tablet de campo: recebe o TOKEN do operador (o mesmo
+       token do login do tablet) e sobe direto na tela de Parte Diária, sem
+       pedir login de novo e sem mostrar o menu lateral.
+     - ?embed=portal — Portal (escritório): recebe o token da sessão
+       Microsoft já aberta lá, confirma com o backend quem é essa pessoa e
+       com qual perfil, e mostra as telas da Controladoria dentro do menu do
+       Portal (sem login, sem moldura própria).
+
+     Sem ?embed na URL, este bloco não faz nada — o sistema continua
+     funcionando normalmente para quem abrir o endereço direto.
+     ===================================================================== -->
+<script>
+(function(){
+  "use strict";
+
+  /* Só estes endereços podem mandar uma sessão para cá. */
+  var ORIGENS_AUTORIZADAS = [ window.location.origin ];
+
+  var parametros = new URLSearchParams(window.location.search);
+  var modo = parametros.get('embed');
+  if (!modo) return;                                   // uso normal: sai fora
+
+  /* ----- Modo PORTAL: aberto como aba dentro do Portal Comprex (escritório). */
+  if (modo === 'portal') {
+    window.__comprexEmbedPortal = true;
+
+    var estiloPortal = document.createElement('style');
+    estiloPortal.textContent =
+      '.sidebar,.sidebar-backdrop,.topbar,.mobile-menu-btn{display:none!important}' +
+      '.hazard{display:none!important}' +
+      '#app{display:flex}.main{flex:1;min-width:0}' +
+      '.view{padding:14px 16px 30px 16px}' +
+      '.cadastro-hero{display:none!important}' +
+      '.p-header,.p-hazard{display:none!important}' +
+      '.profile-screen{background:transparent!important}';
+    document.head.appendChild(estiloPortal);
+
+    // Perfil confirmado pelo backend (controladoria/escritorio) — loadPerfil()
+    // usa este valor em vez de perguntar ao Supabase (que não existe mais).
+    window.__ctrlPerfilPortal = null;
+
+    async function aplicarTokenPortal(token){
+      window.__ctrlDefinirToken(token);
+      try {
+        var resp = await fetch(window.CTRL_BACKEND_URL + '/api/ctrl/sessao', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        var corpo = await resp.json();
+        if (!resp.ok) throw new Error((corpo && corpo.erro) || 'Sessão recusada.');
+        window.__ctrlPerfilPortal = corpo.perfil;
+        window.__ctrlSessao = corpo; // {email, nome, perfil} — usado por init() no lugar do Supabase
+        if (!window.__comprexJaIniciou) {
+          window.__comprexJaIniciou = true;
+          if (typeof window.__comprexIniciar === 'function') window.__comprexIniciar();
+        }
+      } catch (erro) {
+        console.error('Modo embutido (portal): sessão recusada.', erro);
+        var appEl = document.getElementById('app');
+        if (appEl) appEl.innerHTML = '<div style="padding:30px;font-size:14px;color:#8a6300;">' +
+          'Não foi possível confirmar sua conta na Controladoria: ' + (erro.message || '') +
+          '<br>Peça pra alguém do time te cadastrar, ou saia do Portal e entre de novo.</div>';
+      }
+    }
+
+    window.addEventListener('message', function(evento){
+      if (ORIGENS_AUTORIZADAS.indexOf(evento.origin) === -1) return;
+      var dados = evento.data;
+      if (!dados) return;
+      if (dados.tipo === 'ctrl-ir' && typeof window.__comprexTrocarTela === 'function') {
+        window.__comprexTrocarTela(dados.view);
+      }
+      if (dados.tipo === 'ctrl-token' && dados.token) {
+        aplicarTokenPortal(dados.token);
+      }
+    });
+
+    // Avisa o Portal quando o sistema realmente subiu (não quando o HTML só
+    // terminou de carregar) — só faz sentido trocar de tela depois disso.
+    var tentativasPortal = 0;
+    var relogioPortal = setInterval(function(){
+      tentativasPortal++;
+      var appEl = document.getElementById('app');
+      var pronto = appEl && appEl.style.display !== 'none' &&
+                   typeof window.__comprexTrocarTela === 'function';
+      if (pronto) {
+        clearInterval(relogioPortal);
+        for (var i = 0; i < ORIGENS_AUTORIZADAS.length; i++){
+          try { window.parent.postMessage({tipo:'ctrl-pronto'}, ORIGENS_AUTORIZADAS[i]); }
+          catch(e){ /* origem não confere — segue para a próxima */ }
+        }
+      } else if (tentativasPortal > 600) {
+        clearInterval(relogioPortal);   // desiste depois de 10 minutos
+      }
+    }, 1000);
+
+    // Também pede logo de cara um token, caso o Portal já tenha um pronto —
+    // evita esperar até o próximo refresh de token do MSAL.
+    for (var i = 0; i < ORIGENS_AUTORIZADAS.length; i++){
+      try { window.parent.postMessage({tipo:'ctrl-pedir-token'}, ORIGENS_AUTORIZADAS[i]); }
+      catch(e){}
+    }
+    return;
+  }
+
+  if (modo !== 'comprex') return;
+  window.__comprexEmbed = true;
+
+  /* Esconde login, menu lateral e barra de topo — quem cuida de navegação
+     nesse contexto é o app do tablet. */
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '.sidebar,.sidebar-backdrop,.topbar,.mobile-menu-btn{display:none!important}' +
+    '#profileScreen{display:none!important}' +
+    '#app{display:flex}.main{flex:1;min-width:0}' +
+    '.view{padding:14px 16px 40px 16px}' +
+    '#view-apropriacao .cadastro-hero{display:none!important}';
+  document.head.appendChild(estilo);
+
+  function avisarNaTelaDeCarregamento(texto){
+    var tela = document.getElementById('loadingScreen');
+    if (!tela) return;
+    var msg = tela.querySelector('.msg');
+    if (msg) msg.textContent = texto;
+  }
+
+  /* Recebe o token que o tablet manda (o MESMO token do /api/login dele — sem
+     segunda senha, sem segunda conta) e liga o sistema. */
+  async function aplicarTokenTablet(token){
+    try {
+      window.__ctrlDefinirToken(token);
+      try { localStorage.setItem('perfil_v1', 'campo'); } catch(e){}
+      // Confirma com o backend (decodifica o token) pra saber o nome do
+      // operador — mesma rota que o Portal usa; sem isso init() não tem
+      // como saber quem está logado (ver bug corrigido na Etapa 4).
+      var resp = await fetch(window.CTRL_BACKEND_URL + '/api/ctrl/sessao', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      var corpo = await resp.json();
+      if (!resp.ok) throw new Error((corpo && corpo.erro) || 'Sessão recusada.');
+      window.__ctrlSessao = corpo; // {email:null, nome, perfil:'campo'}
+      if (typeof window.__comprexIniciar === 'function') {
+        window.__comprexIniciar();
+      }
+    } catch (erro) {
+      console.error('Modo embutido: falha ao aplicar o token recebido.', erro);
+      avisarNaTelaDeCarregamento(
+        'Não foi possível abrir sua sessão. Feche e abra o aplicativo de novo.'
+      );
+    }
+  }
+
+  window.addEventListener('message', function(evento){
+    if (ORIGENS_AUTORIZADAS.indexOf(evento.origin) === -1) return;
+    var dados = evento.data;
+    if (!dados || dados.tipo !== 'comprex-sessao') return;
+    if (window.__comprexJaIniciou) return;      // uma vez só
+    window.__comprexJaIniciou = true;
+    aplicarTokenTablet(dados.token);
+  });
+
+  /* Avisa o tablet que a página já está de pé e pode receber o token. */
+  function pedirSessaoAoTablet(){
+    for (var i = 0; i < ORIGENS_AUTORIZADAS.length; i++){
+      try { window.parent.postMessage({tipo:'sispoc-pronto'}, ORIGENS_AUTORIZADAS[i]); }
+      catch(e){ /* origem não confere — segue para a próxima */ }
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', pedirSessaoAoTablet);
+  } else {
+    pedirSessaoAoTablet();
+  }
+})();
+</script>
