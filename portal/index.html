@@ -6787,7 +6787,7 @@ const INFO_PAGINA = {
 function carregarControladoria(){
   const iframe = document.getElementById('ctrl-iframe');
   if (iframe && iframe.getAttribute('src') === 'about:blank') {
-    iframe.src = '../parte-diaria.html?embed=portal';
+    iframe.src = '../controladoria/index.html?embed=portal';
   }
 }
 document.getElementById('ctrl-voltar-btn').onclick = function(){ mostrarView('painel'); };
@@ -6796,7 +6796,7 @@ document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
 });
 /* ---- Menu da Controladoria -------------------------------------------------
    Os itens da seção Controladoria não trocam de tela no Portal: a tela é
-   sempre a mesma (o quadro com parte-diaria.html). O que muda é qual
+   sempre a mesma (o quadro com controladoria/index.html). O que muda é qual
    funcionalidade aparece dentro dele, e é isso que mandamos por mensagem.
    --------------------------------------------------------------------------- */
 let telaControladoriaAtual = 'apropriacao';
@@ -6810,21 +6810,49 @@ function enviarTelaControladoria(chave){
   if (!quadro || !quadro.contentWindow) return;
   quadro.contentWindow.postMessage({ tipo: 'ctrl-ir', view: chave }, window.location.origin);
 }
+/* Login único (Etapa 2): a Controladoria não pede senha própria — usa a
+   MESMA sessão Microsoft que já está aberta aqui no Portal. Pegamos o ID
+   token (sempre "endereçado" para o nosso próprio app, não para o Graph) e
+   mandamos pro quadro; o backend confere a assinatura e diz quem é essa
+   pessoa e com qual perfil. */
+async function tokenControladoriaAtual(){
+  try {
+    const resp = await msalInstance.acquireTokenSilent({ scopes: ['openid', 'profile'], account: contaAtual });
+    return resp.idToken;
+  } catch (err) {
+    console.warn('Falha ao obter token da Controladoria:', err.message);
+    return null;
+  }
+}
+async function enviarTokenControladoria(){
+  const quadro = document.getElementById('ctrl-iframe');
+  if (!quadro || !quadro.contentWindow) return;
+  const token = await tokenControladoriaAtual();
+  if (!token) return;
+  quadro.contentWindow.postMessage({ tipo: 'ctrl-token', token: token }, window.location.origin);
+}
 document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(item){
   item.onclick = function(){
     telaControladoriaAtual = item.dataset.ctrl;
     mostrarView('controladoria');
     marcarItemControladoria(telaControladoriaAtual);
+    enviarTokenControladoria();
     enviarTelaControladoria(telaControladoriaAtual);
   };
 });
-// O quadro avisa quando terminou de carregar; só então adianta mandar a tela.
+// O quadro avisa quando terminou de carregar (ou quando precisa renovar o
+// token); só então adianta mandar a tela/token.
 window.addEventListener('message', function(evento){
   if (evento.origin !== window.location.origin) return;
-  if (!evento.data || evento.data.tipo !== 'ctrl-pronto') return;
+  if (!evento.data) return;
+  if (evento.data.tipo === 'ctrl-pedir-token') { enviarTokenControladoria(); return; }
+  if (evento.data.tipo !== 'ctrl-pronto') return;
   marcarItemControladoria(telaControladoriaAtual);
   enviarTelaControladoria(telaControladoriaAtual);
 });
+// O ID token do MSAL dura pouco (~1h) — renova sozinho de tempos em tempos
+// pra quem deixar a aba da Controladoria aberta o dia inteiro não cair.
+setInterval(enviarTokenControladoria, 20 * 60 * 1000);
 document.querySelectorAll('.topo-toggle-opt').forEach(function(btn){
   btn.onclick = function(){ mostrarView(btn.dataset.ir); };
 });
