@@ -417,6 +417,10 @@ document.getElementById('btn-sair').onclick = function(){
    — carregados da API e guardados em cache local pra funcionar offline.
    ===================================================================== */
 let dadosIniciais = null;
+// Código (bruto, igual ao "value" das options de equipamento) do último equipamento usado por
+// este operador, salvo no backend (segue ele entre dispositivos) — vem de /dados-iniciais e é
+// usado só pra pré-selecionar o combo do Checklist quando ele carrega ainda sem nada escolhido.
+let meuUltimoEquipamento = '';
 function dadosCache(){
   try { return JSON.parse(localStorage.getItem('dadosIniciaisCache') || 'null'); } catch(e){ return null; }
 }
@@ -427,6 +431,7 @@ async function carregarDadosIniciais(){
       const r = await fetch(API_BASE + '/dados-iniciais', { headers: { Authorization: 'Bearer ' + sessao.token } });
       if (r.ok) {
         dadosIniciais = await r.json();
+        meuUltimoEquipamento = dadosIniciais.meuUltimoEquipamento || '';
         localStorage.setItem('dadosIniciaisCache', JSON.stringify(dadosIniciais));
         localStorage.setItem('dadosIniciaisAtualizadoEm', String(Date.now()));
         return;
@@ -434,6 +439,7 @@ async function carregarDadosIniciais(){
     } catch (e) { /* segue pro cache */ }
   }
   dadosIniciais = dadosCache();
+  meuUltimoEquipamento = (dadosIniciais && dadosIniciais.meuUltimoEquipamento) || '';
 }
 function preencherSelects(){
   if (!dadosIniciais) return;
@@ -441,8 +447,11 @@ function preencherSelects(){
   const locais = dadosIniciais.locais || [];
   ['chk-equipamento', 'pd-equipamento'].forEach(function(id){
     const sel = document.getElementById(id);
+    // Mostra código e descrição em MAIÚSCULA (só na exibição — o "value" da
+    // option continua com o texto original, exatamente como está cadastrado
+    // no SharePoint, então a seleção/comparação abaixo não muda em nada).
     sel.innerHTML = '<option value="">Selecione…</option>' + frotas.map(function(f){
-      return '<option value="' + f.nome + '">' + f.nome + (f.descricao ? ' — ' + f.descricao : '') + '</option>';
+      return '<option value="' + f.nome + '">' + f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : '') + '</option>';
     }).join('');
   });
   ['chk-local', 'pd-local'].forEach(function(id){
@@ -459,6 +468,18 @@ function preencherSelects(){
     const f = frotas.find(function(x){ return x.nome === this.value; }.bind(this));
     if (f && f.local) document.getElementById('pd-local').value = f.local;
   };
+  // Pré-seleciona o último equipamento usado por este operador (só no combo do Checklist, só
+  // quando ele carrega ainda vazio — não sobrescreve uma escolha que o operador já tenha feito).
+  // Dispara "change" (já com os onchange acima montados) pra rodar a mesma automação de sempre
+  // (preenchimento do Local, foto, validação do checklist).
+  const selChk = document.getElementById('chk-equipamento');
+  if (selChk && !selChk.value && meuUltimoEquipamento) {
+    const existeOpcao = Array.prototype.some.call(selChk.options, function(op){ return op.value === meuUltimoEquipamento; });
+    if (existeOpcao) {
+      selChk.value = meuUltimoEquipamento;
+      selChk.dispatchEvent(new Event('change'));
+    }
+  }
 }
 
 /* =====================================================================
@@ -600,7 +621,21 @@ function atualizarFotoEquipamentoParteDiaria(nomeEquip){ atualizarFotoEquipament
 document.getElementById('chk-equipamento').addEventListener('change', function(){
   atualizarValidacaoChecklist();
   atualizarFotoEquipamentoChecklist(this.value);
+  salvarMeuUltimoEquipamento(this.value);
 });
+// Melhor esforço: guarda no backend o último equipamento escolhido por este operador, pra ele
+// vir pré-selecionado da próxima vez (mesmo em outro tablet/dispositivo). Nunca bloqueia a tela
+// nem mostra erro — se falhar (offline, etc.), simplesmente não atualiza dessa vez.
+function salvarMeuUltimoEquipamento(equipamentoCodigo){
+  if (!equipamentoCodigo) return;
+  const sessao = sessaoAtual();
+  if (!sessao) return;
+  fetch(API_BASE + '/operador/ultimo-equipamento', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessao.token },
+    body: JSON.stringify({ equipamentoCodigo: equipamentoCodigo })
+  }).catch(function(){ /* melhor esforço — ignora falha */ });
+}
 document.getElementById('pd-equipamento').addEventListener('change', function(){
   atualizarFotoEquipamentoParteDiaria(this.value);
 });
