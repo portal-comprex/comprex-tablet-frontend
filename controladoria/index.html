@@ -2386,6 +2386,10 @@
     var novasDescricoes = horasPreventiva.map(function(h){ return {desc:'Manutenção Preventiva '+brNum(h,0)+'h', categoria:'Manutenção Preventiva'}; });
     novasDescricoes.push({desc:'Manutenção Preventiva de Inspeção', categoria:'Manutenção de Inspeção'});
     novasDescricoes.push({desc:'DDS - Diálogo Diário de Segurança', categoria:'Segurança'});
+    // Refeição também é uma parada (soma no tempo parado, que agora é subtraído do lançamento
+    // do tablet) — Almoço pro turno diurno, Janta pra quem trabalha à noite.
+    novasDescricoes.push({desc:'Almoço', categoria:'Alimentação'});
+    novasDescricoes.push({desc:'Janta', categoria:'Alimentação'});
     // Sub-itens de Manutenção Corretiva — mesma lista já usada no campo "tipo de serviço",
     // agora também como motivos próprios, numerados igual à Preventiva.
     TIPOS_SERVICO_MANUTENCAO_GRUPOS.forEach(function(g){
@@ -3840,7 +3844,7 @@
   // Categorias pra escolha em 2 etapas: 1ª Motivo (a categoria), 2ª Serviço (a descrição
   // específica cadastrada dentro dela). "Manutenção Corretiva" pega tudo que já existia antes
   // (tipo Manutenção, sem ser preventiva).
-  var CATEGORIAS_PARADA = ['Manutenção Corretiva', 'Manutenção Preventiva', 'Manutenção de Inspeção', 'Segurança', 'Operacional'];
+  var CATEGORIAS_PARADA = ['Manutenção Corretiva', 'Manutenção Preventiva', 'Manutenção de Inspeção', 'Segurança', 'Operacional', 'Alimentação'];
   function categoriaDoMotivo(descricao){
     var m = state.motivosParada.filter(function(x){ return x.descricao===descricao; })[0];
     return m ? (m.categoria || '') : '';
@@ -4179,6 +4183,7 @@
     // esses campos e pra poder retomar um rascunho em andamento do jeito que a
     // pessoa parou.
     var apEventos = editRecord ? JSON.parse(JSON.stringify(editRecord.timelineEventos||[])) : [];
+    var apTlTimerId = null; // contador ao vivo do evento em aberto (linha do tempo) — ver renderApTimeline
     var equipamentosOrdenados = state.equipamentos.slice().sort(function(a,b){ return a.codigo.localeCompare(b.codigo,'pt-BR'); });
     var ordensOrdenadas = state.ordens.slice().sort(function(a,b){
       var c = a.cliente.localeCompare(b.cliente,'pt-BR');
@@ -4214,7 +4219,6 @@
       (editRecord ? renderApBannerEdicao(editRecord, isRascunho) : '') +
       '<div class="form-section form-section-ident">' +
         '<div class="form-section-title"><span class="dot"></span>Identificação</div>' +
-        '<div class="field-row"><div class="field"><label>Data</label><input type="date" id="apData" value="'+todayISO()+'"'+(travarHorarios?' readonly':'')+'>'+(travarHorarios?'<div class="muted-tag" style="margin-top:4px;">Data de hoje. Para alterar, peça ao Escritório.</div>':'')+'</div></div>' +
         '<div class="field"><label>Equipamento</label><div style="display:flex;align-items:center;gap:10px;"><div id="apEquipFoto" style="width:40px;height:40px;flex-shrink:0;border-radius:8px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;">🚜</div><div class="combo-wrap" style="flex:1;"><input type="text" id="apEquip" autocomplete="off" value="'+esc(equipValorInicial)+'" placeholder="Digite ou selecione o código…"><div class="combo-list" id="apEquipList"></div></div></div><div id="apEquipError"></div></div>' +
         '<div class="field-row-ordem">' +
           '<div class="field"><label>Nº Ordem</label><div class="combo-wrap"><input type="text" id="apOrdemNumero" autocomplete="off" value="'+esc(ordemNumeroValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apOrdemNumeroList"></div></div></div>' +
@@ -4222,8 +4226,9 @@
           '<div class="field"><label>Nº Cliente</label><div class="combo-wrap"><input type="text" id="apNCliente" autocomplete="off" value="'+esc(nClienteValorInicial)+'"'+((restringirOrdem||clienteRestrito)?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apNClienteList"></div></div></div>' +
         '</div>' +
         '<div class="field-row">' +
-          '<div class="field"><label>Operador (obrigatório)</label><input type="text" id="apOperador" list="datalistOperadores" '+(operadorTravado?'readonly value="'+esc(operadorAuto.nome)+'"':'')+' placeholder="Nome ou matrícula"><datalist id="datalistOperadores">'+state.operadores.map(function(o){ return '<option value="'+esc(o.nome)+'">'; }).join('')+'</datalist>'+(operadorTravado?'<div class="muted-tag" style="margin-top:4px;">Identificado automaticamente pelo seu login.</div>':'')+'</div>' +
-          '<div class="field"><label>Escala</label><select id="apEscala"><option value="">Selecione a escala…</option>'+state.escalas.map(function(e){ return '<option value="'+e.key+'">'+esc(e.label)+'</option>'; }).join('')+'</select></div>' +
+          '<div class="field" style="flex:0 1 118px;"><label>Data</label><input type="date" id="apData" value="'+todayISO()+'"'+(travarHorarios?' readonly':'')+' style="padding:6px 8px;">'+(travarHorarios?'<div class="muted-tag" style="margin-top:4px;">Hoje. Pra alterar, peça ao Escritório.</div>':'')+'</div>' +
+          '<div class="field" style="flex:1 1 160px;"><label>Operador (obrigatório)</label><input type="text" id="apOperador" list="datalistOperadores" '+(operadorTravado?'readonly value="'+esc(operadorAuto.nome)+'"':'')+' placeholder="Nome ou matrícula"><datalist id="datalistOperadores">'+state.operadores.map(function(o){ return '<option value="'+esc(o.nome)+'">'; }).join('')+'</datalist>'+(operadorTravado?'<div class="muted-tag" style="margin-top:4px;">Identificado pelo seu login.</div>':'')+'</div>' +
+          '<div class="field" style="flex:1 1 140px;"><label>Escala</label><select id="apEscala"><option value="">Selecione a escala…</option>'+state.escalas.map(function(e){ return '<option value="'+e.key+'">'+esc(e.label)+'</option>'; }).join('')+'</select></div>' +
         '</div>' +
         '<div class="field" id="apTurnoWrap" style="display:none;"><label>Turno</label><select id="apTurno"></select></div>' +
       '</div>' +
@@ -4581,6 +4586,15 @@
       if(tipoIntervalo!=='Sem intervalo' && (!intIni || !intFim)){ errBox.innerHTML = '<div class="form-error">Informe o início e o fim do intervalo, ou selecione "Sem intervalo".</div>'; return; }
       var horasOperador = computeHorasOperador(entrada, tipoIntervalo, intIni, intFim, saida);
       if(horasOperador===null || horasOperador<=0){ errBox.innerHTML = '<div class="form-error">Verifique os horários informados — o intervalo não pode ser maior ou igual ao turno.</div>'; return; }
+      // No lançamento por linha do tempo (tablet), o intervalo de almoço deixou de ser um campo à
+      // parte — é só mais uma parada (motivo "Almoço"), igual qualquer outra. Por isso, só aqui,
+      // as horas do operador saem do turno inteiro (entrada→saída) menos TODAS as paradas do dia
+      // (Operação + À disposição − paradas, incluindo almoço). Fora desse modo nada muda: o
+      // Escritório continua vendo paradas só como registro informativo, sem subtrair das horas.
+      if(modoOperadorSimplificado){
+        var totalHorasParadasTl = formParadas.filter(function(p){ return p.horas>0; }).reduce(function(s,p){ return s+p.horas; },0);
+        horasOperador = Math.max(0, Math.round((horasOperador - totalHorasParadasTl)*100)/100);
+      }
       if(hf < hi){ errBox.innerHTML = '<div class="form-error">Horímetro final não pode ser menor que o horímetro inicial — verifique os valores.</div>'; return; }
       var paradaForaDoTurno = formParadas.filter(function(p){ return p.horas>0; }).filter(function(p){
         return p.inicio && paradaAntesDaEntrada(entrada, saida, p.inicio);
@@ -4744,9 +4758,18 @@
       }catch(e){ console.error('Falha ao salvar rascunho da linha do tempo', e); }
     }
 
+    // Contador compacto (ex.: "1h05") do tempo decorrido desde que o evento em aberto (atividade
+    // ou parada) começou — só mostra, não recalcula nada: quem manda no valor salvo continua
+    // sendo o horário de início/fim de cada evento, igual sempre foi.
+    function formatarDuracaoTl(horasDecimal){
+      var totalMin = Math.max(0, Math.round(horasDecimal*60));
+      var h = Math.floor(totalMin/60), m = totalMin%60;
+      return h+'h'+String(m).padStart(2,'0');
+    }
     function renderApTimeline(){
       var wrapT = document.getElementById('apTimelineWrap');
       if(!wrapT) return;
+      if(apTlTimerId){ clearInterval(apTlTimerId); apTlTimerId = null; }
       var ultimoTl = apEventos[apEventos.length-1];
       var abertoAtividadeTl = ultimoTl && ultimoTl.tipo==='atividade' && !ultimoTl.fim;
       var abertoParadaTl = ultimoTl && ultimoTl.tipo==='parada' && !ultimoTl.fim;
@@ -4779,7 +4802,7 @@
           '<button type="button" class="btn btn-primary" id="apTlIniciarBtn">Iniciar</button>';
       } else if(abertoAtividadeTl){
         acaoHtmlTl =
-          '<div class="muted-tag" style="margin-bottom:8px;">Em '+esc(ultimoTl.situacao)+' desde '+esc(ultimoTl.inicio)+' (horímetro '+brNum(ultimoTl.horimetroIni,1)+').</div>' +
+          '<div class="muted-tag" style="margin-bottom:8px;">Em '+esc(ultimoTl.situacao)+' desde '+esc(ultimoTl.inicio)+' (horímetro '+brNum(ultimoTl.horimetroIni,1)+') · <b id="apTlContador" style="color:var(--navy);">0h00</b></div>' +
           '<div id="apTlParadaForm" style="display:none;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--border);">' +
             '<div class="field-row">' +
               '<div class="field"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
@@ -4800,11 +4823,25 @@
           '</div>';
       } else if(abertoParadaTl){
         acaoHtmlTl =
-          '<div class="muted-tag" style="margin-bottom:8px;">Parado — '+esc(ultimoTl.motivo)+' — desde '+esc(ultimoTl.inicio)+'.</div>' +
+          '<div class="muted-tag" style="margin-bottom:8px;">Parado — '+esc(ultimoTl.motivo)+' — desde '+esc(ultimoTl.inicio)+' · <b id="apTlContador" style="color:var(--ru);">0h00</b></div>' +
           '<button type="button" class="btn btn-primary" id="apTlFinalizarParadaBtn">Finalizar parada</button>';
       }
 
       wrapT.innerHTML = historicoHtmlTl + acaoHtmlTl;
+
+      // Contador ao vivo: atualiza a cada 15s enquanto houver uma atividade ou parada em
+      // aberto. Pequeno de propósito (só o texto em negrito acima) — não é mais um campo,
+      // só um retrato de "quanto tempo já passou" pra quem está lançando acompanhar.
+      if(abertoAtividadeTl || abertoParadaTl){
+        var atualizarContadorTl = function(){
+          var el = document.getElementById('apTlContador');
+          if(!el){ if(apTlTimerId){ clearInterval(apTlTimerId); apTlTimerId = null; } return; }
+          var decorrido = diffHoras(ultimoTl.inicio, horaAtualHHMM());
+          el.textContent = decorrido===null ? '—' : formatarDuracaoTl(decorrido);
+        };
+        atualizarContadorTl();
+        apTlTimerId = setInterval(atualizarContadorTl, 15000);
+      }
 
       if(!ultimoTl || ultimoTl.fim){
         document.getElementById('apTlIniciarBtn').onclick = function(){
@@ -10230,14 +10267,16 @@
     MATERIAIS_PESAGEM = (matPesagem||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     SERVICOS_HORA = (servHora||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     SERVICOS_VERBA = (servVerba||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
-    // Migrações/backfills de cadastro (códigos de tarifa, metas, motivos de parada
-    // novos etc.) só interessam a dados que o modo campo nem carregou — bastam
-    // rodar quando alguém do Escritório/Administrador loga (o cadastro é
-    // compartilhado, então continuam sempre em dia pra todo mundo).
+    // Motivos de parada novos (ex.: Almoço/Janta) mexem só em motivosParada, que o modo
+    // campo carrega igual — roda pros dois perfis, pra um operador do tablet já ver o
+    // motivo novo assim que ele existir, sem depender de um login de Escritório antes.
+    await seedNovosMotivosParada();
+    await backfillCategoriaMotivosParada();
+    // Já as migrações de código de tarifa/metas mexem em listas que o modo campo nem
+    // carregou (ver acima) — bastam rodar quando alguém do Escritório/Administrador loga
+    // (o cadastro é compartilhado, então continuam sempre em dia pra todo mundo).
     if(!modoCampo){
       await migrarCodigosServicoMaterial();
-      await seedNovosMotivosParada();
-      await backfillCategoriaMotivosParada();
       await seedMetasMensaisIniciais();
       await normalizarFormatacaoCadastrosExistentes();
     }
