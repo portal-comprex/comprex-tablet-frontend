@@ -2092,6 +2092,38 @@
     }
   }
 
+  // Igual carregar cada "key" com loadList(), só que todas juntas numa ÚNICA
+  // requisição (/api/ctrl/dados-iniciais) — o servidor já busca tudo em
+  // paralelo lá dentro, então em vez do navegador esperar N idas e vindas
+  // separadas, espera só uma. Usado no login do operador de campo, que é
+  // onde a demora de abrir a Parte Diária mais incomodava. Devolve o mesmo
+  // formato que "chaves.map(loadList)" devolvia antes (um valor por key, na
+  // mesma ordem), então o resto do código nem percebe a diferença.
+  async function carregarListasEmLote(chaves, modoCampo){
+    var porChave = {};
+    try{
+      var resp = await ctrlFetch('/api/ctrl/dados-iniciais' + (modoCampo ? '?modoCampo=1' : ''), { headers: ctrlCabecalhos() });
+      var listas = resp.listas || {};
+      var configs = resp.configs || {};
+      chaves.forEach(function(key){
+        if(CTRL_CONFIG_KEYS[key]){
+          var chaveConfig = CTRL_CONFIG_KEYS[key];
+          porChave[key] = configs[chaveConfig]===undefined ? null : configs[chaveConfig];
+          return;
+        }
+        var nomeLogico = CTRL_MAPA_CHAVES[key] || key;
+        var itens = listas[nomeLogico];
+        if(itens===undefined || itens===null){ porChave[key] = null; return; }
+        CTRL_BASELINE[key] = JSON.parse(JSON.stringify(itens));
+        porChave[key] = ehListaDeNomes(key) ? itens.map(function(it){ return it.nome; }) : itens;
+      });
+    }catch(e){
+      console.error('Erro ao carregar pacote de dados iniciais da Controladoria', e);
+      chaves.forEach(function(key){ porChave[key] = null; });
+    }
+    return porChave;
+  }
+
   async function saveList(key, arr){
     try{
       if(CTRL_CONFIG_KEYS[key]){
@@ -9794,9 +9826,18 @@
     if(!modoCampo){
       chaves = chaves.concat(['tarifas_verba_v1','usuarios_v1','producoes_v1','producao_notas_v1','status_faturamento_v1','custos_ordem_v1','cliente_detalhes_v1','materiais_pesagem_v1','servicos_hora_v1','servicos_verba_v1','metas_mensais_v1','descricoes_boletim_v1','usuarios_ordens_restritas_v2']);
     }
-    var resultados = await Promise.all(chaves.map(function(k){ return loadList(k); }));
-    var porChave = {};
-    chaves.forEach(function(k, i){ porChave[k] = resultados[i]; });
+    // No modo campo (tablet), carrega tudo numa requisição só — é o caminho que
+    // era lento (~11 idas e vindas separadas até o servidor, uma por lista).
+    // No Escritório/Administrador continua igual a sempre (uma de cada vez),
+    // sem risco de mexer no fluxo que já funciona bem pra eles.
+    var porChave;
+    if(modoCampo){
+      porChave = await carregarListasEmLote(chaves, true);
+    } else {
+      var resultados = await Promise.all(chaves.map(function(k){ return loadList(k); }));
+      porChave = {};
+      chaves.forEach(function(k, i){ porChave[k] = resultados[i]; });
+    }
     var eq = porChave['equipamentos_v6'], ord = porChave['ordens_v9'], ap = porChave['apropriacoes_v7'], apRascunhos = porChave['apropriacoes_rascunhos_v1'], oper = porChave['operadores_v4'], tarH = porChave['tarifas_hora_v2'], tarP = porChave['tarifas_producao_v3'], motParada = porChave['motivos_parada_v1'], escalas = porChave['escalas_v1'], cli = porChave['clientes_v2'], cliNum = porChave['cliente_numeros_v3'];
     var tarV = modoCampo ? [] : porChave['tarifas_verba_v1'];
     var usuarios = modoCampo ? [] : porChave['usuarios_v1'];
