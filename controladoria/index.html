@@ -2530,6 +2530,14 @@
   // Remove espaços duplicados/nas pontas de qualquer texto digitado em formulários.
   function normalizarEspacos(s){ return String(s||'').replace(/\s+/g,' ').trim(); }
 
+  // Versão "frouxa" pra COMPARAR dois textos de Local (equipamento x Ordem) sem deixar
+  // acento, espaçamento a mais ou maiúsculas/minúsculas fazerem o auto-preenchimento
+  // falhar por bobagem — ex.: "Pátio Manutenção" e "PATIO MANUTENCAO " devem contar
+  // como o mesmo local.
+  function normalizarLocalParaComparar(s){
+    return normalizarEspacos(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  }
+
   // Normaliza texto digitado em formatação padrão (Título, com preposições em minúsculo) — evita
   // que cadastros fiquem com capitalização aleatória (ex: "PArada para lanche" -> "Parada Para Lanche").
   // Preserva números e sufixos como "250h", e siglas conhecidas (DDS, PM, NR, etc.) em maiúsculo.
@@ -4342,8 +4350,8 @@
       if(restringirOrdem) return; // já travado numa ordem específica — não mexe
       if(!equipObj || !equipObj.local) return;
       if(document.getElementById('apOrdem').value.trim()) return; // já tem ordem escolhida — não atropela
-      var alvo = String(equipObj.local).trim().toLowerCase();
-      var candidatas = ordensOrdenadas.filter(function(o){ return String(o.local||'').trim().toLowerCase()===alvo; });
+      var alvo = normalizarLocalParaComparar(equipObj.local);
+      var candidatas = ordensOrdenadas.filter(function(o){ return normalizarLocalParaComparar(o.local)===alvo; });
       if(candidatas.length !== 1) return; // sem ordem com esse local, ou mais de uma (ambíguo) — deixa pra escolher na mão
       var achada = candidatas[0];
       document.getElementById('apOrdemNumero').value = achada.numero || '';
