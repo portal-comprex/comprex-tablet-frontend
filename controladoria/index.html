@@ -1768,28 +1768,56 @@
   }
 
   /* Recebe o token que o tablet manda (o MESMO token do /api/login dele — sem
-     segunda senha, sem segunda conta) e liga o sistema. */
+     segunda senha, sem segunda conta) e liga o sistema.
+
+     O servidor (Render, plano gratuito) "dorme" depois de ficar um tempo sem
+     ninguém usar, e leva de 30 a 60s pra acordar na primeira chamada do dia —
+     é essa demora que aparece aqui. Antes, se essa primeira chamada demorasse
+     ou falhasse (comum durante o "acordar"), já desistia e mostrava erro.
+     Agora tenta de novo sozinho algumas vezes, avisando que é só o servidor
+     iniciando, antes de desistir de verdade. */
   async function aplicarTokenTablet(token){
-    try {
-      window.__ctrlDefinirToken(token);
-      try { localStorage.setItem('perfil_v1', 'campo'); } catch(e){}
-      // Confirma com o backend (decodifica o token) pra saber o nome do
-      // operador — mesma rota que o Portal usa; sem isso init() não tem
-      // como saber quem está logado (ver bug corrigido na Etapa 4).
-      var resp = await fetch(window.CTRL_BACKEND_URL + '/api/ctrl/sessao', {
-        headers: { Authorization: 'Bearer ' + token }
-      });
-      var corpo = await resp.json();
-      if (!resp.ok) throw new Error((corpo && corpo.erro) || 'Sessão recusada.');
-      window.__ctrlSessao = corpo; // {email:null, nome, perfil:'campo'}
-      if (typeof window.__comprexIniciar === 'function') {
-        window.__comprexIniciar();
+    window.__ctrlDefinirToken(token);
+    try { localStorage.setItem('perfil_v1', 'campo'); } catch(e){}
+    var TENTATIVAS_SESSAO = 5;
+    var TIMEOUT_POR_TENTATIVA_MS = 15000;
+    for (var tentativa = 1; tentativa <= TENTATIVAS_SESSAO; tentativa++){
+      if (tentativa === 1) {
+        avisarNaTelaDeCarregamento('Abrindo sua sessão…');
+      } else {
+        avisarNaTelaDeCarregamento(
+          'O servidor está iniciando (pode levar até 1 minuto na primeira vez do dia). Aguarde…'
+        );
       }
-    } catch (erro) {
-      console.error('Modo embutido: falha ao aplicar o token recebido.', erro);
-      avisarNaTelaDeCarregamento(
-        'Não foi possível abrir sua sessão. Feche e abra o aplicativo de novo.'
-      );
+      try {
+        var controlador = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        var limiteTempo = controlador ? setTimeout(function(){ controlador.abort(); }, TIMEOUT_POR_TENTATIVA_MS) : null;
+        // Confirma com o backend (decodifica o token) pra saber o nome do
+        // operador — mesma rota que o Portal usa; sem isso init() não tem
+        // como saber quem está logado (ver bug corrigido na Etapa 4).
+        var resp = await fetch(window.CTRL_BACKEND_URL + '/api/ctrl/sessao', {
+          headers: { Authorization: 'Bearer ' + token },
+          signal: controlador ? controlador.signal : undefined
+        });
+        if (limiteTempo) clearTimeout(limiteTempo);
+        var corpo = await resp.json();
+        if (!resp.ok) throw new Error((corpo && corpo.erro) || 'Sessão recusada.');
+        window.__ctrlSessao = corpo; // {email:null, nome, perfil:'campo'}
+        if (typeof window.__comprexIniciar === 'function') {
+          window.__comprexIniciar();
+        }
+        return; // sucesso — encerra as tentativas
+      } catch (erro) {
+        console.error('Modo embutido: falha ao aplicar o token recebido (tentativa ' + tentativa + '/' + TENTATIVAS_SESSAO + ').', erro);
+        if (tentativa === TENTATIVAS_SESSAO) {
+          avisarNaTelaDeCarregamento(
+            'Não foi possível abrir sua sessão. Feche e abra o aplicativo de novo.'
+          );
+          return;
+        }
+        // espera um pouco antes de tentar de novo (servidor ainda acordando)
+        await new Promise(function(r){ setTimeout(r, 3000); });
+      }
     }
   }
 
