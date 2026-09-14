@@ -2604,6 +2604,13 @@
   function ordemLabel(ord){ return ord ? ((ord.numero?'['+ord.numero+'] ':'')+ord.nome+' ('+ord.cliente+')') : '(ordem removida)'; }
   // Usada no Lançamento de Apropriação, ao lado do campo Nº Ordem — sem repetir o número, já mostrado ao lado.
   function ordemDescricao(ord){ return ord ? (ord.nome+' ('+ord.cliente+')') : '(ordem removida)'; }
+  // Usada SÓ no lançamento simplificado do tablet (operador de campo): mostra o Local/Obra da
+  // Ordem (o mesmo texto que já vem da lista compartilhada de Locais, igual o Checklist usa) em
+  // vez do nome completo da Ordem com o cliente entre parênteses — assim a busca manual mostra a
+  // mesma lista de Local/Obra que o operador já reconhece do Checklist, em vez de uma descrição
+  // que ele não usa no dia a dia. O auto-preenchimento ao escolher o equipamento (que já casa o
+  // Local do equipamento com o Local da Ordem) continua funcionando igual, só muda o texto exibido.
+  function ordemLocalLabel(ord){ return ord ? (ord.local || ordemDescricao(ord)) : '(ordem removida)'; }
   function paradasTotal(ap){ return (ap.paradas||[]).reduce(function(s,p){ return s+(p.horas||0); },0); }
   function effColor(pct){ if(pct>=85) return CHART_HEX['var(--st-disp)']; if(pct>=60) return CHART_HEX['var(--st-manut)']; return '#B23B3B'; }
   // Medidor circular (gauge) compacto pra eficiência — usado em tabelas de resumo por ordem.
@@ -4210,8 +4217,12 @@
     // Escritório/Administrador (ou alguém editando o lançamento de outra pessoa)
     // continuam vendo o formulário de sempre, com todos os campos abertos.
     var modoOperadorSimplificado = travarHorarios && operadorTravado;
+    // Texto usado no campo "Descrição Ordem" e em todo lugar que precisa reconhecer esse texto de
+    // volta (auto-preenchimento, seleção de tarifa, rascunho da linha do tempo). No tablet mostra
+    // só o Local/Obra (igual o Checklist); fora dele, o nome completo da Ordem com o cliente.
+    var ordemLabelAtual = modoOperadorSimplificado ? ordemLocalLabel : ordemDescricao;
     var equipValorInicial = editRecord ? equipLabel(getEquip(editRecord.equipamentoId)) : equipLabel(equipamentosOrdenados[0]);
-    var ordemValorInicial = editRecord ? ordemDescricao(getOrdem(editRecord.ordemId)) : (restringirOrdem && ordensOrdenadas[0] ? ordemDescricao(ordensOrdenadas[0]) : '');
+    var ordemValorInicial = editRecord ? ordemLabelAtual(getOrdem(editRecord.ordemId)) : (restringirOrdem && ordensOrdenadas[0] ? ordemLabelAtual(ordensOrdenadas[0]) : '');
     var ordemNumeroValorInicial = editRecord ? (getOrdem(editRecord.ordemId)||{}).numero||'' : (restringirOrdem && ordensOrdenadas[0] ? (ordensOrdenadas[0].numero||'') : '');
     var nClienteValorInicial = editRecord ? (CLIENTE_NUMEROS[(getOrdem(editRecord.ordemId)||{}).cliente]||'') : (clienteRestrito ? (CLIENTE_NUMEROS[clienteRestrito]||'') : (restringirOrdem && ordensOrdenadas[0] ? (CLIENTE_NUMEROS[ordensOrdenadas[0].cliente]||'') : ''));
 
@@ -4284,7 +4295,7 @@
 
     if(editRecord){
       document.getElementById('apEquip').value = equipLabel(getEquip(editRecord.equipamentoId));
-      document.getElementById('apOrdem').value = ordemDescricao(getOrdem(editRecord.ordemId));
+      document.getElementById('apOrdem').value = ordemLabelAtual(getOrdem(editRecord.ordemId));
       document.getElementById('apOrdemNumero').value = (getOrdem(editRecord.ordemId)||{}).numero||'';
       document.getElementById('apData').value = editRecord.data;
       if(!operadorTravado) document.getElementById('apOperador').value = editRecord.operador || '';
@@ -4296,7 +4307,7 @@
     updateConsolidacao();
     if(modoOperadorSimplificado) renderApTimeline();
     wireComboBox('apEquip', 'apEquipList', function(){ return equipamentosOrdenados.map(function(e){ return equipLabel(e); }); });
-    wireOrdemTrio('apOrdemNumero', 'apOrdem', 'apNCliente', function(){ return ordensOrdenadas; }, function(){ atualizarServicoTarifa(); atualizarServicoHora(); }, ordemDescricao);
+    wireOrdemTrio('apOrdemNumero', 'apOrdem', 'apNCliente', function(){ return ordensOrdenadas; }, function(){ atualizarServicoTarifa(); atualizarServicoHora(); }, ordemLabelAtual);
     // Mesma ideia do Checklist do tablet: ao escolher o equipamento, já busca a
     // foto dele, e — já que cada Ordem tem um "Local" (a mesma lista Locais do
     // Frota) — acha sozinho a ordem cujo Local bate com onde esse equipamento
@@ -4336,7 +4347,7 @@
       if(candidatas.length !== 1) return; // sem ordem com esse local, ou mais de uma (ambíguo) — deixa pra escolher na mão
       var achada = candidatas[0];
       document.getElementById('apOrdemNumero').value = achada.numero || '';
-      document.getElementById('apOrdem').value = ordemDescricao(achada);
+      document.getElementById('apOrdem').value = ordemLabelAtual(achada);
       document.getElementById('apNCliente').value = CLIENTE_NUMEROS[achada.cliente] || '';
       atualizarServicoTarifa(); atualizarServicoHora();
     }
@@ -4348,7 +4359,7 @@
     document.getElementById('apServicoHora').addEventListener('change', updateConsolidacao);
     function atualizarServicoTarifa(){
       var ordemTexto = document.getElementById('apOrdem').value.trim();
-      var ordemObj = state.ordens.filter(function(o){ return ordemDescricao(o)===ordemTexto; })[0];
+      var ordemObj = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTexto; })[0];
       var tarifas = ordemObj ? tarifasDaOrdem(ordemObj.id) : [];
       var wrap = document.getElementById('apServicoRow');
       var sel = document.getElementById('apServico');
@@ -4368,7 +4379,7 @@
     // mais de uma Tarifa por Hora. Só aparece quando existe ambiguidade de verdade (2+ tarifas).
     function atualizarServicoHora(){
       var ordemTexto = document.getElementById('apOrdem').value.trim();
-      var ordemObj = state.ordens.filter(function(o){ return ordemDescricao(o)===ordemTexto; })[0];
+      var ordemObj = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTexto; })[0];
       var tarifasHoraOrdem = ordemObj ? state.tarifasHora.filter(function(t){ return t.ordemId===ordemObj.id; }) : [];
       var wrap = document.getElementById('apServicoHoraRow');
       var sel = document.getElementById('apServicoHora');
@@ -4472,7 +4483,7 @@
       var equipObj = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTexto; })[0];
       var equipamentoId = equipObj ? equipObj.id : null;
       var ordemTexto = document.getElementById('apOrdem').value.trim();
-      var ordemObj = state.ordens.filter(function(o){ return ordemDescricao(o)===ordemTexto; })[0];
+      var ordemObj = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTexto; })[0];
       if(ordemObj && state.perfil==='campo' && state.operadorClienteRestrito && ordemObj.cliente!==state.operadorClienteRestrito){
         errBox.innerHTML = '<div class="form-error">Essa ordem não pertence ao cliente ao qual você está restrito ('+esc(state.operadorClienteRestrito)+').</div>';
         return;
@@ -4731,7 +4742,7 @@
         var equipTextoTl = document.getElementById('apEquip').value.trim();
         var equipObjTl = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTextoTl; })[0];
         var ordemTextoTl = document.getElementById('apOrdem').value.trim();
-        var ordemObjTl = state.ordens.filter(function(o){ return ordemDescricao(o)===ordemTextoTl; })[0];
+        var ordemObjTl = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTextoTl; })[0];
         if(!equipObjTl || !ordemObjTl) return; // ainda incompleto — não força salvar
         var operadorNomeTl = operadorAuto ? operadorAuto.nome : document.getElementById('apOperador').value.trim();
         var idAtualTl = state.editingRascunhoId || uid();
