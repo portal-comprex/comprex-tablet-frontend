@@ -10155,12 +10155,37 @@
   // autenticação já está resolvida (via init() restaurando sessão, ou logo após um login
   // bem-sucedido em doLogin()) — chamar antes disso faz as consultas irem como "anon" e
   // falharem por permissão, mesmo com o usuário já "logado" na tela.
-  async function carregarDadosDoServidor(){
+  // modoCampo=true: operador de campo (login do tablet) — só vai usar a tela de
+  // Lançar Parte Diária, então pula todas as listas que só interessam ao
+  // Escritório/Administrador (Produção, Faturamento, Custos, cadastro de
+  // Tarifas de Verba/Serviços/Usuários, Log de exclusões, Local da Ordem) —
+  // isso corta o carregamento praticamente pela metade sem tirar nada que o
+  // operador realmente usa. Escritório/Administrador continuam carregando
+  // tudo, do jeito que sempre foi.
+  async function carregarDadosDoServidor(modoCampo){
     var erroCarregamento = false;
     var listasComFalha = []; // nomes legíveis das listas que realmente falharam (pra diagnóstico, não pra assustar)
-    var chaves = ['equipamentos_v6','ordens_v9','apropriacoes_v7','apropriacoes_rascunhos_v1','operadores_v4','tarifas_hora_v2','tarifas_producao_v3','tarifas_verba_v1','motivos_parada_v1','escalas_v1','usuarios_v1','producoes_v1','producao_notas_v1','status_faturamento_v1','custos_ordem_v1','clientes_v2','cliente_detalhes_v1','cliente_numeros_v3','materiais_pesagem_v1','servicos_hora_v1','servicos_verba_v1','metas_mensais_v1','descricoes_boletim_v1','usuarios_ordens_restritas_v2'];
+    var chaves = ['equipamentos_v6','ordens_v9','apropriacoes_v7','apropriacoes_rascunhos_v1','operadores_v4','tarifas_hora_v2','tarifas_producao_v3','motivos_parada_v1','escalas_v1','clientes_v2','cliente_numeros_v3'];
+    if(!modoCampo){
+      chaves = chaves.concat(['tarifas_verba_v1','usuarios_v1','producoes_v1','producao_notas_v1','status_faturamento_v1','custos_ordem_v1','cliente_detalhes_v1','materiais_pesagem_v1','servicos_hora_v1','servicos_verba_v1','metas_mensais_v1','descricoes_boletim_v1','usuarios_ordens_restritas_v2']);
+    }
     var resultados = await Promise.all(chaves.map(function(k){ return loadList(k); }));
-    var eq = resultados[0], ord = resultados[1], ap = resultados[2], apRascunhos = resultados[3], oper = resultados[4], tarH = resultados[5], tarP = resultados[6], tarV = resultados[7], motParada = resultados[8], escalas = resultados[9], usuarios = resultados[10], producoes = resultados[11], producaoNotas = resultados[12], statusFaturamento = resultados[13], custosOrdem = resultados[14], cli = resultados[15], cliDetalhes = resultados[16], cliNum = resultados[17], matPesagem = resultados[18], servHora = resultados[19], servVerba = resultados[20], metasMensais = resultados[21], descricoesBoletim = resultados[22], usuariosOrdensRestritas = resultados[23];
+    var porChave = {};
+    chaves.forEach(function(k, i){ porChave[k] = resultados[i]; });
+    var eq = porChave['equipamentos_v6'], ord = porChave['ordens_v9'], ap = porChave['apropriacoes_v7'], apRascunhos = porChave['apropriacoes_rascunhos_v1'], oper = porChave['operadores_v4'], tarH = porChave['tarifas_hora_v2'], tarP = porChave['tarifas_producao_v3'], motParada = porChave['motivos_parada_v1'], escalas = porChave['escalas_v1'], cli = porChave['clientes_v2'], cliNum = porChave['cliente_numeros_v3'];
+    var tarV = modoCampo ? [] : porChave['tarifas_verba_v1'];
+    var usuarios = modoCampo ? [] : porChave['usuarios_v1'];
+    var producoes = modoCampo ? [] : porChave['producoes_v1'];
+    var producaoNotas = modoCampo ? [] : porChave['producao_notas_v1'];
+    var statusFaturamento = modoCampo ? [] : porChave['status_faturamento_v1'];
+    var custosOrdem = modoCampo ? [] : porChave['custos_ordem_v1'];
+    var cliDetalhes = modoCampo ? {} : porChave['cliente_detalhes_v1'];
+    var matPesagem = modoCampo ? [] : porChave['materiais_pesagem_v1'];
+    var servHora = modoCampo ? [] : porChave['servicos_hora_v1'];
+    var servVerba = modoCampo ? [] : porChave['servicos_verba_v1'];
+    var metasMensais = modoCampo ? [] : porChave['metas_mensais_v1'];
+    var descricoesBoletim = modoCampo ? [] : porChave['descricoes_boletim_v1'];
+    var usuariosOrdensRestritas = modoCampo ? [] : porChave['usuarios_ordens_restritas_v2'];
     if(eq===null){ eq = JSON.parse(JSON.stringify(SEED_EQUIPAMENTOS)); erroCarregamento = true; listasComFalha.push('Equipamentos'); }
     if(ord===null){ ord = JSON.parse(JSON.stringify(SEED_ORDENS)); erroCarregamento = true; listasComFalha.push('Ordens (LISTA_CTRL_ORDENS_ID)'); }
     if(ap===null){ ap = JSON.parse(JSON.stringify(SEED_APROPRIACOES)); erroCarregamento = true; listasComFalha.push('Apropriações'); }
@@ -10168,42 +10193,54 @@
     if(oper===null){ oper = JSON.parse(JSON.stringify(SEED_OPERADORES)); erroCarregamento = true; listasComFalha.push('Operadores'); }
     if(tarH===null){ tarH = JSON.parse(JSON.stringify(SEED_TARIFAS_HORA)); erroCarregamento = true; listasComFalha.push('Tarifas por hora'); }
     if(tarP===null){ tarP = JSON.parse(JSON.stringify(SEED_TARIFAS_PRODUCAO)); erroCarregamento = true; listasComFalha.push('Tarifas de produção'); }
-    if(tarV===null){ tarV = []; await saveList('tarifas_verba_v1', tarV); }
+    if(!modoCampo && tarV===null){ tarV = []; await saveList('tarifas_verba_v1', tarV); }
     if(motParada===null){ motParada = JSON.parse(JSON.stringify(SEED_MOTIVOS_PARADA)); erroCarregamento = true; listasComFalha.push('Motivos de parada'); }
     else {
       var motParadaSemOutro = motParada.filter(function(m){ return m.descricao!=='Outro'; });
       if(motParadaSemOutro.length !== motParada.length){ motParada = motParadaSemOutro; await saveList('motivos_parada_v1', motParada); }
     }
     if(escalas===null){ escalas = JSON.parse(JSON.stringify(SEED_ESCALAS)); erroCarregamento = true; listasComFalha.push('Escalas'); }
-    if(usuarios===null){ usuarios = JSON.parse(JSON.stringify(SEED_USUARIOS)); erroCarregamento = true; listasComFalha.push('Usuários'); }
-    if(producoes===null){ producoes = []; await saveList('producoes_v1', producoes); }
-    if(producaoNotas===null){ producaoNotas = []; await saveList('producao_notas_v1', producaoNotas); }
-    var logAud = await loadList('log_auditoria_v1');
-    if(logAud===null){ logAud = []; await saveList('log_auditoria_v1', logAud); }
-    // Locais é cadastro COMPARTILHADO com o Frota/Portal (mesma lista Locais
-    // do SharePoint) — igual Equipamentos/Operadores. Se der erro de rede,
-    // só fica sem opções no dropdown de Local da Ordem; não é motivo pra
-    // acionar o aviso de "erro ao carregar" (não é dado próprio da Controladoria).
-    var locaisCarregados = await loadList('locais_v1');
-    state.locais = locaisCarregados || [];
+    if(!modoCampo && usuarios===null){ usuarios = JSON.parse(JSON.stringify(SEED_USUARIOS)); erroCarregamento = true; listasComFalha.push('Usuários'); }
+    if(!modoCampo && producoes===null){ producoes = []; await saveList('producoes_v1', producoes); }
+    if(!modoCampo && producaoNotas===null){ producaoNotas = []; await saveList('producao_notas_v1', producaoNotas); }
+    var logAud = modoCampo ? [] : await loadList('log_auditoria_v1');
+    if(!modoCampo && logAud===null){ logAud = []; await saveList('log_auditoria_v1', logAud); }
+    // Locais é cadastro COMPARTILHADO com o Frota/Portal (mesma lista Locais do
+    // SharePoint) — igual Equipamentos/Operadores. Só serve pro dropdown de
+    // Local dentro do cadastro de Ordem (tela de Escritório); operador de campo
+    // não cria/edita Ordem, então pula essa chamada também nesse modo. Se der
+    // erro de rede, só fica sem opções nesse dropdown; não é motivo pra acionar
+    // o aviso de "erro ao carregar" (não é dado próprio da Controladoria).
+    if(modoCampo){
+      state.locais = [];
+    } else {
+      var locaisCarregados = await loadList('locais_v1');
+      state.locais = locaisCarregados || [];
+    }
     if(cli===null){ cli = SEED_CLIENTES.slice(); erroCarregamento = true; listasComFalha.push('Clientes'); }
-    if(cliDetalhes===null){ cliDetalhes = {}; await saveList('cliente_detalhes_v1', cliDetalhes); }
+    if(!modoCampo && cliDetalhes===null){ cliDetalhes = {}; await saveList('cliente_detalhes_v1', cliDetalhes); }
     if(cliNum===null){ cliNum = Object.assign({}, SEED_CLIENTE_NUMEROS); erroCarregamento = true; listasComFalha.push('Números de cliente'); }
-    if(matPesagem===null){ matPesagem = SEED_MATERIAIS_PESAGEM.slice(); await saveList('materiais_pesagem_v1', matPesagem); }
-    if(servHora===null){ servHora = SEED_SERVICOS_HORA.slice(); await saveList('servicos_hora_v1', servHora); }
-    if(servVerba===null){ servVerba = SEED_SERVICOS_VERBA.slice(); await saveList('servicos_verba_v1', servVerba); }
-    state.equipamentos = eq; state.ordens = ord; state.apropriacoes = ap; state.apropriacoesRascunhos = apRascunhos; state.operadores = oper; state.tarifasHora = tarH; state.tarifasProducao = tarP; state.tarifasVerba = tarV; state.motivosParada = motParada; state.escalas = escalas; state.usuarios = usuarios; state.logAuditoria = logAud; state.producoes = producoes; state.producaoNotas = producaoNotas; state.statusFaturamento = statusFaturamento || []; state.custosOrdem = custosOrdem || []; state.metasMensais = metasMensais || []; state.descricoesBoletim = descricoesBoletim || []; state.usuariosOrdensRestritas = usuariosOrdensRestritas || [];
+    if(!modoCampo && matPesagem===null){ matPesagem = SEED_MATERIAIS_PESAGEM.slice(); await saveList('materiais_pesagem_v1', matPesagem); }
+    if(!modoCampo && servHora===null){ servHora = SEED_SERVICOS_HORA.slice(); await saveList('servicos_hora_v1', servHora); }
+    if(!modoCampo && servVerba===null){ servVerba = SEED_SERVICOS_VERBA.slice(); await saveList('servicos_verba_v1', servVerba); }
+    state.equipamentos = eq; state.ordens = ord; state.apropriacoes = ap; state.apropriacoesRascunhos = apRascunhos; state.operadores = oper; state.tarifasHora = tarH; state.tarifasProducao = tarP; state.tarifasVerba = tarV || []; state.motivosParada = motParada; state.escalas = escalas; state.usuarios = usuarios || []; state.logAuditoria = logAud || []; state.producoes = producoes || []; state.producaoNotas = producaoNotas || []; state.statusFaturamento = statusFaturamento || []; state.custosOrdem = custosOrdem || []; state.metasMensais = metasMensais || []; state.descricoesBoletim = descricoesBoletim || []; state.usuariosOrdensRestritas = usuariosOrdensRestritas || [];
     CLIENTES = cli.slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     CLIENTE_NUMEROS = cliNum;
-    CLIENTE_DETALHES = cliDetalhes;
-    MATERIAIS_PESAGEM = matPesagem.slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
-    SERVICOS_HORA = servHora.slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
-    SERVICOS_VERBA = servVerba.slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
-    await migrarCodigosServicoMaterial();
-    await seedNovosMotivosParada();
-    await backfillCategoriaMotivosParada();
-    await seedMetasMensaisIniciais();
-    await normalizarFormatacaoCadastrosExistentes();
+    CLIENTE_DETALHES = cliDetalhes || {};
+    MATERIAIS_PESAGEM = (matPesagem||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
+    SERVICOS_HORA = (servHora||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
+    SERVICOS_VERBA = (servVerba||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
+    // Migrações/backfills de cadastro (códigos de tarifa, metas, motivos de parada
+    // novos etc.) só interessam a dados que o modo campo nem carregou — bastam
+    // rodar quando alguém do Escritório/Administrador loga (o cadastro é
+    // compartilhado, então continuam sempre em dia pra todo mundo).
+    if(!modoCampo){
+      await migrarCodigosServicoMaterial();
+      await seedNovosMotivosParada();
+      await backfillCategoriaMotivosParada();
+      await seedMetasMensaisIniciais();
+      await normalizarFormatacaoCadastrosExistentes();
+    }
     return { erro: erroCarregamento, listas: listasComFalha };
   }
 
@@ -10240,7 +10277,7 @@
     // do Portal). null = sem restrição de tela (admin, ou 'controladoria'
     // inteiro marcado pra essa pessoa).
     state.telas = sessaoCtrl.telas || null;
-    var resultadoCarregamento = await carregarDadosDoServidor();
+    var resultadoCarregamento = await carregarDadosDoServidor(perfil === 'campo');
     document.getElementById('loadingScreen').style.display = 'none';
     if(resultadoCarregamento.erro) mostrarAvisoErroCarregamento(resultadoCarregamento.listas);
     if(perfil === 'campo'){
