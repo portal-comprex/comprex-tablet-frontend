@@ -1273,6 +1273,7 @@
               <th>Matrícula<button type="button" class="th-filtro-btn" data-tabela="operadores" data-col="matricula" data-label="Matrícula">▾</button></th>
               <th>Nome<button type="button" class="th-filtro-btn" data-tabela="operadores" data-col="nome" data-label="Nome">▾</button></th>
               <th>Cargo<button type="button" class="th-filtro-btn" data-tabela="operadores" data-col="cargo" data-label="Cargo">▾</button></th>
+              <th>Login (tablet)</th>
               <th>Ações</th>
             </tr></thead>
             <tbody id="operadoresBody"></tbody>
@@ -3773,7 +3774,14 @@
 
   function openOperadorModal(existing){
     var isEdit = !!existing;
-    var op = existing || {matricula:'', nome:'', cargo:''};
+    var op = existing || {matricula:'', nome:'', cargo:'', usuario:''};
+    // Login do tablet (usuário/senha) agora aparece tanto pra criar quanto pra
+    // editar, e faz parte do mesmo botão "Salvar" — antes só existia editando
+    // um operador já salvo, com um botão à parte ("Definir login"), o que além
+    // de exigir salvar duas vezes também escondia se o operador JÁ tinha um
+    // usuário definido (o campo sempre abria em branco). Agora, se já tiver
+    // login, o usuário atual vem preenchido — dá pra ver quem já está "dono"
+    // daquele usuário sem precisar adivinhar.
     openModal(
       '<h3>'+(isEdit?'Editar operador':'Novo operador')+'</h3>' +
       '<div id="operFormError"></div>' +
@@ -3782,36 +3790,23 @@
         '<div class="field"><label>Nome</label><input type="text" id="fOperNome" value="'+esc(op.nome)+'" placeholder="Nome completo"></div>' +
       '</div>' +
       '<div class="field"><label>Cargo</label><input type="text" id="fOperCargo" value="'+esc(op.cargo||'')+'" placeholder="Ex: Operador Máquinas Móveis III"></div>' +
-      (isEdit && state.perfil==='admin' ? (
+      (state.perfil==='admin' ? (
       '<div class="field" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">' +
         '<label>Login do tablet (Parte Diária)</label>' +
         '<div id="operSenhaWrap" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">' +
-          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">Usuário</label><input type="text" id="fOperUsuario" placeholder="ex: joao.silva" style="width:160px;"></div>' +
-          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">Nova senha</label><input type="password" id="fOperSenha" placeholder="Mínimo 6 caracteres" style="width:160px;"></div>' +
-          '<button type="button" class="btn btn-outline btn-sm" id="operSenhaBtn">Definir login</button>' +
+          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">Usuário</label><input type="text" id="fOperUsuario" value="'+esc(op.usuario||'')+'" placeholder="ex: joao.silva" style="width:160px;"></div>' +
+          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">'+(op.usuario?'Nova senha':'Senha')+'</label><input type="password" id="fOperSenha" placeholder="Mínimo 6 caracteres" style="width:160px;"></div>' +
         '</div>' +
-        '<div class="shared-note" style="display:block;margin-top:6px;">Deixe em branco se não quiser mexer no login do tablet agora. Se ele já tem um login, só preencha a senha pra trocá-la (o usuário atual é mantido).</div>' +
-        '<div id="operSenhaMsg"></div>' +
+        '<div class="shared-note" style="display:block;margin-top:6px;">'+(op.usuario ?
+          'Este operador já tem login com o usuário acima. Deixe a senha em branco se não quiser trocá-la agora.' :
+          'Preencha usuário e senha aqui pra já criar o login do tablet junto — ou deixe em branco e defina depois, editando o operador.'
+        )+'</div>' +
       '</div>') : '') +
       '<div class="modal-actions">' +
         '<button class="btn btn-outline" id="operCancel">Cancelar</button>' +
         '<button class="btn btn-primary" id="operSave">Salvar</button>' +
       '</div>'
     );
-    if(isEdit && document.getElementById('operSenhaBtn')){
-      document.getElementById('operSenhaBtn').addEventListener('click', async function(){
-        var usuario = document.getElementById('fOperUsuario').value.trim();
-        var senha = document.getElementById('fOperSenha').value;
-        var msg = document.getElementById('operSenhaMsg');
-        if(!senha){ msg.innerHTML = '<div class="form-error">Informe a nova senha.</div>'; return; }
-        if(senha.length < 6){ msg.innerHTML = '<div class="form-error">A senha precisa ter pelo menos 6 caracteres.</div>'; return; }
-        try{
-          await ctrlFetch('/api/ctrl/operadores/'+op.id+'/senha', { method:'PATCH', headers: ctrlCabecalhos(), body: JSON.stringify({ usuario: usuario, senha: senha }) });
-          msg.innerHTML = '<div class="muted-tag">✔ Login do tablet definido/atualizado.</div>';
-          document.getElementById('fOperSenha').value = '';
-        }catch(e){ msg.innerHTML = '<div class="form-error">'+esc(e.message)+'</div>'; }
-      });
-    }
     document.getElementById('operCancel').onclick = closeModal;
     document.getElementById('operSave').onclick = async function(){
       var nome = capitalizarNomePessoa(document.getElementById('fOperNome').value);
@@ -3820,16 +3815,36 @@
       if(!nome){ errBox.innerHTML = '<div class="form-error">Informe o nome do operador.</div>'; return; }
       var dup = state.operadores.some(function(x){ return x.nome.toLowerCase()===nome.toLowerCase() && (!isEdit || x.id!==op.id); });
       if(dup){ errBox.innerHTML = '<div class="form-error">Já existe um operador cadastrado com esse nome.</div>'; return; }
+      var fUsuario = document.getElementById('fOperUsuario');
+      var fSenha = document.getElementById('fOperSenha');
+      var usuarioLogin = fUsuario ? normalizarEspacos(fUsuario.value).toLowerCase() : '';
+      var senhaLogin = fSenha ? fSenha.value : '';
+      if(senhaLogin && senhaLogin.length < 6){ errBox.innerHTML = '<div class="form-error">A senha do login do tablet precisa ter pelo menos 6 caracteres.</div>'; return; }
       var record = {
         id: isEdit ? op.id : uid(), matricula: matricula, nome: nome,
         cargo: normalizarEspacos(document.getElementById('fOperCargo').value),
         ativo: true
       };
-      if(isEdit){ state.operadores = state.operadores.map(function(x){ return x.id===record.id ? record : x; }); }
+      if(isEdit){ state.operadores = state.operadores.map(function(x){ return x.id===record.id ? Object.assign({}, x, record) : x; }); }
       else { state.operadores.push(record); }
       var ok = await saveList('operadores_v4', state.operadores);
+      var avisoLogin = '';
+      if(ok && senhaLogin){
+        // Só depois do saveList é que o operador (inclusive um recém-criado)
+        // tem o id de verdade do SharePoint — saveList recarrega a lista fresca
+        // pra equipamentos/operadores/locais logo depois de salvar (ver
+        // comentário lá), então dá pra achar o registro salvo por nome aqui.
+        var operadorSalvo = state.operadores.filter(function(x){ return x.nome.toLowerCase()===nome.toLowerCase(); })[0];
+        if(operadorSalvo){
+          try{
+            await ctrlFetch('/api/ctrl/operadores/'+operadorSalvo.id+'/senha', { method:'PATCH', headers: ctrlCabecalhos(), body: JSON.stringify({ usuario: usuarioLogin, senha: senhaLogin }) });
+            operadorSalvo.usuario = usuarioLogin || operadorSalvo.usuario;
+            avisoLogin = ' Login do tablet definido/atualizado.';
+          }catch(e){ avisoLogin = ' Porém não foi possível definir o login do tablet: '+e.message; }
+        }
+      }
       closeModal();
-      toast(ok ? 'Operador salvo.' : 'Operador salvo localmente — houve um problema ao sincronizar.');
+      toast((ok ? 'Operador salvo.' : 'Operador salvo localmente — houve um problema ao sincronizar.') + avisoLogin);
       renderOperadoresTab();
     };
   }
@@ -3876,7 +3891,7 @@
     marcarBotoesFiltroAtivos('operadores');
     var body = document.getElementById('operadoresBody');
     if(list.length===0){
-      body.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhum operador encontrado.</td></tr>';
+      body.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum operador encontrado.</td></tr>';
       return;
     }
     body.innerHTML = list.map(function(o){
@@ -3884,6 +3899,7 @@
       return '<tr'+(inativo?' style="opacity:.55;"':'')+'><td><span class="plate">'+esc(o.matricula||'—')+'</span></td><td>'+esc(o.nome)+
         (inativo?' <span style="color:var(--danger);font-weight:700;font-size:11px;">(desativado)</span>':'')+'</td>' +
         '<td>'+esc(o.cargo||'—')+'</td>' +
+        '<td>'+(o.usuario ? esc(o.usuario) : '<span class="muted-tag" style="opacity:.7;">sem login</span>')+'</td>' +
         '<td><button class="btn btn-ghost btn-sm" data-edit-oper="'+o.id+'" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>' +
         (inativo ?
           '<button class="btn btn-outline btn-sm" data-reativar-oper="'+o.id+'" title="Reativar" style="margin-left:4px;">Reativar</button>' :
