@@ -4238,7 +4238,7 @@
         '<div class="field"><label>Equipamento</label><div style="display:flex;align-items:center;gap:10px;"><div id="apEquipFoto" style="width:40px;height:40px;flex-shrink:0;border-radius:8px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;">🚜</div><div class="combo-wrap" style="flex:1;"><input type="text" id="apEquip" autocomplete="off" value="'+esc(equipValorInicial)+'" placeholder="Digite ou selecione o código…"><div class="combo-list" id="apEquipList"></div></div></div><div id="apEquipError"></div></div>' +
         '<div class="field-row-ordem">' +
           '<div class="field"><label>Nº Ordem</label><div class="combo-wrap"><input type="text" id="apOrdemNumero" autocomplete="off" value="'+esc(ordemNumeroValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apOrdemNumeroList"></div></div></div>' +
-          '<div class="field"><label>'+(modoOperadorSimplificado?'Local':'Descrição Ordem')+'</label><div class="combo-wrap"><input type="text" id="apOrdem" autocomplete="off" value="'+esc(ordemValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="'+(modoOperadorSimplificado?'Selecione o local…':'Digite ou selecione a ordem…')+'"><div class="combo-list" id="apOrdemList"></div></div>'+(restringirOrdem?('<div class="muted-tag" style="margin-top:4px;">Você está restrito a esta ordem.'+(state.operadorOrdemAdminLock?'':' <button type="button" class="btn-ghost" id="trocarOrdemBtn" style="padding:0;">Trocar ordem</button>')+'</div>'):(clienteRestrito?'<div class="muted-tag" style="margin-top:4px;">Você está restrito ao cliente '+esc(clienteRestrito)+' — escolha entre as ordens dele acima.</div>':''))+'<div id="apOrdemError"></div></div>' +
+          '<div class="field"><label>Descrição Ordem</label><div class="combo-wrap"><input type="text" id="apOrdem" autocomplete="off" value="'+esc(ordemValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Digite ou selecione a ordem…"><div class="combo-list" id="apOrdemList"></div></div>'+(restringirOrdem?('<div class="muted-tag" style="margin-top:4px;">Você está restrito a esta ordem.'+(state.operadorOrdemAdminLock?'':' <button type="button" class="btn-ghost" id="trocarOrdemBtn" style="padding:0;">Trocar ordem</button>')+'</div>'):(clienteRestrito?'<div class="muted-tag" style="margin-top:4px;">Você está restrito ao cliente '+esc(clienteRestrito)+' — escolha entre as ordens dele acima.</div>':''))+'<div id="apOrdemError"></div></div>' +
           '<div class="field"><label>Nº Cliente</label><div class="combo-wrap"><input type="text" id="apNCliente" autocomplete="off" value="'+esc(nClienteValorInicial)+'"'+((restringirOrdem||clienteRestrito)?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apNClienteList"></div></div></div>' +
         '</div>' +
         '<div class="field-row">' +
@@ -4356,11 +4356,15 @@
       if(!equipObj || !equipObj.local) return;
       if(document.getElementById('apOrdem').value.trim()) return; // já tem valor — não atropela
       var localTexto = String(equipObj.local).trim();
-      // No tablet, o campo (agora rotulado "Local") sempre mostra o Local do equipamento — igual
-      // o Checklist — não depende mais de achar uma Ordem cadastrada com esse Local igualzinho.
+      // No tablet, o campo (que mostra o Local, mesmo continuando rotulado "Descrição Ordem")
+      // sempre mostra o Local do equipamento — igual o Checklist — não depende de achar uma Ordem
+      // cadastrada com esse Local igualzinho.
       if(modoOperadorSimplificado) document.getElementById('apOrdem').value = localTexto;
-      var achada = null;
       var numeroExtraido = extrairNumeroOrdemDoLocal(localTexto);
+      // O Nº Ordem sempre preenche sozinho com o número que vier no final do Local — não espera
+      // achar uma Ordem cadastrada com esse número pra mostrar isso ao operador.
+      if(modoOperadorSimplificado && numeroExtraido) document.getElementById('apOrdemNumero').value = numeroExtraido;
+      var achada = null;
       if(numeroExtraido){
         achada = state.ordens.filter(function(o){ return String(o.numero||'').trim()===numeroExtraido; })[0];
       }
