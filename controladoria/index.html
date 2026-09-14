@@ -3834,12 +3834,29 @@
     };
   }
 
+  // "Remover" um operador NUNCA apaga o registro de verdade — o backend só
+  // marca Ativo="Não" na lista compartilhada do SharePoint (pra preservar
+  // histórico/login já feito em nome dele, mesmo padrão que o Portal usa).
+  // Antes disso não tinha nenhuma pista visual: o operador "removido" ficava
+  // exatamente igual na lista, e a pessoa achava que a exclusão não tinha
+  // funcionado. Agora ele aparece marcado como "(desativado)" e o botão vira
+  // "Reativar" — dá pra desfazer, e fica claro o que realmente aconteceu.
   function deleteOperador(id){
     var op = getOperador(id);
-    confirmModal('Remover operador', 'Remover '+(op?op.nome:'')+' do cadastro? Os lançamentos de apropriação já feitos em nome dele são mantidos normalmente.', async function(){
+    confirmModal('Remover operador', 'Remover '+(op?op.nome:'')+' do cadastro? Ele deixa de aparecer disponível para novos lançamentos e o login do tablet dele (se tiver) para de funcionar — mas o histórico de apropriações já feitas é mantido, e dá pra reativar depois.', async function(){
       state.operadores = state.operadores.filter(function(x){ return x.id!==id; });
-      await saveList('operadores_v4', state.operadores);
-      toast('Operador removido.');
+      var ok = await saveList('operadores_v4', state.operadores);
+      toast(ok ? 'Operador removido — ele fica marcado como desativado e some das listas de seleção, mas continua no cadastro pra manter o histórico.' : 'Não foi possível remover agora. Verifique a conexão e tente de novo.');
+      renderOperadoresTab();
+    });
+  }
+
+  function reativarOperador(id){
+    var op = getOperador(id);
+    confirmModal('Reativar operador', 'Reativar '+(op?op.nome:'')+'? Ele volta a aparecer disponível para novos lançamentos e o login do tablet dele (se já tinha um) volta a funcionar.', async function(){
+      state.operadores = state.operadores.map(function(x){ return x.id===id ? Object.assign({}, x, {ativo:true}) : x; });
+      var ok = await saveList('operadores_v4', state.operadores);
+      toast(ok ? 'Operador reativado.' : 'Não foi possível reativar agora. Verifique a conexão e tente de novo.');
       renderOperadoresTab();
     });
   }
@@ -3850,7 +3867,11 @@
     var list = state.operadores.filter(function(o){
       if(busca && o.nome.toLowerCase().indexOf(busca)===-1) return false;
       return true;
-    }).sort(function(a,b){ return a.nome.localeCompare(b.nome,'pt-BR'); });
+    }).sort(function(a,b){
+      // Desativados vão pro fim da lista, pra não misturar com quem está em uso.
+      if((a.ativo===false) !== (b.ativo===false)) return a.ativo===false ? 1 : -1;
+      return a.nome.localeCompare(b.nome,'pt-BR');
+    });
     list = aplicaColFiltrosTabela('operadores', list);
     marcarBotoesFiltroAtivos('operadores');
     var body = document.getElementById('operadoresBody');
@@ -3859,13 +3880,19 @@
       return;
     }
     body.innerHTML = list.map(function(o){
-      return '<tr><td><span class="plate">'+esc(o.matricula||'—')+'</span></td><td>'+esc(o.nome)+'</td>' +
+      var inativo = o.ativo===false;
+      return '<tr'+(inativo?' style="opacity:.55;"':'')+'><td><span class="plate">'+esc(o.matricula||'—')+'</span></td><td>'+esc(o.nome)+
+        (inativo?' <span style="color:var(--danger);font-weight:700;font-size:11px;">(desativado)</span>':'')+'</td>' +
         '<td>'+esc(o.cargo||'—')+'</td>' +
         '<td><button class="btn btn-ghost btn-sm" data-edit-oper="'+o.id+'" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>' +
-        '<button class="btn btn-danger-ghost btn-sm" data-del-oper="'+o.id+'" title="Remover"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button></td></tr>';
+        (inativo ?
+          '<button class="btn btn-outline btn-sm" data-reativar-oper="'+o.id+'" title="Reativar" style="margin-left:4px;">Reativar</button>' :
+          '<button class="btn btn-danger-ghost btn-sm" data-del-oper="'+o.id+'" title="Remover"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>'
+        ) + '</td></tr>';
     }).join('');
     body.querySelectorAll('[data-edit-oper]').forEach(function(btn){ btn.onclick = function(){ openOperadorModal(getOperador(btn.getAttribute('data-edit-oper'))); }; });
     body.querySelectorAll('[data-del-oper]').forEach(function(btn){ btn.onclick = function(){ deleteOperador(btn.getAttribute('data-del-oper')); }; });
+    body.querySelectorAll('[data-reativar-oper]').forEach(function(btn){ btn.onclick = function(){ reativarOperador(btn.getAttribute('data-reativar-oper')); }; });
   }
 
   /* ============ APROPRIAÇÃO FORM ============ */
