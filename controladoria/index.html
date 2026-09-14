@@ -360,6 +360,14 @@
   .combo-item{padding:7px 10px;font-size:13px;cursor:pointer;}
   .combo-item:hover,.combo-item.active{background:var(--blue-soft);}
   .combo-empty{padding:9px 10px;font-size:12.5px;color:var(--text-muted);}
+  /* Frota em MAIÚSCULA nesses filtros por equipamento — só visual (o valor
+     usado pra filtrar/comparar continua o código original, sem mudar nada
+     no cadastro em si). Não usa a classe genérica ".combo-item" porque ela
+     é reaproveitada por combos de outras coisas (operador, ordem, cliente…). */
+  #filtroApEquip, #dashEquip, #consEquip, #indEquip, #medEquip{ text-transform:uppercase; }
+  #filtroApEquipList .combo-item, #dashEquipList .combo-item,
+  #consEquipList .combo-item, #indEquipList .combo-item,
+  #medEquipList .combo-item{ text-transform:uppercase; }
   .parada-remove{color:var(--danger);background:none;border:none;font-size:18px;line-height:1;padding:0 4px;flex:none;width:22px;}
   .add-parada-btn{font-size:12.5px;background:none;border:1px dashed var(--border);border-radius:7px;padding:6px 10px;color:var(--blue);width:100%;text-align:center;}
 
@@ -2638,8 +2646,23 @@
   }
   function getEquip(id){ for(var i=0;i<state.equipamentos.length;i++){ if(state.equipamentos[i].id===id) return state.equipamentos[i]; } return null; }
   function getOrdem(id){ for(var i=0;i<state.ordens.length;i++){ if(state.ordens[i].id===id) return state.ordens[i]; } return null; }
-  function equipLabel(eq){ return eq ? (eq.codigo+' — '+eq.tipo) : '(equipamento removido)'; }
+  // Mostra código e tipo do equipamento em MAIÚSCULA (só na exibição — o
+  // cadastro em si, no SharePoint, continua exatamente como foi digitado).
+  // Como esta função é usada tanto pra montar a lista do combo do equipamento
+  // quanto pra comparar de volta o que foi selecionado (equipLabel(e)===texto),
+  // ficar tudo em maiúscula aqui dos dois lados mantém a comparação
+  // funcionando normalmente — não quebra nada.
+  function equipLabel(eq){ return eq ? (eq.codigo+' — '+eq.tipo).toUpperCase() : '(equipamento removido)'; }
   function ordemLabel(ord){ return ord ? ((ord.numero?'['+ord.numero+'] ':'')+ord.nome+' ('+ord.cliente+')') : '(ordem removida)'; }
+  // Usada em toda tela que mostra a Ordem de um lançamento de apropriação/rascunho pro
+  // humano — cobre o caso (novo) de um lançamento salvo sem uma Ordem cadastrada
+  // reconhecida, guardando só o texto que o operador digitou (ordemNumeroTexto/ordemDescricaoTexto).
+  function ordemLabelDoLancamento(rec){
+    var o = getOrdem(rec.ordemId);
+    if(o) return ordemLabel(o);
+    var texto = ((rec.ordemDescricaoTexto || rec.ordemNumeroTexto || '')+'').trim();
+    return texto ? (texto + ' (não vinculada a uma Ordem cadastrada)') : '(ordem não vinculada)';
+  }
   // Usada no Lançamento de Apropriação, ao lado do campo Nº Ordem — sem repetir o número, já mostrado ao lado.
   function ordemDescricao(ord){ return ord ? (ord.nome+' ('+ord.cliente+')') : '(ordem removida)'; }
   // Usada SÓ no lançamento simplificado do tablet (operador de campo): mostra o Local/Obra da
@@ -3194,7 +3217,7 @@
   }
   function deleteEquipamento(id){
     var eq = getEquip(id);
-    confirmModal('Remover equipamento', 'Remover '+ (eq?eq.codigo:'') +'? Os lançamentos de apropriação vinculados a ele serão mantidos, mas ficarão sem equipamento associado.', async function(){
+    confirmModal('Remover equipamento', 'Remover '+ (eq?eq.codigo.toUpperCase():'') +'? Os lançamentos de apropriação vinculados a ele serão mantidos, mas ficarão sem equipamento associado.', async function(){
       state.equipamentos = state.equipamentos.filter(function(x){ return x.id!==id; });
       await saveList('equipamentos_v6', state.equipamentos);
       toast('Equipamento removido.');
@@ -4151,13 +4174,13 @@
       var linhasDoDia = rascunhosHoje.map(function(a){
         var eqR = getEquip(a.equipamentoId);
         return '<div class="consol-line" style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;">' +
-          '<span><b>'+esc(eqR?eqR.codigo:'—')+'</b> · em andamento (rodada '+(a.rodadas||1)+' de até 4)</span>' +
+          '<span><b>'+esc(eqR?eqR.codigo.toUpperCase():'—')+'</b> · em andamento (rodada '+(a.rodadas||1)+' de até 4)</span>' +
           '<b><button type="button" class="btn btn-outline btn-sm ap-hoje-continuar" data-id="'+esc(a.id)+'">Continuar</button></b>' +
         '</div>';
       }).concat(concluidosHoje.map(function(a){
         var eqC = getEquip(a.equipamentoId);
         return '<div class="consol-line" style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;">' +
-          '<span><b>'+esc(eqC?eqC.codigo:'—')+'</b> · concluído</span><b style="color:var(--text-muted);">✓</b>' +
+          '<span><b>'+esc(eqC?eqC.codigo.toUpperCase():'—')+'</b> · concluído</span><b style="color:var(--text-muted);">✓</b>' +
         '</div>';
       })).join('');
       wrap.innerHTML =
@@ -4224,7 +4247,7 @@
           achados.map(function(item, i){
             var eqB = getEquip(item.reg.equipamentoId);
             return '<button type="button" class="btn btn-outline btn-sm ap-busca-escolher" data-i="'+i+'" style="display:block;width:100%;text-align:left;margin-bottom:6px;">' +
-              esc(eqB?eqB.codigo:'—')+' · '+(item.rascunho?'em andamento':'concluído')+'</button>';
+              esc(eqB?eqB.codigo.toUpperCase():'—')+' · '+(item.rascunho?'em andamento':'concluído')+'</button>';
           }).join('');
         errBox.querySelectorAll('.ap-busca-escolher').forEach(function(btn){
           btn.addEventListener('click', function(){
@@ -4301,7 +4324,16 @@
     // volta (auto-preenchimento, seleção de tarifa, rascunho da linha do tempo). No tablet mostra
     // só o Local/Obra (igual o Checklist); fora dele, o nome completo da Ordem com o cliente.
     var ordemLabelAtual = modoOperadorSimplificado ? ordemLocalLabel : ordemDescricao;
-    var equipValorInicial = editRecord ? equipLabel(getEquip(editRecord.equipamentoId)) : equipLabel(equipamentosOrdenados[0]);
+    // Pré-seleciona o último equipamento usado por este operador (segue ele entre dispositivos —
+    // salvo via PATCH /api/ctrl/operadores/:id/ultimo-equipamento), só num lançamento NOVO (não
+    // editando) no modo simplificado. Se o equipamento salvo não existir mais no cadastro, cai
+    // de volta no comportamento de sempre (primeiro da lista ordenada).
+    var equipUltimoUsado = null;
+    if(!editRecord && modoOperadorSimplificado && operadorAuto && operadorAuto.ultimoEquipamentoCodigo){
+      var codigoUltimo = String(operadorAuto.ultimoEquipamentoCodigo).trim().toUpperCase();
+      equipUltimoUsado = codigoUltimo ? state.equipamentos.filter(function(e){ return String(e.codigo).trim().toUpperCase()===codigoUltimo; })[0] || null : null;
+    }
+    var equipValorInicial = editRecord ? equipLabel(getEquip(editRecord.equipamentoId)) : equipLabel(equipUltimoUsado || equipamentosOrdenados[0]);
     var ordemValorInicial = editRecord ? ordemLabelAtual(getOrdem(editRecord.ordemId)) : (restringirOrdem && ordensOrdenadas[0] ? ordemLabelAtual(ordensOrdenadas[0]) : '');
     var ordemNumeroValorInicial = editRecord ? (getOrdem(editRecord.ordemId)||{}).numero||'' : (restringirOrdem && ordensOrdenadas[0] ? (ordensOrdenadas[0].numero||'') : '');
     var nClienteValorInicial = editRecord ? (CLIENTE_NUMEROS[(getOrdem(editRecord.ordemId)||{}).cliente]||'') : (clienteRestrito ? (CLIENTE_NUMEROS[clienteRestrito]||'') : (restringirOrdem && ordensOrdenadas[0] ? (CLIENTE_NUMEROS[ordensOrdenadas[0].cliente]||'') : ''));
@@ -4619,6 +4651,11 @@
         return;
       }
       var ordemId = ordemObj ? ordemObj.id : null;
+      // Quando não achou uma Ordem cadastrada batendo com o que foi digitado, guarda o texto cru
+      // (Nº e Descrição) pra não perder o que o operador digitou — só usado de fato lá na frente,
+      // ao montar o record, e só quando ordemId continua null (uma Ordem real já tem esses dados).
+      var ordemNumeroTextoLivre = ordemObj ? '' : document.getElementById('apOrdemNumero').value.trim();
+      var ordemDescricaoTextoLivre = ordemObj ? '' : document.getElementById('apOrdem').value.trim();
       var data = document.getElementById('apData').value;
       var operadorTexto = normalizarEspacos(document.getElementById('apOperador').value);
       var operadorRegistrado = state.operadores.filter(function(o){
@@ -4650,8 +4687,10 @@
 
       if(!data){ errBox.innerHTML = '<div class="form-error">Informe a data.</div>'; return; }
       if(!equipamentoId){ errBox.innerHTML = '<div class="form-error">Equipamento não reconhecido — digite o código ou escolha um da lista.</div>'; return; }
-      if(!ordemId){ errBox.innerHTML = '<div class="form-error">Ordem não reconhecida — digite o nome ou escolha uma da lista.</div>'; return; }
-      var equipEmOutraOrdem = data ? todosParaChecagem.filter(function(a){
+      // Ordem não reconhecida deixou de bloquear o salvamento — o lançamento pode ser salvo sem
+      // vínculo a uma Ordem cadastrada (ordemId fica null), guardando o texto digitado acima em
+      // ordemNumeroTextoLivre/ordemDescricaoTextoLivre pra não perder o que foi digitado.
+      var equipEmOutraOrdem = (ordemId && data) ? todosParaChecagem.filter(function(a){
         return a.equipamentoId===equipamentoId && a.data===data && a.ordemId!==ordemId && a.id!==idEmEdicao;
       })[0] : null;
       if(equipEmOutraOrdem){
@@ -4691,6 +4730,15 @@
         }
       }
 
+      // Melhor esforço: guarda o último equipamento usado por este operador (no tablet/campo),
+      // pra ele seguir pré-selecionado da próxima vez, mesmo trocando de dispositivo. Nunca
+      // bloqueia nem mostra erro — se falhar, só não pré-seleciona da próxima vez.
+      function salvarUltimoEquipamentoDoOperador(){
+        var op = operadorDoLoginAtual();
+        if(!modoOperadorSimplificado || !op || !equipObj || editandoConcluido) return;
+        ctrlFetch('/api/ctrl/operadores/'+op.id+'/ultimo-equipamento', { method:'PATCH', headers: ctrlCabecalhos(), body: JSON.stringify({ equipamentoCodigo: equipObj.codigo }) }).catch(function(){});
+      }
+
       async function salvarComoRascunho(){
         var rascunhoExistente = editandoRascunho ? state.apropriacoesRascunhos.filter(function(x){ return x.id===idEmEdicao; })[0] : null;
         var record = {
@@ -4705,6 +4753,7 @@
           status: 'em_andamento',
           rodadas: rascunhoExistente ? (rascunhoExistente.rodadas||1)+1 : 1
         };
+        if(!ordemId){ record.ordemNumeroTexto = ordemNumeroTextoLivre; record.ordemDescricaoTexto = ordemDescricaoTextoLivre; }
         if(editandoRascunho){
           state.apropriacoesRascunhos = state.apropriacoesRascunhos.map(function(x){ return x.id===record.id ? record : x; });
         } else {
@@ -4712,6 +4761,7 @@
         }
         var ok = await saveList('apropriacoes_rascunhos_v1', state.apropriacoesRascunhos);
         toast(ok ? ('Lançamento salvo em andamento (rodada '+record.rodadas+' de até 4) — '+operador+', '+brDate(data)+'.') : 'Salvo localmente — problema ao sincronizar.', 6000);
+        salvarUltimoEquipamentoDoOperador();
         renderApropriacaoForm(record, true);
       }
 
@@ -4803,6 +4853,7 @@
         saltoHorimetro: saltoHorimetro, excedeuJornada: excedeuJornada,
         timelineEventos: apEventos
       };
+      if(!ordemId){ record.ordemNumeroTexto = ordemNumeroTextoLivre; record.ordemDescricaoTexto = ordemDescricaoTextoLivre; }
       return (async function(){
       var jaExisteEmApropriacoes = state.apropriacoes.some(function(x){ return x.id===record.id; });
       if(jaExisteEmApropriacoes){
@@ -4824,6 +4875,7 @@
       } else {
         toast(ok ? (wasEditing ? 'Parte diária atualizada.' : 'Parte diária lançada.') : 'Lançamento salvo localmente — houve um problema ao sincronizar.');
       }
+      salvarUltimoEquipamentoDoOperador();
       state.editingApropriacaoId = null;
       state.editingRascunhoId = null;
       renderApropriacaoEntry();
@@ -4898,6 +4950,29 @@
       }catch(e){ console.error('Falha ao salvar rascunho da linha do tempo', e); }
     }
 
+    // Botões "Cancelar"/"Refazer" (só pra facilitar teste em campo) — os dois fazem a mesma
+    // coisa: descartam o rascunho em andamento (o mesmo que persistirRascunhoTimeline mantém,
+    // identificado por state.editingRascunhoId) e voltam a linha do tempo pro zero.
+    function cancelarOuRefazerLancamentoTl(){
+      confirmModal('Recomeçar lançamento', 'Isso descarta o que já foi lançado hoje neste equipamento (rascunho em andamento) e volta pro início, pra você testar de novo. Continuar?', async function(){
+        apEventos = [];
+        formParadas = [];
+        var idRascunhoTl = state.editingRascunhoId;
+        if(idRascunhoTl){
+          var existiaTl = state.apropriacoesRascunhos.some(function(x){ return x.id===idRascunhoTl; });
+          if(existiaTl){
+            state.apropriacoesRascunhos = state.apropriacoesRascunhos.filter(function(x){ return x.id!==idRascunhoTl; });
+            await saveList('apropriacoes_rascunhos_v1', state.apropriacoesRascunhos);
+          }
+          state.editingRascunhoId = null;
+        }
+        renderApTimeline();
+        renderParadasEditor();
+        updateConsolidacao();
+        toast('Lançamento reiniciado.');
+      });
+    }
+
     // Contador compacto (ex.: "1h05") do tempo decorrido desde que o evento em aberto (atividade
     // ou parada) começou — só mostra, não recalcula nada: quem manda no valor salvo continua
     // sendo o horário de início/fim de cada evento, igual sempre foi.
@@ -4905,6 +4980,20 @@
       var totalMin = Math.max(0, Math.round(horasDecimal*60));
       var h = Math.floor(totalMin/60), m = totalMin%60;
       return h+'h'+String(m).padStart(2,'0');
+    }
+    // Contador ao vivo com precisão de segundo (HH:MM:SS), pra quem está lançando ver o tempo
+    // passando de verdade — não muda em nada o que é persistido: inicio/fim continuam HH:MM,
+    // usados pra calcular as horas pagas, exatamente como sempre foram.
+    function elapsedMsDoEvento(ev){
+      if(ev.iniciadoEmTs) return Date.now() - ev.iniciadoEmTs;
+      // Rascunho antigo, salvo antes desse campo existir — aproxima pela hora HH:MM (sem segundos).
+      var d = diffHoras(ev.inicio, horaAtualHHMM());
+      return d===null ? 0 : Math.round(d*3600000);
+    }
+    function formatarDuracaoTlPreciso(ms){
+      var total = Math.max(0, Math.floor(ms/1000));
+      var h = Math.floor(total/3600), m = Math.floor((total%3600)/60), s = total%60;
+      return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
     }
     function renderApTimeline(){
       var wrapT = document.getElementById('apTimelineWrap');
@@ -4955,7 +5044,7 @@
           '</div>';
       } else if(abertoAtividadeTl){
         acaoHtmlTl =
-          '<div class="muted-tag" style="margin-bottom:8px;">Em '+esc(ultimoTl.situacao)+' desde '+esc(ultimoTl.inicio)+' (horímetro '+brNum(ultimoTl.horimetroIni,1)+') · <b id="apTlContador" style="color:var(--navy);">0h00</b></div>' +
+          '<div class="muted-tag" style="margin-bottom:8px;">Em '+esc(ultimoTl.situacao)+' desde '+esc(ultimoTl.inicio)+' (horímetro '+brNum(ultimoTl.horimetroIni,1)+') · <b id="apTlContador" style="color:var(--navy);">00:00:00</b></div>' +
           '<div id="apTlParadaForm" style="display:none;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--border);">' +
             '<div class="field-row">' +
               '<div class="field"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
@@ -4977,11 +5066,19 @@
           '</div>';
       } else if(abertoParadaTl){
         acaoHtmlTl =
-          '<div class="muted-tag" style="margin-bottom:8px;">Parado — '+esc(ultimoTl.motivo)+' — desde '+esc(ultimoTl.inicio)+' · <b id="apTlContador" style="color:var(--ru);">0h00</b></div>' +
+          '<div class="muted-tag" style="margin-bottom:8px;">Parado — '+esc(ultimoTl.motivo)+' — desde '+esc(ultimoTl.inicio)+' · <b id="apTlContador" style="color:var(--ru);">00:00:00</b></div>' +
           '<button type="button" class="btn btn-primary" id="apTlFinalizarParadaBtn">Finalizar parada</button>';
       }
 
-      wrapT.innerHTML = historicoHtmlTl + acaoHtmlTl;
+      var testeHtmlTl =
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);">' +
+          '<button type="button" class="btn btn-outline btn-sm" id="apTlCancelarBtn">Cancelar lançamento</button>' +
+          '<button type="button" class="btn btn-outline btn-sm" id="apTlRefazerBtn">Refazer lançamento</button>' +
+        '</div>';
+
+      wrapT.innerHTML = historicoHtmlTl + acaoHtmlTl + testeHtmlTl;
+      document.getElementById('apTlCancelarBtn').onclick = cancelarOuRefazerLancamentoTl;
+      document.getElementById('apTlRefazerBtn').onclick = cancelarOuRefazerLancamentoTl;
 
       // Contador ao vivo: atualiza a cada 15s enquanto houver uma atividade ou parada em
       // aberto. Pequeno de propósito (só o texto em negrito acima) — não é mais um campo,
@@ -4990,11 +5087,10 @@
         var atualizarContadorTl = function(){
           var el = document.getElementById('apTlContador');
           if(!el){ if(apTlTimerId){ clearInterval(apTlTimerId); apTlTimerId = null; } return; }
-          var decorrido = diffHoras(ultimoTl.inicio, horaAtualHHMM());
-          el.textContent = decorrido===null ? '—' : formatarDuracaoTl(decorrido);
+          el.textContent = formatarDuracaoTlPreciso(elapsedMsDoEvento(ultimoTl));
         };
         atualizarContadorTl();
-        apTlTimerId = setInterval(atualizarContadorTl, 15000);
+        apTlTimerId = setInterval(atualizarContadorTl, 1000);
       }
 
       if(!ultimoTl || ultimoTl.fim){
@@ -5009,7 +5105,7 @@
             document.getElementById('apEntrada').value = agoraTl;
             document.getElementById('apHi').value = h;
           }
-          apEventos.push({ tipo:'atividade', situacao: situacaoTl, horimetroIni: h, inicio: agoraTl, fim: null, horimetroFim: null });
+          apEventos.push({ tipo:'atividade', situacao: situacaoTl, horimetroIni: h, inicio: agoraTl, fim: null, horimetroFim: null, iniciadoEmTs: Date.now() });
           persistirRascunhoTimeline();
           renderApTimeline();
           updateConsolidacao();
@@ -5037,7 +5133,7 @@
             document.getElementById('apEntrada').value = agoraTl;
             document.getElementById('apHi').value = h;
           }
-          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null, observacao: obsTl });
+          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null, observacao: obsTl, iniciadoEmTs: Date.now() });
           formParadas.push({ motivo: servico, inicio: agoraTl, termino: '', horas: 0, tipoServico: '', observacao: obsTl });
           persistirRascunhoTimeline();
           renderApTimeline();
@@ -5067,7 +5163,7 @@
           var obsTl = normalizarEspacos(document.getElementById('apTlParadaObs').value);
           var agoraTl = horaAtualHHMM();
           ultimoTl.horimetroFim = h; ultimoTl.fim = agoraTl;
-          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null, observacao: obsTl });
+          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null, observacao: obsTl, iniciadoEmTs: Date.now() });
           formParadas.push({ motivo: servico, inicio: agoraTl, termino: '', horas: 0, tipoServico: '', observacao: obsTl });
           persistirRascunhoTimeline();
           renderApTimeline();
@@ -5091,7 +5187,7 @@
           // de escolher "Iniciar" ou "Iniciar já em parada" de novo.
           var eventoAnteriorTl = apEventos[apEventos.length-2];
           if(eventoAnteriorTl && eventoAnteriorTl.tipo==='atividade'){
-            apEventos.push({ tipo:'atividade', situacao: eventoAnteriorTl.situacao, horimetroIni: horimetroRetomadaTl, inicio: agoraTl, fim: null, horimetroFim: null });
+            apEventos.push({ tipo:'atividade', situacao: eventoAnteriorTl.situacao, horimetroIni: horimetroRetomadaTl, inicio: agoraTl, fim: null, horimetroFim: null, iniciadoEmTs: Date.now() });
           }
           persistirRascunhoTimeline();
           renderParadasEditor();
@@ -5157,8 +5253,8 @@
     openModal(
       '<h3>Detalhes do lançamento</h3>' +
       '<div class="consol-line"><span>Nº Parte Diária</span><b>'+esc(ap.numeroPD||'—')+'</b></div>' +
-      '<div class="consol-line"><span>Equipamento</span><b>'+(eq?esc(eq.codigo):'—')+'</b></div>' +
-      '<div class="consol-line"><span>Ordem</span><b>'+esc(ordemLabel(ord))+'</b></div>' +
+      '<div class="consol-line"><span>Equipamento</span><b>'+(eq?esc(eq.codigo).toUpperCase():'—')+'</b></div>' +
+      '<div class="consol-line"><span>Ordem</span><b>'+esc(ordemLabelDoLancamento(ap))+'</b></div>' +
       '<div class="consol-line"><span>Data</span><b>'+brDate(ap.data)+(ap.dataFim && ap.dataFim!==ap.data ? ' → '+brDate(ap.dataFim)+' (vira o dia)' : '')+'</b></div>' +
       '<div class="consol-line"><span>Operador</span><b>'+esc(ap.operador)+'</b></div>' +
       '<div class="consol-line"><span>Escala</span><b>'+esc(ap.escala?escalaLabel(ap.escala,ap.turno):'—')+'</b></div>' +
@@ -5201,8 +5297,8 @@
     }
     body.innerHTML = list.map(function(e){
       return '<tr>' +
-        '<td><span class="plate">'+esc(e.codigo)+'</span></td>' +
-        '<td>'+esc(e.tipo)+'</td>' +
+        '<td><span class="plate">'+esc(e.codigo).toUpperCase()+'</span></td>' +
+        '<td>'+esc(e.tipo||'').toUpperCase()+'</td>' +
         '<td><button class="btn btn-ghost btn-sm" data-edit-eq="'+e.id+'" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>' +
         '<button class="btn btn-danger-ghost btn-sm" data-del-eq="'+e.id+'" title="Remover"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button></td>' +
       '</tr>';
@@ -5673,7 +5769,7 @@
       cliente: (ord?((clienteNumero(ord.cliente)?clienteNumero(ord.cliente)+' ':'')+ord.cliente):'—'),
       nordem: (ord&&ord.numero)?ord.numero:'—',
       descordem: ord?ord.nome:'—',
-      equip: eq?eq.codigo:'—',
+      equip: eq?eq.codigo.toUpperCase():'—',
       data: a.data ? brDate(a.data) : '—',
       inicio: a.entrada||'—',
       termino: a.saida||'—',
@@ -5810,9 +5906,8 @@
       '<h2 style="margin:0 0 10px;">Lançamentos em andamento ('+lista.length+')</h2>' +
       lista.map(function(a){
         var eq = getEquip(a.equipamentoId);
-        var ord = getOrdem(a.ordemId);
         return '<div class="consol-line" style="border-top:1px solid #F1DDA0;padding-top:8px;margin-top:8px;">' +
-          '<span>'+esc(a.operador||'—')+' · '+brDate(a.data)+' · '+esc(eq?eq.codigo:'—')+' · '+esc(ord?ordemLabel(ord):'—')+' · rodada '+(a.rodadas||1)+' de até 4</span>' +
+          '<span>'+esc(a.operador||'—')+' · '+brDate(a.data)+' · '+esc(eq?eq.codigo.toUpperCase():'—')+' · '+esc(ordemLabelDoLancamento(a))+' · rodada '+(a.rodadas||1)+' de até 4</span>' +
           '<b><button type="button" class="btn-ghost ap-rascunho-continuar" data-id="'+a.id+'" style="padding:2px 8px;">Continuar</button></b>' +
         '</div>';
       }).join('') +
@@ -5838,7 +5933,7 @@
       if(totalAlertas>0){
         var codigosEquip = Array.from(new Set(apropsComAlerta.map(function(a){
           var eq = getEquip(a.equipamentoId);
-          return eq ? eq.codigo : null;
+          return eq ? eq.codigo.toUpperCase() : null;
         }).filter(Boolean))).sort();
         var listaEquip = codigosEquip.length
           ? codigosEquip.map(function(c){ return '<span class="plate" style="background:rgba(255,255,255,0.2);color:#fff;">'+esc(c)+'</span>'; }).join(' ')
@@ -5912,9 +6007,9 @@
       return '<tr'+(temAlerta?' style="background:#FEF1F1;"':'')+'>' +
         '<td>'+esc(a.numeroPD||'—')+alertaBadge+'</td>' +
         '<td>'+(ord?(clienteNumero(ord.cliente)?esc(clienteNumero(ord.cliente))+' ':''):'')+(ord?esc(ord.cliente):'—')+'</td>' +
-        '<td>'+(ord&&ord.numero?esc(ord.numero):'—')+'</td>' +
-        '<td>'+(ord?esc(ord.nome):'<span class="muted-tag">(removida)</span>')+'</td>' +
-        '<td>'+(eq?'<span class="plate">'+esc(eq.codigo)+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
+        '<td>'+(ord&&ord.numero?esc(ord.numero):(a.ordemNumeroTexto?esc(a.ordemNumeroTexto):'—'))+'</td>' +
+        '<td>'+(ord?esc(ord.nome):(a.ordemDescricaoTexto?esc(a.ordemDescricaoTexto)+' <span class="muted-tag">(não vinculada)</span>':(a.ordemId?'<span class="muted-tag">(removida)</span>':'<span class="muted-tag">(sem ordem)</span>')))+'</td>' +
+        '<td>'+(eq?'<span class="plate">'+esc(eq.codigo).toUpperCase()+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
         '<td>'+brDate(a.data)+(a.dataFim && a.dataFim!==a.data ? '<br><span class="muted-tag">→ '+brDate(a.dataFim)+'</span>' : '')+'</td>' +
         '<td>'+esc(a.entrada||'—')+'</td>' +
         '<td>'+esc(a.saida||'—')+'</td>' +
@@ -6367,7 +6462,7 @@
     el.innerHTML = '<div class="legend">' + linhas.map(function(l){
       var eq = getEquip(l.equipamentoId), ord = getOrdem(l.ordemId);
       return '<div class="legend-item" style="border-left:3px solid #C0392B;padding-left:8px;">' +
-        '<span class="plate">'+(eq?esc(eq.codigo):'—')+'</span>' +
+        '<span class="plate">'+(eq?esc(eq.codigo).toUpperCase():'—')+'</span>' +
         '<span class="muted-tag">'+(ord?esc(ord.nome):'—')+' · último em '+brDate(l.ultimaData)+'</span>' +
         '<span class="n" style="color:#C0392B;">'+brNum(l.horas,1)+' h</span></div>';
     }).join('') + '</div>';
@@ -6507,7 +6602,7 @@
     if(list.length===0){ el.innerHTML = '<div class="empty-state" style="padding:20px;">Nenhum lançamento ainda.</div>'; return; }
     el.innerHTML = '<div class="legend">' + list.map(function(a){
       var eq = getEquip(a.equipamentoId), ord = getOrdem(a.ordemId);
-      return '<div class="legend-item"><span class="plate">'+(eq?esc(eq.codigo):'—')+'</span>' +
+      return '<div class="legend-item"><span class="plate">'+(eq?esc(eq.codigo).toUpperCase():'—')+'</span>' +
         '<span class="muted-tag">'+(ord?esc(ord.nome):'—')+' · '+brDate(a.data)+(a.dataFim && a.dataFim!==a.data ? '→'+brDate(a.dataFim):'')+'</span>' +
         '<span class="n">'+brNum(a.horasHorimetro,1)+' h</span></div>';
     }).join('') + '</div>';
@@ -6536,7 +6631,7 @@
       var horasManut = (a.paradas||[]).filter(function(p){ return isMotivoManutencao(p.motivo); }).reduce(function(s,p){ return s+(p.horas||0); },0);
       var motivos = (a.paradas||[]).filter(function(p){ return isMotivoManutencao(p.motivo) && p.horas>0; }).map(function(p){ return esc(p.motivo); }).join(', ');
       return '<div class="legend-item" style="border-left:3px solid #C0392B;padding-left:8px;">' +
-        '<span class="plate">'+(eq?esc(eq.codigo):'—')+'</span>' +
+        '<span class="plate">'+(eq?esc(eq.codigo).toUpperCase():'—')+'</span>' +
         '<span class="muted-tag">'+(ord?esc(ord.nome):'—')+' · último lançamento em '+brDate(a.data)+(motivos?' · '+motivos:'')+'</span>' +
         '<span class="n" style="color:#C0392B;">'+brNum(horasManut,1)+' h parado</span></div>';
     }).join('') + '</div>';
@@ -6821,8 +6916,8 @@
     return {
       cliente: ord?((clienteNumero(ord.cliente)?clienteNumero(ord.cliente)+' ':'')+ord.cliente):'—',
       ordem: ord?((ord.numero?ord.numero+' ':'')+ord.nome):'—',
-      equipamento: eq?eq.codigo:'(removido)',
-      tipo: eq?eq.tipo:'—',
+      equipamento: eq?eq.codigo.toUpperCase():'(removido)',
+      tipo: eq?eq.tipo.toUpperCase():'—',
       hProgramada: brNum(r.operador,2),
       hInicial: r.hInicial!==null?brNum(r.hInicial,1):'—',
       hFinal: r.hFinal!==null?brNum(r.hFinal,1):'—',
@@ -6920,8 +7015,8 @@
         var ord = getOrdem(r.ordemId);
         var eff = r.operador>0 ? Math.round(r.horimetro/r.operador*100) : 0;
         return '<tr><td>'+(ord?(clienteNumero(ord.cliente)?esc(clienteNumero(ord.cliente))+' ':''):'')+(ord?esc(ord.cliente):'—')+'</td><td>'+(ord&&ord.numero?esc(ord.numero)+' ':'')+(ord?esc(ord.nome):'—')+'</td>' +
-          '<td>'+(eq?'<span class="plate">'+esc(eq.codigo)+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
-          '<td>'+(eq?esc(eq.tipo):'—')+'</td>' +
+          '<td>'+(eq?'<span class="plate">'+esc(eq.codigo).toUpperCase()+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
+          '<td>'+(eq?esc(eq.tipo).toUpperCase():'—')+'</td>' +
           '<td class="num">'+brNum(r.operador,2)+'</td>' +
           '<td class="num">'+(r.hInicial!==null?brNum(r.hInicial,1):'—')+'</td>' +
           '<td class="num">'+(r.hFinal!==null?brNum(r.hFinal,1):'—')+'</td>' +
@@ -7006,8 +7101,8 @@
     var eq = getEquip(l.equipamentoId);
     var ind = l.ind;
     return {
-      equipamento: eq?eq.codigo:'—',
-      tipo: eq?eq.tipo:'—',
+      equipamento: eq?eq.codigo.toUpperCase():'—',
+      tipo: eq?eq.tipo.toUpperCase():'—',
       programada: brNum(ind.totalProgramada,1),
       horimetro: brNum(ind.totalHorimetro,1),
       manutencao: brNum(ind.totalManutencao,1),
@@ -7052,8 +7147,8 @@
         var eq = getEquip(l.equipamentoId);
         var ind = l.ind;
         return '<tr>' +
-          '<td>'+(eq?'<span class="plate">'+esc(eq.codigo)+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
-          '<td>'+(eq?esc(eq.tipo):'—')+'</td>' +
+          '<td>'+(eq?'<span class="plate">'+esc(eq.codigo).toUpperCase()+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
+          '<td>'+(eq?esc(eq.tipo).toUpperCase():'—')+'</td>' +
           '<td class="num">'+brNum(ind.totalProgramada,1)+'</td>' +
           '<td class="num">'+brNum(ind.totalHorimetro,1)+'</td>' +
           '<td class="num">'+brNum(ind.totalManutencao,1)+'</td>' +
@@ -7123,7 +7218,7 @@
         bodyTop5.innerHTML = top5.map(function(e){
           var eq = getEquip(e.equipamentoId);
           var pct = total>0 ? Math.round(e.horas/total*1000)/10 : 0;
-          return '<tr><td>'+(eq?'<span class="plate">'+esc(eq.codigo)+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
+          return '<tr><td>'+(eq?'<span class="plate">'+esc(eq.codigo).toUpperCase()+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>' +
             '<td>'+esc(e.tipo||'—')+'</td>' +
             '<td class="num">'+brNum(e.horas,1)+'</td><td class="num">'+gaugeMedidor(pct, 56)+'</td></tr>';
         }).join('');
@@ -7201,7 +7296,7 @@
     bodyFin.innerHTML = linhasEquip.map(function(l){
       var eq = getEquip(l.equipamentoId);
       var rPorHora = l.horasHorimetro>0 ? l.receitaTotal/l.horasHorimetro : 0;
-      return '<tr><td>'+(eq?'<span class="plate">'+esc(eq.codigo)+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>'+
+      return '<tr><td>'+(eq?'<span class="plate">'+esc(eq.codigo).toUpperCase()+'</span>':'<span class="muted-tag">(removido)</span>')+'</td>'+
         '<td class="num">'+brNum(l.toneladas,2)+'</td><td class="num">'+brNum(l.horasHorimetro,1)+'</td>'+
         '<td class="num">'+brNum(l.receitaProducao,2)+'</td><td class="num">'+brNum(l.receitaMedicao,2)+'</td>'+
         '<td class="num">'+brNum(l.receitaTotal,2)+'</td>'+
@@ -8534,7 +8629,7 @@
     });
     var linhasHtml = linhas.map(function(g){
       var eq = getEquip(g.equipamentoId);
-      return '<tr><td>'+(eq?'<span class="plate">'+esc(eq.codigo)+'</span> '+esc(eq.tipo):'<span class="muted-tag">(removido)</span>')+'</td>'+
+      return '<tr><td>'+(eq?'<span class="plate">'+esc(eq.codigo).toUpperCase()+'</span> '+esc(eq.tipo).toUpperCase():'<span class="muted-tag">(removido)</span>')+'</td>'+
         '<td>'+esc(g.operador)+'</td><td class="num">'+brNum(g.horas,2)+'</td></tr>';
     }).join('');
     return '<div class="card" style="margin-top:16px;"><h2>Equipamentos envolvidos</h2>' +
@@ -9318,7 +9413,7 @@
     var rows = list.map(function(a){
       var eq = getEquip(a.equipamentoId), ord = getOrdem(a.ordemId);
       var motivos = (a.paradas||[]).map(function(p){ return p.motivo+(p.tipoServico?' ('+p.tipoServico+')':'')+(p.inicio&&p.termino?' '+p.inicio+'-'+p.termino:'')+':'+brNum(p.horas,2); }).join(' | ');
-      return [a.numeroPD||'', brDate(a.data), brDate(a.dataFim||a.data), eq?eq.codigo:'', ord?(ord.numero||''):'', ord?ord.cliente:'', ord?ord.nome:'', a.operador,
+      return [a.numeroPD||'', brDate(a.data), brDate(a.dataFim||a.data), eq?eq.codigo:'', ord?(ord.numero||''):(a.ordemNumeroTexto||''), ord?ord.cliente:'', ord?ord.nome:(a.ordemDescricaoTexto||''), a.operador,
         a.escala?escalaLabel(a.escala,a.turno):'',
         a.entrada, a.tipoIntervalo, a.intervaloInicio||'', a.intervaloFim||'', a.saida,
         brNum(a.horasOperador,2), brNum(a.horimetroInicial,1), brNum(a.horimetroFinal,1), brNum(a.horasHorimetro,2),
