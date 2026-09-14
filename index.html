@@ -3,13 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Checklist Comprex — Tablet</title>
+<title>Portal de Operações Comprex</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1b6b34">
+<meta name="theme-color" content="#1b4a52">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
-    --navy:#1b6b34; --cream:#e8f5e9; --ok:#2e7d46; --at:#c79a3a; --ru:#c0392b; --na:#8a93a0;
+    /* Mesmo azul petróleo com degradê do Portal (sidebar) — --navy/--navy-2 são
+       os dois tons do degradê; --navy sozinho (sem gradiente) segue usado em
+       texto/bordas/detalhes finos, onde um degradê não faria sentido. */
+    --navy:#1b4a52; --navy-2:#0f2e34; --navy-gradient:linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    --cream:#e3eef0; --ok:#2e7d46; --at:#c79a3a; --ru:#c0392b; --na:#8a93a0;
     --linha:#e2e0d8; --tinta:#1a2430; --cinza:#5b6570; --card:#fff; --fundo:#f4f5f3;
   }
   *{box-sizing:border-box}
@@ -27,14 +31,14 @@
   .campo label{display:block;font-size:12px;font-weight:700;color:var(--cinza);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
   .campo input, .campo select, .campo textarea{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:10px;color:var(--tinta);background:#fff}
   .campo textarea{resize:vertical;min-height:70px}
-  .btn-primario{width:100%;padding:15px;border:none;border-radius:11px;background:var(--navy);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+  .btn-primario{width:100%;padding:15px;border:none;border-radius:11px;background:var(--navy-gradient);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
   .btn-primario:disabled{background:#b7bcc0}
   .btn-secundario{padding:13px 18px;border:1.5px solid var(--linha);border-radius:11px;background:#fff;color:var(--tinta);font-size:14px;font-weight:700;cursor:pointer}
   .erro-msg{background:#fbe9e7;color:var(--ru);border-radius:9px;padding:10px 12px;font-size:12.5px;margin-top:14px;display:none;font-weight:600}
   .ok-msg{background:#e9f4ee;color:var(--ok);border-radius:9px;padding:10px 12px;font-size:12.5px;margin-top:14px;display:none;font-weight:600}
   .login-offline-aviso{background:#fdf3e3;color:#8a6300;border-radius:9px;padding:10px 12px;font-size:12px;margin-top:14px;display:none}
   /* ---- App ---- */
-  #tela-app header{background:var(--navy);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+  #tela-app header{background:var(--navy-gradient);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
   #tela-app header .titulo{font-weight:800;font-size:15px;flex:1}
   .status-conexao{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px}
   .status-conexao.online{background:rgba(255,255,255,.18)}
@@ -87,7 +91,7 @@
   .progresso-fill{height:100%;background:var(--navy);border-radius:5px;transition:width .2s}
   .pd-linha-din{border:1.5px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px;position:relative}
   .pd-linha-din .apagar{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--ru);font-size:16px;cursor:pointer}
-  .pd-add-btn{width:100%;padding:12px;border:1.5px dashed #8fb99a;border-radius:10px;background:var(--cream);color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;margin-bottom:6px}
+  .pd-add-btn{width:100%;padding:12px;border:1.5px dashed #7fa3ab;border-radius:10px;background:var(--cream);color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;margin-bottom:6px}
   .pd-totais{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0;border-top:1px solid var(--linha);margin-top:8px}
   .pd-totais b{color:var(--tinta)}
   .pd-status-badge{display:inline-block;font-size:11px;font-weight:800;padding:4px 11px;border-radius:20px;margin-bottom:10px}
@@ -113,7 +117,7 @@
 <!-- ================= LOGIN ================= -->
 <div class="tela ativa" id="tela-login">
   <div class="login-card">
-    <h1>🚜 Portal Comprex</h1>
+    <h1>🚜 Portal de Operações Comprex</h1>
     <div class="sub">Login do operador — tablet de campo</div>
     <div class="campo">
       <label>Usuário</label>

@@ -1,10 +1,10 @@
 {
-  "name": "Comprex - Checklist Tablet",
-  "short_name": "Checklist Comprex",
+  "name": "Portal de Operações Comprex",
+  "short_name": "POC Comprex",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0d2b1c",
-  "theme_color": "#1b6b34",
+  "background_color": "#0f2e34",
+  "theme_color": "#1b4a52",
   "orientation": "any",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
