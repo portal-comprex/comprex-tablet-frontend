@@ -1339,10 +1339,7 @@
         <div class="cadastro-hero-sub">Horário do operador, horímetro e paradas por lançamento</div>
       </div>
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-          <h2 style="margin:0;">Lançar parte diária</h2>
-          <button type="button" class="btn btn-outline" id="importarApropriacaoBtn" data-role-only="administrador">Importar Parte Diária (planilha)</button>
-        </div>
+        <h2 style="margin:0 0 8px;">Lançar parte diária</h2>
         <div id="apropriacaoFormWrap"></div>
       </div>
     </section>
@@ -4241,7 +4238,7 @@
         '<div class="field"><label>Equipamento</label><div style="display:flex;align-items:center;gap:10px;"><div id="apEquipFoto" style="width:40px;height:40px;flex-shrink:0;border-radius:8px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;">🚜</div><div class="combo-wrap" style="flex:1;"><input type="text" id="apEquip" autocomplete="off" value="'+esc(equipValorInicial)+'" placeholder="Digite ou selecione o código…"><div class="combo-list" id="apEquipList"></div></div></div><div id="apEquipError"></div></div>' +
         '<div class="field-row-ordem">' +
           '<div class="field"><label>Nº Ordem</label><div class="combo-wrap"><input type="text" id="apOrdemNumero" autocomplete="off" value="'+esc(ordemNumeroValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apOrdemNumeroList"></div></div></div>' +
-          '<div class="field"><label>Descrição Ordem</label><div class="combo-wrap"><input type="text" id="apOrdem" autocomplete="off" value="'+esc(ordemValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Digite ou selecione a ordem…"><div class="combo-list" id="apOrdemList"></div></div>'+(restringirOrdem?('<div class="muted-tag" style="margin-top:4px;">Você está restrito a esta ordem.'+(state.operadorOrdemAdminLock?'':' <button type="button" class="btn-ghost" id="trocarOrdemBtn" style="padding:0;">Trocar ordem</button>')+'</div>'):(clienteRestrito?'<div class="muted-tag" style="margin-top:4px;">Você está restrito ao cliente '+esc(clienteRestrito)+' — escolha entre as ordens dele acima.</div>':''))+'<div id="apOrdemError"></div></div>' +
+          '<div class="field"><label>'+(modoOperadorSimplificado?'Local':'Descrição Ordem')+'</label><div class="combo-wrap"><input type="text" id="apOrdem" autocomplete="off" value="'+esc(ordemValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="'+(modoOperadorSimplificado?'Selecione o local…':'Digite ou selecione a ordem…')+'"><div class="combo-list" id="apOrdemList"></div></div>'+(restringirOrdem?('<div class="muted-tag" style="margin-top:4px;">Você está restrito a esta ordem.'+(state.operadorOrdemAdminLock?'':' <button type="button" class="btn-ghost" id="trocarOrdemBtn" style="padding:0;">Trocar ordem</button>')+'</div>'):(clienteRestrito?'<div class="muted-tag" style="margin-top:4px;">Você está restrito ao cliente '+esc(clienteRestrito)+' — escolha entre as ordens dele acima.</div>':''))+'<div id="apOrdemError"></div></div>' +
           '<div class="field"><label>Nº Cliente</label><div class="combo-wrap"><input type="text" id="apNCliente" autocomplete="off" value="'+esc(nClienteValorInicial)+'"'+((restringirOrdem||clienteRestrito)?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apNClienteList"></div></div></div>' +
         '</div>' +
         '<div class="field-row">' +
@@ -4343,31 +4340,79 @@
         el.innerHTML = url ? '<img src="'+esc(url)+'" style="width:100%;height:100%;object-fit:cover;" alt="">' : '🚜';
       });
     }
+    // Pega o número da Ordem embutido no final do texto do Local (ex.: "AMT - Boleamento  500008"
+    // -> "500008"). É esse número que a gente usa pra reconhecer a Ordem de verdade — mais
+    // confiável do que tentar bater o texto do Local igualzinho entre o cadastro do equipamento e
+    // o cadastro da Ordem (que pode divergir por causa de como cada um foi digitado).
+    function extrairNumeroOrdemDoLocal(localTexto){
+      var m = String(localTexto||'').match(/(\d{3,})\s*$/);
+      return m ? m[1] : '';
+    }
     function autoPreencherPorEquipamentoAp(){
       var equipTexto = document.getElementById('apEquip').value.trim();
       var equipObj = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTexto; })[0];
       atualizarFotoEquipamentoAp(equipObj ? equipObj.codigo : null);
       if(restringirOrdem) return; // já travado numa ordem específica — não mexe
       if(!equipObj || !equipObj.local) return;
-      if(document.getElementById('apOrdem').value.trim()) return; // já tem ordem escolhida — não atropela
-      var alvo = normalizarLocalParaComparar(equipObj.local);
-      var candidatas = ordensOrdenadas.filter(function(o){ return normalizarLocalParaComparar(o.local)===alvo; });
-      if(candidatas.length !== 1) return; // sem ordem com esse local, ou mais de uma (ambíguo) — deixa pra escolher na mão
-      var achada = candidatas[0];
-      document.getElementById('apOrdemNumero').value = achada.numero || '';
-      document.getElementById('apOrdem').value = ordemLabelAtual(achada);
-      document.getElementById('apNCliente').value = CLIENTE_NUMEROS[achada.cliente] || '';
+      if(document.getElementById('apOrdem').value.trim()) return; // já tem valor — não atropela
+      var localTexto = String(equipObj.local).trim();
+      // No tablet, o campo (agora rotulado "Local") sempre mostra o Local do equipamento — igual
+      // o Checklist — não depende mais de achar uma Ordem cadastrada com esse Local igualzinho.
+      if(modoOperadorSimplificado) document.getElementById('apOrdem').value = localTexto;
+      var achada = null;
+      var numeroExtraido = extrairNumeroOrdemDoLocal(localTexto);
+      if(numeroExtraido){
+        achada = state.ordens.filter(function(o){ return String(o.numero||'').trim()===numeroExtraido; })[0];
+      }
+      if(!achada){
+        // Sem número reconhecível no Local — tenta do jeito antigo, casando o Local cadastrado na
+        // própria Ordem (útil pra quem não segue essa convenção de terminar o Local com o número).
+        var alvo = normalizarLocalParaComparar(localTexto);
+        var candidatas = ordensOrdenadas.filter(function(o){ return normalizarLocalParaComparar(o.local)===alvo; });
+        if(candidatas.length===1) achada = candidatas[0];
+      }
+      if(achada){
+        document.getElementById('apOrdemNumero').value = achada.numero || '';
+        if(!modoOperadorSimplificado) document.getElementById('apOrdem').value = ordemLabelAtual(achada);
+        document.getElementById('apNCliente').value = CLIENTE_NUMEROS[achada.cliente] || '';
+      }
       atualizarServicoTarifa(); atualizarServicoHora();
     }
     document.getElementById('apEquip').addEventListener('change', autoPreencherPorEquipamentoAp);
     if(!editRecord) autoPreencherPorEquipamentoAp();
     else { var equipInicialEdicao = getEquip(editRecord.equipamentoId); atualizarFotoEquipamentoAp(equipInicialEdicao ? equipInicialEdicao.codigo : null); }
+    if(modoOperadorSimplificado){
+      // No tablet, o campo (agora "Local") não é obrigado a bater com o texto que a própria Ordem
+      // tem cadastrado — então quem realmente diz qual Ordem é essa é o Nº Ordem (preenchido
+      // sozinho a partir do número no final do Local, ou escolhido na lista). Só cai pra reconhecer
+      // pelo texto se não tiver um Nº Ordem preenchido (ex.: alguém digitou o Local na mão).
+      document.getElementById('apEquip').addEventListener('blur', function(){
+        var el = this;
+        setTimeout(function(){
+          var texto = el.value.trim();
+          if(texto && !state.equipamentos.some(function(e){ return equipLabel(e)===texto; })){
+            el.value = '';
+            autoPreencherPorEquipamentoAp();
+          }
+        }, 200);
+      });
+    }
+    function resolverOrdemAtual(){
+      if(modoOperadorSimplificado){
+        var numeroTexto = normalizarEspacos(document.getElementById('apOrdemNumero').value);
+        if(numeroTexto){
+          var porNumero = state.ordens.filter(function(o){ return String(o.numero||'').trim()===numeroTexto; })[0];
+          if(porNumero) return porNumero;
+        }
+      }
+      var ordemTexto = document.getElementById('apOrdem').value.trim();
+      return state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTexto; })[0];
+    }
     document.getElementById('apOrdem').addEventListener('change', function(){ atualizarServicoTarifa(); atualizarServicoHora(); });
     document.getElementById('apServico').addEventListener('change', updateConsolidacao);
     document.getElementById('apServicoHora').addEventListener('change', updateConsolidacao);
     function atualizarServicoTarifa(){
-      var ordemTexto = document.getElementById('apOrdem').value.trim();
-      var ordemObj = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTexto; })[0];
+      var ordemObj = resolverOrdemAtual();
       var tarifas = ordemObj ? tarifasDaOrdem(ordemObj.id) : [];
       var wrap = document.getElementById('apServicoRow');
       var sel = document.getElementById('apServico');
@@ -4386,8 +4431,7 @@
     // campo) precisa poder responder, senão ninguém consegue fechar o lançamento numa ordem com
     // mais de uma Tarifa por Hora. Só aparece quando existe ambiguidade de verdade (2+ tarifas).
     function atualizarServicoHora(){
-      var ordemTexto = document.getElementById('apOrdem').value.trim();
-      var ordemObj = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTexto; })[0];
+      var ordemObj = resolverOrdemAtual();
       var tarifasHoraOrdem = ordemObj ? state.tarifasHora.filter(function(t){ return t.ordemId===ordemObj.id; }) : [];
       var wrap = document.getElementById('apServicoHoraRow');
       var sel = document.getElementById('apServicoHora');
@@ -4490,8 +4534,7 @@
       var equipTexto = document.getElementById('apEquip').value.trim();
       var equipObj = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTexto; })[0];
       var equipamentoId = equipObj ? equipObj.id : null;
-      var ordemTexto = document.getElementById('apOrdem').value.trim();
-      var ordemObj = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTexto; })[0];
+      var ordemObj = resolverOrdemAtual();
       if(ordemObj && state.perfil==='campo' && state.operadorClienteRestrito && ordemObj.cliente!==state.operadorClienteRestrito){
         errBox.innerHTML = '<div class="form-error">Essa ordem não pertence ao cliente ao qual você está restrito ('+esc(state.operadorClienteRestrito)+').</div>';
         return;
@@ -4749,8 +4792,7 @@
       try{
         var equipTextoTl = document.getElementById('apEquip').value.trim();
         var equipObjTl = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTextoTl; })[0];
-        var ordemTextoTl = document.getElementById('apOrdem').value.trim();
-        var ordemObjTl = state.ordens.filter(function(o){ return ordemLabelAtual(o)===ordemTextoTl; })[0];
+        var ordemObjTl = resolverOrdemAtual();
         if(!equipObjTl || !ordemObjTl) return; // ainda incompleto — não força salvar
         var operadorNomeTl = operadorAuto ? operadorAuto.nome : document.getElementById('apOperador').value.trim();
         var idAtualTl = state.editingRascunhoId || uid();
@@ -4801,7 +4843,7 @@
           '</div>';
         }
         return '<div class="consol-line" style="border-top:1px solid var(--border);padding-top:6px;margin-top:6px;">' +
-          '<span>⏸ '+esc(ev.motivo)+' · '+esc(ev.inicio)+'–'+esc(ev.fim||'…')+'</span>' +
+          '<span>⏸ '+esc(ev.motivo)+' · '+esc(ev.inicio)+'–'+esc(ev.fim||'…')+(ev.observacao?' · <i>'+esc(ev.observacao)+'</i>':'')+'</span>' +
           '<b style="color:var(--text-muted);">parada</b>' +
         '</div>';
       }
@@ -4818,7 +4860,20 @@
             '<div class="field"><label>Iniciar em</label><select id="apTlSituacao">'+optionsList(['Operação','À disposição'],'Operação')+'</select></div>' +
           '</div>' +
           '<div id="apTlErro"></div>' +
-          '<button type="button" class="btn btn-primary" id="apTlIniciarBtn">Iniciar</button>';
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<button type="button" class="btn btn-primary" style="flex:1" id="apTlIniciarBtn">Iniciar</button>' +
+            '<button type="button" class="btn btn-outline" style="flex:1" id="apTlIniciarEmParadaBtn">+ Iniciar já em parada</button>' +
+          '</div>' +
+          '<div id="apTlParadaForm" style="display:none;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">' +
+            '<div class="field-row">' +
+              '<div class="field"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
+              '<div class="field"><label>Serviço</label><select id="apTlParadaServico"><option value="">Escolha o motivo primeiro…</option></select></div>' +
+              '<div class="field"><label>Horímetro</label><input type="number" step="0.1" id="apTlParadaHorimetro" placeholder="0,0"></div>' +
+            '</div>' +
+            '<div class="field"><label>Observação (opcional)</label><input type="text" id="apTlParadaObs" placeholder="Ex: aguardando liberação"></div>' +
+            '<div id="apTlParadaErro"></div>' +
+            '<button type="button" class="btn btn-outline btn-sm" id="apTlParadaIniciarBtn">Iniciar parada</button>' +
+          '</div>';
       } else if(abertoAtividadeTl){
         acaoHtmlTl =
           '<div class="muted-tag" style="margin-bottom:8px;">Em '+esc(ultimoTl.situacao)+' desde '+esc(ultimoTl.inicio)+' (horímetro '+brNum(ultimoTl.horimetroIni,1)+') · <b id="apTlContador" style="color:var(--navy);">0h00</b></div>' +
@@ -4828,6 +4883,7 @@
               '<div class="field"><label>Serviço</label><select id="apTlParadaServico"><option value="">Escolha o motivo primeiro…</option></select></div>' +
               '<div class="field"><label>Horímetro</label><input type="number" step="0.1" id="apTlParadaHorimetro" placeholder="0,0"></div>' +
             '</div>' +
+            '<div class="field"><label>Observação (opcional)</label><input type="text" id="apTlParadaObs" placeholder="Ex: aguardando liberação"></div>' +
             '<div id="apTlParadaErro"></div>' +
             '<button type="button" class="btn btn-outline btn-sm" id="apTlParadaIniciarBtn">Iniciar parada</button>' +
           '</div>' +
@@ -4879,6 +4935,35 @@
           renderApTimeline();
           updateConsolidacao();
         };
+        // "Iniciar já em parada" — pro caso do operador começar o dia (ou retomar depois de uma
+        // parada anterior) já parado, sem precisar abrir uma atividade primeiro pra depois parar.
+        document.getElementById('apTlIniciarEmParadaBtn').onclick = function(){
+          document.getElementById('apTlParadaForm').style.display = 'block';
+        };
+        document.getElementById('apTlParadaCategoria').addEventListener('change', function(){
+          var servSel = document.getElementById('apTlParadaServico');
+          var categoria = this.value;
+          servSel.innerHTML = categoria ? ('<option value="">Selecione…</option>'+optionsList(servicosDaCategoria(categoria),'')) : '<option value="">Escolha o motivo primeiro…</option>';
+        });
+        document.getElementById('apTlParadaIniciarBtn').onclick = function(){
+          var servico = document.getElementById('apTlParadaServico').value;
+          var hRaw = document.getElementById('apTlParadaHorimetro').value;
+          var h = parseFloat(hRaw);
+          var erroEl = document.getElementById('apTlParadaErro');
+          if(!servico){ erroEl.innerHTML = '<div class="form-error">Selecione o motivo/serviço da parada.</div>'; return; }
+          if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro.</div>'; return; }
+          var obsTl = normalizarEspacos(document.getElementById('apTlParadaObs').value);
+          var agoraTl = horaAtualHHMM();
+          if(apEventos.length===0){
+            document.getElementById('apEntrada').value = agoraTl;
+            document.getElementById('apHi').value = h;
+          }
+          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null, observacao: obsTl });
+          formParadas.push({ motivo: servico, inicio: agoraTl, termino: '', horas: 0, tipoServico: '', observacao: obsTl });
+          persistirRascunhoTimeline();
+          renderApTimeline();
+          updateConsolidacao();
+        };
       } else if(abertoAtividadeTl){
         document.getElementById('apTlAddParadaBtn').onclick = function(){
           document.getElementById('apTlParadaForm').style.display = 'block';
@@ -4900,10 +4985,11 @@
           var erroEl = document.getElementById('apTlParadaErro');
           if(!servico){ erroEl.innerHTML = '<div class="form-error">Selecione o motivo/serviço da parada.</div>'; return; }
           if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro.</div>'; return; }
+          var obsTl = normalizarEspacos(document.getElementById('apTlParadaObs').value);
           var agoraTl = horaAtualHHMM();
           ultimoTl.horimetroFim = h; ultimoTl.fim = agoraTl;
-          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null });
-          formParadas.push({ motivo: servico, inicio: agoraTl, termino: '', horas: 0, tipoServico: '' });
+          apEventos.push({ tipo:'parada', motivo: servico, horimetroIni: h, inicio: agoraTl, fim: null, observacao: obsTl });
+          formParadas.push({ motivo: servico, inicio: agoraTl, termino: '', horas: 0, tipoServico: '', observacao: obsTl });
           persistirRascunhoTimeline();
           renderApTimeline();
           updateConsolidacao();
@@ -4911,12 +4997,22 @@
       } else if(abertoParadaTl){
         document.getElementById('apTlFinalizarParadaBtn').onclick = function(){
           var agoraTl = horaAtualHHMM();
+          var horimetroRetomadaTl = ultimoTl.horimetroIni;
           ultimoTl.fim = agoraTl;
           var abertasFormParadasTl = formParadas.filter(function(p){ return !p.termino; });
           var alvoFormParadaTl = abertasFormParadasTl[abertasFormParadasTl.length-1];
           if(alvoFormParadaTl){
             alvoFormParadaTl.termino = agoraTl;
             alvoFormParadaTl.horas = paradaHoras(alvoFormParadaTl);
+          }
+          // Reinicia sozinha a atividade que tava rolando antes dessa parada — não precisa clicar
+          // em "Iniciar" de novo. O horímetro não andou durante a parada, então retoma do mesmo
+          // horímetro em que ela começou. Só não reinicia nada se essa parada foi o primeiro
+          // lançamento do dia (não tinha atividade nenhuma antes dela) — nesse caso volta pra tela
+          // de escolher "Iniciar" ou "Iniciar já em parada" de novo.
+          var eventoAnteriorTl = apEventos[apEventos.length-2];
+          if(eventoAnteriorTl && eventoAnteriorTl.tipo==='atividade'){
+            apEventos.push({ tipo:'atividade', situacao: eventoAnteriorTl.situacao, horimetroIni: horimetroRetomadaTl, inicio: agoraTl, fim: null, horimetroFim: null });
           }
           persistirRascunhoTimeline();
           renderParadasEditor();
@@ -4949,536 +5045,6 @@
         };
       }
     }
-  }
-
-  /* ============ IMPORTAR PARTE DIÁRIA (PLANILHA) ============
-     Espelha as mesmas regras de negócio do salvamento manual acima (apSalvarBtn.onclick),
-     adaptadas pra rodar sobre linhas de planilha em vez de campos do formulário. Processa em
-     lote: cada linha aceita atualiza os índices "vivos" (último horímetro por equipamento,
-     ordem por equipamento+data, PDs já usados) pra que a linha seguinte do mesmo equipamento
-     dentro do próprio arquivo já enxergue a continuidade corretamente. */
-  var MESES_PT_IMPORT = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-
-  // A planilha de campo usa hífen no código do equipamento (ex: "MHS-05"), o cadastro do
-  // sistema usa espaço (ex: "MHS 05") — normaliza os dois lados pra comparar sem se importar
-  // com essa diferença de separador.
-  function normalizarCodigoEquipImport(s){ return String(s||'').toUpperCase().replace(/[\s\-_]+/g,' ').trim(); }
-  function numeroPDNormalizado(v){
-    var n = parseInt(v,10);
-    return isNaN(n) ? String(v||'').trim().toLowerCase() : String(n);
-  }
-  function detectarMesAnoPorNomeArquivo(nome){
-    var normalizado = normalizarNomeColuna(nome);
-    var mesIdx = null;
-    for(var i=0;i<MESES_PT_IMPORT.length;i++){
-      if(normalizado.indexOf(normalizarNomeColuna(MESES_PT_IMPORT[i]))>-1){ mesIdx = i; break; }
-    }
-    var anoMatch = String(nome||'').match(/(20\d{2})/);
-    var ano = anoMatch ? anoMatch[1] : null;
-    if(mesIdx!==null && ano) return ano + '-' + String(mesIdx+1).padStart(2,'0');
-    // Nem todo arquivo usa o nome do mês por extenso — alguns usam "08.2026"/"08-2026" etc,
-    // igual ao nome das pastas mensais.
-    var numMatch = String(nome||'').match(/(?:^|[^0-9])(0?[1-9]|1[0-2])[.\-_\/](20\d{2})(?:[^0-9]|$)/);
-    if(numMatch) return numMatch[2] + '-' + numMatch[1].padStart(2,'0');
-    return '';
-  }
-  function converterDataLongaISO(txt){
-    if(!txt) return null;
-    var d = new Date(txt);
-    if(isNaN(d.getTime())) return null;
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  function horaTextoParaDecimalImport(v){
-    v = String(v||'').trim();
-    if(!v) return 0;
-    if(v.indexOf(':')>-1){
-      var p = v.split(':');
-      return (parseFloat(p[0])||0) + (parseFloat(p[1])||0)/60;
-    }
-    var n = parseFloat(v.replace(',','.'));
-    return isNaN(n) ? 0 : n;
-  }
-  function numeroTextoImport(v){
-    v = String(v||'').trim();
-    if(!v) return null;
-    var n = parseFloat(v.replace(',','.'));
-    return isNaN(n) ? null : n;
-  }
-  // Algumas planilhas de campo declaram um intervalo (!ref) de mais de 1 milhão de linhas —
-  // sobra de formatação aplicada em colunas inteiras no Excel, mesmo tendo só umas dezenas de
-  // linhas com dado real. Converter o intervalo inteiro pra JSON nesse caso trava o navegador
-  // por 20-30s (testado com arquivo real). Acha o fim real dos dados por busca binária direto
-  // nas células da coluna B (Nº Ordem, sempre preenchida nas linhas válidas) antes de converter,
-  // com uma margem de segurança de 1000 linhas pro caso de existir alguma linha vazia no meio.
-  function acharUltimaLinhaComDados(ws, col, limiteSuperior){
-    function temDado(row){ var c = ws[col+row]; return !!(c && c.v!==undefined && c.v!==''); }
-    if(!temDado(1)) return 0;
-    var lo = 1, hi = 2;
-    while(hi<=limiteSuperior && temDado(hi)){ lo = hi; hi *= 2; }
-    hi = Math.min(hi, limiteSuperior);
-    while(lo<hi){
-      var mid = Math.ceil((lo+hi)/2);
-      if(temDado(mid)) lo = mid; else hi = mid-1;
-    }
-    return lo;
-  }
-  // Nem toda planilha de campo usa a mesma ORDEM de colunas — já vi um arquivo (Piracicaba)
-  // com o bloco Funcionário/PM Inicial/PM Final/PM Total em posições diferentes do padrão
-  // "Geral". Em vez de ler por posição fixa, acha a linha de cabeçalho de verdade e resolve
-  // cada campo pelo nome da coluna (tolerante a acento/maiúsculas, via normalizarNomeColuna).
-  var CAMPOS_PARTE_DIARIA = {
-    cliente: ['Cliente'],
-    ordem: ['Nº Ordem','No Ordem','Ordem'],
-    descricaoOrdem: ['Descrição da Ordem','Descricao da Ordem'],
-    equipamento: ['Equipamento'],
-    data: ['Data'],
-    entrada: ['Início','Inicio'],
-    saida: ['Término','Termino'],
-    refeicao: ['Refeição','Refeicao'],
-    numeroPD: ['Nº P.D','Nº PD','No P.D','Nº Parte Diária'],
-    horasTrabalhadas: ['Horas Trabalhadas'],
-    horimetroInicial: ['Horímetro Inicial','Horimetro Inicial'],
-    horimetroFinal: ['Horímetro Final','Horimetro Final'],
-    horimetroTrabalhado: ['Horímetro Trabalhado','Horimetro Trabalhado'],
-    pmInicial: ['PM Inicial'],
-    pmFinal: ['PM Final'],
-    pmTotal: ['PM Total'],
-    funcionario: ['Funcionário','Funcionario'],
-    observacao: ['Observação','Observacao']
-  };
-  // "Ordem" e "Data" são os únicos dois nomes de coluna que aparecem certinho em TODOS os
-  // arquivos reais já vistos — não exige "Equipamento" aqui porque já achei um arquivo real
-  // com erro de digitação nessa célula do cabeçalho (virou só "\"), o que faria a linha de
-  // cabeçalho nunca ser encontrada mesmo com o resto certo.
-  function acharLinhaCabecalhoPartediaria(linhasBrutas){
-    for(var i=0;i<Math.min(6, linhasBrutas.length);i++){
-      var normalizados = (linhasBrutas[i]||[]).map(normalizarNomeColuna);
-      var temOrdem = normalizados.some(function(c){ return c.indexOf('ordem')>-1; });
-      var temData = normalizados.indexOf('data')>-1;
-      if(temOrdem && temData) return i;
-    }
-    return -1;
-  }
-  function montarMapaColunasPartediaria(linhaCabecalho){
-    var normalizados = (linhaCabecalho||[]).map(normalizarNomeColuna);
-    var mapa = {};
-    // Equipamento sempre aparece na coluna D (índice 3) em todo arquivo real já visto — usa
-    // como resguardo se o nome da coluna não bater (erro de digitação no cabeçalho, por ex.).
-    if(normalizados.length>3) mapa.equipamento = 3;
-    Object.keys(CAMPOS_PARTE_DIARIA).forEach(function(campo){
-      var candidatos = CAMPOS_PARTE_DIARIA[campo].map(normalizarNomeColuna);
-      for(var i=0;i<normalizados.length;i++){
-        if(candidatos.indexOf(normalizados[i])>-1){ mapa[campo]=i; break; }
-      }
-    });
-    return mapa;
-  }
-  function lerAbasPartediaria(wb){
-    var nomes = ['PARTE DIÁRIA ', 'PARTE DIÁRIA'].filter(function(n){ return !!wb.Sheets[n]; });
-    return nomes.map(function(nome){
-      var ws = wb.Sheets[nome];
-      var range = XLSX.utils.decode_range(ws['!ref']);
-      var ultimaLinha = acharUltimaLinhaComDados(ws, 'B', range.e.r+1);
-      var rangeCortado = { s:{r:0,c:range.s.c}, e:{r:Math.min(range.e.r, ultimaLinha+999), c:range.e.c} };
-      var linhasBrutas = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false, range: rangeCortado});
-      var idxCabecalho = acharLinhaCabecalhoPartediaria(linhasBrutas);
-      if(idxCabecalho===-1) return { nome: nome, erro: 'Não achei a linha de cabeçalho (Cliente/Nº Ordem/Equipamento/Data) nessa aba.', linhas: [] };
-      var mapa = montarMapaColunasPartediaria(linhasBrutas[idxCabecalho]);
-      if(mapa.ordem===undefined || mapa.equipamento===undefined || mapa.data===undefined){
-        return { nome: nome, erro: 'Não achei as colunas essenciais (Nº Ordem/Equipamento/Data) no cabeçalho dessa aba.', linhas: [] };
-      }
-      var validas = linhasBrutas.filter(function(r){ return /^\d{6}$/.test(String(r[mapa.ordem]||'').trim()); }).map(function(r){
-        return {
-          cliente: r[mapa.cliente]||'', ordem: r[mapa.ordem]||'', descricaoOrdem: mapa.descricaoOrdem!==undefined?r[mapa.descricaoOrdem]:'',
-          equipamento: r[mapa.equipamento]||'', data: r[mapa.data]||'',
-          entrada: mapa.entrada!==undefined?r[mapa.entrada]:'', saida: mapa.saida!==undefined?r[mapa.saida]:'',
-          refeicao: mapa.refeicao!==undefined?r[mapa.refeicao]:'', numeroPD: mapa.numeroPD!==undefined?r[mapa.numeroPD]:'',
-          horasTrabalhadas: mapa.horasTrabalhadas!==undefined?r[mapa.horasTrabalhadas]:'',
-          horimetroInicial: mapa.horimetroInicial!==undefined?r[mapa.horimetroInicial]:'',
-          horimetroFinal: mapa.horimetroFinal!==undefined?r[mapa.horimetroFinal]:'',
-          horimetroTrabalhado: mapa.horimetroTrabalhado!==undefined?r[mapa.horimetroTrabalhado]:'',
-          pmInicial: mapa.pmInicial!==undefined?r[mapa.pmInicial]:'', pmFinal: mapa.pmFinal!==undefined?r[mapa.pmFinal]:'',
-          pmTotal: mapa.pmTotal!==undefined?r[mapa.pmTotal]:'',
-          funcionario: mapa.funcionario!==undefined?r[mapa.funcionario]:'', observacao: mapa.observacao!==undefined?r[mapa.observacao]:''
-        };
-      });
-      return { nome: nome, linhas: validas };
-    });
-  }
-  function candidatosEscalaImport(){
-    var out = [];
-    state.escalas.forEach(function(esc2){
-      if(esc2.turnos){
-        esc2.turnos.forEach(function(t){
-          var m = t.horario ? timeToMinutes(t.horario.entrada) : null;
-          if(m!==null) out.push({escala: esc2.key, turno: t.key, entradaMin: m});
-        });
-      } else if(esc2.horario){
-        var m = timeToMinutes(esc2.horario.entrada);
-        if(m!==null) out.push({escala: esc2.key, turno: null, entradaMin: m});
-      }
-    });
-    return out;
-  }
-  function casarEscalaPorHorarioImport(entrada, candidatos){
-    var alvo = timeToMinutes(entrada);
-    if(alvo===null || !candidatos.length) return null;
-    var melhor = null, melhorDist = Infinity;
-    candidatos.forEach(function(c){
-      var d = Math.abs(alvo - c.entradaMin);
-      d = Math.min(d, 1440-d);
-      if(d < melhorDist){ melhorDist = d; melhor = c; }
-    });
-    return (melhor && melhorDist<=90) ? melhor : null;
-  }
-
-  function abrirImportarApropriacaoModal(){
-    openModal(
-      '<h3>Importar Parte Diária de planilha</h3>' +
-      '<p style="font-size:12.5px;color:var(--text-muted);line-height:1.5;">A planilha precisa ter a aba "PARTE DIÁRIA" no mesmo formato do modelo usado em campo (Cliente, Nº Ordem, Descrição, Equipamento, Data, Início, Término, Refeição, Nº P.D., Horas Trabalhadas, Horímetro Inicial/Final/Trabalhado, PM Inicial/Final/Total, Funcionário, Observação). O campo "Refeição" da planilha só traz a duração total — os lançamentos importados não guardam o horário exato de início/fim do intervalo, só a duração já embutida nas Horas Trabalhadas.</p>' +
-      '<div id="impApError"></div>' +
-      '<div class="field-row">' +
-        '<div class="field"><label>Arquivo (.xlsx/.xlsb)</label><input type="file" id="fImpApArquivo" accept=".xlsx,.xls,.xlsb"></div>' +
-        '<div class="field"><label>Mês de referência</label><input type="month" id="impApMesRef"></div>' +
-      '</div>' +
-      '<div style="max-height:min(42vh,340px);overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:2px 8px;margin-top:4px;">' +
-        '<div id="impApResumo"></div>' +
-        '<div id="impApEscalasPendentes"></div>' +
-        '<div id="impApManutPendentes"></div>' +
-      '</div>' +
-      '<div class="modal-actions"><button class="btn btn-outline" id="impApCancel">Cancelar</button><button class="btn btn-primary" id="impApConfirmar" disabled>Importar</button></div>'
-    );
-    document.getElementById('impApCancel').onclick = closeModal;
-
-    var workbookAtual = null;
-    var resultadoAtual = null;
-
-    function processar(){
-      var errBox = document.getElementById('impApError');
-      document.getElementById('impApResumo').innerHTML = '';
-      document.getElementById('impApEscalasPendentes').innerHTML = '';
-      document.getElementById('impApConfirmar').disabled = true;
-      errBox.innerHTML = '';
-      resultadoAtual = null;
-      if(!workbookAtual) return;
-      var mesRef = document.getElementById('impApMesRef').value;
-      if(!mesRef){ errBox.innerHTML = '<div class="form-error">Informe o mês de referência da planilha.</div>'; return; }
-      var partes = mesRef.split('-'); var anoAlvo = parseInt(partes[0],10); var mesAlvo = parseInt(partes[1],10)-1;
-
-      var abas = lerAbasPartediaria(workbookAtual);
-      if(!abas.length){ errBox.innerHTML = '<div class="form-error">Não encontrei a aba "PARTE DIÁRIA" nesse arquivo.</div>'; return; }
-      var abasComErro = abas.filter(function(a){ return a.erro; });
-      var melhorAba = null, melhorContagem = -1;
-      abas.forEach(function(aba){
-        if(aba.erro) return;
-        var contagem = aba.linhas.filter(function(r){
-          var iso = converterDataLongaISO(r.data);
-          return iso && parseInt(iso.slice(0,4),10)===anoAlvo && (parseInt(iso.slice(5,7),10)-1)===mesAlvo;
-        }).length;
-        if(contagem>melhorContagem){ melhorContagem = contagem; melhorAba = aba; }
-      });
-      if(!melhorAba || melhorContagem===0){
-        errBox.innerHTML = '<div class="form-error">Nenhuma linha desse arquivo tem data dentro do mês de referência selecionado. Confira o mês/ano ou o arquivo escolhido.'+(abasComErro.length?' ('+abasComErro.map(function(a){return esc(a.nome)+': '+esc(a.erro);}).join('; ')+')':'')+'</div>';
-        return;
-      }
-
-      var dentro = [], fora = [];
-      melhorAba.linhas.forEach(function(r){
-        var iso = converterDataLongaISO(r.data);
-        var noMes = iso && parseInt(iso.slice(0,4),10)===anoAlvo && (parseInt(iso.slice(5,7),10)-1)===mesAlvo;
-        (noMes ? dentro : fora).push({ raw: r, dataISO: iso });
-      });
-      // Ordena por equipamento + data e, dentro do mesmo dia, pelo Horímetro Inicial — não pelo
-      // horário de "entrada" digitado, que costuma se repetir igual entre turnos/operadores
-      // diferentes no mesmo dia (ex: todo mundo usa "6:00" como referência de turno), enquanto
-      // o horímetro é o único jeito confiável de saber a ordem real de uso naquele dia.
-      dentro.sort(function(a,b){
-        var ca = String(a.raw.equipamento||''), cb = String(b.raw.equipamento||'');
-        if(ca!==cb) return ca.localeCompare(cb);
-        if(a.dataISO!==b.dataISO) return (a.dataISO||'').localeCompare(b.dataISO||'');
-        var hiA = numeroTextoImport(a.raw.horimetroInicial), hiB = numeroTextoImport(b.raw.horimetroInicial);
-        if(hiA!==null && hiB!==null && hiA!==hiB) return hiA-hiB;
-        return String(a.raw.entrada||'').localeCompare(String(b.raw.entrada||''));
-      });
-
-      var candidatosEscala = candidatosEscalaImport();
-      var pdsExistentes = {};
-      state.apropriacoes.forEach(function(a){
-        pdsExistentes[(a.operador||'').toLowerCase()+'|'+numeroPDNormalizado(a.numeroPD)] = true;
-      });
-      // Histórico por equipamento, indexado pelo próprio HORÍMETRO (não por data/hora) — no dia
-      // a dia real, é comum várias linhas do mesmo equipamento no mesmo dia terem o mesmo
-      // horário de "entrada" digitado (turnos/operadores diferentes usando "6:00" como
-      // referência genérica), então data+entrada não dá pra ordenar de forma confiável. O
-      // horímetro em si é a única sequência monotônica confiável pra achar o predecessor real.
-      var historicoPorEquip = {};
-      state.apropriacoes.forEach(function(a){
-        if(typeof a.horimetroFinal!=='number') return;
-        if(!historicoPorEquip[a.equipamentoId]) historicoPorEquip[a.equipamentoId] = [];
-        historicoPorEquip[a.equipamentoId].push({ horimetroFinal:a.horimetroFinal, data:a.data });
-      });
-      function encontrarPredecessor(equipId, horimetroInicialLinha){
-        var lista = historicoPorEquip[equipId] || [];
-        var melhor = null;
-        lista.forEach(function(item){
-          if(item.horimetroFinal<=horimetroInicialLinha && (!melhor || item.horimetroFinal>melhor.horimetroFinal)) melhor = item;
-        });
-        return melhor;
-      }
-      function registrarNoHistoricoEquip(equipId, horimetroFinalLinha, dataISO){
-        if(!historicoPorEquip[equipId]) historicoPorEquip[equipId] = [];
-        historicoPorEquip[equipId].push({ horimetroFinal:horimetroFinalLinha, data:dataISO });
-      }
-      var ordemPorEquipData = {};
-      state.apropriacoes.forEach(function(a){ ordemPorEquipData[a.equipamentoId+'|'+a.data] = a.ordemId; });
-
-      var prontos = [], jaExistem = [], ordemNaoEncontrada = {}, equipNaoEncontrado = {}, operadorNaoEncontrado = {}, bloqueados = [], gruposEscalaPendenteMap = {}, manutencaoPendente = [], linhasEmBranco = 0;
-
-      dentro.forEach(function(item){
-        var r = item.raw;
-        var ordemNumero = String(r.ordem||'').trim();
-        var equipCodigo = String(r.equipamento||'').trim();
-        var operadorTexto = normalizarEspacos(r.funcionario);
-        var numeroPD = String(r.numeroPD||'').trim();
-
-        // Algumas planilhas de campo têm linhas "pré-preenchidas" pra datas futuras (Cliente,
-        // Ordem, Equipamento, horário e refeição já copiados por arrasto), mas sem nenhum
-        // lançamento real ainda — sem Nº P.D. nem horímetro. Não conta como erro, é só uma
-        // linha em branco esperando ser preenchida em campo; ignora silenciosamente.
-        if(!numeroPD && !String(r.horimetroInicial||'').trim() && !String(r.horimetroFinal||'').trim()){
-          linhasEmBranco++;
-          return;
-        }
-
-        var ordemObj = state.ordens.filter(function(o){ return (o.numero||'').trim()===ordemNumero; })[0];
-        if(!ordemObj){ ordemNaoEncontrada[ordemNumero] = (ordemNaoEncontrada[ordemNumero]||0)+1; return; }
-        var equipObj = state.equipamentos.filter(function(e){ return normalizarCodigoEquipImport(e.codigo)===normalizarCodigoEquipImport(equipCodigo); })[0];
-        if(!equipObj){ equipNaoEncontrado[equipCodigo] = (equipNaoEncontrado[equipCodigo]||0)+1; return; }
-        var operadorObj = state.operadores.filter(function(o){
-          return normalizarNomeColuna(o.nome)===normalizarNomeColuna(operadorTexto) || (o.matricula && normalizarNomeColuna(o.matricula)===normalizarNomeColuna(operadorTexto));
-        })[0];
-        if(!operadorObj){ operadorNaoEncontrado[operadorTexto||'(vazio)'] = (operadorNaoEncontrado[operadorTexto||'(vazio)']||0)+1; return; }
-
-        var chavePD = operadorObj.nome.toLowerCase()+'|'+numeroPDNormalizado(numeroPD);
-        if(!numeroPD || pdsExistentes[chavePD]){ jaExistem.push({numeroPD:numeroPD, operador:operadorObj.nome}); return; }
-
-        var entrada = String(r.entrada||'').trim(), saida = String(r.saida||'').trim();
-        if(!item.dataISO || !entrada || !saida){ bloqueados.push({motivo:'Data/horário inválido (PD '+numeroPD+')'}); return; }
-
-        var horasOperador = horaTextoParaDecimalImport(r.horasTrabalhadas);
-        if(horasOperador<=0){ bloqueados.push({motivo:'Horas Trabalhadas inválidas ou zeradas (PD '+numeroPD+')'}); return; }
-
-        var hi = numeroTextoImport(r.horimetroInicial);
-        var hf = numeroTextoImport(r.horimetroFinal);
-        var horimetroTrabalhadoPlanilha = numeroTextoImport(r.horimetroTrabalhado);
-        if(hi===null || hf===null){ bloqueados.push({motivo:'Horímetro Inicial/Final em branco na planilha (PD '+numeroPD+')'}); return; }
-        if(hf<hi){ bloqueados.push({motivo:'Horímetro final menor que o inicial (PD '+numeroPD+')'}); return; }
-
-        var predecessor = encontrarPredecessor(equipObj.id, hi);
-        if(predecessor && typeof predecessor.horimetroFinal==='number'){
-          if(hi < predecessor.horimetroFinal){ bloqueados.push({motivo:'Horímetro inicial menor que o final do lançamento anterior desse equipamento, '+brNum(predecessor.horimetroFinal,1)+' em '+brDate(predecessor.data)+' (PD '+numeroPD+')'}); return; }
-          if((hi - predecessor.horimetroFinal) > 13){ bloqueados.push({motivo:'Salto de horímetro acima de 13h desde o lançamento anterior (PD '+numeroPD+')'}); return; }
-        }
-        var ordemConflito = ordemPorEquipData[equipObj.id+'|'+item.dataISO];
-        if(ordemConflito && ordemConflito!==ordemObj.id){
-          bloqueados.push({motivo:'Equipamento já tem lançamento em '+brDate(item.dataISO)+' em outra ordem (PD '+numeroPD+')'});
-          return;
-        }
-
-        var horasHorimetro = (typeof horimetroTrabalhadoPlanilha==='number' && horimetroTrabalhadoPlanilha>=0) ? horimetroTrabalhadoPlanilha : Math.round((hf-hi)*100)/100;
-        if(horasHorimetro > horasOperador + 0.01){
-          bloqueados.push({motivo:'Horas de horímetro maiores que as Horas Trabalhadas (PD '+numeroPD+')'});
-          return;
-        }
-
-        var refeicaoDuracao = horaTextoParaDecimalImport(r.refeicao);
-        var pmInicial = String(r.pmInicial||'').trim(), pmFinal = String(r.pmFinal||'').trim();
-        var pmTotal = horaTextoParaDecimalImport(r.pmTotal);
-        var paradas = [];
-        // A planilha só traz a duração da manutenção (PM Total), não o tipo (Corretiva/Preventiva/
-        // Inspeção) — em vez de gravar um motivo genérico "Manutenção" sem categoria (que some do
-        // painel "Manutenção por Tipo" dos Indicadores, ver conversa com a Nalva), a parada nasce
-        // sem motivo e fica pendente de confirmação manual antes de liberar a importação.
-        if(pmTotal>0) paradas.push({ motivo:'', inicio:pmInicial, termino:pmFinal, horas: Math.round(pmTotal*100)/100, tipoServico:'' });
-
-        var excedeuJornada = horasOperador > 12 ? Math.round((horasOperador-12)*100)/100 : null;
-        var escalaEscolhida = casarEscalaPorHorarioImport(entrada, candidatosEscala);
-
-        var record = {
-          id: uid(), equipamentoId: equipObj.id, ordemId: ordemObj.id, data: item.dataISO,
-          dataFim: isOvernightShift(entrada, saida) ? addDaysISO(item.dataISO, 1) : item.dataISO,
-          operador: operadorObj.nome, numeroPD: numeroPD,
-          escala: escalaEscolhida ? escalaEscolhida.escala : null, turno: escalaEscolhida ? escalaEscolhida.turno : null,
-          entrada: entrada, tipoIntervalo: refeicaoDuracao>0 ? 'Almoço' : 'Sem intervalo',
-          intervaloInicio: '', intervaloFim: '', saida: saida,
-          horasOperador: Math.round(horasOperador*100)/100,
-          horimetroInicial: hi, horimetroFinal: hf, horasHorimetro: horasHorimetro,
-          servicoTarifa: '', valorUnitarioTarifa: 0, valorProducaoCalculado: 0,
-          paradas: paradas, observacao: normalizarEspacos(r.observacao||''),
-          saltoHorimetro: null, excedeuJornada: excedeuJornada
-        };
-
-        registrarNoHistoricoEquip(equipObj.id, hf, item.dataISO);
-        ordemPorEquipData[equipObj.id+'|'+item.dataISO] = ordemObj.id;
-        pdsExistentes[chavePD] = true;
-
-        if(!escalaEscolhida){
-          var chaveGrupo = entrada+'|'+saida;
-          if(!gruposEscalaPendenteMap[chaveGrupo]) gruposEscalaPendenteMap[chaveGrupo] = { entrada:entrada, saida:saida, registros:[] };
-          gruposEscalaPendenteMap[chaveGrupo].registros.push(record);
-        }
-        var paradaManutPendente = paradas.filter(function(p){ return p.horas>0 && !p.motivo; })[0];
-        if(paradaManutPendente){
-          manutencaoPendente.push({ parada: paradaManutPendente, equipCodigo: equipObj.codigo, dataISO: item.dataISO, numeroPD: numeroPD });
-        }
-        prontos.push(record);
-      });
-
-      resultadoAtual = {
-        prontos: prontos, jaExistem: jaExistem, ordemNaoEncontrada: ordemNaoEncontrada,
-        equipNaoEncontrado: equipNaoEncontrado, operadorNaoEncontrado: operadorNaoEncontrado,
-        bloqueados: bloqueados, fora: fora, abaUsada: melhorAba.nome, linhasEmBranco: linhasEmBranco,
-        gruposEscalaPendente: Object.keys(gruposEscalaPendenteMap).map(function(k){ return gruposEscalaPendenteMap[k]; }),
-        manutencaoPendente: manutencaoPendente
-      };
-      renderResumoImportacao();
-    }
-
-    function listaResumida(obj, singular){
-      var chaves = Object.keys(obj);
-      if(!chaves.length) return '';
-      return '<div class="muted-tag" style="display:block;margin-top:2px;">'+singular+': '+chaves.map(function(k){ return esc(k)+' ('+obj[k]+')'; }).join(', ')+'</div>';
-    }
-
-    function renderResumoImportacao(){
-      var resumoBox = document.getElementById('impApResumo');
-      var escalasBox = document.getElementById('impApEscalasPendentes');
-      var manutBox = document.getElementById('impApManutPendentes');
-      var r = resultadoAtual;
-      if(!r){ resumoBox.innerHTML = ''; escalasBox.innerHTML = ''; manutBox.innerHTML = ''; atualizarBotaoConfirmar(); return; }
-      var totalOrdemFora = Object.keys(r.ordemNaoEncontrada).reduce(function(s,k){return s+r.ordemNaoEncontrada[k];},0);
-      var totalEquipFora = Object.keys(r.equipNaoEncontrado).reduce(function(s,k){return s+r.equipNaoEncontrado[k];},0);
-      var totalOperFora = Object.keys(r.operadorNaoEncontrado).reduce(function(s,k){return s+r.operadorNaoEncontrado[k];},0);
-      resumoBox.innerHTML =
-        '<div class="consol-box" style="margin:10px 0;">' +
-          '<div class="consol-line"><span>Aba usada</span><b>'+esc(r.abaUsada)+'</b></div>' +
-          '<div class="consol-line"><span>Prontos para importar</span><b style="color:#2E9E5B;">'+r.prontos.length+'</b></div>' +
-          '<div class="consol-line"><span>Fora do mês selecionado (ignoradas)</span><b>'+r.fora.length+'</b></div>' +
-          '<div class="consol-line"><span>Linhas em branco (sem Nº P.D./horímetro — ignoradas)</span><b>'+r.linhasEmBranco+'</b></div>' +
-          '<div class="consol-line"><span>Já existem (PD duplicado)</span><b>'+r.jaExistem.length+'</b></div>' +
-          '<div class="consol-line"><span>Ordem não cadastrada</span><b>'+totalOrdemFora+'</b></div>' +
-          listaResumida(r.ordemNaoEncontrada, 'Números não encontrados') +
-          '<div class="consol-line"><span>Equipamento não cadastrado</span><b>'+totalEquipFora+'</b></div>' +
-          listaResumida(r.equipNaoEncontrado, 'Códigos não encontrados') +
-          '<div class="consol-line"><span>Operador não cadastrado</span><b>'+totalOperFora+'</b></div>' +
-          listaResumida(r.operadorNaoEncontrado, 'Nomes não encontrados') +
-          '<div class="consol-line"><span>Bloqueadas por regra de negócio</span><b>'+r.bloqueados.length+'</b></div>' +
-          (r.bloqueados.length ? '<div class="muted-tag" style="display:block;margin-top:2px;">'+r.bloqueados.slice(0,10).map(function(b){ return esc(b.motivo); }).join('<br>')+(r.bloqueados.length>10?'<br>… e mais '+(r.bloqueados.length-10)+'.':'')+'</div>' : '') +
-          '<div class="consol-line"><span>Paradas de manutenção sem tipo identificado</span><b>'+r.manutencaoPendente.length+'</b></div>' +
-        '</div>';
-
-      if(r.gruposEscalaPendente.length){
-        escalasBox.innerHTML = '<div class="form-error" style="background:#FCEBD5;color:#B26A1A;border-color:#F1D9A0;">Não consegui identificar a escala automaticamente pra '+r.gruposEscalaPendente.reduce(function(s,g){return s+g.registros.length;},0)+' lançamento(s). Escolha a escala pra cada horário abaixo antes de importar:</div>' +
-          r.gruposEscalaPendente.map(function(g, idx){
-            return '<div class="field" style="margin-top:8px;"><label>Horário '+esc(g.entrada)+'–'+esc(g.saida)+' ('+g.registros.length+' lançamento(s))</label>' +
-              '<select data-grupo-escala="'+idx+'"><option value="">Selecione a escala…</option>'+state.escalas.map(function(e){ return '<option value="'+e.key+'">'+esc(e.label)+'</option>'; }).join('')+'</select></div>';
-          }).join('');
-        escalasBox.querySelectorAll('[data-grupo-escala]').forEach(function(sel){
-          sel.addEventListener('change', function(){
-            var grupo = r.gruposEscalaPendente[+sel.getAttribute('data-grupo-escala')];
-            var escObj = getEscala(sel.value);
-            grupo.registros.forEach(function(rec){
-              rec.escala = sel.value || null;
-              rec.turno = (escObj && escObj.turnos) ? escObj.turnos[0].key : null;
-            });
-            atualizarBotaoConfirmar();
-          });
-        });
-      } else {
-        escalasBox.innerHTML = '';
-      }
-
-      if(r.manutencaoPendente.length){
-        var motivosManutCadastrados = CATEGORIAS_PARADA.slice(0,3).some(function(cat){ return motivosDaCategoria(cat).length>0; });
-        if(!motivosManutCadastrados){
-          manutBox.innerHTML = '<div class="form-error">A planilha tem '+r.manutencaoPendente.length+' parada(s) de manutenção (campo PM Total) sem nenhum Motivo de Parada de Manutenção cadastrado no sistema. Cadastre pelo menos um em Cadastro → Motivos de Parada (categoria Corretiva, Preventiva ou Inspeção) antes de importar.</div>';
-        } else {
-          manutBox.innerHTML = '<div class="form-error" style="background:#FCEBD5;color:#B26A1A;border-color:#F1D9A0;">A planilha tem '+r.manutencaoPendente.length+' parada(s) de manutenção (campo PM Total) sem o tipo identificado — confirme o motivo de cada uma antes de importar, pra não virar um lançamento genérico que não conta certo nos Indicadores:</div>' +
-            r.manutencaoPendente.map(function(m, idx){
-              return '<div class="field" style="margin-top:8px;"><label>'+esc(m.equipCodigo)+' · '+brDate(m.dataISO)+' · PD '+esc(m.numeroPD)+' · '+brNum(m.parada.horas,2)+'h</label>' +
-                '<select data-manut-pendente="'+idx+'"><option value="">Selecione o motivo da manutenção…</option>'+opcoesMotivoManutencao(m.parada.motivo)+'</select></div>';
-            }).join('');
-          manutBox.querySelectorAll('[data-manut-pendente]').forEach(function(sel){
-            sel.addEventListener('change', function(){
-              var item = r.manutencaoPendente[+sel.getAttribute('data-manut-pendente')];
-              item.parada.motivo = sel.value;
-              atualizarBotaoConfirmar();
-            });
-          });
-        }
-      } else {
-        manutBox.innerHTML = '';
-      }
-      atualizarBotaoConfirmar();
-    }
-
-    function atualizarBotaoConfirmar(){
-      var confirmarBtn = document.getElementById('impApConfirmar');
-      var r = resultadoAtual;
-      if(!r || r.prontos.length===0){ confirmarBtn.disabled = true; return; }
-      var faltaEscala = r.gruposEscalaPendente.some(function(g){ return g.registros.some(function(rec){ return !rec.escala; }); });
-      var faltaManut = r.manutencaoPendente.some(function(m){ return !m.parada.motivo; });
-      confirmarBtn.disabled = faltaEscala || faltaManut;
-    }
-
-    document.getElementById('fImpApArquivo').addEventListener('change', function(e){
-      var file = e.target.files[0];
-      var errBox = document.getElementById('impApError');
-      errBox.innerHTML = ''; workbookAtual = null; resultadoAtual = null;
-      document.getElementById('impApResumo').innerHTML = '';
-      document.getElementById('impApEscalasPendentes').innerHTML = '';
-      document.getElementById('impApConfirmar').disabled = true;
-      if(!file) return;
-      var mesRefAuto = detectarMesAnoPorNomeArquivo(file.name);
-      if(mesRefAuto) document.getElementById('impApMesRef').value = mesRefAuto;
-      document.getElementById('impApResumo').innerHTML = '<div class="muted-tag">Lendo planilha… pode levar alguns segundos em arquivos grandes.</div>';
-      var reader = new FileReader();
-      reader.onload = function(ev){
-        // O parser da planilha é síncrono e pode travar a aba por alguns segundos em arquivos
-        // grandes — o setTimeout dá uma chance do navegador desenhar o aviso "Lendo…" acima
-        // antes de travar a thread principal, se não ele nunca aparece na tela.
-        setTimeout(function(){
-          try{
-            var dados = new Uint8Array(ev.target.result);
-            // sheetRows limita quantas linhas o PRÓPRIO parser lê (não só a conversão pra JSON
-            // depois) — é o que realmente evita o travamento em arquivos com faixa inflada por
-            // formatação vazia; 10000 cobre com folga qualquer mês real de Parte Diária.
-            workbookAtual = XLSX.read(dados, {type:'array', sheetRows: 10000});
-            processar();
-          }catch(erro){
-            document.getElementById('impApResumo').innerHTML = '';
-            errBox.innerHTML = '<div class="form-error">Não foi possível ler esse arquivo. Confira se é um .xlsx/.xlsb válido.</div>';
-          }
-        }, 30);
-      };
-      reader.readAsArrayBuffer(file);
-    });
-    document.getElementById('impApMesRef').addEventListener('change', processar);
-
-    document.getElementById('impApConfirmar').onclick = async function(){
-      var r = resultadoAtual;
-      if(!r || !r.prontos.length) return;
-      document.getElementById('impApConfirmar').disabled = true;
-      r.prontos.forEach(function(rec){ state.apropriacoes.push(rec); });
-      var ok = await saveList('apropriacoes_v7', state.apropriacoes);
-      var comAlerta = r.prontos.filter(function(rec){ return rec.excedeuJornada!==null; }).length;
-      closeModal();
-      toast((ok ? r.prontos.length+' lançamento(s) importado(s).' : 'Importado localmente — houve um problema ao sincronizar.') + (comAlerta ? ' '+comAlerta+' marcado(s) para revisão da Controladoria (jornada acima de 12h).' : ''), 7000);
-      renderApropriacaoEntry();
-      renderApropriacoesTable();
-      renderDashboard();
-      renderCadastro();
-    };
   }
 
   function editarApropriacao(id){
@@ -9586,7 +9152,6 @@
       if(tab==='boletim') renderBoletimMedicao();
     });
   });
-  document.getElementById('importarApropriacaoBtn').addEventListener('click', abrirImportarApropriacaoModal);
   document.getElementById('novoClienteCadastroBtn').addEventListener('click', function(){ openClienteModal(null); });
   ['filtroClienteNome','filtroClienteNumero'].forEach(function(id){
     document.getElementById(id).addEventListener('input', renderClientesTab);
