@@ -1328,6 +1328,55 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .rec-mini-linha .bar i{display:block;height:100%;border-radius:4px}
   .rec-mini-linha .chip-eq{cursor:pointer;color:var(--navy);font-weight:700}
   .rec-mini-linha .chip-eq:hover{text-decoration:underline}
+  /* ===== Resumo do dia / Metas / Alerta de impeditivos (ajustes 22) ===== */
+  .painel-resumo{display:flex;align-items:flex-start;gap:12px;background:linear-gradient(90deg,var(--cream),#fff);
+    border:1px solid var(--linha);border-left:4px solid var(--navy);border-radius:12px;padding:13px 16px;margin-bottom:14px}
+  body.tema-escuro .painel-resumo{background:#16261c;border-color:#2c3a4a;border-left-color:#5fd4e0}
+  .painel-resumo .ico{font-size:20px;line-height:1;margin-top:1px}
+  .painel-resumo .txt{font-size:13.5px;color:var(--tinta);line-height:1.5}
+  .painel-resumo .txt b{color:var(--navy)}
+  .painel-resumo .txt .ruim{color:var(--ru);font-weight:800}
+  .painel-resumo .txt .bom{color:var(--ok);font-weight:800}
+  .painel-resumo .txt .clic{cursor:pointer;border-bottom:1px dashed currentColor}
+  .painel-resumo .txt .clic:hover{opacity:.75}
+  .painel-alerta-imp{background:#fdeeee;border:1px solid #f0b7ae;border-left:4px solid var(--ru);border-radius:12px;
+    padding:12px 16px;margin-bottom:14px}
+  body.tema-escuro .painel-alerta-imp{background:#2a1a1a;border-color:#5a3030;border-left-color:var(--ru)}
+  .painel-alerta-imp .cab{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .painel-alerta-imp .cab .t{font-size:13.5px;font-weight:800;color:var(--ru);text-transform:uppercase;letter-spacing:.4px}
+  .painel-alerta-imp .cab .pisca{width:10px;height:10px;border-radius:50%;background:var(--ru);animation:pulseImp 1.4s infinite}
+  @keyframes pulseImp{0%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}70%{box-shadow:0 0 0 8px rgba(192,57,43,0)}100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}}
+  .painel-alerta-imp .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .painel-alerta-imp .imp-chip{display:inline-flex;flex-direction:column;gap:2px;background:#fff;border:1px solid #f0b7ae;
+    border-radius:9px;padding:7px 11px;cursor:pointer;transition:all .12s ease;min-width:0}
+  body.tema-escuro .painel-alerta-imp .imp-chip{background:#1a2430;border-color:#5a3030}
+  .painel-alerta-imp .imp-chip:hover{border-color:var(--ru);box-shadow:0 3px 10px rgba(192,57,43,.18)}
+  .painel-alerta-imp .imp-chip .eq{font-size:12.5px;font-weight:800;color:var(--tinta)}
+  .painel-alerta-imp .imp-chip .it{font-size:10.5px;color:var(--ru);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px}
+  .painel-alerta-imp .imp-chip .reinc{display:inline-block;margin-top:2px;font-size:9.5px;font-weight:800;color:#7a1f16;
+    background:#f6c9c2;border-radius:999px;padding:1px 7px;letter-spacing:.3px;width:fit-content}
+  .painel-metas{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  @media(max-width:820px){.painel-metas{grid-template-columns:repeat(2,1fr)}}
+  .meta-tile{position:relative;border:1px solid var(--linha);border-radius:12px;padding:12px 14px;background:#fff;
+    cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;overflow:hidden}
+  body.tema-escuro .meta-tile{background:#1a2430;border-color:#2c3a4a}
+  .meta-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(19,36,54,.12)}
+  .meta-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+  .meta-tile.ok::before{background:var(--ok)}
+  .meta-tile.ruim::before{background:var(--ru)}
+  .meta-tile.neutro::before{background:var(--na)}
+  .meta-tile .meta-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .meta-tile .meta-lbl{font-size:11px;color:var(--cinza);text-transform:uppercase;letter-spacing:.3px;font-weight:700}
+  .meta-tile .meta-sinal{font-size:15px}
+  .meta-tile .meta-val{font-size:26px;font-weight:800;line-height:1.1;margin-top:4px}
+  .meta-tile.ok .meta-val{color:var(--ok)}
+  .meta-tile.ruim .meta-val{color:var(--ru)}
+  .meta-tile.neutro .meta-val{color:var(--tinta)}
+  .meta-tile .meta-meta{font-size:11px;color:var(--cinza);margin-top:2px}
+  .meta-tile .meta-tend{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;margin-top:6px}
+  .meta-tile .meta-tend.sobe{color:var(--ok)}
+  .meta-tile .meta-tend.desce{color:var(--ru)}
+  .meta-tile .meta-tend.igual{color:var(--cinza)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1590,6 +1639,15 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   </div>
   </div>
 <div class="view" id="view-painel">
+  <div id="painel-resumo-dia" class="painel-resumo" style="display:none">
+    <div class="ico">🧭</div><div class="txt" id="painel-resumo-txt"></div>
+  </div>
+  <div id="painel-alerta-impeditivos" class="painel-alerta-imp" style="display:none">
+    <div class="cab"><span class="pisca"></span><span class="t">🛡️ Itens impeditivos em aberto</span>
+      <span id="painel-alerta-imp-num" style="font-size:12px;color:var(--cinza);font-weight:700"></span></div>
+    <div class="chips" id="painel-alerta-imp-chips"></div>
+  </div>
+  <div id="painel-metas" class="painel-metas"></div>
   <div class="painel-kpis">
     <div class="painel-kpi verde clicavel" id="painel-kpi-card-hoje">
       <div class="icone">📋</div>
@@ -8115,6 +8173,9 @@ async function carregarPainelGeral(forcar){
         precisaParalisar: !!(ultimo && ultimo.campos[LABEL_ITEM_PARADA] === 'SIM')
       };
     });
+    renderizarPainelResumoDia(frotasEquip);
+    renderizarPainelAlertaImpeditivos();
+    renderizarPainelMetas(frotasEquip);
     renderizarPainelKPIs(frotasEquip);
     renderizarPainelTabela();
     renderizarPainelDonut(frotasEquip);
@@ -10127,6 +10188,235 @@ function abrirRecorrentesDrilldown(){
     });
   }
   document.getElementById('oc-recorrentes-overlay').classList.add('aberto');
+}
+
+/* =====================================================================
+   AJUSTES 22 — Metas, Resumo do dia, Alerta de impeditivos, Reincidência
+   ===================================================================== */
+/* Metas fixas definidas com o Lucas (podem virar configuráveis depois). */
+var PAINEL_METAS = { conformidade: 100, aderencia: 100, impeditivos: 0, ruinsDia: 3 };
+
+/** Série dos últimos 14 dias com os números que alimentam metas e tendência. */
+function painelSerie14(){
+  const hist = (typeof historicoItens !== 'undefined' ? historicoItens : []);
+  const frotasEquip = frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; });
+  const operSet = new Set(frotasEquip.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL'; }));
+  const operTot = operSet.size || 1;
+  const arr = [];
+  for (let i = 13; i >= 0; i--) {
+    const d0 = new Date(); d0.setHours(0,0,0,0); d0.setDate(d0.getDate() - i);
+    const d1 = new Date(d0.getTime() + 86400000);
+    const doDia = hist.filter(function(h){ const d = new Date(h.criado); return d >= d0 && d < d1; });
+    const tot = doDia.length;
+    const ok = doDia.filter(function(h){ return (h.itensProblema || 0) === 0; }).length;
+    const ruins = doDia.reduce(function(s,h){ return s + painelContarItensRuins(h); }, 0);
+    const imp = doDia.filter(temItemImpeditivo).length;
+    const equipDia = new Set(doDia.map(function(h){ return h.equipamento; }));
+    let cobertos = 0; operSet.forEach(function(eq){ if (equipDia.has(eq)) cobertos++; });
+    arr.push({ tot: tot, confPct: tot ? ok / tot * 100 : null, ruins: ruins, imp: imp, coberturaPct: cobertos / operTot * 100 });
+  }
+  return arr;
+}
+function mediaCampo(arr, campo){
+  const vals = arr.map(function(x){ return x[campo]; }).filter(function(v){ return v !== null && v !== undefined && !isNaN(v); });
+  if (!vals.length) return null;
+  return vals.reduce(function(s,v){ return s + v; }, 0) / vals.length;
+}
+/** Tendência 7d atuais x 7d anteriores. menorMelhor inverte a leitura de "bom". */
+function painelTendencia(serie, campo, menorMelhor){
+  const last7 = serie.slice(7), prev7 = serie.slice(0, 7);
+  const a = mediaCampo(last7, campo), b = mediaCampo(prev7, campo);
+  if (a === null || b === null) return { dir: 'igual', delta: null, classe: 'igual', txt: 'sem histórico' };
+  const delta = a - b;
+  let dir = 'igual';
+  if (Math.abs(delta) >= 0.5) dir = delta > 0 ? 'subiu' : 'caiu';
+  let bom;
+  if (dir === 'igual') bom = 'igual';
+  else if (menorMelhor) bom = (dir === 'caiu') ? 'sobe' : 'desce';
+  else bom = (dir === 'subiu') ? 'sobe' : 'desce';
+  const seta = dir === 'igual' ? '→' : (dir === 'subiu' ? '▲' : '▼');
+  return { dir: dir, delta: delta, classe: bom, seta: seta };
+}
+function painelMetasHoje(){
+  const hist = (typeof historicoItens !== 'undefined' ? historicoItens : []);
+  const frotasEquip = frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; });
+  const operacionais = frotasEquip.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL'; });
+  const hoje0 = new Date(); hoje0.setHours(0,0,0,0);
+  const amanha = new Date(hoje0.getTime() + 86400000);
+  const doDia = hist.filter(function(h){ const d = new Date(h.criado); return d >= hoje0 && d < amanha; });
+  const confTot = doDia.length;
+  const confOk = doDia.filter(function(h){ return (h.itensProblema || 0) === 0; }).length;
+  const confHoje = confTot ? Math.round(confOk / confTot * 100) : null;
+  const equipFeitos = new Set(doDia.map(function(h){ return h.equipamento; }));
+  const aderFeitos = operacionais.filter(function(eq){ return equipFeitos.has(eq); }).length;
+  const aderHoje = operacionais.length ? Math.round(aderFeitos / operacionais.length * 100) : null;
+  const linhas = (typeof painelLinhasAtual !== 'undefined' ? painelLinhasAtual : []).filter(function(l){ return l.tipoItem !== 'implemento'; });
+  const impAbertos = linhas.filter(function(l){ return l.itensImpeditivos > 0 || l.precisaParalisar; }).length;
+  const ruinsHoje = doDia.reduce(function(s,h){ return s + painelContarItensRuins(h); }, 0);
+  return { confHoje: confHoje, aderHoje: aderHoje, aderFeitos: aderFeitos, aderTotal: operacionais.length,
+    impAbertos: impAbertos, ruinsHoje: ruinsHoje, checklistsHoje: confTot };
+}
+function renderizarPainelMetas(){
+  const cont = document.getElementById('painel-metas');
+  if (!cont) return;
+  const m = painelMetasHoje();
+  const serie = painelSerie14();
+  function tendHtml(t, sufixo){
+    if (!t || t.delta === null) return '';
+    if (t.dir === 'igual') return '<span class="meta-tend igual">→ estável vs. semana passada</span>';
+    const val = Math.abs(t.delta) >= 10 ? Math.round(Math.abs(t.delta)) : Math.abs(t.delta).toFixed(1);
+    return '<span class="meta-tend '+t.classe+'">'+t.seta+' '+val+(sufixo||'')+' vs. semana passada</span>';
+  }
+  const tiles = [];
+  // Conformidade
+  (function(){
+    const val = m.confHoje;
+    const ok = val !== null && val >= PAINEL_METAS.conformidade;
+    const classe = val === null ? 'neutro' : (ok ? 'ok' : 'ruim');
+    tiles.push({ id: 'meta-conf', classe: classe,
+      lbl: 'Conformidade', sinal: val === null ? '⏳' : (ok ? '✅' : '⚠️'),
+      val: val === null ? '—' : val + '%', meta: 'Meta ≥ ' + PAINEL_METAS.conformidade + '%',
+      tend: tendHtml(painelTendencia(serie, 'confPct', false), 'pp'), acao: 'ruins' });
+  })();
+  // Aderência
+  (function(){
+    const val = m.aderHoje;
+    const ok = val !== null && val >= PAINEL_METAS.aderencia;
+    const classe = val === null ? 'neutro' : (ok ? 'ok' : 'ruim');
+    tiles.push({ id: 'meta-ader', classe: classe,
+      lbl: 'Aderência (checklist hoje)', sinal: val === null ? '⏳' : (ok ? '✅' : '⚠️'),
+      val: val === null ? '—' : val + '%', meta: m.aderFeitos + ' de ' + m.aderTotal + ' · meta ' + PAINEL_METAS.aderencia + '%',
+      tend: tendHtml(painelTendencia(serie, 'coberturaPct', false), 'pp'), acao: 'pendentes' });
+  })();
+  // Impeditivos
+  (function(){
+    const val = m.impAbertos;
+    const ok = val <= PAINEL_METAS.impeditivos;
+    tiles.push({ id: 'meta-imp', classe: ok ? 'ok' : 'ruim',
+      lbl: 'Impeditivos (segurança)', sinal: ok ? '✅' : '🛑',
+      val: String(val), meta: 'Meta = 0',
+      tend: tendHtml(painelTendencia(serie, 'imp', true), ''), acao: 'impeditivos' });
+  })();
+  // Itens ruins no dia
+  (function(){
+    const val = m.ruinsHoje;
+    const ok = val <= PAINEL_METAS.ruinsDia;
+    tiles.push({ id: 'meta-ruins', classe: ok ? 'ok' : 'ruim',
+      lbl: 'Itens ruins no dia', sinal: ok ? '✅' : '⚠️',
+      val: String(val), meta: 'Meta ≤ ' + PAINEL_METAS.ruinsDia,
+      tend: tendHtml(painelTendencia(serie, 'ruins', true), ''), acao: 'ruins' });
+  })();
+  cont.innerHTML = tiles.map(function(t){
+    return '<div class="meta-tile '+t.classe+'" data-meta-acao="'+t.acao+'">' +
+      '<div class="meta-top"><span class="meta-lbl">'+t.lbl+'</span><span class="meta-sinal">'+t.sinal+'</span></div>' +
+      '<div class="meta-val">'+t.val+'</div>' +
+      '<div class="meta-meta">'+t.meta+'</div>' +
+      t.tend +
+    '</div>';
+  }).join('');
+  cont.querySelectorAll('[data-meta-acao]').forEach(function(el){
+    el.onclick = function(){
+      const a = el.dataset.metaAcao;
+      if (a === 'pendentes') mostrarView('pendentes-obra');
+      else if (a === 'impeditivos'){ const alerta = document.getElementById('painel-alerta-impeditivos');
+        if (alerta && alerta.style.display !== 'none') alerta.scrollIntoView({ behavior:'smooth', block:'center' });
+        else if (typeof painelFocarTabelaPorSituacao === 'function') painelFocarTabelaPorSituacao('laranja'); }
+      else if (a === 'ruins'){ if (typeof painelFocarTabelaPorSituacao === 'function') painelFocarTabelaPorSituacao('vermelho'); }
+    };
+  });
+}
+
+/** Reincidência: equipamentos cujo item impeditivo do último checklist se
+ *  repete nos checklists imediatamente anteriores (mesmo item, seguidos). */
+function painelReincidencias(){
+  const hist = (typeof historicoItens !== 'undefined' ? historicoItens : []);
+  const porEquip = {};
+  hist.forEach(function(h){ (porEquip[h.equipamento] = porEquip[h.equipamento] || []).push(h); });
+  const res = [];
+  Object.keys(porEquip).forEach(function(eq){
+    const lista = porEquip[eq].slice().sort(function(a,b){ return new Date(b.criado) - new Date(a.criado); });
+    const ultimo = lista[0]; if (!ultimo) return;
+    const impUlt = itensImpeditivosDe(ultimo);
+    impUlt.forEach(function(item){
+      let vezes = 1;
+      for (let i = 1; i < lista.length; i++){
+        if (itensImpeditivosDe(lista[i]).indexOf(item) !== -1) vezes++; else break;
+      }
+      if (vezes >= 2) res.push({ equipamento: eq, item: item, vezes: vezes });
+    });
+  });
+  return res.sort(function(a,b){ return b.vezes - a.vezes; });
+}
+function renderizarPainelAlertaImpeditivos(){
+  const box = document.getElementById('painel-alerta-impeditivos');
+  const chipsCont = document.getElementById('painel-alerta-imp-chips');
+  const numEl = document.getElementById('painel-alerta-imp-num');
+  if (!box) return;
+  const linhas = (typeof painelLinhasAtual !== 'undefined' ? painelLinhasAtual : [])
+    .filter(function(l){ return l.tipoItem !== 'implemento' && l.ultimo && (l.itensImpeditivos > 0 || l.precisaParalisar); });
+  if (!linhas.length){ box.style.display = 'none'; return; }
+  const reincMap = {};
+  painelReincidencias().forEach(function(r){ if (!reincMap[r.equipamento] || r.vezes > reincMap[r.equipamento].vezes) reincMap[r.equipamento] = r; });
+  box.style.display = 'block';
+  numEl.textContent = '— ' + linhas.length + ' equipamento(s) precisam de ação de segurança';
+  chipsCont.innerHTML = linhas.map(function(l){
+    const itens = itensImpeditivosDe(l.ultimo);
+    const itensTxt = l.precisaParalisar ? 'Necessita paralisar' + (itens.length ? ' · ' + itens.join(', ') : '') : itens.join(', ');
+    const r = reincMap[l.equipamento];
+    const reincHtml = r ? '<span class="reinc">🔁 REINCIDENTE '+r.vezes+'x</span>' : '';
+    return '<div class="imp-chip" data-imp-equip="'+frotaEsc(l.equipamento)+'">' +
+      '<span class="eq">🛡️ '+frotaEsc(l.equipamento)+'</span>' +
+      '<span class="it" title="'+itensTxt+'">'+ (itensTxt || 'Item impeditivo') +'</span>' +
+      reincHtml +
+    '</div>';
+  }).join('');
+  chipsCont.querySelectorAll('[data-imp-equip]').forEach(function(chip){
+    chip.onclick = function(){ painelIrParaHistoricoDoEquip(chip.dataset.impEquip); };
+  });
+}
+
+/** Resumo do dia em linguagem natural — a "manchete" do Painel. */
+function renderizarPainelResumoDia(){
+  const box = document.getElementById('painel-resumo-dia');
+  const txt = document.getElementById('painel-resumo-txt');
+  if (!box || !txt) return;
+  const m = painelMetasHoje();
+  const linhas = (typeof painelLinhasAtual !== 'undefined' ? painelLinhasAtual : []).filter(function(l){ return l.tipoItem !== 'implemento'; });
+  const atencao = (typeof painelLinhasDeAtencao === 'function' ? painelLinhasDeAtencao() : [])
+    .filter(function(l){ return l.precisaParalisar || l.itensImpeditivos > 0; });
+  const reinc = painelReincidencias();
+  const dataHoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+  const partes = [];
+  partes.push('<b>Hoje (' + dataHoje + '):</b>');
+  // Aderência
+  if (m.aderHoje === null) partes.push('nenhum checklist registrado ainda.');
+  else {
+    const cls = m.aderHoje >= PAINEL_METAS.aderencia ? 'bom' : 'ruim';
+    partes.push('<span class="'+cls+'">' + m.aderHoje + '% de aderência</span> (' + m.aderFeitos + ' de ' + m.aderTotal + ' equipamentos).');
+  }
+  // Conformidade
+  if (m.confHoje !== null){
+    const cls = m.confHoje >= PAINEL_METAS.conformidade ? 'bom' : 'ruim';
+    partes.push('Conformidade <span class="'+cls+'">' + m.confHoje + '%</span>.');
+  }
+  // Impeditivos + atenção
+  if (m.impAbertos > 0){
+    const amostra = atencao.slice(0, 3).map(function(l){ return l.equipamento; });
+    partes.push('<span class="ruim">' + m.impAbertos + ' item(ns) impeditivo(s) em aberto</span>' +
+      (amostra.length ? ' (' + amostra.join(', ') + (atencao.length > 3 ? ', +' + (atencao.length - 3) : '') + ')' : '') + '.');
+  } else {
+    partes.push('<span class="bom">Nenhum item impeditivo em aberto</span>.');
+  }
+  // Itens ruins
+  const clsR = m.ruinsHoje <= PAINEL_METAS.ruinsDia ? 'bom' : 'ruim';
+  partes.push('<span class="'+clsR+'">' + m.ruinsHoje + ' item(ns) ruim(ns)</span> no dia.');
+  // Reincidência
+  if (reinc.length){
+    partes.push('<span class="ruim">⚠️ ' + reinc.length + ' reincidência(s)</span> de item impeditivo (ex.: ' +
+      reinc[0].equipamento + ' — ' + reinc[0].item + ' ' + reinc[0].vezes + 'x).');
+  }
+  txt.innerHTML = partes.join(' ');
+  box.style.display = 'flex';
 }
 
 /* ---------- Ligações de eventos (toggles, botões, overlays) ---------- */
