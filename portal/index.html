@@ -1377,6 +1377,33 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .meta-tile .meta-tend.sobe{color:var(--ok)}
   .meta-tile .meta-tend.desce{color:var(--ru)}
   .meta-tile .meta-tend.igual{color:var(--cinza)}
+  /* ===== Raio-x por Obra (ajustes 23) ===== */
+  .raiox-legenda{font-size:12px;color:var(--cinza);background:var(--cream);border:1px solid var(--linha);
+    border-radius:9px;padding:8px 12px;margin-bottom:14px}
+  body.tema-escuro .raiox-legenda{background:#16261c;border-color:#2c3a4a}
+  .raiox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+  .raiox-card{border:1px solid var(--linha);border-radius:14px;background:#fff;padding:15px 17px;display:flex;flex-direction:column;gap:11px}
+  body.tema-escuro .raiox-card{background:#1a2430;border-color:#2c3a4a}
+  .raiox-card.alerta{border-color:#f0b7ae;box-shadow:0 0 0 1px #f0b7ae inset}
+  .raiox-card-topo{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .raiox-card-topo .obra{font-size:15px;font-weight:800;color:var(--tinta);letter-spacing:.3px}
+  .raiox-card-topo .qtd{font-size:11px;color:var(--cinza);font-weight:700}
+  .raiox-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .raiox-kpi{border:1px solid var(--linha);border-radius:9px;padding:8px 10px;text-align:center}
+  .raiox-kpi .v{font-size:19px;font-weight:800;line-height:1}
+  .raiox-kpi .l{font-size:9.5px;color:var(--cinza);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
+  .raiox-kpi.ok .v{color:var(--ok)} .raiox-kpi.ruim .v{color:var(--ru)} .raiox-kpi.neutro .v{color:var(--tinta)} .raiox-kpi.alerta .v{color:#b25e17}
+  .raiox-sec-tit{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--cinza);font-weight:700;margin:2px 0 -4px}
+  .raiox-item-linha{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:3px 0}
+  .raiox-item-linha .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .raiox-item-linha .bar{width:64px;height:6px;background:#eef0ee;border-radius:4px;overflow:hidden;flex-shrink:0}
+  .raiox-item-linha .bar i{display:block;height:100%;background:var(--ru);border-radius:4px}
+  .raiox-reinc{font-size:11px;color:#7a1f16;background:#f6c9c2;border-radius:8px;padding:5px 9px}
+  .raiox-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .raiox-chip{background:var(--cream);border:1px solid var(--linha);border-radius:7px;padding:3px 8px;font-size:10.5px;
+    font-weight:700;color:var(--tinta);cursor:pointer;transition:all .12s ease}
+  .raiox-chip:hover{border-color:var(--navy);color:var(--navy);background:#fff}
+  .raiox-chip.imp{background:#fdeeee;border-color:#f0b7ae;color:#7a1f16}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1435,6 +1462,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sidebar-item" data-view="partediaria" data-secao="partediaria"><i>📝</i> TESTE</div>
       <div class="sidebar-item" data-view="historico" data-secao="checklist"><i>🕒</i> Histórico</div>
      <div class="sidebar-item" data-view="ocorrencias" data-secao="checklist"><i>⚠️</i> Ocorrências <span class="sidebar-badge" id="badge-ocorrencias" style="display:none">0</span></div>
+      <div class="sidebar-item" data-view="raiox-obra" data-secao="checklist"><i>🩺</i> Raio-x por Obra</div>
       <div class="sidebar-item" data-view="indicadores" data-secao="checklist"><i>📈</i> Indicadores</div>
       <div class="sidebar-item" data-view="historico-pd" data-secao="partediaria"><i>🕒</i> Histórico</div>
       <div class="sidebar-item" data-view="dashboard-pd" data-secao="partediaria"><i>📊</i> Dashboard</div>
@@ -1787,6 +1815,25 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
   </div>
   <div id="pendentes-obra-cards" class="obra-grid"><div class="lista-vazia-dash">Carregando…</div></div>
+</div>
+<div class="view" id="view-raiox-obra">
+  <div class="tela-simples-cab">
+    <h2>🩺 Raio-x por Obra</h2>
+    <span id="raiox-resumo" style="font-size:12.5px;color:var(--cinza)"></span>
+    <div style="margin-left:auto"><button type="button" class="painel-btn-ghost" id="raiox-imprimir">🖨️ Imprimir</button></div>
+  </div>
+  <div class="raiox-legenda">Aderência = % da frota operacional da obra que fez o checklist <b>hoje</b>. Conformidade e itens = últimos <b>30 dias</b>.</div>
+  <div class="dash-row" style="grid-template-columns:1fr 1fr;align-items:stretch;margin-bottom:16px">
+    <div class="dash-card" style="display:flex;flex-direction:column">
+      <h3>Aderência de hoje por obra</h3>
+      <div id="raiox-chart-aderencia" class="chart-box" style="min-height:230px"><div class="lista-vazia-dash">Carregando…</div></div>
+    </div>
+    <div class="dash-card" style="display:flex;flex-direction:column">
+      <h3>Conformidade (30 dias) por obra</h3>
+      <div id="raiox-chart-conformidade" class="chart-box" style="min-height:230px"><div class="lista-vazia-dash">Carregando…</div></div>
+    </div>
+  </div>
+  <div id="raiox-cards" class="raiox-grid"><div class="lista-vazia-dash">Carregando…</div></div>
 </div>
 <div class="view" id="view-partediaria">
   <div class="forma-layout">
@@ -4281,6 +4328,7 @@ const MENUS_POR_SECAO = {
     { view: 'novo', label: 'Checklists' },
     { view: 'historico', label: 'Histórico' },
     { view: 'ocorrencias', label: 'Ocorrências' },
+    { view: 'raiox-obra', label: 'Raio-x por Obra' },
     { view: 'indicadores', label: 'Indicadores' }
   ],
   partediaria: [
@@ -6953,7 +7001,7 @@ function mostrarView(nome){
   document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
     item.classList.toggle('ativo', item.dataset.view === nome);
   });
-const titulos = { painel: 'Painel', 'pendentes-obra': 'Pendentes por obra', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'localizacao-atual': 'Localização Atual', 'historico-mov': 'Histórico de Movimentações', 'dashboard-mov': 'Dashboard', 'status-equipamentos': 'Status dos Equipamentos', controladoria: 'Controladoria' };
+const titulos = { painel: 'Painel', 'pendentes-obra': 'Pendentes por obra', 'raiox-obra': 'Raio-x por Obra', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'localizacao-atual': 'Localização Atual', 'historico-mov': 'Histórico de Movimentações', 'dashboard-mov': 'Dashboard', 'status-equipamentos': 'Status dos Equipamentos', controladoria: 'Controladoria' };
 const INFO_PAGINA = {
   painel: { icone: '🧭', sub: 'Visão geral dos checklists diários da frota', secao: 'Checklists' },
   novo: { icone: '📋', sub: 'Preenchimento diário de inspeção', secao: 'Checklists' },
@@ -7002,6 +7050,7 @@ const INFO_PAGINA = {
   });
   if (nome === 'painel') carregarPainelGeral();
   if (nome === 'pendentes-obra') carregarPendentesPorObra();
+  if (nome === 'raiox-obra') carregarRaioXObra();
   if (nome === 'historico') carregarHistorico();
   if (nome === 'dashboard') carregarDashboard();
   if (nome === 'ocorrencias') carregarOcorrencias();
@@ -10419,6 +10468,124 @@ function renderizarPainelResumoDia(){
   box.style.display = 'flex';
 }
 
+/* =====================================================================
+   AJUSTES 23 — Raio-x por Obra (comparativo de obras)
+   ===================================================================== */
+async function carregarRaioXObra(){
+  const cardsCont = document.getElementById('raiox-cards');
+  try {
+    await Promise.all([garantirDadosHistorico(), garantirDadosFrotaExtra()]);
+    const hist = (typeof historicoItens !== 'undefined' ? historicoItens : []);
+    const frotasEquip = frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; });
+    const grupoDe = function(eq){
+      const l = frotaLocalAtual[eq] || '';
+      if (!l) return 'SEM LOCAL';
+      return (typeof statusEqGrupoDoLocal === 'function') ? statusEqGrupoDoLocal(l) : l.split('-')[0].trim();
+    };
+    const hoje0 = new Date(); hoje0.setHours(0,0,0,0);
+    const amanha = new Date(hoje0.getTime() + 86400000);
+    const d30 = new Date(hoje0.getTime() - 30 * 86400000);
+    const ultimoPorEquip = {};
+    hist.forEach(function(h){ if (!ultimoPorEquip[h.equipamento]) ultimoPorEquip[h.equipamento] = h; }); // hist já vem desc
+    const reincPorEquip = {};
+    painelReincidencias().forEach(function(r){ (reincPorEquip[r.equipamento] = reincPorEquip[r.equipamento] || []).push(r); });
+    const obras = {};
+    frotasEquip.forEach(function(eq){
+      const g = grupoDe(eq);
+      if (!obras[g]) obras[g] = { obra: g, equips: [], oper: [], feitosHoje: 0, chk30: 0, conf30: 0, imp: [], reinc: [], itens: {} };
+      obras[g].equips.push(eq);
+      if ((frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL') obras[g].oper.push(eq);
+    });
+    hist.forEach(function(h){
+      if (new Date(h.criado) < d30) return;
+      if (frotaTipoItem[h.equipamento] === 'implemento') return;
+      const O = obras[grupoDe(h.equipamento)]; if (!O) return;
+      O.chk30++; if ((h.itensProblema || 0) === 0) O.conf30++;
+      ITENS.forEach(function(it){ const v = h.campos[it[0]]; if (v && severidadeDaResposta(it[0], v) === 'ru'){ const nm = prettify(it[0]); O.itens[nm] = (O.itens[nm] || 0) + 1; } });
+    });
+    const feitosHojeSet = new Set(hist.filter(function(h){ const d = new Date(h.criado); return d >= hoje0 && d < amanha; }).map(function(h){ return h.equipamento; }));
+    Object.keys(obras).forEach(function(g){
+      const O = obras[g];
+      O.feitosHoje = O.oper.filter(function(eq){ return feitosHojeSet.has(eq); }).length;
+      O.equips.forEach(function(eq){
+        const u = ultimoPorEquip[eq];
+        if (u && (itensImpeditivosDe(u).length > 0 || u.campos[LABEL_ITEM_PARADA] === 'SIM')) O.imp.push(eq);
+        if (reincPorEquip[eq]) reincPorEquip[eq].forEach(function(r){ O.reinc.push(r); });
+      });
+      O.aderPct = O.oper.length ? Math.round(O.feitosHoje / O.oper.length * 100) : null;
+      O.confPct = O.chk30 ? Math.round(O.conf30 / O.chk30 * 100) : null;
+      O.topItens = Object.keys(O.itens).map(function(k){ return { nome: k, qtd: O.itens[k] }; }).sort(function(a,b){ return b.qtd - a.qtd; }).slice(0, 5);
+    });
+    const lista = Object.keys(obras).map(function(g){ return obras[g]; }).sort(function(a,b){
+      const adA = a.aderPct === null ? 100 : a.aderPct, adB = b.aderPct === null ? 100 : b.aderPct;
+      return (b.imp.length - a.imp.length) || (adA - adB) || a.obra.localeCompare(b.obra);
+    });
+    const totalImp = lista.reduce(function(s,o){ return s + o.imp.length; }, 0);
+    document.getElementById('raiox-resumo').textContent = lista.length + ' obra(s) · ' + frotasEquip.length + ' equipamentos · ' + totalImp + ' com item impeditivo em aberto';
+    // Gráficos comparativos
+    const comAder = lista.filter(function(o){ return o.aderPct !== null; });
+    if (chartOk() && comAder.length){
+      const metaOk = cssVar('--ok','#2e7d46'), metaRu = cssVar('--ru','#c0392b');
+      criarGrafico('raiox-chart-aderencia', {
+        type: 'bar',
+        data: { labels: comAder.map(function(o){ return o.obra; }),
+          datasets: [{ label: 'Aderência hoje', data: comAder.map(function(o){ return o.aderPct; }),
+            backgroundColor: comAder.map(function(o){ return o.aderPct >= PAINEL_METAS.aderencia ? metaOk : metaRu; }), borderRadius: 5, maxBarThickness: 46 }] },
+        options: opcoesBase({ scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(v){ return v + '%'; } } }, x: { grid: { display: false } } },
+          plugins: { tooltip: { callbacks: { label: function(c){ const o = comAder[c.dataIndex]; return c.parsed.y + '% (' + o.feitosHoje + ' de ' + o.oper.length + ')'; } } } } })
+      });
+    } else document.getElementById('raiox-chart-aderencia').innerHTML = '<div class="lista-vazia-dash">Sem equipamentos operacionais.</div>';
+    const comConf = lista.filter(function(o){ return o.confPct !== null; });
+    if (chartOk() && comConf.length){
+      const metaOk = cssVar('--ok','#2e7d46'), metaRu = cssVar('--ru','#c0392b');
+      criarGrafico('raiox-chart-conformidade', {
+        type: 'bar',
+        data: { labels: comConf.map(function(o){ return o.obra; }),
+          datasets: [{ label: 'Conformidade 30d', data: comConf.map(function(o){ return o.confPct; }),
+            backgroundColor: comConf.map(function(o){ return o.confPct >= PAINEL_METAS.conformidade ? metaOk : metaRu; }), borderRadius: 5, maxBarThickness: 46 }] },
+        options: opcoesBase({ scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(v){ return v + '%'; } } }, x: { grid: { display: false } } },
+          plugins: { tooltip: { callbacks: { label: function(c){ const o = comConf[c.dataIndex]; return c.parsed.y + '% (' + o.conf30 + ' de ' + o.chk30 + ' checklists sem apontamento)'; } } } } })
+      });
+    } else document.getElementById('raiox-chart-conformidade').innerHTML = '<div class="lista-vazia-dash">Sem checklists nos últimos 30 dias.</div>';
+    // Cards por obra
+    if (!lista.length){ cardsCont.innerHTML = '<div class="lista-vazia-dash">Nenhuma obra com equipamentos.</div>'; return; }
+    cardsCont.innerHTML = lista.map(function(o){
+      const aderCls = o.aderPct === null ? 'neutro' : (o.aderPct >= PAINEL_METAS.aderencia ? 'ok' : 'ruim');
+      const confCls = o.confPct === null ? 'neutro' : (o.confPct >= PAINEL_METAS.conformidade ? 'ok' : 'ruim');
+      const impCls = o.imp.length ? 'alerta' : 'ok';
+      const reincCls = o.reinc.length ? 'alerta' : 'ok';
+      const maxItem = o.topItens.length ? o.topItens[0].qtd : 1;
+      const itensHtml = o.topItens.length
+        ? '<div class="raiox-sec-tit">Itens que mais reprovam (30d)</div>' + o.topItens.map(function(x){
+            return '<div class="raiox-item-linha"><span class="nm" title="'+x.nome+'">'+x.nome+'</span><div class="bar"><i style="width:'+Math.round(x.qtd/maxItem*100)+'%"></i></div><b>'+x.qtd+'</b></div>';
+          }).join('')
+        : '<div style="font-size:11.5px;color:var(--ok)">Nenhum item reprovado nos últimos 30 dias. ✅</div>';
+      const impHtml = o.imp.length
+        ? '<div class="raiox-sec-tit">Impeditivos em aberto</div><div class="raiox-chips">' +
+            o.imp.map(function(eq){ return '<span class="raiox-chip imp" data-raiox-equip="'+frotaEsc(eq)+'">🛡️ '+frotaEsc(eq)+'</span>'; }).join('') + '</div>'
+        : '';
+      const reincHtml = o.reinc.length
+        ? '<div class="raiox-reinc">🔁 '+o.reinc.length+' reincidência(s) de item impeditivo — ex.: '+frotaEsc(o.reinc[0].equipamento)+' ('+o.reinc[0].item+' '+o.reinc[0].vezes+'x)</div>'
+        : '';
+      return '<div class="raiox-card'+(o.imp.length?' alerta':'')+'">' +
+        '<div class="raiox-card-topo"><span class="obra">🏗️ '+frotaEsc(o.obra)+'</span><span class="qtd">'+o.equips.length+' equip · '+o.oper.length+' operac.</span></div>' +
+        '<div class="raiox-kpis">' +
+          '<div class="raiox-kpi '+aderCls+'"><div class="v">'+(o.aderPct===null?'—':o.aderPct+'%')+'</div><div class="l">Aderência hoje</div></div>' +
+          '<div class="raiox-kpi '+confCls+'"><div class="v">'+(o.confPct===null?'—':o.confPct+'%')+'</div><div class="l">Conformidade 30d</div></div>' +
+          '<div class="raiox-kpi '+impCls+'"><div class="v">'+o.imp.length+'</div><div class="l">Impeditivos</div></div>' +
+          '<div class="raiox-kpi '+reincCls+'"><div class="v">'+o.reinc.length+'</div><div class="l">Reincidências</div></div>' +
+        '</div>' +
+        reincHtml + impHtml + itensHtml +
+      '</div>';
+    }).join('');
+    cardsCont.querySelectorAll('[data-raiox-equip]').forEach(function(chip){
+      chip.onclick = function(){ painelIrParaHistoricoDoEquip(chip.dataset.raioxEquip); };
+    });
+  } catch(err){
+    cardsCont.innerHTML = '<div class="lista-vazia-dash">⚠️ Erro ao carregar: ' + err.message + '</div>';
+  }
+}
+
 /* ---------- Ligações de eventos (toggles, botões, overlays) ---------- */
 (function(){
   function wire(){
@@ -10438,6 +10605,15 @@ function renderizarPainelResumoDia(){
     // Voltar da tela pendentes-por-obra
     const volt = document.getElementById('pendentes-obra-voltar');
     if (volt) volt.onclick = function(){ mostrarView('painel'); };
+    // Imprimir Raio-x por Obra
+    const raioxImp = document.getElementById('raiox-imprimir');
+    if (raioxImp) raioxImp.onclick = function(){
+      const area = document.getElementById('hist-print-area');
+      if (!area) { window.print(); return; }
+      area.innerHTML = '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + (typeof LOGO_COMPREX_B64!=='undefined'?LOGO_COMPREX_B64:'') + '" alt="Comprex"><div class="rel-print-titulo-texto">Raio-x por Obra<small>Aderência (hoje) e Conformidade/itens (30 dias) — Comprex Máquinas e Serviços</small></div></div>' +
+        '<div class="hist-detalhe-print"><div class="raiox-grid">' + document.getElementById('raiox-cards').innerHTML + '</div></div>';
+      window.print();
+    };
     // Drill-down de recorrentes
     const btnRec = document.getElementById('oc-btn-recorrentes');
     if (btnRec) btnRec.onclick = function(){ garantirOcorrenciasCarregadas().then(abrirRecorrentesDrilldown); };
