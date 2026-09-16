@@ -818,6 +818,9 @@
   .hist-tabela tr.linha-atencao:hover td{background:#faead0}
   .hist-detalhe-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
     z-index:600;justify-content:center;align-items:center;padding:20px}
+  /* O detalhe de um checklist precisa ficar acima do painel lateral do
+     equipamento (aberto a partir dele). */
+  #hist-detalhe-overlay{z-index:720}
   .hist-detalhe-overlay.aberto{display:flex}
   .hist-detalhe-modal{background:#fff;border-radius:14px;width:100%;max-width:640px;
     max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
@@ -1227,8 +1230,107 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .modal-preview-foto img{width:100%;height:100%;object-fit:cover;display:block}
   .mli-desc{font-size:11px;color:var(--cinza);margin-left:2px;margin-right:auto}
   .equip-descricao{font-size:11px;color:var(--cinza);margin-top:1px}
+  /* Frota em MAIÚSCULA em toda a tela — só na exibição (text-transform é uma
+     transformação visual do CSS, não muda o texto real armazenado em nenhum
+     lugar), então nada no SharePoint, nos filtros/comparações ou nos campos
+     de edição precisa mudar. Aplicado só nas classes exclusivas de código e
+     descrição de equipamento/implemento — nunca em classes genéricas
+     reaproveitadas por outros cadastros (ex.: ".valor", ".oc-info-item"). */
+  .equip-nome, .equip-descricao, .frota-item-cod, .frota-item-desc,
+  .arv-cod-equip, .arv-cod-impl, .mli-desc, .painel-eq-nome, .painel-eq-tipo,
+  .painel-at-tipo, .oc-equip-nome-grande, .painel-at-cod, .painel-rank-cod
+  { text-transform:uppercase; }
+  /* Os campos de busca de equipamento (mesma ideia: só visual — o valor real
+     que fica guardado/enviado continua exatamente como está cadastrado). */
+  #equipamento, #pd-equipamento, #hist-mov-filtro-equip, #mov-equipamento,
+  #painel-filtro-equip, #hist-pd-filtro-equip, #dash-mov-filtro-equip,
+  #hist-filtro-equip, #oc-filtro-equip, #ind2-filtro-equip{ text-transform:uppercase; }
+  /* ===== Interatividade e gráficos (ajustes 21) ===== */
+  .painel-kpi.clicavel{cursor:pointer;transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease}
+  .painel-kpi.clicavel:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(19,36,54,.16)}
+  .painel-kpi.clicavel:active{transform:translateY(-1px)}
+  .painel-kpi .kpi-acao{margin-top:8px;font-size:10.5px;font-weight:700;color:var(--navy);opacity:0;transition:opacity .12s ease;letter-spacing:.3px}
+  .painel-kpi.clicavel:hover .kpi-acao{opacity:.85}
+  .chart-box{position:relative;flex:1;min-height:170px;width:100%}
+  .chart-box canvas{max-width:100%}
+  .chart-toggle{display:flex;gap:4px;flex-wrap:wrap}
+  .chart-toggle button{border:1px solid var(--linha);background:#fff;color:var(--cinza);border-radius:999px;
+    padding:3px 11px;font-size:11px;font-weight:700;cursor:pointer;transition:all .12s ease;font-family:inherit}
+  .chart-toggle button:hover{border-color:var(--navy);color:var(--navy)}
+  .chart-toggle button.ativo{background:var(--navy);color:#fff;border-color:var(--navy)}
+  body.tema-escuro .chart-toggle button{background:#1a2430;border-color:#2c3a4a;color:#9fb0c0}
+  body.tema-escuro .chart-toggle button.ativo{background:#5fd4e0;color:#0d1620;border-color:#5fd4e0}
+  .painel-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .painel-card-head h3{margin:0}
+  .painel-btn-tela{border:1px solid var(--navy);background:var(--navy);color:#fff;border-radius:8px;padding:6px 12px;
+    font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:filter .12s ease}
+  .painel-btn-tela:hover{filter:brightness(1.12)}
+  .painel-btn-ghost{border:1px solid var(--linha);background:#fff;color:var(--navy);border-radius:8px;padding:6px 12px;
+    font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s ease}
+  .painel-btn-ghost:hover{border-color:var(--navy);background:var(--cream)}
+  body.tema-escuro .painel-btn-ghost{background:#1a2430;border-color:#2c3a4a;color:#cfe0ee}
+  /* Botão "Ir para o checklist" no painel lateral do equipamento */
+  .oc-equip-cta{border:none;background:var(--navy);color:#fff;border-radius:10px;padding:9px 16px;font-size:12.5px;
+    font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px;transition:filter .12s ease;margin-top:10px}
+  .oc-equip-cta:hover{filter:brightness(1.15)}
+  .oc-equip-cta.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+  .oc-hist-card-clicavel{cursor:pointer;transition:box-shadow .12s ease, transform .12s ease}
+  .oc-hist-card-clicavel:hover{box-shadow:0 4px 14px rgba(19,36,54,.14);transform:translateY(-1px)}
+  .oc-hist-card-clicavel .ver-mais-chk{font-size:10.5px;color:var(--navy);font-weight:700;margin-top:4px}
+  /* Detalhamento de conformidade por tipo */
+  .oc-conform-tipos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .oc-conform-tipo{flex:1;min-width:120px;border:1px solid var(--linha);border-radius:10px;padding:9px 11px;text-align:center}
+  .oc-conform-tipo .n{font-size:20px;font-weight:800;line-height:1}
+  .oc-conform-tipo .l{font-size:10px;color:var(--cinza);margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+  .oc-conform-tipo.imp{border-color:#f0c2b8;background:#fdf3f1}
+  .oc-conform-tipo.imp .n{color:#b25e17}
+  .oc-conform-tipo.crit{border-color:#f0c2b8;background:#fdeeee}
+  .oc-conform-tipo.crit .n{color:var(--ru)}
+  .oc-conform-tipo.min{border-color:#e9d8a6;background:#fdf9ee}
+  .oc-conform-tipo.min .n{color:#a06800}
+  .oc-conform-tipo.ok{border-color:#bfe3c9;background:#f0f9f2}
+  .oc-conform-tipo.ok .n{color:var(--ok)}
+  body.tema-escuro .oc-conform-tipo{background:#1a2430;border-color:#2c3a4a}
+  .oc-conform-itens{margin-top:12px}
+  .oc-conform-item-linha{display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--linha)}
+  .oc-conform-item-linha:last-child{border-bottom:none}
+  .oc-conform-item-linha .barra{flex:1;height:7px;background:#eef0ee;border-radius:5px;overflow:hidden}
+  .oc-conform-item-linha .barra i{display:block;height:100%;background:var(--ru);border-radius:5px}
+  .oc-conform-item-linha b{min-width:26px;text-align:right}
+  /* Tela "pendentes por obra" e drilldown de recorrentes */
+  .tela-simples-cab{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .tela-simples-cab h2{font-size:17px;color:var(--tinta);margin:0}
+  .obra-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .obra-card{border:1px solid var(--linha);border-radius:12px;background:#fff;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+  body.tema-escuro .obra-card{background:#1a2430;border-color:#2c3a4a}
+  .obra-card-topo{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .obra-card-topo b{font-size:13px;color:var(--tinta)}
+  .obra-card-num{font-size:13px;font-weight:800;color:var(--ru);background:#fdeeee;border-radius:999px;padding:2px 10px}
+  .obra-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .obra-chip{background:var(--cream);border:1px solid var(--linha);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;
+    color:var(--tinta);cursor:pointer;transition:all .12s ease}
+  .obra-chip:hover{border-color:var(--navy);background:#fff;color:var(--navy)}
+  .obra-card.feito{opacity:.85}
+  .obra-card-barra{height:8px;background:#eef0ee;border-radius:6px;overflow:hidden}
+  .obra-card-barra i{display:block;height:100%;background:var(--navy);border-radius:6px}
+  .rec-lista{display:flex;flex-direction:column;gap:12px}
+  .rec-item{border:1px solid var(--linha);border-radius:12px;padding:14px 16px;background:#fff}
+  body.tema-escuro .rec-item{background:#1a2430;border-color:#2c3a4a}
+  .rec-item-topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+  .rec-item-topo .titulo{font-size:13.5px;font-weight:800;color:var(--tinta)}
+  .rec-item-topo .qtd{font-size:12px;font-weight:800;color:var(--ru);background:#fdeeee;border-radius:999px;padding:2px 11px;white-space:nowrap}
+  .rec-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.rec-cols{grid-template-columns:1fr}}
+  .rec-col h5{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--cinza);margin:0 0 6px}
+  .rec-mini-linha{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:3px 0}
+  .rec-mini-linha .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rec-mini-linha .bar{width:70px;height:6px;background:#eef0ee;border-radius:4px;overflow:hidden;flex-shrink:0}
+  .rec-mini-linha .bar i{display:block;height:100%;border-radius:4px}
+  .rec-mini-linha .chip-eq{cursor:pointer;color:var(--navy);font-weight:700}
+  .rec-mini-linha .chip-eq:hover{text-decoration:underline}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="login-gate login-gate-simple" id="acesso-negado-gate" style="display:none">
@@ -1283,7 +1385,6 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sidebar-item ativo" data-view="novo" data-secao="checklist"><i>📋</i> Checklists</div>
       <div class="sidebar-item" data-view="partediaria" data-secao="partediaria"><i>📝</i> TESTE</div>
       <div class="sidebar-item" data-view="historico" data-secao="checklist"><i>🕒</i> Histórico</div>
-      <div class="sidebar-item" data-view="dashboard" data-secao="checklist"><i>📊</i> Dashboard</div>
      <div class="sidebar-item" data-view="ocorrencias" data-secao="checklist"><i>⚠️</i> Ocorrências <span class="sidebar-badge" id="badge-ocorrencias" style="display:none">0</span></div>
       <div class="sidebar-item" data-view="indicadores" data-secao="checklist"><i>📈</i> Indicadores</div>
       <div class="sidebar-item" data-view="historico-pd" data-secao="partediaria"><i>🕒</i> Histórico</div>
@@ -1490,36 +1591,41 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   </div>
 <div class="view" id="view-painel">
   <div class="painel-kpis">
-    <div class="painel-kpi verde">
+    <div class="painel-kpi verde clicavel" id="painel-kpi-card-hoje">
       <div class="icone">📋</div>
       <div class="lbl">Checklists realizados hoje</div>
       <div class="num" id="painel-kpi-hoje">—</div>
       <div class="sub" id="painel-kpi-hoje-sub">de — previstos</div>
       <div class="barra"><i id="painel-kpi-hoje-barra" style="width:0%"></i></div>
+      <div class="kpi-acao">Ver pendentes por obra →</div>
     </div>
-    <div class="painel-kpi vermelho">
+    <div class="painel-kpi vermelho clicavel" id="painel-kpi-card-ruins">
       <div class="icone">⚠️</div>
       <div class="lbl">Equipamentos com itens ruins</div>
       <div class="num" id="painel-kpi-ruins">—</div>
       <div class="sub" id="painel-kpi-ruins-sub">— da frota</div>
+      <div class="kpi-acao">Ver na tabela →</div>
     </div>
-    <div class="painel-kpi amarelo">
+    <div class="painel-kpi amarelo clicavel" id="painel-kpi-card-alerta">
       <div class="icone">⚠️</div>
       <div class="lbl">Equipamentos com alerta</div>
       <div class="num" id="painel-kpi-alerta">—</div>
       <div class="sub" id="painel-kpi-alerta-sub">— da frota</div>
+      <div class="kpi-acao">Ver na tabela →</div>
     </div>
-    <div class="painel-kpi laranja">
+    <div class="painel-kpi laranja clicavel" id="painel-kpi-card-impeditivos">
       <div class="icone">🛡️</div>
       <div class="lbl">Equipamentos com itens impeditivos</div>
       <div class="num" id="painel-kpi-impeditivos">—</div>
       <div class="sub" id="painel-kpi-impeditivos-sub">— da frota</div>
+      <div class="kpi-acao">Ver na tabela →</div>
     </div>
-    <div class="painel-kpi neutro">
+    <div class="painel-kpi neutro clicavel" id="painel-kpi-card-total">
       <div class="icone">🚜</div>
       <div class="lbl">Total de equipamentos</div>
       <div class="num" id="painel-kpi-total">—</div>
       <div class="sub" id="painel-kpi-total-sub">100% da frota</div>
+      <div class="kpi-acao">Ver todos →</div>
     </div>
   </div>
   <div class="dash-row" style="grid-template-columns:1.7fr 1fr;align-items:stretch">
@@ -1570,13 +1676,15 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <h3>Distribuição dos equipamentos por situação</h3>
         <div id="painel-donut" style="flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0"><div class="lista-vazia-dash">Carregando…</div></div>
       </div>
-      <div class="dash-card" style="flex:1;min-height:200px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column">
-        <h3>Evolução diária — itens ruins e itens impeditivos</h3>
-        <div class="painel-evolucao-legenda">
-          <span><span class="dot" style="background:var(--ru)"></span>Itens ruins (comuns)</span>
-          <span><span class="dot" style="background:#b25e17"></span>Itens impeditivos (segurança)</span>
+      <div class="dash-card" style="flex:1;min-height:220px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column">
+        <div class="painel-card-head">
+          <h3 id="painel-evolucao-titulo">Evolução dos últimos 14 dias</h3>
+          <div class="chart-toggle" id="painel-evolucao-toggle">
+            <button type="button" data-modo="combo" class="ativo">Visão geral</button>
+            <button type="button" data-modo="conformidade">Conformidade</button>
+          </div>
         </div>
-        <div id="painel-evolucao" style="flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0"><div class="lista-vazia-dash">Carregando…</div></div>
+        <div id="painel-evolucao" class="chart-box"><div class="lista-vazia-dash">Carregando…</div></div>
       </div>
     </div>
   </div>
@@ -1589,14 +1697,38 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       </div>
     </div>
     <div class="dash-card painel-card-inferior">
-      <h3>📋 Checklists pendentes hoje <span class="painel-pendentes-num" id="painel-pendentes-num">—</span></h3>
+      <div class="painel-card-head">
+        <h3>📋 Checklists pendentes hoje <span class="painel-pendentes-num" id="painel-pendentes-num">—</span></h3>
+        <button type="button" class="painel-btn-tela" id="painel-btn-pendentes-obra">Ver por obra →</button>
+      </div>
       <div id="painel-pendentes" style="flex:1;min-height:0;overflow-y:auto"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
     <div class="dash-card painel-card-inferior">
-      <h3>🏁 Operacionais sem checklist <span style="font-weight:400;text-transform:none;color:var(--cinza)">(ranking)</span></h3>
-      <div id="painel-ranking-sem-checklist" style="flex:1;min-height:0;overflow-y:auto"><div class="lista-vazia-dash">Carregando…</div></div>
+      <div class="painel-card-head">
+        <h3>🔁 Apontamentos mais recorrentes <span style="font-weight:400;text-transform:none;color:var(--cinza)">(30 dias)</span></h3>
+        <button type="button" class="painel-btn-ghost" id="painel-btn-apont-ocorrencias">Abrir Ocorrências →</button>
+      </div>
+      <div id="painel-apontamentos" class="chart-box" style="overflow-y:auto"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
   </div>
+</div>
+<div class="view" id="view-pendentes-obra">
+  <div class="tela-simples-cab">
+    <button type="button" class="painel-btn-ghost" id="pendentes-obra-voltar">← Voltar ao Painel</button>
+    <h2>📋 Checklists pendentes hoje — por obra</h2>
+    <span id="pendentes-obra-resumo" style="font-size:12.5px;color:var(--cinza)"></span>
+  </div>
+  <div class="dash-row" style="grid-template-columns:1.1fr 1fr;align-items:stretch;margin-bottom:16px">
+    <div class="dash-card" style="display:flex;flex-direction:column">
+      <h3>Pendentes por obra</h3>
+      <div id="pendentes-obra-chart" class="chart-box" style="min-height:240px"><div class="lista-vazia-dash">Carregando…</div></div>
+    </div>
+    <div class="dash-card" style="display:flex;flex-direction:column">
+      <h3>Situação do dia</h3>
+      <div id="pendentes-obra-donut" class="chart-box" style="min-height:240px"><div class="lista-vazia-dash">Carregando…</div></div>
+    </div>
+  </div>
+  <div id="pendentes-obra-cards" class="obra-grid"><div class="lista-vazia-dash">Carregando…</div></div>
 </div>
 <div class="view" id="view-partediaria">
   <div class="forma-layout">
@@ -2392,22 +2524,32 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   <div class="dash-kpis" id="oc-kpis"></div>
   <div class="dash-row" style="align-items:stretch;grid-template-columns:1fr 1fr">
     <div class="dash-card" style="display:flex;flex-direction:column">
-      <h3>📊 Top 10 Itens Mais Recorrentes</h3>
+      <div class="painel-card-head">
+        <h3>📊 Top 10 Itens Mais Recorrentes</h3>
+        <button type="button" class="painel-btn-tela" id="oc-btn-recorrentes">🔎 Por obra e máquina →</button>
+      </div>
       <div id="oc-top-recorrentes" style="flex:1;min-width:0"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
     <div class="dash-card" style="display:flex;flex-direction:column">
-      <h3>📈 Evolução de Ocorrências</h3>
-      <div id="oc-evolucao" style="flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0"><div class="lista-vazia-dash">Carregando…</div></div>
+      <div class="painel-card-head">
+        <h3>📈 Evolução de Ocorrências</h3>
+        <div class="chart-toggle" id="oc-evolucao-toggle">
+          <button type="button" data-modo="area" class="ativo">Área</button>
+          <button type="button" data-modo="linha">Linha</button>
+          <button type="button" data-modo="colunas">Colunas</button>
+        </div>
+      </div>
+      <div id="oc-evolucao" class="chart-box" style="min-height:200px"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
   </div>
-  <div class="dash-row" style="align-items:flex-start">
-    <div class="dash-card" style="flex:1">
-      <h3>📍 Ocorrências por Local</h3>
-      <div id="oc-por-local"><div class="lista-vazia-dash">Carregando…</div></div>
+  <div class="dash-row" style="align-items:stretch">
+    <div class="dash-card" style="flex:1;display:flex;flex-direction:column">
+      <h3>📍 Ocorrências por Local <span style="font-weight:400;text-transform:none;color:var(--cinza);font-size:11px">(pizza)</span></h3>
+      <div id="oc-por-local" class="chart-box" style="min-height:230px"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
-    <div class="dash-card" style="flex:1">
-      <h3>👷 Ocorrências por Operador</h3>
-      <div id="oc-por-operador"><div class="lista-vazia-dash">Carregando…</div></div>
+    <div class="dash-card" style="flex:1;display:flex;flex-direction:column">
+      <h3>👷 Ocorrências por Operador <span style="font-weight:400;text-transform:none;color:var(--cinza);font-size:11px">(colunas)</span></h3>
+      <div id="oc-por-operador" class="chart-box" style="min-height:230px"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
   </div>
   <div class="dash-card" style="margin-bottom:16px">
@@ -2572,6 +2714,15 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       </div>
     </div>
     <div class="hist-detalhe-corpo" id="oc-equip-corpo"></div>
+  </div>
+</div>
+<div class="hist-detalhe-overlay" id="oc-recorrentes-overlay">
+  <div class="hist-detalhe-modal" style="max-width:760px">
+    <div class="hist-detalhe-header">
+      <h3>🔁 Itens recorrentes — por obra e por máquina</h3>
+      <button class="modal-fechar" id="oc-recorrentes-fechar" style="color:#1a2430">✕</button>
+    </div>
+    <div class="hist-detalhe-corpo" id="oc-recorrentes-corpo"></div>
   </div>
 </div>
 <div class="hist-detalhe-overlay oc-painel-lateral" id="mov-equip-overlay">
@@ -4071,7 +4222,6 @@ const MENUS_POR_SECAO = {
     { view: 'painel', label: 'Painel' },
     { view: 'novo', label: 'Checklists' },
     { view: 'historico', label: 'Histórico' },
-    { view: 'dashboard', label: 'Dashboard' },
     { view: 'ocorrencias', label: 'Ocorrências' },
     { view: 'indicadores', label: 'Indicadores' }
   ],
@@ -4448,7 +4598,7 @@ function renderizarListaModal(tipo) {
               const vinculadoAtual = frotaItemVinculado[v] || '';
               const opcoes = frotas.filter(function(f){ return f !== v && frotaTipoItem[f] === 'implemento'; });
               if (vinculadoAtual && opcoes.indexOf(vinculadoAtual) === -1) opcoes.unshift(vinculadoAtual);
-              return opcoes.map(function(f){ return '<option value="'+f+'" '+(vinculadoAtual===f?'selected':'')+'>'+f+'</option>'; }).join('');
+              return opcoes.map(function(f){ return '<option value="'+f+'" '+(vinculadoAtual===f?'selected':'')+'>'+f.toUpperCase()+'</option>'; }).join('');
             })() +
           '</select>' +
           '<label>Regime de trabalho</label>' +
@@ -4480,7 +4630,7 @@ function renderizarListaModal(tipo) {
     const tagTipo = (tipo === 'equip' && frotaTipoItem[v] === 'implemento')
       ? '<span class="mli-desc" style="color:var(--laranja,#c77700);font-weight:700">🔧 Implemento</span>' : '';
     return '<div class="modal-lista-item">' +
-      '<span class="mli-nome">'+v+'</span>' +
+      '<span class="mli-nome">'+(tipo === 'equip' ? v.toUpperCase() : v)+'</span>' +
       tagTipo +
       desc +
       btnFoto +
@@ -5217,7 +5367,7 @@ function movRenderizarTabelaHistorico(itensCompletos){
       const dias = (typeof m.diasNoLocal !== 'number') ? '—' : (m.diasNoLocal + (m.diasNoLocal === 1 ? ' dia' : ' dias') + (m.aindaNoLocal ? ' (até hoje)' : ''));
       return '<tr class="oc-linha-clicavel" data-mov-equip="' + m.equipamento + '" title="Ver histórico completo deste equipamento">' +
         '<td>' + formatarDataHist(m.criado) + '</td>' +
-        '<td><b style="color:var(--navy)">' + m.equipamento + '</b></td>' +
+        '<td><b style="color:var(--navy)">' + m.equipamento.toUpperCase() + '</b></td>' +
         '<td>' + (m.itemVinculado || '—') + '</td>' +
         '<td>' + m.localOrigem + '</td>' +
         '<td><b>' + m.localDestino + '</b></td>' +
@@ -5277,7 +5427,7 @@ document.getElementById('hist-mov-imprimir').onclick = function(){
     const dias = (typeof m.diasNoLocal !== 'number') ? '—' : (m.diasNoLocal + (m.diasNoLocal === 1 ? ' dia' : ' dias') + (m.aindaNoLocal ? ' (até hoje)' : ''));
     return '<tr>' +
       '<td>' + formatarDataHist(m.criado) + '</td>' +
-      '<td>' + m.equipamento + '</td>' +
+      '<td>' + m.equipamento.toUpperCase() + '</td>' +
       '<td>' + (m.itemVinculado || '—') + '</td>' +
       '<td>' + m.localOrigem + '</td>' +
       '<td>' + m.localDestino + '</td>' +
@@ -5339,7 +5489,7 @@ async function carregarDashboardMov(){
   if (!selEquip.dataset.preenchido) {
     const equips = frotas.slice().sort();
     const locaisList = locais.slice().sort();
-    selEquip.innerHTML = '<option value="">Todos</option>' + equips.map(function(e){ return '<option value="'+e+'">'+e+'</option>'; }).join('');
+    selEquip.innerHTML = '<option value="">Todos</option>' + equips.map(function(e){ return '<option value="'+e+'">'+e.toUpperCase()+'</option>'; }).join('');
     selLocal.innerHTML = '<option value="">Todos</option>' + locaisList.map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
     selEquip.dataset.preenchido = '1';
   }
@@ -5446,7 +5596,7 @@ function dashMovRenderizarQtdPorLocal(){
   }
   function folhaEquip(eq){
     const vinc = frotaItemVinculado[eq];
-    const nome = eq + (vinc ? (' + ' + vinc) : '');
+    const nome = eq.toUpperCase() + (vinc ? (' + ' + vinc.toUpperCase()) : '');
     return '<div class="qtd-arv-no qtd-arv-nivel-3" data-equip="'+eq+'" style="cursor:pointer" title="Clique para mudar o status ou mover este equipamento">' +
       '<span class="qtd-arv-nome" style="padding-left:54px">🚜 '+nome+'</span>' +
       '<span>'+statusEqBadge(frotaStatusAtual[eq])+'</span>' +
@@ -6017,7 +6167,7 @@ function statusEqRenderizarDashboard(equipsFiltrados){
   } else {
     movCont.innerHTML = recentes.map(function(m){
       return '<div class="deq-mov-linha">' +
-        '<span style="font-weight:700">'+(m.equipamento || '—')+'</span>' +
+        '<span style="font-weight:700">'+(m.equipamento ? m.equipamento.toUpperCase() : '—')+'</span>' +
         '<span class="deq-mov-rota">'+(m.localOrigem ? frotaEsc(m.localOrigem) + ' → ' : '')+'<b>'+frotaEsc(m.localDestino || '—')+'</b></span>' +
         '<span class="arv-sub">'+formatarDataHist(m.criado)+'</span>' +
       '</div>';
@@ -6376,7 +6526,7 @@ function pdPreencherFiltrosHistorico(itens){
   const selLocal = document.getElementById('hist-pd-filtro-local');
   const equips = Array.from(new Set(itens.map(function(i){ return i.equipamento; }).filter(Boolean))).sort();
   const locaisList = Array.from(new Set(itens.map(function(i){ return i.local; }).filter(Boolean))).sort();
-  selEquip.innerHTML = '<option value="">Todos</option>' + equips.map(function(e){ return '<option value="'+e+'">'+e+'</option>'; }).join('');
+  selEquip.innerHTML = '<option value="">Todos</option>' + equips.map(function(e){ return '<option value="'+e+'">'+e.toUpperCase()+'</option>'; }).join('');
   selLocal.innerHTML = '<option value="">Todos</option>' + locaisList.map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
 }
 function pdFiltrarHistorico(itens){
@@ -6405,7 +6555,7 @@ function pdRenderizarTabelaHistorico(itensCompletos){
   tbody.innerHTML = filtrados.map(function(p){
     return '<tr class="hist-linha-clicavel" data-id="' + p.id + '" style="cursor:pointer">' +
       '<td>' + formatarDataHist(p.criado) + '</td>' +
-      '<td>' + p.equipamento + '</td>' +
+      '<td>' + p.equipamento.toUpperCase() + '</td>' +
       '<td>' + p.operador + '</td>' +
       '<td>' + p.local + '</td>' +
       '<td>' + pdFormatarHoras(p.trabalhadas) + '</td>' +
@@ -6422,7 +6572,7 @@ function pdAbrirDetalhe(id){
   const p = partesDiariasItens.find(function(x){ return String(x.id) === String(id); });
   if (!p) return;
   pdDetalheAberto = p;
-  document.getElementById('pd-detalhe-titulo').textContent = p.equipamento + ' — ' + formatarDataHist(p.criado);
+  document.getElementById('pd-detalhe-titulo').textContent = p.equipamento.toUpperCase() + ' — ' + formatarDataHist(p.criado);
   document.getElementById('pd-detalhe-corpo').innerHTML = pdMontarConteudoDetalhe(p);
   document.getElementById('pd-detalhe-overlay').classList.add('aberto');
 }
@@ -6463,7 +6613,7 @@ document.getElementById('pd-detalhe-overlay').onclick = function(e){
 };
 document.getElementById('pd-detalhe-imprimir').onclick = function(){
   if (!pdDetalheAberto) return;
-  const titulo = pdDetalheAberto.equipamento + ' — ' + formatarDataHist(pdDetalheAberto.criado);
+  const titulo = pdDetalheAberto.equipamento.toUpperCase() + ' — ' + formatarDataHist(pdDetalheAberto.criado);
   document.getElementById('hist-print-area').innerHTML =
     '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">' + titulo + '<small>Parte Diária — Comprex Máquinas e Serviços</small></div></div>' +
     '<div class="hist-detalhe-print">' + pdMontarConteudoDetalhe(pdDetalheAberto) + '</div>';
@@ -6745,7 +6895,7 @@ function mostrarView(nome){
   document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
     item.classList.toggle('ativo', item.dataset.view === nome);
   });
-const titulos = { painel: 'Painel', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'localizacao-atual': 'Localização Atual', 'historico-mov': 'Histórico de Movimentações', 'dashboard-mov': 'Dashboard', 'status-equipamentos': 'Status dos Equipamentos', controladoria: 'Controladoria' };
+const titulos = { painel: 'Painel', 'pendentes-obra': 'Pendentes por obra', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'localizacao-atual': 'Localização Atual', 'historico-mov': 'Histórico de Movimentações', 'dashboard-mov': 'Dashboard', 'status-equipamentos': 'Status dos Equipamentos', controladoria: 'Controladoria' };
 const INFO_PAGINA = {
   painel: { icone: '🧭', sub: 'Visão geral dos checklists diários da frota', secao: 'Checklists' },
   novo: { icone: '📋', sub: 'Preenchimento diário de inspeção', secao: 'Checklists' },
@@ -6793,6 +6943,7 @@ const INFO_PAGINA = {
     b.classList.toggle('ativo', ativoAgora);
   });
   if (nome === 'painel') carregarPainelGeral();
+  if (nome === 'pendentes-obra') carregarPendentesPorObra();
   if (nome === 'historico') carregarHistorico();
   if (nome === 'dashboard') carregarDashboard();
   if (nome === 'ocorrencias') carregarOcorrencias();
@@ -6990,7 +7141,7 @@ function renderizarHistorico(){
   tbody.innerHTML = filtrados.map(function(h){
     const linhaClasse = h.status.classe === 'parar' ? 'linha-parar' : (h.status.classe === 'at' ? 'linha-atencao' : '');
     return '<tr class="' + linhaClasse + '" data-id="' + h.id + '">' +
-      '<td>' + formatarDataHist(h.criado) + '</td><td>' + h.equipamento + '</td>' +
+      '<td>' + formatarDataHist(h.criado) + '</td><td>' + h.equipamento.toUpperCase() + '</td>' +
       '<td>' + formatarHorimetro(h.horimetro) + '</td><td>' + h.operador + '</td><td>' + h.local + '</td>' +
       '<td><span class="hist-st ' + h.status.classe + '">' + h.status.texto + '</span></td>' +
       '<td>' + h.itensProblema + '</td></tr>';
@@ -7019,7 +7170,7 @@ function montarConteudoImpressaoHistorico(filtrados){
     const linhaClasse = h.status.classe === 'parar' ? 'linha-parar' : (h.status.classe === 'at' ? 'linha-atencao' : '');
     return '<tr class="' + linhaClasse + '">' +
       '<td>' + formatarDataHist(h.criado) + '</td>' +
-      '<td>' + (h.equipamento || '—') + '</td>' +
+      '<td>' + (h.equipamento ? h.equipamento.toUpperCase() : '—') + '</td>' +
       '<td>' + formatarHorimetro(h.horimetro) + '</td>' +
       '<td>' + (h.operador || '—') + '</td>' +
       '<td>' + (h.local || '—') + '</td>' +
@@ -7079,7 +7230,7 @@ function abrirDetalheHistorico(id){
   const h = historicoItens.find(function(x){ return String(x.id) === String(id); });
   if (!h) return;
   detalheHistoricoAberto = h;
-  document.getElementById('hist-detalhe-titulo').textContent = h.equipamento + ' — ' + formatarDataHist(h.criado);
+  document.getElementById('hist-detalhe-titulo').textContent = h.equipamento.toUpperCase() + ' — ' + formatarDataHist(h.criado);
   document.getElementById('hist-detalhe-corpo').innerHTML = montarLinhasDetalheChecklist(h);
   document.getElementById('hist-detalhe-overlay').classList.add('aberto');
 }
@@ -7105,14 +7256,14 @@ function montarConteudoImpressaoHistoricoDetalhado(filtrados){
         montarLinhasDetalheChecklist(h) +
       '</div>';
     }).join('');
-    return '<div class="rel-grupo-resultado-titulo" style="break-after:avoid">🚜 ' + eq + (descricao ? ' <span style="font-weight:400;font-size:12px;color:#555">— ' + descricao + '</span>' : '') + ' <span style="font-weight:400;font-size:12px;color:#555">(' + registros.length + ' checklist' + (registros.length > 1 ? 's' : '') + ')</span></div>' +
+    return '<div class="rel-grupo-resultado-titulo" style="break-after:avoid">🚜 ' + eq.toUpperCase() + (descricao ? ' <span style="font-weight:400;font-size:12px;color:#555">— ' + descricao.toUpperCase() + '</span>' : '') + ' <span style="font-weight:400;font-size:12px;color:#555">(' + registros.length + ' checklist' + (registros.length > 1 ? 's' : '') + ')</span></div>' +
       corpo;
   }).join('');
   return '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">Relatório Detalhado — Histórico de Checklists<small>' + filtrados.length + ' registro(s), ' + equipsOrdenados.length + ' equipamento(s) — Comprex Máquinas e Serviços</small></div></div>' +
     '<div class="hist-detalhe-print">' + cartoes + '</div>';
 }
 function montarConteudoImpressaoDetalhe(h){
-  const titulo = h.equipamento + ' — ' + formatarDataHist(h.criado);
+  const titulo = h.equipamento.toUpperCase() + ' — ' + formatarDataHist(h.criado);
   return '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">' + titulo + '<small>Comprex Máquinas e Serviços</small></div></div>' +
     '<div class="hist-detalhe-print">' + document.getElementById('hist-detalhe-corpo').innerHTML + '</div>';
 }
@@ -7168,13 +7319,13 @@ async function carregarDashboard(){
   renderAtividades(historicoItens);
   renderCalendario();
   configurarHoverGenerico2('dash-kpi-checklists-hoje', 'tooltip-global', 'Já fizeram checklist hoje',
-    function(){ return Array.from(feitosHojeSet).sort().map(function(eq){ return '<span class="oc-tooltip-chip" data-chip="'+eq+'">'+eq+'</span>'; }).join(''); },
+    function(){ return Array.from(feitosHojeSet).sort().map(function(eq){ return '<span class="oc-tooltip-chip" data-chip="'+eq+'">'+eq.toUpperCase()+'</span>'; }).join(''); },
     function(eq){ garantirOcorrenciasCarregadas().then(function(){ abrirHistoricoEquipamentoOcorrencias(eq); }); });
   configurarHoverGenerico2('dash-kpi-pendentes', 'tooltip-global', 'Ainda não fizeram checklist hoje',
-    function(){ return pendentes.map(function(eq){ return '<span class="oc-tooltip-chip" style="background:#c79a3a" data-chip="'+eq+'">'+eq+'</span>'; }).join(''); },
+    function(){ return pendentes.map(function(eq){ return '<span class="oc-tooltip-chip" style="background:#c79a3a" data-chip="'+eq+'">'+eq.toUpperCase()+'</span>'; }).join(''); },
     function(eq){ garantirOcorrenciasCarregadas().then(function(){ abrirHistoricoEquipamentoOcorrencias(eq); }); });
   configurarHoverGenerico2('dash-kpi-ocorrencias', 'tooltip-global', 'Equipamentos com ocorrência (' + CONFIG.diasReincidencia + 'd)',
-    function(){ return Array.from(new Set(ocorrencias30.map(function(h){ return h.equipamento; }))).sort().map(function(eq){ return '<span class="oc-tooltip-chip" data-chip="'+eq+'">'+eq+'</span>'; }).join(''); },
+    function(){ return Array.from(new Set(ocorrencias30.map(function(h){ return h.equipamento; }))).sort().map(function(eq){ return '<span class="oc-tooltip-chip" data-chip="'+eq+'">'+eq.toUpperCase()+'</span>'; }).join(''); },
     function(eq){ garantirOcorrenciasCarregadas().then(function(){ abrirHistoricoEquipamentoOcorrencias(eq); }); });
   configurarHoverGenerico2('dash-kpi-operadores', 'tooltip-global', 'Operadores ativos (' + CONFIG.diasReincidencia + 'd)',
     function(){ return Array.from(operadoresSet).sort().map(function(o){ return '<span class="oc-tooltip-chip" style="cursor:default">'+o+'</span>'; }).join(''); },
@@ -7318,7 +7469,7 @@ function renderNotificacoes(ocorrencias){
     const hora = formatarDataHist(o.criado).split(' ')[1] || '';
     return '<div class="notif-item">' +
       '<span class="notif-dot ru"></span>' +
-      '<div class="notif-txt"><div class="notif-titulo">'+o.equipamento+'</div>' +
+      '<div class="notif-txt"><div class="notif-titulo">'+o.equipamento.toUpperCase()+'</div>' +
       '<div class="notif-sub">Necessita paralisar · '+(o.operador||'—')+'</div></div>' +
       '<div class="notif-tempo">'+hora+'</div>' +
     '</div>';
@@ -7406,7 +7557,7 @@ function renderAtividades(itens){
       '<div class="ativ-icone '+classe+'">'+icone+'</div>' +
       '<div class="ativ-titulo" style="flex:1">' +
         '<div>Checklist '+(ok?'conforme':'com apontamento')+'</div>' +
-        '<div class="ativ-sub">'+h.equipamento+' · '+(h.operador||'—')+'</div>' +
+        '<div class="ativ-sub">'+h.equipamento.toUpperCase()+' · '+(h.operador||'—')+'</div>' +
       '</div>' +
       '<div class="ativ-hora">'+hora+'</div>' +
     '</div>';
@@ -7595,7 +7746,7 @@ async function abrirHistoricoMovimentacaoEquipamento(equip){
           '<div class="oc-equip-nome-grande">' + frotaEsc(equip) + '</div>' +
           (podeEditar ? '<button type="button" class="oc-equip-editar-btn" id="mov-equip-editar-btn">✏️ Editar</button>' : '') +
         '</div>' +
-        (descricao ? '<div style="font-size:12.5px;color:var(--cinza);margin-top:-6px">' + frotaEsc(descricao) + '</div>' : '') +
+        (descricao ? '<div style="font-size:12.5px;color:var(--cinza);margin-top:-6px;text-transform:uppercase">' + frotaEsc(descricao) + '</div>' : '') +
         '<div class="oc-equip-header-meta">' + statusEqBadge(frotaStatusAtual[equip]) +
           ' &nbsp; 📍 ' + frotaEsc(frotaLocalAtual[equip] || '—') +
           '<br>Última movimentação: ' + (visiveis.length ? formatarDataHist(visiveis[0].criado) : '—') + '</div>' +
@@ -7650,8 +7801,8 @@ function renderizarSecaoCadastroEquip(){
         '<div class="oc-info-item"><label>Status atual</label><div class="valor">' + statusEqBadge(frotaStatusAtual[equip]) + '</div></div>' +
         '<div class="oc-info-item"><label>Local atual</label><div class="valor">' + frotaEsc(frotaLocalAtual[equip] || '—') + '</div></div>' +
         '<div class="oc-info-item"><label>Regime de trabalho</label><div class="valor">' + frotaEsc(frotaRegimeTrabalho[equip] || '8h') + '</div></div>' +
-        '<div class="oc-info-item"><label>' + vinculadoLabel + '</label><div class="valor">' + (vinculado ? frotaEsc(vinculado) : '—') + '</div></div>' +
-        '<div class="oc-info-item"><label>Descrição</label><div class="valor">' + (frotaDescricao[equip] ? frotaEsc(frotaDescricao[equip]) : '<i style="opacity:.6;font-weight:400">Sem descrição cadastrada</i>') + '</div></div>' +
+        '<div class="oc-info-item"><label>' + vinculadoLabel + '</label><div class="valor" style="text-transform:uppercase">' + (vinculado ? frotaEsc(vinculado) : '—') + '</div></div>' +
+        '<div class="oc-info-item"><label>Descrição</label><div class="valor" style="text-transform:uppercase">' + (frotaDescricao[equip] ? frotaEsc(frotaDescricao[equip]) : '<i style="opacity:.6;font-weight:400;text-transform:none">Sem descrição cadastrada</i>') + '</div></div>' +
       '</div>';
     return;
   }
@@ -7684,7 +7835,7 @@ function renderizarSecaoCadastroEquip(){
         '</select></div>' +
       '<div class="oc-edit-campo"><label>' + (ehImplemento ? 'Vincular a um equipamento' : 'Implemento vinculado') + '</label>' +
         '<select id="mov-edit-vinculo"><option value="">Nenhum</option>' +
-          opcoesVinculo.map(function(f){ return '<option value="' + f + '" ' + (vinculadoAtual === f ? 'selected' : '') + '>' + f + '</option>'; }).join('') +
+          opcoesVinculo.map(function(f){ return '<option value="' + f + '" ' + (vinculadoAtual === f ? 'selected' : '') + '>' + f.toUpperCase() + '</option>'; }).join('') +
         '</select></div>' +
       '<div class="oc-edit-campo"><button type="button" class="oc-equip-editar-btn" id="mov-edit-trocar-foto">📷 Trocar foto</button>' +
         '<div class="modal-dica" style="margin-top:6px">Pra mudar o local, use "Mover Equip./Implemento" — assim fica registrado no histórico de movimentações.</div></div>' +
@@ -7970,7 +8121,8 @@ async function carregarPainelGeral(forcar){
     renderizarPainelEvolucao();
     renderizarPainelAtencao();
     renderizarPainelPendentes(frotasEquip);
-    renderizarPainelRankingSemChecklist();
+    renderizarPainelApontamentos();
+    painelWireKpisInterativos(frotasEquip);
   } catch(err) {
     cont.innerHTML = '<div class="lista-vazia-dash">⚠️ Erro ao carregar o painel: ' + err.message + '</div>';
   }
@@ -8008,7 +8160,7 @@ function montarPreviaPainelLinha(l){
   const chk = l.ultimo
     ? (formatarDataHist(l.ultimo.criado) + ' — ' + (l.ultimo.operador || '—'))
     : 'Sem checklist registrado';
-  return '<div class="hpt-titulo">🚜 ' + l.equipamento + '</div>' +
+  return '<div class="hpt-titulo">🚜 ' + l.equipamento.toUpperCase() + '</div>' +
     '<div class="hpt-linha"><span>Local</span><b>' + l.local + '</b></div>' +
     '<div class="hpt-linha"><span>Situação</span><b>' + info.icone + ' ' + info.texto + '</b></div>' +
     '<div class="hpt-linha"><span>Último checklist</span><b>' + chk + '</b></div>' +
@@ -8435,6 +8587,32 @@ function abrirHistoricoEquipamentoOcorrencias(equip, soImpeditivos){
   const conforme = todosChecklistsDoEquip.length - naoConforme;
   const totalChecklists = todosChecklistsDoEquip.length || 1;
   const pctConforme = Math.round(conforme / totalChecklists * 100);
+  // TIPO da inconformidade: separa as ocorrências desse equipamento em
+  // Item impeditivo (segurança) > Desgaste crítico > Desgaste mínimo, sem
+  // dupla contagem (um impeditivo não conta como crítico também).
+  const ocEquipTodas = (typeof historicoItens !== 'undefined' ? historicoItens : []).filter(function(h){ return h.equipamento === equip && h.itensProblema > 0; });
+  let tipoImp = 0, tipoCrit = 0, tipoMin = 0;
+  ocEquipTodas.forEach(function(h){
+    if (temItemImpeditivo(h)) tipoImp++;
+    else if (criticidadeDaOcorrencia(h) === 'CRÍTICO') tipoCrit++;
+    else tipoMin++;
+  });
+  // Itens específicos que mais aparecem como "ruim" nesse equipamento.
+  const contItensEquip = {};
+  ocEquipTodas.forEach(function(h){
+    ITENS.forEach(function(it){
+      const valor = h.campos[it[0]];
+      if (valor && severidadeDaResposta(it[0], valor) === 'ru') {
+        const nome = prettify(it[0]);
+        contItensEquip[nome] = (contItensEquip[nome] || 0) + 1;
+      }
+    });
+  });
+  const topItensEquip = Object.keys(contItensEquip).map(function(k){ return { nome: k, qtd: contItensEquip[k] }; })
+    .sort(function(a, b){ return b.qtd - a.qtd; }).slice(0, 5);
+  const maxItemEquip = topItensEquip.length ? topItensEquip[0].qtd : 1;
+  // Checklist mais recente desse equipamento (pra abrir "todos os itens marcados").
+  const ultimoChecklistDoEquip = todosChecklistsDoEquip.length ? todosChecklistsDoEquip[0] : null;
   // Trajetória do equipamento — gráfico de linha (mesmo estilo da Evolução geral),
   // mas só com as ocorrências desse equipamento, dia a dia.
   const porDiaEquip = {};
@@ -8472,13 +8650,33 @@ function abrirHistoricoEquipamentoOcorrencias(equip, soImpeditivos){
           .map(function(it){ return prettify(it[0]); }).join(', ');
     const badge = itensImpeditivo.length ? '<span class="hist-st parar" title="Item de segurança ausente ou não funciona">ITEM IMPEDITIVO</span>' :
       (criticidadeDaOcorrencia(h) === 'CRÍTICO' ? '<span class="hist-st parar" title="Algum item de desgaste/condição chegou no nível crítico">DESGASTE CRÍTICO</span>' : '<span class="hist-st at" title="Teve problema, mas nenhum item chegou no nível crítico">DESGASTE MÍNIMO</span>');
-    return '<div class="oc-equip-hist-card"><span class="data">'+formatarDataHist(h.criado)+'</span> ' + badge +
+    return '<div class="oc-equip-hist-card oc-hist-card-clicavel" data-hist-id="'+h.id+'"><span class="data">'+formatarDataHist(h.criado)+'</span> ' + badge +
       '<div class="itens">'+qtdItens+'</div>' +
       '<div class="oc-equip-meta">👤 '+(h.operador || '—')+' &nbsp;·&nbsp; 📍 '+(h.local || '—')+'</div>' +
+      '<div class="ver-mais-chk">📋 Ver todos os itens marcados pelo operador →</div>' +
     '</div>';
   }).join('');
+  // Detalhamento do TIPO de conformidade x inconformidade.
+  const tiposHtml =
+    '<div class="oc-conform-tipos">' +
+      '<div class="oc-conform-tipo ok"><div class="n">'+conforme+'</div><div class="l">Conforme</div></div>' +
+      '<div class="oc-conform-tipo imp"><div class="n">'+tipoImp+'</div><div class="l">Item impeditivo</div></div>' +
+      '<div class="oc-conform-tipo crit"><div class="n">'+tipoCrit+'</div><div class="l">Desgaste crítico</div></div>' +
+      '<div class="oc-conform-tipo min"><div class="n">'+tipoMin+'</div><div class="l">Desgaste mínimo</div></div>' +
+    '</div>';
+  const itensConformHtml = topItensEquip.length
+    ? '<div class="oc-conform-itens"><h4 style="font-size:11.5px;margin:0 0 6px">Itens que mais reprovam neste equipamento</h4>' +
+        topItensEquip.map(function(x){
+          return '<div class="oc-conform-item-linha"><span style="flex:0 0 42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+x.nome+'">'+x.nome+'</span>' +
+            '<div class="barra"><i style="width:'+Math.round(x.qtd/maxItemEquip*100)+'%"></i></div><b>'+x.qtd+'</b></div>';
+        }).join('') +
+      '</div>'
+    : '';
   const statusAtualBadge = (typeof frotaStatusAtual !== 'undefined' && frotaStatusAtual[equip]) ? statusEqBadge(frotaStatusAtual[equip]) : '';
   const localAtualTxt = (typeof frotaLocalAtual !== 'undefined' && frotaLocalAtual[equip]) ? frotaLocalAtual[equip] : '—';
+  const ctaChecklistHtml = ultimoChecklistDoEquip
+    ? '<button type="button" class="oc-equip-cta" id="oc-equip-ir-checklist" data-chk-id="'+ultimoChecklistDoEquip.id+'">📋 Ir para o checklist <span style="font-weight:400;opacity:.85">('+formatarDataHist(ultimoChecklistDoEquip.criado).split(' ')[0]+')</span></button>'
+    : '<div style="font-size:11.5px;color:var(--cinza);margin-top:8px">Sem checklist registrado para este equipamento.</div>';
   document.getElementById('oc-equip-corpo').innerHTML =
     '<div class="oc-equip-header">' +
       '<div class="oc-equip-foto" id="oc-equip-foto">🚜</div>' +
@@ -8489,6 +8687,7 @@ function abrirHistoricoEquipamentoOcorrencias(equip, soImpeditivos){
           '<div class="caixa"><div class="num">'+todasDoEquip.length+'</div><div class="lbl">Total de ocorrências</div></div>' +
           '<div class="caixa"><div class="num">'+criticas+'</div><div class="lbl" title="Ocorrências com algum item de desgaste/condição no nível crítico">Desgaste Crítico</div></div>' +
         '</div>' +
+        ctaChecklistHtml +
       '</div>' +
     '</div>' +
     '<div class="oc-equip-secao">' +
@@ -8498,13 +8697,20 @@ function abrirHistoricoEquipamentoOcorrencias(equip, soImpeditivos){
         '<span><span class="dot ok"></span>Conforme: '+conforme+' ('+pctConforme+'%)</span>' +
         '<span><span class="dot ru"></span>Não conforme: '+naoConforme+' ('+(100-pctConforme)+'%)</span>' +
       '</div>' +
+      tiposHtml +
+      itensConformHtml +
     '</div>' +
     (diasEquip.length ? '<div class="oc-equip-secao"><h4>📈 Trajetória do equipamento (ocorrências por dia)</h4>' + trajetoriaHtml + '</div>' : '') +
     '<div class="oc-equip-secao">' +
-      '<h4>🕒 Histórico</h4>' +
+      '<h4>🕒 Histórico <span style="font-weight:400;font-size:11px;color:var(--cinza)">— clique num registro para ver os itens marcados</span></h4>' +
       (listaHtml || '<div class="lista-vazia-dash">Nenhuma ocorrência registrada.</div>') +
     '</div>';
   document.getElementById('oc-equip-overlay').classList.add('aberto');
+  const btnIrChk = document.getElementById('oc-equip-ir-checklist');
+  if (btnIrChk) btnIrChk.onclick = function(){ abrirDetalheHistorico(btnIrChk.dataset.chkId); };
+  document.getElementById('oc-equip-corpo').querySelectorAll('[data-hist-id]').forEach(function(card){
+    card.onclick = function(){ abrirDetalheHistorico(card.dataset.histId); };
+  });
   const fotoEl = document.getElementById('oc-equip-foto');
   buscarUrlFotoEquipamento(equip).then(function(url){
     if (url) fotoEl.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:16px">';
@@ -8694,7 +8900,7 @@ function renderizarOcorrenciasTabelaDetalhe(filtradas){
     const qtdItens = ITENS.filter(function(it){ return h.campos[it[0]] && severidadeDaResposta(it[0], h.campos[it[0]]) === 'ru'; }).length;
     const crit = criticidadeDaOcorrencia(h);
     const badge = crit === 'CRÍTICO' ? '<span class="hist-st parar" title="Algum item de desgaste/condição chegou no nível crítico">DESGASTE CRÍTICO</span>' : '<span class="hist-st at" title="Teve problema, mas nenhum item chegou no nível crítico">DESGASTE MÍNIMO</span>';
-    return '<tr class="oc-linha-clicavel" data-ver-detalhe-tabela="'+h.equipamento+'" title="Ver histórico e detalhes desse equipamento"><td>'+h.equipamento+'</td><td>'+formatarDataHist(h.criado)+'</td><td>'+h.local+'</td><td>'+h.operador+'</td><td>'+qtdItens+' itens</td><td>'+badge+'</td></tr>';
+    return '<tr class="oc-linha-clicavel" data-ver-detalhe-tabela="'+h.equipamento+'" title="Ver histórico e detalhes desse equipamento"><td>'+h.equipamento.toUpperCase()+'</td><td>'+formatarDataHist(h.criado)+'</td><td>'+h.local+'</td><td>'+h.operador+'</td><td>'+qtdItens+' itens</td><td>'+badge+'</td></tr>';
   }).join('');
   cont.innerHTML = '<div class="hist-tabela-wrap"><table class="hist-tabela"><thead><tr>' +
     '<th>Código</th><th>Data</th><th>Local</th><th>Operador</th><th>Itens com ocorrência</th><th>Nível de Desgaste</th>' +
@@ -9006,7 +9212,7 @@ ligarPreviewFotoCadastro('input-implemento-foto', 'input-implemento-foto-preview
  /* =====================================================================
    COMBO DE BUSCA — Equipamento e Local (visual do mockup)
    ===================================================================== */
-function configurarComboBusca(inputId, listaOrigemFn){
+function configurarComboBusca(inputId, listaOrigemFn, maiusculoDisplay){
   const input = document.getElementById(inputId);
   const wrap = input.closest('.busca-wrap');
   const painel = wrap.querySelector('.busca-lista');
@@ -9019,8 +9225,11 @@ function configurarComboBusca(inputId, listaOrigemFn){
       painel.innerHTML = '<div class="busca-vazio">Nenhum resultado</div>';
       return;
     }
+    // "data-valor" guarda sempre o texto original (é o que vira input.value e
+    // o que o resto do código usa pra buscar/comparar) — só o texto mostrado
+    // na lista de resultados vira maiúscula, quando o combo é de frota.
     painel.innerHTML = filtrados.slice(0, 100).map(function(v){
-      return '<div class="busca-item" data-valor="' + v.replace(/"/g,'&quot;') + '">' + v + '</div>';
+      return '<div class="busca-item" data-valor="' + v.replace(/"/g,'&quot;') + '">' + (maiusculoDisplay ? v.toUpperCase() : v) + '</div>';
     }).join('');
     painel.querySelectorAll('.busca-item').forEach(function(item){
       item.onclick = function(){
@@ -9048,14 +9257,14 @@ function configurarComboBusca(inputId, listaOrigemFn){
     input.dispatchEvent(new Event('change'));
   };
 }
-configurarComboBusca('equipamento', function(){ return frotas; });
+configurarComboBusca('equipamento', function(){ return frotas; }, true);
 configurarComboBusca('local', function(){ return locais; });
 configurarComboBusca('operador', function(){ return operadores; });
-configurarComboBusca('pd-equipamento', function(){ return frotas; });
+configurarComboBusca('pd-equipamento', function(){ return frotas; }, true);
 configurarComboBusca('pd-operador', function(){ return operadores; });
 configurarComboBusca('pd-local', function(){ return locais; });
-configurarComboBusca('hist-mov-filtro-equip', function(){ return frotas; });
-configurarComboBusca('mov-equipamento', function(){ return frotas; });
+configurarComboBusca('hist-mov-filtro-equip', function(){ return frotas; }, true);
+configurarComboBusca('mov-equipamento', function(){ return frotas; }, true);
 configurarComboBusca('mov-novo-local', function(){ return locais; });
  /* =====================================================================
    INDICADORES V2 — filtros de período + KPIs com sparkline (Fase 1)
@@ -9377,7 +9586,7 @@ function renderRankMelhoresDesempenhos(lista){
   cont.innerHTML = top.map(function(x){
     const pct = Math.max(8, Math.round(x.ocorrencias/max*100));
     return '<div class="ind2-rank-linha" data-ver-equip-ind="'+x.equipamento+'" style="cursor:pointer" title="Ver histórico detalhado">' +
-      '<span class="ind2-rank-nome">'+x.equipamento+'</span>' +
+      '<span class="ind2-rank-nome">'+x.equipamento.toUpperCase()+'</span>' +
       '<span class="ind2-rank-sub">'+x.apontamento+'</span>' +
       '<div class="ind2-rank-bar-wrap"><div class="ind2-rank-bar" style="width:'+pct+'%;background:var(--ok)"></div></div>' +
       '<span class="ind2-rank-val">'+x.ocorrencias+'</span>' +
@@ -9395,7 +9604,7 @@ function renderRankReincidencias(lista){
   cont.innerHTML = top.map(function(x){
     const pct = Math.max(8, Math.round(x.ocorrencias/max*100));
     return '<div class="ind2-rank-linha" data-ver-equip-ind="'+x.equipamento+'" style="cursor:pointer" title="Ver histórico detalhado">' +
-      '<span class="ind2-rank-nome">'+x.equipamento+'</span>' +
+      '<span class="ind2-rank-nome">'+x.equipamento.toUpperCase()+'</span>' +
       '<span class="ind2-rank-sub">'+x.apontamento+'</span>' +
       '<div class="ind2-rank-bar-wrap"><div class="ind2-rank-bar" style="width:'+pct+'%;background:var(--ru)"></div></div>' +
       '<span class="ind2-rank-val">'+x.ocorrencias+'</span>' +
@@ -9514,6 +9723,442 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+</script>
+<script>
+/* =====================================================================
+   AJUSTES 21 — Painel/Ocorrências mais interativos + gráficos ricos
+   (Chart.js, com fallback pra quando a biblioteca não carregar)
+   ===================================================================== */
+window.__charts = window.__charts || {};
+function chartOk(){ return typeof Chart !== 'undefined'; }
+function cssVar(nome, fallback){
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+    return v || fallback;
+  } catch(e){ return fallback; }
+}
+function paletaCategorica(){
+  return [ cssVar('--navy','#1b6b34'), cssVar('--at','#c79a3a'), '#b25e17', cssVar('--ru','#c0392b'),
+    '#5b6570', '#6a9fb5', '#7a5a10', '#8a94a0', '#a0522d', '#4b7a8a', '#2e7d46', '#9b59b6' ];
+}
+function corComAlfa(hex, a){
+  const m = String(hex).replace('#','');
+  if (m.length !== 6) return hex;
+  const r = parseInt(m.slice(0,2),16), g = parseInt(m.slice(2,4),16), b = parseInt(m.slice(4,6),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+/** Cria (ou recria) um gráfico Chart.js num container, destruindo o anterior.
+ *  alturaPx opcional força a altura (útil pra barras horizontais que crescem
+ *  com a quantidade de itens). */
+function criarGrafico(containerId, config, alturaPx){
+  const cont = document.getElementById(containerId);
+  if (!cont) return null;
+  if (window.__charts[containerId]) { try { window.__charts[containerId].destroy(); } catch(e){} window.__charts[containerId] = null; }
+  cont.innerHTML = '<canvas></canvas>';
+  const canvas = cont.querySelector('canvas');
+  if (alturaPx){ cont.style.height = alturaPx + 'px'; }
+  if (!chartOk()) { cont.innerHTML = '<div class="lista-vazia-dash">Gráfico indisponível (sem conexão com a biblioteca de gráficos).</div>'; return null; }
+  try {
+    if (!criarGrafico._defAplicado){
+      Chart.defaults.font.family = "'Segoe UI', system-ui, -apple-system, sans-serif";
+      Chart.defaults.font.size = 11;
+      Chart.defaults.color = cssVar('--cinza','#5b6570');
+      Chart.defaults.plugins.tooltip.padding = 9;
+      Chart.defaults.plugins.tooltip.cornerRadius = 8;
+      Chart.defaults.plugins.tooltip.titleFont = { weight: '700', size: 12 };
+      criarGrafico._defAplicado = true;
+    }
+    const ch = new Chart(canvas.getContext('2d'), config);
+    window.__charts[containerId] = ch;
+    return ch;
+  } catch(e){
+    cont.innerHTML = '<div class="lista-vazia-dash">Não foi possível desenhar o gráfico.</div>';
+    return null;
+  }
+}
+function opcoesBase(extra){
+  const base = { responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
+    plugins: { legend: { display: false } }, interaction: { intersect: false, mode: 'index' } };
+  return Object.assign(base, extra || {});
+}
+
+/* ---------- PAINEL: Apontamentos mais recorrentes (30d) ---------- */
+function painelApontamentosDados(){
+  const limite = new Date(); limite.setHours(0,0,0,0); limite.setDate(limite.getDate() - 30);
+  const cont = {};
+  (typeof historicoItens !== 'undefined' ? historicoItens : []).forEach(function(h){
+    if (new Date(h.criado) < limite) return;
+    ITENS.forEach(function(it){
+      const valor = h.campos[it[0]];
+      if (!valor) return;
+      const sev = severidadeDaResposta(it[0], valor);
+      if (sev === 'ru' || sev === 'at') {
+        const nome = prettify(it[0]);
+        cont[nome] = (cont[nome] || 0) + 1;
+      }
+    });
+  });
+  return Object.keys(cont).map(function(k){ return { label: k, valor: cont[k] }; })
+    .sort(function(a,b){ return b.valor - a.valor; }).slice(0, 8);
+}
+function renderizarPainelApontamentos(){
+  const cont = document.getElementById('painel-apontamentos');
+  if (!cont) return;
+  const dados = painelApontamentosDados();
+  if (!dados.length){ cont.innerHTML = '<div class="lista-vazia-dash">Sem apontamentos nos últimos 30 dias. ✅</div>'; return; }
+  if (!chartOk()){
+    const maxV = dados[0].valor || 1;
+    cont.innerHTML = dados.map(function(d){
+      return '<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+d.label+'</span><b>'+d.valor+'</b></div>' +
+        '<div style="height:8px;background:#eef0ee;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:'+Math.round(d.valor/maxV*100)+'%;background:'+cssVar('--ru','#c0392b')+';border-radius:5px"></i></div></div>';
+    }).join('');
+    return;
+  }
+  const altura = Math.max(150, dados.length * 30 + 24);
+  criarGrafico('painel-apontamentos', {
+    type: 'bar',
+    data: { labels: dados.map(function(d){ return d.label; }),
+      datasets: [{ label: 'Apontamentos', data: dados.map(function(d){ return d.valor; }),
+        backgroundColor: corComAlfa(cssVar('--ru','#c0392b'), .82), borderRadius: 5, maxBarThickness: 22 }] },
+    options: opcoesBase({ indexAxis: 'y',
+      onClick: function(){ mostrarView('ocorrencias'); },
+      scales: { x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,.05)' } },
+        y: { grid: { display: false }, ticks: { font: { size: 10.5 } } } },
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: function(c){ return c.parsed.x + ' apontamento(s)'; } } } } })
+  }, altura);
+}
+
+/* ---------- PAINEL: Evolução (14 dias) — combo interativo ---------- */
+let painelEvolucaoModo = 'combo';
+function painelEvolucaoDias(n){
+  const dias = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d0 = new Date(); d0.setHours(0,0,0,0); d0.setDate(d0.getDate() - i);
+    const d1 = new Date(d0.getTime() + 86400000);
+    const doDia = (typeof historicoItens !== 'undefined' ? historicoItens : []).filter(function(h){ const d = new Date(h.criado); return d >= d0 && d < d1; });
+    const ruins = doDia.reduce(function(s,h){ return s + painelContarItensRuins(h); }, 0);
+    const impeditivos = doDia.reduce(function(s,h){ return s + itensImpeditivosDe(h).length; }, 0);
+    const conformes = doDia.filter(function(h){ return (h.itensProblema || 0) === 0; }).length;
+    const pctConf = doDia.length ? Math.round(conformes / doDia.length * 100) : null;
+    dias.push({ label: String(d0.getDate()).padStart(2,'0')+'/'+String(d0.getMonth()+1).padStart(2,'0'),
+      checklists: doDia.length, ruins: ruins, impeditivos: impeditivos, conformes: conformes, pctConf: pctConf });
+  }
+  return dias;
+}
+function renderizarPainelEvolucao(){
+  const cont = document.getElementById('painel-evolucao');
+  if (!cont) return;
+  const dias = painelEvolucaoDias(14);
+  const tituloEl = document.getElementById('painel-evolucao-titulo');
+  if (!chartOk()){
+    // Fallback: gráfico SVG antigo (ruins x impeditivos).
+    if (typeof gerarGraficoEvolucaoPainelSVG === 'function') cont.innerHTML = gerarGraficoEvolucaoPainelSVG(dias);
+    else cont.innerHTML = '<div class="lista-vazia-dash">Gráfico indisponível.</div>';
+    return;
+  }
+  const labels = dias.map(function(d){ return d.label; });
+  const navy = cssVar('--navy','#1b6b34'), ru = cssVar('--ru','#c0392b'), ok = cssVar('--ok','#2e7d46');
+  if (painelEvolucaoModo === 'conformidade'){
+    if (tituloEl) tituloEl.textContent = 'Conformidade dos últimos 14 dias';
+    criarGrafico('painel-evolucao', {
+      type: 'bar',
+      data: { labels: labels, datasets: [
+        { type: 'bar', label: 'Checklists no dia', data: dias.map(function(d){ return d.checklists; }),
+          backgroundColor: corComAlfa(navy, .22), borderRadius: 5, order: 2, yAxisID: 'y' },
+        { type: 'line', label: '% conforme', data: dias.map(function(d){ return d.pctConf; }),
+          borderColor: ok, backgroundColor: ok, tension: .35, spanGaps: true, pointRadius: 3, borderWidth: 2.5, order: 1, yAxisID: 'y1' }
+      ] },
+      options: opcoesBase({
+        plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } },
+          tooltip: { callbacks: { label: function(c){ return c.dataset.label + ': ' + (c.parsed.y == null ? '—' : c.parsed.y) + (c.dataset.yAxisID === 'y1' ? '%' : ''); } } } },
+        scales: { y: { beginAtZero: true, position: 'left', ticks: { precision: 0 }, title: { display: true, text: 'Checklists' } },
+          y1: { beginAtZero: true, max: 100, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: '% conforme' } },
+          x: { grid: { display: false } } } })
+    });
+    return;
+  }
+  if (tituloEl) tituloEl.textContent = 'Evolução dos últimos 14 dias';
+  criarGrafico('painel-evolucao', {
+    data: { labels: labels, datasets: [
+      { type: 'bar', label: 'Checklists', data: dias.map(function(d){ return d.checklists; }),
+        backgroundColor: corComAlfa(navy, .20), borderRadius: 5, order: 3 },
+      { type: 'line', label: 'Itens ruins', data: dias.map(function(d){ return d.ruins; }),
+        borderColor: ru, backgroundColor: corComAlfa(ru, .12), tension: .35, pointRadius: 3, borderWidth: 2.5, fill: true, order: 1 },
+      { type: 'line', label: 'Itens impeditivos', data: dias.map(function(d){ return d.impeditivos; }),
+        borderColor: '#b25e17', backgroundColor: 'transparent', tension: .35, pointRadius: 3, borderWidth: 2.5, order: 2 }
+    ] },
+    options: opcoesBase({
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,.05)' } }, x: { grid: { display: false } } } })
+  });
+}
+
+/* ---------- PAINEL: KPIs superiores clicáveis ---------- */
+function painelFocarTabelaPorSituacao(sit){
+  const sel = document.getElementById('painel-filtro-situacao');
+  if (sel){ sel.value = sit || ''; }
+  if (typeof painelTabelaExpandida !== 'undefined') painelTabelaExpandida = false;
+  if (typeof renderizarPainelTabela === 'function') renderizarPainelTabela();
+  const alvo = document.getElementById('painel-tabela-cont');
+  if (alvo) alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function painelWireKpisInterativos(){
+  if (window.__painelKpisWired) return;
+  window.__painelKpisWired = true;
+  const map = [ ['painel-kpi-card-ruins','vermelho'], ['painel-kpi-card-alerta','amarelo'],
+    ['painel-kpi-card-impeditivos','laranja'], ['painel-kpi-card-total',''] ];
+  map.forEach(function(par){
+    const el = document.getElementById(par[0]);
+    if (el) el.onclick = function(){
+      if (par[0] === 'painel-kpi-card-total'){
+        ['painel-filtro-de','painel-filtro-ate','painel-filtro-equip','painel-filtro-local','painel-filtro-situacao']
+          .forEach(function(id){ const c = document.getElementById(id); if (c) c.value = ''; });
+        painelFocarTabelaPorSituacao('');
+      } else painelFocarTabelaPorSituacao(par[1]);
+    };
+  });
+  const cardHoje = document.getElementById('painel-kpi-card-hoje');
+  if (cardHoje) cardHoje.onclick = function(){ mostrarView('pendentes-obra'); };
+  const btnPend = document.getElementById('painel-btn-pendentes-obra');
+  if (btnPend) btnPend.onclick = function(e){ e.stopPropagation(); mostrarView('pendentes-obra'); };
+  const btnApont = document.getElementById('painel-btn-apont-ocorrencias');
+  if (btnApont) btnApont.onclick = function(e){ e.stopPropagation(); mostrarView('ocorrencias'); };
+}
+
+/* ---------- TELA: Checklists pendentes hoje por obra ---------- */
+async function carregarPendentesPorObra(){
+  const cardsCont = document.getElementById('pendentes-obra-cards');
+  try {
+    await Promise.all([garantirDadosHistorico(), garantirDadosFrotaExtra()]);
+    const frotasEquip = frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; });
+    const pendentes = painelEquipamentosPendentesHoje(frotasEquip);
+    const pendSet = new Set(pendentes);
+    const grupoDe = function(eq){
+      const local = frotaLocalAtual[eq] || '';
+      if (!local) return 'SEM LOCAL';
+      return (typeof statusEqGrupoDoLocal === 'function') ? statusEqGrupoDoLocal(local) : local.split('-')[0].trim();
+    };
+    const obras = {};
+    frotasEquip.forEach(function(eq){
+      const g = grupoDe(eq);
+      if (!obras[g]) obras[g] = { total: 0, pendentes: [] };
+      obras[g].total++;
+      if (pendSet.has(eq)) obras[g].pendentes.push(eq);
+    });
+    const listaObras = Object.keys(obras).map(function(g){
+      return { obra: g, total: obras[g].total, pend: obras[g].pendentes.length, equips: obras[g].pendentes.sort() };
+    }).sort(function(a,b){ return b.pend - a.pend || a.obra.localeCompare(b.obra); });
+    const totalPend = pendentes.length, totalFeitos = frotasEquip.length - totalPend;
+    const obrasComPend = listaObras.filter(function(o){ return o.pend > 0; });
+    document.getElementById('pendentes-obra-resumo').textContent =
+      totalPend + ' pendente(s) em ' + obrasComPend.length + ' obra(s) · ' + totalFeitos + ' de ' + frotasEquip.length + ' já feitos hoje';
+    // Gráfico de barras horizontais: pendentes por obra (só obras com pendência).
+    const dadosG = obrasComPend.slice(0, 12);
+    if (!dadosG.length){
+      document.getElementById('pendentes-obra-chart').innerHTML = '<div class="lista-vazia-dash">Todas as obras com o checklist de hoje em dia. ✅</div>';
+    } else {
+      criarGrafico('pendentes-obra-chart', {
+        type: 'bar',
+        data: { labels: dadosG.map(function(o){ return o.obra; }),
+          datasets: [{ label: 'Pendentes', data: dadosG.map(function(o){ return o.pend; }),
+            backgroundColor: corComAlfa(cssVar('--ru','#c0392b'), .82), borderRadius: 5, maxBarThickness: 24 }] },
+        options: opcoesBase({ indexAxis: 'y',
+          scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } },
+          plugins: { tooltip: { callbacks: { label: function(c){ const o = dadosG[c.dataIndex]; return c.parsed.x + ' de ' + o.total + ' pendentes'; } } } } })
+      }, Math.max(150, dadosG.length * 32 + 24));
+    }
+    // Donut feitos x pendentes.
+    if (chartOk()){
+      criarGrafico('pendentes-obra-donut', {
+        type: 'doughnut',
+        data: { labels: ['Feitos hoje', 'Pendentes'],
+          datasets: [{ data: [totalFeitos, totalPend], backgroundColor: [cssVar('--ok','#2e7d46'), cssVar('--ru','#c0392b')], borderWidth: 0 }] },
+        options: opcoesBase({ cutout: '62%', plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } } } })
+      });
+    } else {
+      document.getElementById('pendentes-obra-donut').innerHTML = '<div class="lista-vazia-dash">'+totalFeitos+' feitos · '+totalPend+' pendentes</div>';
+    }
+    // Cards por obra.
+    if (!obrasComPend.length){
+      cardsCont.innerHTML = '<div class="lista-vazia-dash">Todos os checklists de hoje já foram feitos. ✅</div>';
+    } else {
+      cardsCont.innerHTML = obrasComPend.map(function(o){
+        const chips = o.equips.map(function(eq){ return '<span class="obra-chip" data-obra-equip="'+frotaEsc(eq)+'">'+frotaEsc(eq)+'</span>'; }).join('');
+        const pctFeito = o.total ? Math.round((o.total - o.pend) / o.total * 100) : 0;
+        return '<div class="obra-card">' +
+          '<div class="obra-card-topo"><b>'+frotaEsc(o.obra)+'</b><span class="obra-card-num">'+o.pend+' / '+o.total+'</span></div>' +
+          '<div class="obra-card-barra"><i style="width:'+pctFeito+'%"></i></div>' +
+          '<div style="font-size:11px;color:var(--cinza)">'+pctFeito+'% já feito hoje</div>' +
+          '<div class="obra-chips">'+chips+'</div>' +
+        '</div>';
+      }).join('');
+      cardsCont.querySelectorAll('[data-obra-equip]').forEach(function(chip){
+        chip.onclick = function(){ painelIrParaHistoricoDoEquip(chip.dataset.obraEquip); };
+      });
+    }
+  } catch(err){
+    cardsCont.innerHTML = '<div class="lista-vazia-dash">⚠️ Erro ao carregar: ' + err.message + '</div>';
+  }
+}
+
+/* ---------- OCORRÊNCIAS: gráficos variados (pizza / colunas / área) ---------- */
+let ocEvolucaoModo = 'area';
+window.__ocEvolucaoDados = [];
+function renderizarOcorrenciasEvolucao(filtradas){
+  const cont = document.getElementById('oc-evolucao');
+  if (!cont) return;
+  if (!filtradas || !filtradas.length){ cont.innerHTML = '<div class="lista-vazia-dash">Sem dados.</div>'; return; }
+  const porDia = {};
+  filtradas.forEach(function(h){ const d = h.criado.slice(0,10); porDia[d] = (porDia[d]||0) + 1; });
+  const dias = Object.keys(porDia).sort();
+  window.__ocEvolucaoDados = dias.map(function(d){ return { dia: d, valor: porDia[d] }; });
+  if (!chartOk()){
+    cont.innerHTML = '<div class="lista-vazia-dash">'+dias.length+' dia(s) com ocorrências.</div>';
+    return;
+  }
+  const ru = cssVar('--ru','#c0392b');
+  const ehColuna = ocEvolucaoModo === 'colunas';
+  criarGrafico('oc-evolucao', {
+    type: ehColuna ? 'bar' : 'line',
+    data: { labels: dias.map(function(d){ return formatarDataCurta(d); }),
+      datasets: [{ label: 'Ocorrências', data: dias.map(function(d){ return porDia[d]; }),
+        borderColor: ru, backgroundColor: ehColuna ? corComAlfa(ru, .82) : corComAlfa(ru, .14),
+        fill: ocEvolucaoModo === 'area', tension: .35, pointRadius: 3, borderWidth: 2.5, borderRadius: 5, maxBarThickness: 34 }] },
+    options: opcoesBase({
+      onClick: function(evt, els){ if (els && els.length){ const dia = dias[els[0].index];
+        document.getElementById('oc-filtro-de').value = dia; document.getElementById('oc-filtro-ate').value = dia;
+        renderizarOcorrencias(); document.getElementById('oc-tabela-detalhe').scrollIntoView({ behavior:'smooth', block:'center' }); } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,.05)' } }, x: { grid: { display: false } } },
+      plugins: { tooltip: { callbacks: { label: function(c){ return c.parsed.y + ' ocorrência(s) — clique pra filtrar esse dia'; } } } } })
+  });
+}
+function renderizarOcorrenciasPorLocal(filtradas){
+  const cont = document.getElementById('oc-por-local');
+  if (!cont) return;
+  const c = {}; filtradas.forEach(function(h){ c[h.local || '—'] = (c[h.local || '—']||0) + 1; });
+  const ranking = Object.keys(c).map(function(l){ return { label: l, valor: c[l] }; }).sort(function(a,b){ return b.valor - a.valor; });
+  if (!ranking.length){ cont.innerHTML = '<div class="lista-vazia-dash">Sem dados.</div>'; return; }
+  if (!chartOk()){ if (typeof pdRenderizarRanking === 'function') pdRenderizarRanking('oc-por-local', ranking.map(function(r){ return { label:r.label, valor:r.valor, valorFmt:String(r.valor) }; }), 'var(--navy)', 'local'); return; }
+  const top = ranking.slice(0, 8);
+  const outros = ranking.slice(8).reduce(function(s,r){ return s + r.valor; }, 0);
+  const labels = top.map(function(r){ return r.label; }); const valores = top.map(function(r){ return r.valor; });
+  if (outros){ labels.push('Outros'); valores.push(outros); }
+  const cores = paletaCategorica();
+  criarGrafico('oc-por-local', {
+    type: 'doughnut',
+    data: { labels: labels, datasets: [{ data: valores, backgroundColor: labels.map(function(_,i){ return cores[i % cores.length]; }), borderWidth: 1, borderColor: '#fff' }] },
+    options: opcoesBase({ cutout: '55%',
+      onClick: function(evt, els){ if (els && els.length){ const lab = labels[els[0].index]; if (lab === 'Outros') return;
+        const sel = document.getElementById('oc-filtro-local'); if (sel){ sel.value = lab; renderizarOcorrencias(); } } },
+      plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 11, font: { size: 10.5 }, usePointStyle: true } },
+        tooltip: { callbacks: { label: function(c){ return c.label + ': ' + c.parsed + ' ocorrência(s)'; } } } } })
+  });
+}
+function renderizarOcorrenciasPorOperador(filtradas){
+  const cont = document.getElementById('oc-por-operador');
+  if (!cont) return;
+  const c = {}; filtradas.forEach(function(h){ const o = h.operador || '—'; c[o] = (c[o]||0) + 1; });
+  const ranking = Object.keys(c).map(function(o){ return { label: o, valor: c[o] }; }).sort(function(a,b){ return b.valor - a.valor; }).slice(0, 10);
+  if (!ranking.length){ cont.innerHTML = '<div class="lista-vazia-dash">Sem dados.</div>'; return; }
+  if (!chartOk()){ if (typeof pdRenderizarRanking === 'function') pdRenderizarRanking('oc-por-operador', ranking.map(function(r){ return { label:r.label, valor:r.valor, valorFmt:String(r.valor) }; }), 'var(--navy)'); return; }
+  criarGrafico('oc-por-operador', {
+    type: 'bar',
+    data: { labels: ranking.map(function(r){ return r.label; }),
+      datasets: [{ label: 'Ocorrências', data: ranking.map(function(r){ return r.valor; }),
+        backgroundColor: corComAlfa(cssVar('--navy','#1b6b34'), .82), borderRadius: 5, maxBarThickness: 40 }] },
+    options: opcoesBase({
+      onClick: function(evt, els){ if (els && els.length){ const nome = ranking[els[0].index].label;
+        const inp = document.getElementById('oc-filtro-operador'); if (inp){ inp.value = nome; renderizarOcorrencias(); } } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,.05)' } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 40, minRotation: 0 } } },
+      plugins: { tooltip: { callbacks: { label: function(c){ return c.parsed.y + ' ocorrência(s) — clique pra filtrar'; } } } } })
+  });
+}
+
+/* ---------- OCORRÊNCIAS: drill-down itens recorrentes por obra/máquina ---------- */
+function abrirRecorrentesDrilldown(){
+  const filtradas = obterOcorrenciasFiltradas();
+  const cont = document.getElementById('oc-recorrentes-corpo');
+  const agg = {};
+  filtradas.forEach(function(h){
+    ITENS.forEach(function(it){
+      const valor = h.campos[it[0]];
+      if (!valor || severidadeDaResposta(it[0], valor) !== 'ru') return;
+      const chave = prettify(it[0]) + ': ' + valor;
+      if (!agg[chave]) agg[chave] = { total: 0, locais: {}, equips: {} };
+      agg[chave].total++;
+      const loc = h.local || '—', eq = h.equipamento || '—';
+      agg[chave].locais[loc] = (agg[chave].locais[loc] || 0) + 1;
+      agg[chave].equips[eq] = (agg[chave].equips[eq] || 0) + 1;
+    });
+  });
+  const itens = Object.keys(agg).map(function(k){ return { chave: k, dados: agg[k] }; })
+    .sort(function(a,b){ return b.dados.total - a.dados.total; }).slice(0, 10);
+  if (!itens.length){
+    cont.innerHTML = '<div class="lista-vazia-dash">Nenhum item recorrente no filtro atual.</div>';
+  } else {
+    function miniLista(mapa, cor, clicavel){
+      const arr = Object.keys(mapa).map(function(k){ return { nome: k, qtd: mapa[k] }; }).sort(function(a,b){ return b.qtd - a.qtd; }).slice(0, 6);
+      const max = arr[0].qtd || 1;
+      return arr.map(function(x){
+        const nm = clicavel
+          ? '<span class="nm chip-eq" data-rec-equip="'+frotaEsc(x.nome)+'">'+frotaEsc(x.nome)+'</span>'
+          : '<span class="nm" title="'+x.nome+'">'+x.nome+'</span>';
+        return '<div class="rec-mini-linha">'+nm+'<div class="bar"><i style="width:'+Math.round(x.qtd/max*100)+'%;background:'+cor+'"></i></div><b>'+x.qtd+'</b></div>';
+      }).join('');
+    }
+    cont.innerHTML =
+      '<div style="font-size:12px;color:var(--cinza);margin-bottom:12px">Para cada item que mais reprova no período/filtro atual, veja em quais <b>obras</b> e em quais <b>máquinas</b> ele está aparecendo — ajuda a separar problema de local (padrão de operação) de problema de equipamento.</div>' +
+      '<div class="rec-lista">' + itens.map(function(it){
+        return '<div class="rec-item">' +
+          '<div class="rec-item-topo"><span class="titulo">'+it.chave+'</span><span class="qtd">'+it.dados.total+'x</span></div>' +
+          '<div class="rec-cols">' +
+            '<div class="rec-col"><h5>📍 Por obra/local</h5>'+miniLista(it.dados.locais, cssVar('--navy','#1b6b34'), false)+'</div>' +
+            '<div class="rec-col"><h5>🚜 Por máquina</h5>'+miniLista(it.dados.equips, cssVar('--ru','#c0392b'), true)+'</div>' +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>';
+    cont.querySelectorAll('[data-rec-equip]').forEach(function(ch){
+      ch.onclick = function(){
+        document.getElementById('oc-recorrentes-overlay').classList.remove('aberto');
+        garantirOcorrenciasCarregadas().then(function(){ abrirHistoricoEquipamentoOcorrencias(ch.dataset.recEquip); });
+      };
+    });
+  }
+  document.getElementById('oc-recorrentes-overlay').classList.add('aberto');
+}
+
+/* ---------- Ligações de eventos (toggles, botões, overlays) ---------- */
+(function(){
+  function wire(){
+    // Toggle da evolução do Painel
+    const tgP = document.getElementById('painel-evolucao-toggle');
+    if (tgP) tgP.querySelectorAll('button').forEach(function(b){
+      b.onclick = function(){ tgP.querySelectorAll('button').forEach(function(x){ x.classList.remove('ativo'); });
+        b.classList.add('ativo'); painelEvolucaoModo = b.dataset.modo; renderizarPainelEvolucao(); };
+    });
+    // Toggle da evolução de Ocorrências
+    const tgO = document.getElementById('oc-evolucao-toggle');
+    if (tgO) tgO.querySelectorAll('button').forEach(function(b){
+      b.onclick = function(){ tgO.querySelectorAll('button').forEach(function(x){ x.classList.remove('ativo'); });
+        b.classList.add('ativo'); ocEvolucaoModo = b.dataset.modo;
+        renderizarOcorrenciasEvolucao((window.__ocEvolucaoDados || []).length ? obterOcorrenciasFiltradas() : []); };
+    });
+    // Voltar da tela pendentes-por-obra
+    const volt = document.getElementById('pendentes-obra-voltar');
+    if (volt) volt.onclick = function(){ mostrarView('painel'); };
+    // Drill-down de recorrentes
+    const btnRec = document.getElementById('oc-btn-recorrentes');
+    if (btnRec) btnRec.onclick = function(){ garantirOcorrenciasCarregadas().then(abrirRecorrentesDrilldown); };
+    const recFechar = document.getElementById('oc-recorrentes-fechar');
+    if (recFechar) recFechar.onclick = function(){ document.getElementById('oc-recorrentes-overlay').classList.remove('aberto'); };
+    const recOverlay = document.getElementById('oc-recorrentes-overlay');
+    if (recOverlay) recOverlay.onclick = function(e){ if (e.target === this) this.classList.remove('aberto'); };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+})();
 </script>
 </body>
 </html>
