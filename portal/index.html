@@ -541,12 +541,12 @@
      menu lateral sai, porque os itens dele são da seção de Checklist — quem
      navega pelas telas da Controladoria é o menu que vem dentro dela. ---- */
   .shell.controladoria-cheia #view-controladoria.ativo{padding:10px 14px}
-  /* CADASTRAR, Gerenciar Acessos e Login Tablet não têm marcação de seção no
-     HTML, então a troca de seção nunca os escondia e eles vazavam para dentro
-     da Controladoria. Escondidos por CSS: ao sair da aba, a regra deixa de
-     valer e cada um volta ao que a permissão do usuário já tinha definido. */
-  .shell.controladoria-cheia .sidebar-item.acao,
-  .shell.controladoria-cheia #submenu-cadastrar{display:none!important}
+  /* A pedido do Lucas: o menu CADASTRAR (Local / Equipamento / Implemento),
+     "Gerenciar Acessos" e "Login Tablet (Operadores)" continuam VISÍVEIS também
+     dentro da Controladoria — na mesma coluna da esquerda, do mesmo jeito que
+     aparecem no Checklist. Cada um segue a permissão de sempre (só administrador
+     enxerga) e abre como modal por cima do quadro da Controladoria. Por isso a
+     antiga regra que os escondia em ".controladoria-cheia" foi removida. */
   /* Sem "flex" aqui de propósito: num contêiner em coluna o flex-basis passa
      por cima da altura, e a moldura encolhia até o mínimo, cortando a tela. */
   .shell.controladoria-cheia #view-controladoria .ctrl-iframe-wrap{height:calc(100vh - 184px)}
