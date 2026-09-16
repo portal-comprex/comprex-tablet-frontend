@@ -923,6 +923,10 @@
           <h1 class="cadastro-hero-title">Base de dados operacional</h1>
           <div class="cadastro-hero-sub">Mantenha equipamentos, ordens de trabalho e operadores organizados em um só lugar. Estes cadastros alimentam automaticamente os lançamentos de apropriação, o consolidado, os indicadores e os relatórios do painel.</div>
         </div>
+        <div id="importPlanilhaWrap" style="display:none;margin-bottom:18px;border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:10px;padding:14px 16px;background:#fff;">
+          <button type="button" class="btn btn-primary" id="importPlanilhaBtn">📥 Importar planilha (Ordens e Clientes)</button>
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:6px;">Carga inicial das planilhas enviadas — só adiciona o que ainda não existe, não sobrescreve nada.</div>
+        </div>
         <div class="cadastro-cards-grid">
           <div class="cadastro-card" data-hub-target="clientes">
             <div class="cadastro-card-top">
@@ -5700,6 +5704,114 @@
       var el = document.getElementById(id);
       if(el) el.textContent = map[id];
     });
+    // Botão de importação da planilha: só administrador vê, e some sozinho
+    // quando tudo o que estava na planilha já foi importado.
+    var impWrap = document.getElementById('importPlanilhaWrap');
+    if(impWrap){
+      var pendente = 0;
+      if(typeof importPlanilhaAnalisar === 'function' && state.perfil==='admin'){
+        try{ var a = importPlanilhaAnalisar(); pendente = a.cliNovos.length + a.ordNovas.length; }catch(e){ pendente = 0; }
+      }
+      impWrap.style.display = pendente > 0 ? 'block' : 'none';
+      var impBtn = document.getElementById('importPlanilhaBtn');
+      if(impBtn) impBtn.onclick = importPlanilhaAbrir;
+    }
+  }
+
+
+  /* =====================================================================
+     IMPORTAÇÃO DA PLANILHA (carga inicial de Ordens e Clientes)
+     Dados enviados pelo Lucas nas planilhas "Cadastro de ordens" (aba OBRA)
+     e "Cadastro de clientes". Clientes que apareciam com mais de um número
+     foram desmembrados por unidade, conforme combinado.
+     A importação é ADITIVA e idempotente: só cria o que ainda não existe
+     (ordem pelo Nº, cliente pelo nome), nunca sobrescreve nem apaga nada.
+     ===================================================================== */
+  var IMPORT_PLANILHA = {"ordens":[{"numero":"500000","nome":"VALE S.A. PENEIRAMENTO VIX","cliente":"VALE S.A. - PENEIRAMENTO VIX","local":"VITÓRIA/ES","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"33.592.510/0220-42","med":"verba"},{"numero":"500001","nome":"AMG ENGENHARIA LTDA","cliente":"AMG ENGENHARIA LTDA","local":"VILA VELHA/ES","segmento":"DEMOLIÇÃO","modelo":"PRODUÇÃO","cnpj":"31.783.830/0004-09","med":"pesagem"},{"numero":"500002","nome":"SIMEC SERVIÇO COM GARRA (MANIPULADOR)","cliente":"SIMEC CARIACICA","local":"CARIACICA/ES","segmento":"MOVIMENTAÇÃO","modelo":"HORA","cnpj":"29.617.631/0001-36","med":"hora"},{"numero":"500003","nome":"SIMEC MINI CARREGADEIRA","cliente":"SIMEC CARIACICA","local":"CARIACICA/ES","segmento":"OUTROS","modelo":"HORA","cnpj":"29.617.631/0001-37","med":"hora"},{"numero":"500004","nome":"AMJM JOÃO MONLEVADE/MG SUCATA","cliente":"ARCELORMITTAL JOÃO MONLEVADE","local":"JOÃO MONLEVADE/MG","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0066-12","med":"pesagem"},{"numero":"500005","nome":"AMJM JOÃO MONLEVADE/MG PENEIRAMENTO","cliente":"ARCELORMITTAL JOÃO MONLEVADE","local":"JOÃO MONLEVADE/MG","segmento":"PENEIRAMENTO","modelo":"HORA","cnpj":"17.469.701/0066-12","med":"hora"},{"numero":"500006","nome":"AMT ACIARIA DIVERSOS","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"OUTROS","modelo":"HORA","cnpj":"17.469.701/0104-82","med":"hora"},{"numero":"500007","nome":"AMT PENEIRA","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"PENEIRAMENTO","modelo":"HORA","cnpj":"17.469.701/0104-82","med":"hora"},{"numero":"500008","nome":"AMT PATIO DE SUCATA/BOLEAMENTO","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"BENEFICIAMENTO","modelo":"PRODUÇÃO","cnpj":"17.469.701/0104-82","med":"pesagem"},{"numero":"500009","nome":"AMT TESOURA DE TARUGO","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0104-82","med":"pesagem"},{"numero":"500010","nome":"AMT CORTE DE SUCATA DIVERSAS/BOBINA","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0104-82","med":"pesagem"},{"numero":"500011","nome":"AMT BF3 GUSA","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"BENEFICIAMENTO","modelo":"PRODUÇÃO","cnpj":"17.469.701/0104-82","med":"pesagem"},{"numero":"500012","nome":"AMT CARGA E TRANSPORTE","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"TRANSPORTE","modelo":"PRODUÇÃO","cnpj":"17.469.701/0104-82","med":"pesagem"},{"numero":"500013","nome":"AMT GARRA/ESCAVADEIRA/MANIPULADOR","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"MOVIMENTAÇÃO","modelo":"HORA","cnpj":"17.469.701/0104-82","med":"hora"},{"numero":"500014","nome":"AMT PÁ CARREGADEIRA","cliente":"ARCELORMITTAL TUBARÃO","local":"SERRA/ES","segmento":"MOVIMENTAÇÃO","modelo":"HORA","cnpj":"17.469.701/0104-82","med":"hora"},{"numero":"500015","nome":"AVB AÇO VERDE DO BRASIL/MA","cliente":"AÇO VERDE DO BRASIL","local":"AÇAILANDIA/MA","segmento":"BENEFICIAMENTO","modelo":"PRODUÇÃO","cnpj":"07.636.657/0002-70","med":"pesagem"},{"numero":"500016","nome":"VALE S.A. VARGEM GRANDE NOVA LIMA/MG","cliente":"VALE S.A. - VARGEM GRANDE","local":"NOVA LIMA/MG","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"33.592.510/0034-12","med":"verba"},{"numero":"500017","nome":"VALE S.A. SÃO LUIS/MA","cliente":"VALE S.A. - SÃO LUÍS","local":"SÃO LUIS/MA","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"33.592.510/0434-73","med":"verba"},{"numero":"500018","nome":"AMA ARCELORMITTAL ALAGOINHAS/BA","cliente":"ARCELORMITTAL BRASIL S.A.","local":"ALAGOINHAS/BA","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0001-77","med":"pesagem"},{"numero":"500019","nome":"AMSL ARCELORMITTAL SETE LAGOAS/MG","cliente":"ARCELORMITTAL BRASIL S.A.","local":"SETE LAGOAS/MG","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0026-25","med":"pesagem"},{"numero":"500020","nome":"AMJF JUIZ DE FORA/MG SUCATA","cliente":"ARCELORMITTAL JUIZ DE FORA","local":"JUIZ DE FORA/MG","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0034-35","med":"pesagem"},{"numero":"500021","nome":"AMJF JUIZ DE FORA/MG PRENSA","cliente":"ARCELORMITTAL JUIZ DE FORA","local":"JUIZ DE FORA/MG","segmento":"PRENSA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0034-35","med":"pesagem"},{"numero":"500022","nome":"AMP PIRACICABA/SP SUCATA","cliente":"ARCELORMITTAL PIRACICABA","local":"PIRACICABA/SP","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0049-11","med":"pesagem"},{"numero":"500023","nome":"AMP PIRACICABA/SP PENEIRAMENTO","cliente":"ARCELORMITTAL PIRACICABA","local":"PIRACICABA/SP","segmento":"PENEIRAMENTO","modelo":"HORA","cnpj":"17.469.701/0049-11","med":"hora"},{"numero":"500024","nome":"SIMEC VLI","cliente":"SIMEC VLI","local":"CARIACICA/ES","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"29.617.631/0001-36","med":"pesagem"},{"numero":"500025","nome":"AMR RESENDE/RJ SUCATA","cliente":"ARCELORMITTAL RESENDE","local":"RESENDE/RJ","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0260-52","med":"pesagem"},{"numero":"500026","nome":"AMR RESENDE/RJ PENEIRAMENTO","cliente":"ARCELORMITTAL RESENDE","local":"RESENDE/RJ","segmento":"CORTE DE SUCATA","modelo":"HORA","cnpj":"17.469.701/0260-52","med":"hora"},{"numero":"500027","nome":"VALE S.A. MASCARENHAS VIX","cliente":"VALE S.A. - MASCARENHAS","local":"VITÓRIA/ES","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"33.592.510/0220-42","med":"verba"},{"numero":"500028","nome":"VILFER GRANDE VITORIA","cliente":"VILFER GRANDE VITORIA","local":"CARIACICA/ES","segmento":"CORTE DE SUCATA","modelo":"HORA","cnpj":"02.435.383/0001-56","med":"hora"},{"numero":"500029","nome":"AMRP ARCELORMITTAL RIBEIRÃO PRETO/SP","cliente":"ARCELORMITTAL BRASIL S.A.","local":"RIBEIRÃO PRETO/SP","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0026-25","med":"pesagem"},{"numero":"500030","nome":"CONSORCIO CONSTRAL","cliente":"CONSORCIO CONSTRAL","local":"RIO DE JANEIRO/RJ","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"62.404.176/0001-66","med":"hora"},{"numero":"500031","nome":"JAMA NORDESTE ENGENHARIA","cliente":"JAMA NORDESTE ENGENHARIA INDUSTRIAL LTDA","local":"CAAPORA/PB","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"44.413.304/0001-56","med":"hora"},{"numero":"500032","nome":"CHAGAS METAIS E SERVIÇOS LTDA","cliente":"CHAGAS METAIS E SERVIÇOS LTDA","local":"CACHOEIRO DE ITAPEMIRIM/ES","segmento":"CORTE DE SUCATA","modelo":"HORA","cnpj":"21.401.257/0001-25","med":"hora"},{"numero":"500033","nome":"AMT MINI ESCAVADEIRA","cliente":"ARCELORMITTAL TUBARÃO (10004950)","local":"SERRA/ES","segmento":"OUTROS","modelo":"HORA","cnpj":"17.469.701/0104-82","med":"hora"},{"numero":"500034","nome":"AMT BRITADOR","cliente":"ARCELORMITTAL TUBARÃO (10004950)","local":"SERRA/ES","segmento":"OUTROS","modelo":"HORA","cnpj":"17.469.701/0104-82","med":"hora"},{"numero":"500035","nome":"IPE CONSTRUCAO E SERVICOS","cliente":"IPE CONSTRUCAO E SERVICOS LTDA","local":"VILA VELHA/ES","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"28.027.481/0001-48","med":"verba"},{"numero":"500036","nome":"AMS ENGENHARIA LTDA","cliente":"AMS ENGENHARIA LTDA","local":"VITÓRIA/ES","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"00.865.596/0001-92","med":"verba"},{"numero":"500037","nome":"CARBONVIX INDUSTRIAL E COMERCIO LTDAL","cliente":"CARBONVIX INDUSTRIAL E COMERCIO LTDAL","local":"SERRA/ES","segmento":"BENEFICIAMENTO","modelo":"DIÁRIA","cnpj":"29.200.092/0001-35","med":"verba"},{"numero":"500038","nome":"TECHNIP FMC CENTRO DE VITÓRIA/ES","cliente":"TECHNIP FMC CENTRO DE VITÓRIA/ES","local":"VITÓRIA/ES","segmento":"CORTE DE SUCATA","modelo":"HORA","cnpj":"68.915.891/0019-79","med":"hora"},{"numero":"500039","nome":"COFERVIL INDUSTRIA E COMÉRCIO DE FERROS","cliente":"COFERVIL INDUSTRIA E COMÉRCIO DE FERROS VITÓRIA LTDA","local":"CARIACICA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"39.815.253/0001-59","med":"hora"},{"numero":"500040","nome":"SIMEC SERVIÇO COM ELETROIMÃ","cliente":"SIMEC CARIACICA","local":"CARIACICA/ES","segmento":"OUTROS","modelo":"HORA","cnpj":"29.617.631/0001-36","med":"hora"},{"numero":"500041","nome":"ENGEFORM ENGENHARIA LTDA.","cliente":"ENGEFORM ENGENHARIA LTDA.","local":"ITABIRA/MG","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"48.246.920/0001-10","med":"hora"},{"numero":"500042","nome":"FORTES ENGENHARIA LTDA","cliente":"FORTES ENGENHARIA LTDA","local":"VITÓRIA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"30.667.132/0001-13","med":"hora"},{"numero":"500043","nome":"VITÓRIA STONE INDUSTRIA E COMERCIO S/A","cliente":"VITÓRIA STONE INDUSTRIA E COMERCIO S/A","local":"SERRA/ES","segmento":"DEMOLIÇÃO","modelo":"DIÁRIA","cnpj":"00.338.678/0001-89","med":"verba"},{"numero":"500044","nome":"CONSIGMA ENGENHARIA E CONSTRUÇÕES LTDA","cliente":"CONSIGMA ENGENHARIA E CONSTRUÇÕES LTDA","local":"ARARAS/SP","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"06.263.976/0001-33","med":"hora"},{"numero":"500045","nome":"VALE MINA DE FÁBRICA (TAC VARGEM GRANDE)","cliente":"VALE MINA DE FÁBRICA (TAC VARGEM GRANDE)","local":"VARGEM GRANDE/MG","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"33.592.510/0007-40","med":"verba"},{"numero":"500046","nome":"ECOLOGIKA AMBIENTAL TRANSPORTE E LOCACAO LTDA","cliente":"ECOLOGIKA AMBIENTAL TRANSPORTE E LOCACAO LTDA","local":"CARAPEBUS /RJ","segmento":"CORTE DE SUCATA","modelo":"HORA","cnpj":"12.483.353/0001-79","med":"hora"},{"numero":"500047","nome":"PREMONALI INDUSTRIA E COMERCIO DE ARTEFATOS","cliente":"PREMONALI INDUSTRIA E COMERCIO DE ARTEFATOS","local":"SOORETAMA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"08.923.414/0001-02","med":"hora"},{"numero":"500048","nome":"SIMEC VALE","cliente":"SIMEC VALE","local":"CARIACICA/ES","segmento":"MOVIMENTAÇÃO","modelo":"MENSAL","cnpj":"29.617.631/0001-36","med":"verba"},{"numero":"500049","nome":"CONSEFOR CONSULTORIA E TREINAMENTO LTDA","cliente":"CONSEFOR CONSULTORIA E TREINAMENTO LTDA","local":"SERRA/ES","segmento":"OUTROS","modelo":"","cnpj":"20.481.285/0001-37","med":"hora"},{"numero":"500050","nome":"BASE EMPREENDIMENTOS IMOBILIÁRIOS LTDA","cliente":"BASE EMPREENDIMENTOS IMOBILIÁRIOS LTDA","local":"SERRA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"60.999.412/0001-09","med":"hora"},{"numero":"500051","nome":"CONCRESERRA CONCRETO LTDA","cliente":"CONCRESERRA CONCRETO LTDA","local":"SERRA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"10.386.032/0001-20","med":"hora"},{"numero":"500052","nome":"VALE MINA DE GONGO SOCO","cliente":"VALE MINA DE GONGO SOCO","local":"GONGO SOCO/MG","segmento":"DEMOLIÇÃO","modelo":"MENSAL","cnpj":"33.592.510/0433-92","med":"verba"},{"numero":"500053","nome":"SIGNUS CONSTRUTORA","cliente":"SIGNUS CONSTRUTORA","local":"VITÓRIA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"28.414.415/0001-20","med":"hora"},{"numero":"500054","nome":"AMT DEMOLIÇÃO","cliente":"ARCELORMITTAL TUBARÃO (10004950)","local":"SERRA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"17.469.701/0104-82","med":"hora"},{"numero":"500055","nome":"HARSCO METALS LTDA","cliente":"HARSCO METALS LTDA","local":"SERRA/ES","segmento":"BENEFICIAMENTO","modelo":"HORA","cnpj":"32.592.073/0006-10","med":"hora"},{"numero":"500056","nome":"ARCELORMITTAL BRASIL MACAÉ","cliente":"ARCELORMITTAL BRASIL S.A.","local":"BELO HORIZONTE/MG","segmento":"CORTE DE SUCATA","modelo":"PRODUÇÃO","cnpj":"17.469.701/0001-77","med":"pesagem"},{"numero":"500057","nome":"CARAIVA PARTICIPAÇÕES LTDA (TERVAP)","cliente":"CARAIVA PARTICIPAÇÕES LTDA","local":"SERRA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"02.464.452/0001-50","med":"hora"},{"numero":"500058","nome":"DOME SERVIÇOS INTEGRADOS PORTO DO AÇU","cliente":"DOME SERVIÇOS INTEGRADOS","local":"PORTO DO AÇU/RJ","segmento":"CORTE DE SUCATA","modelo":"HORA","cnpj":"28.483.069/0001-32","med":"hora"},{"numero":"500059","nome":"SIMEC ABERTURA DE PACOTES","cliente":"SIMEC CARIACICA","local":"CARIACICA/ES","segmento":"BENEFICIAMENTO","modelo":"HORA","cnpj":"29.617.631/0001-36","med":"hora"},{"numero":"500060","nome":"PRAIA 320 EMPREENDIMENTOS (NAZCA)","cliente":"PRAIA 320 EMPREENDIMENTOS (NAZCA)","local":"VITÓRIA/ES","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"54.478.683/0001-16","med":"verba"},{"numero":"500080","nome":"UNIBRAS","cliente":"UNIBRAS","local":"SERRA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"35.950.971/0003-49","med":"hora"},{"numero":"500081","nome":"CONSERVASOLO ENG. DE PROJETOS","cliente":"CONSERVASOLO ENG. DE PROJETOS","local":"COLATINA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"21.728.225/0001-39","med":"hora"},{"numero":"500082","nome":"VLI MULTIMODAL S.A.","cliente":"VLI MULTIMODAL S.A.","local":"VITÓRIA/ES","segmento":"DEMOLIÇÃO","modelo":"PREÇO FECHADO","cnpj":"42.276.907/0001-28","med":"verba"},{"numero":"500083","nome":"INOVA TS ENGENHARIA LTDA","cliente":"INOVA TS ENGENHARIA LTDA","local":"VILA VELHA/ES","segmento":"DEMOLIÇÃO","modelo":"HORA","cnpj":"08.608.026/0001-29","med":"hora"}],"clientes":[{"nome":"AMG ENGENHARIA LTDA","numero":"10005132","cnpj":"31.783.830/0004-09"},{"nome":"AMS ENGENHARIA LTDA","numero":"10004935","cnpj":"00.865.596/0001-92"},{"nome":"ARCELORMITTAL BRASIL S.A.","numero":"10005125","cnpj":"17.469.701/0001-77"},{"nome":"ARCELORMITTAL JOÃO MONLEVADE","numero":"10006760","cnpj":"17.469.701/0066-12"},{"nome":"ARCELORMITTAL JUIZ DE FORA","numero":"10006759","cnpj":"17.469.701/0034-35"},{"nome":"ARCELORMITTAL PIRACICABA","numero":"10004976","cnpj":"17.469.701/0049-11"},{"nome":"ARCELORMITTAL RESENDE","numero":"10005004","cnpj":"17.469.701/0260-52"},{"nome":"ARCELORMITTAL TUBARÃO","numero":"10006758","cnpj":"17.469.701/0104-82"},{"nome":"ARCELORMITTAL TUBARÃO (10004950)","numero":"10004950","cnpj":"17.469.701/0104-82"},{"nome":"AÇO VERDE DO BRASIL","numero":"10006809","cnpj":"07.636.657/0002-70"},{"nome":"BASE EMPREENDIMENTOS IMOBILIÁRIOS LTDA","numero":"10007139","cnpj":"60.999.412/0001-09"},{"nome":"CARAIVA PARTICIPAÇÕES LTDA","numero":"10007427","cnpj":"02.464.452/0001-50"},{"nome":"CARBONVIX INDUSTRIAL E COMERCIO LTDAL","numero":"10006872","cnpj":"29.200.092/0001-35"},{"nome":"CHAGAS METAIS E SERVIÇOS LTDA","numero":"10006810","cnpj":"21.401.257/0001-25"},{"nome":"COFERVIL INDUSTRIA E COMÉRCIO DE FERROS VITÓRIA LTDA","numero":"10006948","cnpj":"39.815.253/0001-59"},{"nome":"CONCRESERRA CONCRETO LTDA","numero":"10004245","cnpj":"10.386.032/0001-20"},{"nome":"CONSEFOR CONSULTORIA E TREINAMENTO LTDA","numero":"10006958","cnpj":"20.481.285/0001-37"},{"nome":"CONSERVASOLO ENG. DE PROJETOS","numero":"10007574","cnpj":"21.728.225/0001-39"},{"nome":"CONSIGMA ENGENHARIA E CONSTRUÇÕES LTDA","numero":"10007054","cnpj":"06.263.976/0001-33"},{"nome":"CONSORCIO CONSTRAL","numero":"10006811","cnpj":"62.404.176/0001-66"},{"nome":"DOME SERVIÇOS INTEGRADOS","numero":"10007428","cnpj":"28.483.069/0001-32"},{"nome":"ECOLOGIKA AMBIENTAL TRANSPORTE E LOCACAO LTDA","numero":"10006761","cnpj":"12.483.353/0001-79"},{"nome":"ENGEFORM ENGENHARIA LTDA.","numero":"10006968","cnpj":"48.246.920/0001-10"},{"nome":"FORTES ENGENHARIA LTDA","numero":"10004922","cnpj":"30.667.132/0001-13"},{"nome":"HARSCO METALS LTDA","numero":"10007264","cnpj":"32.592.073/0006-10"},{"nome":"INOVA TS ENGENHARIA LTDA","numero":"10005033","cnpj":"08.608.026/0001-29"},{"nome":"IPE CONSTRUCAO E SERVICOS LTDA","numero":"10005009","cnpj":"28.027.481/0001-48"},{"nome":"JAMA NORDESTE ENGENHARIA INDUSTRIAL LTDA","numero":"10005133","cnpj":"44.413.304/0001-56"},{"nome":"PRAIA 320 EMPREENDIMENTOS (NAZCA)","numero":"10007459","cnpj":"54.478.683/0001-16"},{"nome":"PREMONALI INDUSTRIA E COMERCIO DE ARTEFATOS","numero":"10007101","cnpj":"08.923.414/0001-02"},{"nome":"SIGNUS CONSTRUTORA","numero":"10007185","cnpj":"28.414.415/0001-20"},{"nome":"SIMEC CARIACICA","numero":"10004960","cnpj":"29.617.631/0001-36"},{"nome":"SIMEC VALE","numero":"10004960","cnpj":"29.617.631/0001-36"},{"nome":"SIMEC VLI","numero":"10004960","cnpj":"29.617.631/0001-36"},{"nome":"TECHNIP FMC CENTRO DE VITÓRIA/ES","numero":"10006888","cnpj":"68.915.891/0019-79"},{"nome":"UNIBRAS","numero":"10004949","cnpj":"35.950.971/0003-49"},{"nome":"VALE MINA DE FÁBRICA (TAC VARGEM GRANDE)","numero":"10007440","cnpj":"33.592.510/0007-40"},{"nome":"VALE MINA DE GONGO SOCO","numero":"10007263","cnpj":"33.592.510/0433-92"},{"nome":"VALE S.A. - MASCARENHAS","numero":"10006757","cnpj":"33.592.510/0220-42"},{"nome":"VALE S.A. - PENEIRAMENTO VIX","numero":"10006921","cnpj":"33.592.510/0220-42"},{"nome":"VALE S.A. - SÃO LUÍS","numero":"10005079","cnpj":"33.592.510/0434-73"},{"nome":"VALE S.A. - VARGEM GRANDE","numero":"10005113","cnpj":"33.592.510/0034-12"},{"nome":"VILFER GRANDE VITORIA","numero":"10004983","cnpj":"02.435.383/0001-56"},{"nome":"VITÓRIA STONE INDUSTRIA E COMERCIO S/A","numero":"10004937","cnpj":"00.338.678/0001-89"},{"nome":"VLI MULTIMODAL S.A.","numero":"10005057","cnpj":"42.276.907/0001-28"}]};
+  function importPlanilhaAnalisar(){
+    var existeCli = {}; CLIENTES.forEach(function(c){ existeCli[String(c).trim().toLowerCase()] = c; });
+    var existeOrdNum = {}; state.ordens.forEach(function(o){ var n=String(o.numero||'').trim(); if(n) existeOrdNum[n]=o; });
+    var cliNovos=[], cliJa=[], ordNovas=[], ordJa=[];
+    IMPORT_PLANILHA.clientes.forEach(function(c){
+      var nome = normalizarEspacos(c.nome);
+      if(existeCli[nome.toLowerCase()]) cliJa.push(nome); else cliNovos.push(c);
+    });
+    IMPORT_PLANILHA.ordens.forEach(function(o){
+      var num = String(o.numero||'').trim();
+      if(num && existeOrdNum[num]) ordJa.push(o); else ordNovas.push(o);
+    });
+    return { cliNovos:cliNovos, cliJa:cliJa, ordNovas:ordNovas, ordJa:ordJa };
+  }
+  function importPlanilhaAbrir(){
+    if(state.perfil!=='admin'){ toast('Só administrador pode importar a planilha.'); return; }
+    var a = importPlanilhaAnalisar();
+    var listaOrdJa = a.ordJa.length
+      ? '<div style="margin-top:10px;font-size:12px;color:var(--text-muted);max-height:120px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' +
+          '<b>Já cadastradas (serão mantidas como estão):</b><br>' +
+          a.ordJa.map(function(o){ return 'Nº '+esc(o.numero)+' — '+esc(o.nome); }).join('<br>') + '</div>'
+      : '';
+    openModal(
+      '<h3>Importar planilha — Ordens e Clientes</h3>' +
+      '<p style="font-size:13px;color:var(--text-muted);">Vou adicionar só o que ainda não existe. Nada é sobrescrito ou removido.</p>' +
+      '<div class="consol-box" style="margin-bottom:10px;">' +
+        '<div class="consol-line"><span>Clientes novos</span><b>'+a.cliNovos.length+'</b></div>' +
+        '<div class="consol-line"><span>Clientes que já existem (ignorados)</span><b>'+a.cliJa.length+'</b></div>' +
+        '<div class="consol-line"><span>Ordens novas</span><b>'+a.ordNovas.length+'</b></div>' +
+        '<div class="consol-line"><span>Ordens que já existem (ignoradas)</span><b>'+a.ordJa.length+'</b></div>' +
+      '</div>' + listaOrdJa +
+      '<div id="importPlanilhaErro"></div>' +
+      '<div class="modal-actions"><button class="btn btn-outline" id="impCancel">Cancelar</button>' +
+      '<button class="btn btn-primary" id="impOk"'+((a.cliNovos.length+a.ordNovas.length)?'':' disabled')+'>Importar</button></div>'
+    );
+    document.getElementById('impCancel').onclick = closeModal;
+    var btn = document.getElementById('impOk');
+    if(btn) btn.onclick = async function(){
+      btn.disabled = true; btn.textContent = 'Importando…';
+      try{
+        // 1) Clientes (primeiro, porque as ordens apontam pra eles pelo nome)
+        a.cliNovos.forEach(function(c){
+          var nome = normalizarEspacos(c.nome);
+          if(!CLIENTES.some(function(x){ return String(x).toLowerCase()===nome.toLowerCase(); })) CLIENTES.push(nome);
+          if(c.numero) CLIENTE_NUMEROS[nome] = String(c.numero).trim();
+          if(c.cnpj) CLIENTE_DETALHES[nome] = Object.assign({}, CLIENTE_DETALHES[nome]||{}, {cnpj:String(c.cnpj).trim()});
+        });
+        CLIENTES.sort(function(x,y){ return String(x).localeCompare(String(y),'pt-BR'); });
+        // 2) Ordens
+        a.ordNovas.forEach(function(o){
+          state.ordens.push({
+            id: uid(),
+            nome: normalizarEspacos(o.nome),
+            numero: String(o.numero||'').trim(),
+            cliente: normalizarEspacos(o.cliente),
+            local: normalizarEspacos(o.local),
+            vendedor: normalizarTituloCase(o.segmento||''),
+            modeloContrato: normalizarTituloCase(o.modelo||''),
+            cnpj: normalizarEspacos(o.cnpj),
+            vigenciaContratoInicio: '',
+            vigenciaContratoFim: '',
+            medicaoPesagem: o.med==='pesagem',
+            medicaoHora: o.med==='hora',
+            medicaoVerba: o.med==='verba'
+          });
+        });
+        var ok = true;
+        if(a.cliNovos.length){
+          ok = await saveList('clientes_v2', CLIENTES) && ok;
+          await saveList('cliente_numeros_v3', CLIENTE_NUMEROS);
+          await saveList('cliente_detalhes_v1', CLIENTE_DETALHES);
+        }
+        if(a.ordNovas.length){ ok = await saveList('ordens_v9', state.ordens) && ok; }
+        closeModal();
+        toast(ok
+          ? ('Importação concluída: '+a.cliNovos.length+' cliente(s) e '+a.ordNovas.length+' ordem(ns) adicionadas.')
+          : 'Importado localmente — houve um problema ao sincronizar com o servidor.', 8000);
+        renderAll();
+      }catch(e){
+        var err = document.getElementById('importPlanilhaErro');
+        if(err) err.innerHTML = '<div class="form-error">Erro ao importar: '+esc(e.message)+'</div>';
+        btn.disabled = false; btn.textContent = 'Importar';
+      }
+    };
   }
 
   function showCadastroHub(){
