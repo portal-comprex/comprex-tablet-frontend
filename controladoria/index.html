@@ -4620,9 +4620,16 @@
         var numeroClienteAchado = numeroDoClientePorNome(achada.cliente);
         document.getElementById('apNCliente').value = numeroClienteAchado;
         if(infoEl){
-          infoEl.innerHTML = (!numeroClienteAchado && achada.cliente)
-            ? '<div class="muted-tag" style="margin-top:4px;">Cliente da ordem: '+esc(achada.cliente)+' — sem Nº de cliente cadastrado ainda (Cadastrar → Clientes).</div>'
-            : '';
+          if(!numeroClienteAchado && achada.cliente){
+            // Diz quantos números de cliente este aparelho realmente carregou. Se vier 0, o
+            // problema não é o cadastro: os números não chegaram ao tablet.
+            var qtdNumerosCarregados = Object.keys(CLIENTE_NUMEROS||{}).length;
+            infoEl.innerHTML = '<div class="muted-tag" style="margin-top:4px;">Cliente da ordem: '+esc(achada.cliente)+' — sem Nº de cliente. ' +
+              (qtdNumerosCarregados===0
+                ? 'Este aparelho não recebeu <b>nenhum</b> número de cliente do servidor — avise a TI.'
+                : ('Cadastre o número em Cadastrar → Clientes. (Este aparelho carregou '+qtdNumerosCarregados+' número(s) de cliente.)')) +
+              '</div>';
+          } else infoEl.innerHTML = '';
         }
       } else if(infoEl){
         infoEl.innerHTML = numeroExtraido
@@ -10381,11 +10388,25 @@
     // cliente não vierem nesse pacote — ou vierem vazios — o "Nº Cliente" da Parte Diária nunca
     // preenche, mesmo com os números cadastrados direitinho no Escritório. Então, nesse caso,
     // busca só essa peça pelo caminho antigo (uma chamada a mais, e só quando falta).
-    if(modoCampo && (cliNum===null || (cliNum && typeof cliNum==='object' && Object.keys(cliNum).length===0))){
+    if(modoCampo){
       try{
         var cliNumAvulso = await loadList('cliente_numeros_v3');
-        if(cliNumAvulso && typeof cliNumAvulso==='object' && Object.keys(cliNumAvulso).length) cliNum = cliNumAvulso;
+        var qtdLote = (cliNum && typeof cliNum==='object') ? Object.keys(cliNum).length : 0;
+        var qtdAvulso = (cliNumAvulso && typeof cliNumAvulso==='object') ? Object.keys(cliNumAvulso).length : 0;
+        // Fica com a fonte que trouxe mais números — se o pacote veio incompleto (ou sem essa
+        // parte), a busca avulsa resolve; se a avulsa falhar, continua valendo o pacote.
+        if(qtdAvulso > qtdLote) cliNum = cliNumAvulso;
       }catch(e){ /* segue com o que tiver */ }
+      // Terceira tentativa: se nem o pacote nem a rota avulsa trouxeram número nenhum, pede o
+      // pacote completo (sem o recorte de campo). É uma requisição a mais e só acontece no caso
+      // em que o "Nº Cliente" ficaria vazio de qualquer jeito.
+      if(!cliNum || Object.keys(cliNum).length===0){
+        try{
+          var pacoteCheio = await carregarListasEmLote(['cliente_numeros_v3'], false);
+          var cliNumCheio = pacoteCheio && pacoteCheio['cliente_numeros_v3'];
+          if(cliNumCheio && typeof cliNumCheio==='object' && Object.keys(cliNumCheio).length) cliNum = cliNumCheio;
+        }catch(e){ /* segue com o que tiver */ }
+      }
     }
     if(cliNum===null){ cliNum = Object.assign({}, SEED_CLIENTE_NUMEROS); erroCarregamento = true; listasComFalha.push('Números de cliente'); }
     if(!modoCampo && matPesagem===null){ matPesagem = SEED_MATERIAIS_PESAGEM.slice(); await saveList('materiais_pesagem_v1', matPesagem); }
