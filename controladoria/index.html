@@ -1775,6 +1775,25 @@
   var SEED_CLIENTE_NUMEROS = {};
   var CLIENTE_NUMEROS = Object.assign({}, SEED_CLIENTE_NUMEROS);
   function clienteNumero(nome){ return CLIENTE_NUMEROS[nome] || null; }
+  /* Nº do cliente tolerante a diferença de escrita. O nome do cliente aparece em dois cadastros
+     diferentes (dentro da Ordem e na lista de Clientes) e basta um acento, um espaço duplo ou
+     uma letra maiúscula fora do lugar pra busca exata não achar nada — foi o que fazia o
+     "Nº Cliente" ficar vazio no tablet mesmo com o número cadastrado. Aqui compara ignorando
+     acento, caixa e espaços sobrando. */
+  function numeroDoClientePorNome(nome){
+    if(!nome) return '';
+    var direto = CLIENTE_NUMEROS[nome];
+    if(direto) return String(direto).trim();
+    var alvo = String(nome).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+    if(!alvo) return '';
+    var achado = '';
+    Object.keys(CLIENTE_NUMEROS).forEach(function(chave){
+      if(achado) return;
+      var k = String(chave).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+      if(k === alvo) achado = String(CLIENTE_NUMEROS[chave]||'').trim();
+    });
+    return achado;
+  }
   var CLIENTE_DETALHES = {}; // { [nomeCliente]: {cnpj, contato} } — CNPJ e contato de cada cliente.
   var SEED_MATERIAIS_PESAGEM = [];
   var MATERIAIS_PESAGEM = SEED_MATERIAIS_PESAGEM.slice();
@@ -2941,7 +2960,7 @@
     function aplicarOrdem(ord){
       document.getElementById(idNumero).value = ord.numero || '';
       document.getElementById(idNome).value = labelFn(ord);
-      if(idNCliente) document.getElementById(idNCliente).value = CLIENTE_NUMEROS[ord.cliente] || '';
+      if(idNCliente) document.getElementById(idNCliente).value = numeroDoClientePorNome(ord.cliente);
       if(idCliente) document.getElementById(idCliente).value = ord.cliente || '';
     }
     wireComboBox(idNumero, idNumero+'List', function(){ return ordensFiltradas().filter(function(o){ return o.numero; }).map(function(o){ return o.numero; }); }, ordensFiltradas().map(function(o){ return o.cliente; }), function(){
@@ -4444,7 +4463,7 @@
         if(!modoOperadorSimplificado) document.getElementById('apOrdem').value = ordemLabelAtual(achada);
         // Nº do Cliente: vem do Cliente cadastrado NA ORDEM (Cadastrar → Ordens de Trabalho),
         // cruzado com o número dele em Cadastrar → Clientes. É esse o vínculo.
-        var numeroClienteAchado = CLIENTE_NUMEROS[achada.cliente] || '';
+        var numeroClienteAchado = numeroDoClientePorNome(achada.cliente);
         document.getElementById('apNCliente').value = numeroClienteAchado;
         if(infoEl){
           infoEl.innerHTML = (!numeroClienteAchado && achada.cliente)
@@ -4497,7 +4516,7 @@
         var numAtual = elNum.value.trim();
         if(numAtual && elNCli && !elNCli.value.trim()){
           var ord = state.ordens.filter(function(o){ return String(o.numero||'').trim()===numAtual; })[0];
-          if(ord) elNCli.value = CLIENTE_NUMEROS[ord.cliente] || '';
+          if(ord) elNCli.value = numeroDoClientePorNome(ord.cliente);
         }
         atualizarServicoTarifa(); atualizarServicoHora();
       }
@@ -10180,6 +10199,16 @@
     }
     if(cli===null){ cli = SEED_CLIENTES.slice(); erroCarregamento = true; listasComFalha.push('Clientes'); }
     if(!modoCampo && cliDetalhes===null){ cliDetalhes = {}; await saveList('cliente_detalhes_v1', cliDetalhes); }
+    // No tablet os dados vêm todos num pacote só (/api/ctrl/dados-iniciais). Se os Números de
+    // cliente não vierem nesse pacote — ou vierem vazios — o "Nº Cliente" da Parte Diária nunca
+    // preenche, mesmo com os números cadastrados direitinho no Escritório. Então, nesse caso,
+    // busca só essa peça pelo caminho antigo (uma chamada a mais, e só quando falta).
+    if(modoCampo && (cliNum===null || (cliNum && typeof cliNum==='object' && Object.keys(cliNum).length===0))){
+      try{
+        var cliNumAvulso = await loadList('cliente_numeros_v3');
+        if(cliNumAvulso && typeof cliNumAvulso==='object' && Object.keys(cliNumAvulso).length) cliNum = cliNumAvulso;
+      }catch(e){ /* segue com o que tiver */ }
+    }
     if(cliNum===null){ cliNum = Object.assign({}, SEED_CLIENTE_NUMEROS); erroCarregamento = true; listasComFalha.push('Números de cliente'); }
     if(!modoCampo && matPesagem===null){ matPesagem = SEED_MATERIAIS_PESAGEM.slice(); await saveList('materiais_pesagem_v1', matPesagem); }
     if(!modoCampo && servHora===null){ servHora = SEED_SERVICOS_HORA.slice(); await saveList('servicos_hora_v1', servHora); }
