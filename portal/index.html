@@ -900,6 +900,10 @@
   .btn-salvar-cfg:hover{background:#1e3d5c}
   /* ---- Ajustes específicos da versão Microsoft ---- */
   .sidebar-item.bloqueado{opacity:.4;cursor:not-allowed}
+  /* Separador dentro do submenu CADASTRAR: divide os cadastros do Checklist
+     (Local/Equipamento/Implemento) dos cadastros da Controladoria. */
+  .submenu-divisor{padding:10px 12px 4px 32px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+    color:#7fa3a8;font-weight:700;border-top:1px solid rgba(255,255,255,.08);margin-top:6px}
   .aviso-coluna{background:#fbe9e7;border:1px solid #f0c4bd;border-radius:9px;
     padding:12px 16px;font-size:12px;color:var(--ru);margin-bottom:16px}
   .aviso-coluna b{display:block;margin-bottom:4px}
@@ -1477,7 +1481,6 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="historico"><i>🕒</i> Histórico de Lançamentos</div>
       <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="producao"><i>📦</i> Produção</div>
       <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="dashboard"><i>📊</i> Dashboard</div>
-      <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="cadastro"><i>🗂️</i> Cadastros</div>
       <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="consolidado"><i>📈</i> Consolidado</div>
       <div class="sidebar-item" data-view="controladoria" data-secao="controladoria" data-ctrl="medicao"><i>📐</i> Medição</div>
       <div class="sidebar-item acao" id="btn-toggle-cadastrar"><i>🛠️</i> CADASTRAR <span id="seta-cadastrar" style="margin-left:auto">▾</span></div>
@@ -1485,6 +1488,16 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <div class="sidebar-item acao" id="btn-abrir-cadastro-local" style="padding-left:32px"><i>📍</i> Local</div>
         <div class="sidebar-item acao" id="btn-abrir-cadastro-equip" style="padding-left:32px"><i>🚜</i> Equipamento</div>
         <div class="sidebar-item acao" id="btn-abrir-cadastro-implemento" style="padding-left:32px"><i>🔧</i> Implemento</div>
+        <div class="submenu-divisor">Controladoria</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="clientes" style="padding-left:32px"><i>🏢</i> Clientes</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="ordens" style="padding-left:32px"><i>📄</i> Ordens de Trabalho</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="equip" style="padding-left:32px"><i>🚚</i> Equipamentos (frota)</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="operadores" style="padding-left:32px"><i>👷</i> Operadores</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="paradas" style="padding-left:32px"><i>⛔</i> Paradas</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="escalas" style="padding-left:32px"><i>🕐</i> Escalas</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="tarifas" style="padding-left:32px"><i>💲</i> Tarifas</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="sugestoes" style="padding-left:32px"><i>💡</i> Sugestões</div>
+        <div class="sidebar-item acao" data-ctrl-cadastro="metas" style="padding-left:32px"><i>📊</i> Metas</div>
       </div>
       <div class="sidebar-item acao" id="btn-abrir-acessos"><i>🔐</i> Gerenciar Acessos</div>
       <div class="sidebar-item acao" id="btn-abrir-tablet-login"><i>📱</i> Login Tablet (Operadores)</div>
@@ -7090,6 +7103,16 @@ function marcarItemControladoria(chave){
   document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(el){
     el.classList.toggle('ativo', el.dataset.ctrl === chave);
   });
+  // Ao voltar para uma tela da Controladoria, nenhum cadastro fica mais aceso.
+  document.querySelectorAll('.sidebar-item[data-ctrl-cadastro]').forEach(function(el){
+    el.classList.remove('ativo');
+  });
+}
+function marcarItemCadastro(sub){
+  document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(el){ el.classList.remove('ativo'); });
+  document.querySelectorAll('.sidebar-item[data-ctrl-cadastro]').forEach(function(el){
+    el.classList.toggle('ativo', el.dataset.ctrlCadastro === sub);
+  });
 }
 function enviarTelaControladoria(chave){
   const quadro = document.getElementById('ctrl-iframe');
@@ -7126,6 +7149,29 @@ document.querySelectorAll('.sidebar-item[data-ctrl]').forEach(function(item){
     enviarTelaControladoria(telaControladoriaAtual);
   };
 });
+/* ---- Cadastros da Controladoria pelo menu CADASTRAR do Portal ----------
+   A "Central de Cadastros" (hub de cards) saiu de dentro da Controladoria;
+   cada cadastro dela agora é um item do submenu CADASTRAR, aqui do Portal.
+   Clicar leva pra aba Controladoria e pede a tela certa por mensagem. Se o
+   quadro ainda não tiver carregado, o pedido fica pendente e é enviado
+   assim que ele avisa "ctrl-pronto".
+   --------------------------------------------------------------------- */
+let cadastroControladoriaPendente = null;
+function enviarCadastroControladoria(sub){
+  const quadro = document.getElementById('ctrl-iframe');
+  if (!quadro || !quadro.contentWindow) return;
+  quadro.contentWindow.postMessage({ tipo: 'ctrl-cadastro', sub: sub }, window.location.origin);
+}
+document.querySelectorAll('.sidebar-item[data-ctrl-cadastro]').forEach(function(item){
+  item.onclick = function(){
+    const sub = item.dataset.ctrlCadastro;
+    cadastroControladoriaPendente = sub;
+    mostrarView('controladoria');
+    marcarItemCadastro(sub);
+    enviarTokenControladoria();
+    enviarCadastroControladoria(sub); // se o quadro já estiver de pé, abre na hora
+  };
+});
 // O quadro avisa quando terminou de carregar (ou quando precisa renovar o
 // token); só então adianta mandar a tela/token.
 window.addEventListener('message', function(evento){
@@ -7135,6 +7181,14 @@ window.addEventListener('message', function(evento){
   if (evento.data.tipo !== 'ctrl-pronto') return;
   marcarItemControladoria(telaControladoriaAtual);
   enviarTelaControladoria(telaControladoriaAtual);
+  // Pedido de cadastro feito antes do quadro carregar: manda agora (depois da
+  // tela padrão, pra ele ficar por cima).
+  if (cadastroControladoriaPendente) {
+    const subPendente = cadastroControladoriaPendente;
+    cadastroControladoriaPendente = null;
+    enviarCadastroControladoria(subPendente);
+    marcarItemCadastro(subPendente); // a linha acima acendeu a tela padrão; corrige
+  }
 });
 // O ID token do MSAL dura pouco (~1h) — renova sozinho de tempos em tempos
 // pra quem deixar a aba da Controladoria aberta o dia inteiro não cair.
