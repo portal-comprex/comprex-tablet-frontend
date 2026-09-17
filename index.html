@@ -1180,9 +1180,18 @@ document.querySelectorAll('.abas button').forEach(function(btn){
     document.getElementById('aba-checklist').style.display = btn.dataset.aba === 'checklist' ? 'block' : 'none';
     document.getElementById('aba-partediaria').style.display = btn.dataset.aba === 'partediaria' ? 'block' : 'none';
     document.getElementById('aba-apropriacao').style.display = btn.dataset.aba === 'apropriacao' ? '' : 'none';
-    if (btn.dataset.aba === 'apropriacao') carregarApropriacao();
+    if (btn.dataset.aba === 'apropriacao') { carregarApropriacao(); pedirAbaLancar(); }
   };
 });
+/* Sempre que o operador entra na Parte Diária, pede pro sistema de lançamento abrir na aba
+   "Lançar". Sem isso, quem tivesse saído em "Meus lançamentos" voltava direto no histórico. */
+function pedirAbaLancar(){
+  const iframe = document.getElementById('apr-iframe');
+  if (!iframe || !iframe.contentWindow) return;
+  if (iframe.getAttribute('src') === 'about:blank') return; // ainda vai carregar; já abre em Lançar
+  try { iframe.contentWindow.postMessage({ tipo: 'sispoc-ir-lancar' }, window.location.origin); }
+  catch (e) { /* origem diferente — ignora */ }
+}
 const RECADOS_APROPRIACAO = {
   'sem-rede':
     '<b>Sem conexão com o sistema da parte diária</b>' +
@@ -1226,9 +1235,11 @@ async function carregarApropriacao(){
     }, 25000);
   }
 }
-document.getElementById('apr-voltar-btn').onclick = function(){
-  document.querySelector('.abas button[data-aba="checklist"]').click();
-};
+function abrirAbaChecklist(){
+  const btnChecklist = document.querySelector('.abas button[data-aba="checklist"]');
+  if (btnChecklist) btnChecklist.click();
+}
+document.getElementById('apr-voltar-btn').onclick = abrirAbaChecklist;
 
 /* =====================================================================
    INICIALIZAÇÃO
@@ -1245,6 +1256,9 @@ async function iniciarApp(){
   preencherSelects();
   renderizarItensChecklist();
   pdInicializarTab();
+  // Ao entrar, a primeira tela é sempre o Checklist — a Parte Diária só abre quando o operador
+  // toca na aba dela (assim o lançamento não carrega sozinho no login).
+  abrirAbaChecklist();
   atualizarBadgePendencias();
   processarFila(false);
   iniciarPing();
