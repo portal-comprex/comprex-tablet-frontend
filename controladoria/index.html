@@ -365,10 +365,24 @@
   .tl-hist-horas{font-size:16px;font-weight:800;color:var(--orange-deep);white-space:nowrap;}
   .tl-hist-linha{font-size:13.5px;color:var(--text-muted);line-height:1.5;}
   .tl-hist-linha b{color:var(--navy);font-weight:700;}
-  .tl-abas{display:flex;gap:8px;margin-bottom:14px;}
-  .tl-aba{flex:1;min-height:46px;border-radius:10px;border:1px solid var(--border);background:#fff;
-    color:var(--text-muted);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;}
+  /* Abas compactas: são um atalho, não o assunto da tela — num tablet de 9" cada linha conta. */
+  .tl-abas{display:flex;gap:6px;margin-bottom:8px;}
+  .tl-aba{flex:0 0 auto;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;
+    color:var(--text-muted);font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;}
   .tl-aba.ativa{background:var(--navy);color:#fff;border-color:var(--navy);}
+  /* Avisos da Identificação numa linha só, pra não empurrar o resto da tela pra baixo. */
+  .dica-1linha{font-size:10.5px;line-height:1.35;margin-top:3px;color:var(--text-muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* Identificação do tablet: Nº Ordem, Descrição, Nº Cliente e Escala na mesma faixa — a Escala
+     fica ao lado dos campos que já vêm preenchidos, pra lembrar de escolher. */
+  .field-row-ordem-tl{display:grid;grid-template-columns:96px minmax(0,1fr) 96px 150px;gap:10px;}
+  @media (max-width:700px){.field-row-ordem-tl{grid-template-columns:96px minmax(0,1fr);}}
+  .form-section .field-row-ordem-tl{margin-bottom:14px;}
+  .form-section .field-row-ordem-tl .field{margin-bottom:0;}
+  /* Campo de Data sem a setinha/ícone do seletor: no tablet a data é sempre hoje. */
+  .sem-seta-data input[type="date"]{-webkit-appearance:none;appearance:none;background-image:none;}
+  .sem-seta-data input[type="date"]::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none;}
+  .sem-seta-data input[type="date"]::-webkit-inner-spin-button{display:none;}
   .btn-danger-ghost:hover{background:#FBEDED;}
   .btn-sm{padding:5px 9px;font-size:12px;}
 
@@ -2055,6 +2069,9 @@
   // "clientes_v2" guarda uma lista de NOMES (texto puro), não objetos com id
   // — o backend genérico espera {id,...}, então embrulha/desembrulha aqui.
   function ehListaDeNomes(chaveInterna){ return chaveInterna === 'clientes_v2'; }
+  // Última leitura crua da lista de clientes (com numero/cnpj/contato, quando o servidor guarda
+  // esses campos junto). Serve de rede de segurança quando as "configurações" voltam vazias.
+  var CLIENTES_ITENS_BRUTOS = [];
 
   // Fotografia da última leitura conhecida de cada lista, por chave interna —
   // é o que permite ao saveList saber se um item ausente no array local foi
@@ -2075,7 +2092,10 @@
       var resp = await ctrlFetch('/api/ctrl/' + nomeLogico, { headers: ctrlCabecalhos() });
       var itens = resp.itens || [];
       CTRL_BASELINE[key] = JSON.parse(JSON.stringify(itens));
-      if(ehListaDeNomes(key)) return itens.map(function(it){ return it.nome; });
+      if(ehListaDeNomes(key)){
+        CLIENTES_ITENS_BRUTOS = itens.slice();
+        return itens.map(function(it){ return it.nome; });
+      }
       return itens;
     }catch(e){
       console.error('Erro ao carregar', key, e);
@@ -2106,6 +2126,7 @@
         var itens = listas[nomeLogico];
         if(itens===undefined || itens===null){ porChave[key] = null; return; }
         CTRL_BASELINE[key] = JSON.parse(JSON.stringify(itens));
+        if(ehListaDeNomes(key)) CLIENTES_ITENS_BRUTOS = itens.slice();
         porChave[key] = ehListaDeNomes(key) ? itens.map(function(it){ return it.nome; }) : itens;
       });
     }catch(e){
@@ -2115,16 +2136,47 @@
     return porChave;
   }
 
-  async function saveList(key, arr){
+  // Motivo da última falha ao gravar uma "configuração" (Nº de cliente, CNPJ...). Serve pra
+  // mostrar na tela o que o servidor respondeu, em vez de um "salvo" que não salvou.
+  var ULTIMO_ERRO_CONFIG = '';
+  async function saveList(key, arr, semExtras){
     try{
       if(CTRL_CONFIG_KEYS[key]){
         await ctrlFetch('/api/ctrl-config/' + CTRL_CONFIG_KEYS[key], {
           method: 'PUT', headers: ctrlCabecalhos(), body: JSON.stringify({ valor: arr })
         });
+        // CONFERE se o servidor realmente guardou. Antes a gente confiava no "200 OK" e
+        // devolvia sucesso — se o valor não era gravado de verdade, a tela mostrava o dado
+        // salvo e ele sumia no próximo carregamento, sem ninguém ser avisado.
+        try{
+          var confere = await ctrlFetch('/api/ctrl-config/' + CTRL_CONFIG_KEYS[key], { headers: ctrlCabecalhos() });
+          var guardado = confere ? confere.valor : null;
+          var qtdEsperada = (arr && typeof arr==='object') ? Object.keys(arr).length : 0;
+          var qtdGuardada = (guardado && typeof guardado==='object') ? Object.keys(guardado).length : 0;
+          if(qtdEsperada > 0 && qtdGuardada < qtdEsperada){
+            ULTIMO_ERRO_CONFIG = 'O servidor aceitou o envio, mas devolveu ' + qtdGuardada +
+              ' de ' + qtdEsperada + ' registro(s) em "' + CTRL_CONFIG_KEYS[key] + '".';
+            return false;
+          }
+        }catch(erroConfere){
+          ULTIMO_ERRO_CONFIG = 'Não consegui reler "' + CTRL_CONFIG_KEYS[key] + '" pra conferir: ' + (erroConfere.message||'');
+          return false;
+        }
+        ULTIMO_ERRO_CONFIG = '';
         return true;
       }
       var nomeLogico = CTRL_MAPA_CHAVES[key] || key;
-      var arrItens = ehListaDeNomes(key) ? arr.map(function(nome){ return { id: nome, nome: nome }; }) : arr;
+      // Clientes: além do nome, o item leva junto o Nº do cliente, o CNPJ e o contato.
+      // Eles também continuam sendo gravados nas "configurações" (como sempre foram), mas ali
+      // o servidor às vezes não guarda — e aí o número sumia ao recarregar a tela. Guardando
+      // nos dois lugares, basta um dos dois funcionar pra informação não se perder.
+      var arrItens = ehListaDeNomes(key) ? arr.map(function(nome){
+        if(semExtras) return { id: nome, nome: nome };
+        var det = CLIENTE_DETALHES[nome] || {};
+        return { id: nome, nome: nome,
+                 numero: String(CLIENTE_NUMEROS[nome]||''),
+                 cnpj: String(det.cnpj||''), contato: String(det.contato||'') };
+      }) : arr;
 
       // Descobre o que já está fresco no servidor (pode ter coisa nova, de
       // outra pessoa, que este cliente nunca viu) e compara com a fotografia
@@ -2186,6 +2238,13 @@
       return true;
     }catch(e){
       console.error('Erro ao salvar', key, e);
+      // Se o servidor recusou o item de cliente com os campos extras (Nº/CNPJ/contato), grava
+      // do jeito antigo, só com o nome — nunca pior do que era antes desses campos existirem.
+      if(ehListaDeNomes(key) && !semExtras){
+        console.warn('Tentando salvar', key, 'sem os campos extras.');
+        return saveList(key, arr, true);
+      }
+      if(CTRL_CONFIG_KEYS[key]) ULTIMO_ERRO_CONFIG = (e && e.message) ? e.message : 'Falha de rede.';
       return false;
     }
   }
@@ -4433,15 +4492,19 @@
       '<div class="form-section form-section-ident">' +
         '<div class="form-section-title"><span class="dot"></span>Identificação</div>' +
         '<div class="field"><label>Equipamento</label><div style="display:flex;align-items:center;gap:10px;"><div id="apEquipFoto" style="width:40px;height:40px;flex-shrink:0;border-radius:8px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;">🚜</div><div class="combo-wrap" style="flex:1;"><input type="text" id="apEquip" autocomplete="off" value="'+esc(equipValorInicial)+'" placeholder="Digite ou selecione o código…"><div class="combo-list" id="apEquipList"></div></div></div><div id="apEquipError"></div></div>' +
-        '<div class="field-row-ordem">' +
+        '<div class="'+(modoOperadorSimplificado?'field-row-ordem-tl':'field-row-ordem')+'">' +
           '<div class="field"><label>Nº Ordem</label><div class="combo-wrap"><input type="text" id="apOrdemNumero" autocomplete="off" value="'+esc(ordemNumeroValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apOrdemNumeroList"></div></div></div>' +
-          '<div class="field"><label>Descrição Ordem</label><div class="combo-wrap"><input type="text" id="apOrdem" autocomplete="off" value="'+esc(ordemValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Digite ou selecione a ordem…"><div class="combo-list" id="apOrdemList"></div></div>'+(restringirOrdem?('<div class="muted-tag" style="margin-top:4px;">Você está restrito a esta ordem.'+(state.operadorOrdemAdminLock?'':' <button type="button" class="btn-ghost" id="trocarOrdemBtn" style="padding:0;">Trocar ordem</button>')+'</div>'):(clienteRestrito?'<div class="muted-tag" style="margin-top:4px;">Você está restrito ao cliente '+esc(clienteRestrito)+' — escolha entre as ordens dele acima.</div>':''))+'<div id="apOrdemError"></div></div>' +
+          '<div class="field"><label>Descrição Ordem</label><div class="combo-wrap"><input type="text" id="apOrdem" autocomplete="off" value="'+esc(ordemValorInicial)+'"'+(restringirOrdem?' readonly':'')+' placeholder="Digite ou selecione a ordem…"><div class="combo-list" id="apOrdemList"></div></div>'+(restringirOrdem?('<div class="muted-tag" style="margin-top:4px;">Você está restrito a esta ordem.'+(state.operadorOrdemAdminLock?'':' <button type="button" class="btn-ghost" id="trocarOrdemBtn" style="padding:0;">Trocar ordem</button>')+'</div>'):(clienteRestrito?'<div class="muted-tag" style="margin-top:4px;">Você está restrito ao cliente '+esc(clienteRestrito)+' — escolha entre as ordens dele acima.</div>':''))+(modoOperadorSimplificado?'':'<div id="apOrdemError"></div>')+'</div>' +
           '<div class="field"><label>Nº Cliente</label><div class="combo-wrap"><input type="text" id="apNCliente" autocomplete="off" value="'+esc(nClienteValorInicial)+'"'+((restringirOrdem||clienteRestrito)?' readonly':'')+' placeholder="Nº…"><div class="combo-list" id="apNClienteList"></div></div></div>' +
+          (modoOperadorSimplificado ? ('<div class="field"><label>Escala</label><select id="apEscala"><option value="">Selecione a escala…</option>'+state.escalas.map(function(e){ return '<option value="'+e.key+'">'+esc(e.label)+'</option>'; }).join('')+'</select></div>') : '') +
         '</div>' +
-        '<div class="field-row">' +
-          '<div class="field" style="flex:0 1 118px;"><label>Data</label><input type="date" id="apData" value="'+todayISO()+'"'+(travarHorarios?' readonly':'')+' style="padding:6px 8px;">'+(travarHorarios?'<div class="muted-tag" style="margin-top:4px;">Hoje. Pra alterar, peça ao Escritório.</div>':'')+'</div>' +
-          '<div class="field" style="flex:1 1 160px;"><label>Operador (obrigatório)</label><input type="text" id="apOperador" list="datalistOperadores" '+(operadorTravado?'readonly value="'+esc(operadorAuto.nome)+'"':'')+' placeholder="Nome ou matrícula"><datalist id="datalistOperadores">'+state.operadores.map(function(o){ return '<option value="'+esc(o.nome)+'">'; }).join('')+'</datalist>'+(operadorTravado?'<div class="muted-tag" style="margin-top:4px;">Identificado pelo seu login.</div>':'')+'</div>' +
-          '<div class="field" style="flex:1 1 140px;"><label>Escala</label><select id="apEscala"><option value="">Selecione a escala…</option>'+state.escalas.map(function(e){ return '<option value="'+e.key+'">'+esc(e.label)+'</option>'; }).join('')+'</select></div>' +
+        // No tablet o aviso sai de dentro da coluna "Descrição Ordem" e ocupa a largura toda —
+        // assim o texto inteiro cabe numa linha só, em vez de ser cortado.
+        (modoOperadorSimplificado ? '<div id="apOrdemError" style="margin:2px 0 8px;"></div>' : '') +
+        '<div class="field-row'+(modoOperadorSimplificado?' sem-seta-data':'')+'">' +
+          '<div class="field" style="flex:0 1 118px;"><label>Data</label><input type="date" id="apData" value="'+todayISO()+'"'+(travarHorarios?' readonly':'')+' style="padding:6px 8px;">'+(travarHorarios?('<div class="'+(modoOperadorSimplificado?'dica-1linha':'muted-tag')+'"'+(modoOperadorSimplificado?'':' style="margin-top:4px;"')+'>Hoje. Pra alterar, peça ao Escritório.</div>'):'')+'</div>' +
+          '<div class="field" style="flex:1 1 160px;"><label>Operador (obrigatório)</label><input type="text" id="apOperador" list="datalistOperadores" '+(operadorTravado?'readonly value="'+esc(operadorAuto.nome)+'"':'')+' placeholder="Nome ou matrícula"><datalist id="datalistOperadores">'+state.operadores.map(function(o){ return '<option value="'+esc(o.nome)+'">'; }).join('')+'</datalist>'+(operadorTravado?('<div class="'+(modoOperadorSimplificado?'dica-1linha':'muted-tag')+'"'+(modoOperadorSimplificado?'':' style="margin-top:4px;"')+'>Identificado pelo seu login.</div>'):'')+'</div>' +
+          (modoOperadorSimplificado ? '' : ('<div class="field"><label>Escala</label><select id="apEscala"><option value="">Selecione a escala…</option>'+state.escalas.map(function(e){ return '<option value="'+e.key+'">'+esc(e.label)+'</option>'; }).join('')+'</select></div>')) +
         '</div>' +
         '<div class="field" id="apTurnoWrap" style="display:none;"><label>Turno</label><select id="apTurno"></select></div>' +
       '</div>' +
@@ -4449,7 +4512,6 @@
       (modoOperadorSimplificado ? (
       '<div class="form-section form-section-timeline">' +
         '<div class="form-section-title"><span class="dot"></span>Lançamento do dia</div>' +
-        ((typeof MODO_TESTE_TABLET !== 'undefined' && MODO_TESTE_TABLET) ? '<div class="muted-tag" style="margin-bottom:8px;background:#FFF3CD;border:1px solid #F1DDA0;border-radius:6px;padding:6px 8px;color:#7a5b00;">⚠ <b>Modo de teste ligado</b> — as travas de horímetro e de horas programadas estão liberadas neste aparelho. Desligar antes de usar de verdade.</div>' : '') +
         '<div id="apTimelineWrap"></div>' +
       '</div>') : '') +
 
@@ -4553,6 +4615,11 @@
       var todos = texto.match(/\d{4,8}/g);
       return todos ? todos[todos.length-1] : '';
     }
+    /* Aviso de uma linha só: no tablet de 9" cada linha extra empurra os botões pra fora da
+       tela. O texto vai inteiro no "title", então dá pra ler tudo tocando e segurando. */
+    function dicaUmaLinha(texto){
+      return '<div class="dica-1linha" title="'+esc(texto)+'">'+esc(texto)+'</div>';
+    }
     // Guarda qual equipamento gerou o preenchimento atual. Trocou de equipamento => refaz tudo,
     // mesmo que os campos de Ordem já tenham valor (senão o operador troca de máquina e fica
     // com a ordem da máquina anterior). Mesmo equipamento => respeita o que estiver preenchido.
@@ -4624,17 +4691,16 @@
             // Diz quantos números de cliente este aparelho realmente carregou. Se vier 0, o
             // problema não é o cadastro: os números não chegaram ao tablet.
             var qtdNumerosCarregados = Object.keys(CLIENTE_NUMEROS||{}).length;
-            infoEl.innerHTML = '<div class="muted-tag" style="margin-top:4px;">Cliente da ordem: '+esc(achada.cliente)+' — sem Nº de cliente. ' +
+            infoEl.innerHTML = dicaUmaLinha('Cliente da ordem: '+achada.cliente+' — sem Nº de cliente. ' +
               (qtdNumerosCarregados===0
-                ? 'Este aparelho não recebeu <b>nenhum</b> número de cliente do servidor — avise a TI.'
-                : ('Cadastre o número em Cadastrar → Clientes. (Este aparelho carregou '+qtdNumerosCarregados+' número(s) de cliente.)')) +
-              '</div>';
+                ? 'Este aparelho não recebeu nenhum número de cliente do servidor — avise a TI.'
+                : ('Cadastre o número em Cadastrar → Clientes. (Este aparelho carregou '+qtdNumerosCarregados+' número de cliente.)')));
           } else infoEl.innerHTML = '';
         }
       } else if(infoEl){
         infoEl.innerHTML = numeroExtraido
-          ? '<div class="muted-tag" style="margin-top:4px;">Não achei a ordem nº '+esc(numeroExtraido)+' no cadastro — por isso o Nº do cliente não preencheu. Confira em Cadastrar → Ordens de Trabalho.</div>'
-          : '<div class="muted-tag" style="margin-top:4px;">O Local deste equipamento ("'+esc(localTexto)+'") não tem um nº de ordem no fim, então não dá pra descobrir a ordem sozinho.</div>';
+          ? dicaUmaLinha('Não achei a ordem nº '+numeroExtraido+' no cadastro — por isso o Nº do cliente não preencheu. Confira em Cadastrar → Ordens de Trabalho.')
+          : dicaUmaLinha('O Local deste equipamento ("'+localTexto+'") não tem um nº de ordem no fim, então não dá pra descobrir a ordem sozinho.');
       }
       atualizarServicoTarifa(); atualizarServicoHora();
     }
@@ -5144,8 +5210,17 @@
     // Botões "Cancelar"/"Refazer" (só pra facilitar teste em campo) — os dois fazem a mesma
     // coisa: descartam o rascunho em andamento (o mesmo que persistirRascunhoTimeline mantém,
     // identificado por state.editingRascunhoId) e voltam a linha do tempo pro zero.
-    function cancelarOuRefazerLancamentoTl(){
-      confirmModal('Recomeçar lançamento', 'Isso descarta o que já foi lançado hoje neste equipamento (rascunho em andamento) e volta pro início, pra você testar de novo. Continuar?', async function(){
+    /* sair=true  -> "Cancelar lançamento": apaga o que está em andamento e volta pra tela
+                       inicial da Parte Diária.
+       sair=false -> "Refazer lançamento": apaga o mesmo, mas continua no formulário, pronto
+                       pra começar de novo com o mesmo equipamento.
+       Nos dois casos só o lançamento EM ANDAMENTO (rascunho) é apagado — parte diária já
+       concluída continua sendo assunto da Controladoria. */
+    function cancelarOuRefazerLancamentoTl(sair){
+      confirmModal(sair ? 'Cancelar lançamento' : 'Recomeçar lançamento',
+        sair
+          ? 'Isso apaga o lançamento em andamento deste equipamento e volta pra tela inicial da Parte Diária. O que já foi concluído hoje não é tocado. Continuar?'
+          : 'Isso descarta o que já foi lançado hoje neste equipamento (rascunho em andamento) e volta pro início, pra você lançar de novo. Continuar?', async function(){
         apEventos = [];
         formParadas = [];
         var idRascunhoTl = state.editingRascunhoId;
@@ -5156,6 +5231,11 @@
             await saveList('apropriacoes_rascunhos_v1', state.apropriacoesRascunhos);
           }
           state.editingRascunhoId = null;
+        }
+        if(sair){
+          toast('Lançamento cancelado.');
+          renderApropriacaoEntry();   // volta pra tela inicial da Parte Diária
+          return;
         }
         renderApTimeline();
         renderParadasEditor();
@@ -5287,12 +5367,14 @@
       }
 
       var testeHtmlTl =
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);">' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);">' +
+          '<button type="button" class="btn-tl btn-tl-refazer" id="apTlCancelarBtn"><span class="tl-ico">✕</span>Cancelar lançamento</button>' +
           '<button type="button" class="btn-tl btn-tl-refazer" id="apTlRefazerBtn"><span class="tl-ico">↺</span>Refazer lançamento</button>' +
         '</div>';
 
       wrapT.innerHTML = historicoHtmlTl + acaoHtmlTl + testeHtmlTl;
-      document.getElementById('apTlRefazerBtn').onclick = cancelarOuRefazerLancamentoTl;
+      document.getElementById('apTlRefazerBtn').onclick = function(){ cancelarOuRefazerLancamentoTl(false); };
+      document.getElementById('apTlCancelarBtn').onclick = function(){ cancelarOuRefazerLancamentoTl(true); };
       ligarMascaraHorimetroTl();
 
       // Contador ao vivo: atualiza a cada 15s enquanto houver uma atividade ou parada em
@@ -5872,11 +5954,26 @@
       }
       if(numero){ CLIENTE_NUMEROS[nome] = numero; } else { delete CLIENTE_NUMEROS[nome]; }
       if(cnpj || contato){ CLIENTE_DETALHES[nome] = {cnpj:cnpj, contato:contato}; } else { delete CLIENTE_DETALHES[nome]; }
-      var ok1 = await saveList('clientes_v2', CLIENTES);
-      await saveList('cliente_numeros_v3', CLIENTE_NUMEROS);
+      // A ordem importa: 'clientes_v2' agora leva o Nº do cliente e o CNPJ dentro do próprio
+      // item, então precisa ser gravado DEPOIS de CLIENTE_NUMEROS/CLIENTE_DETALHES já estarem
+      // atualizados na memória (o que acontece logo acima).
+      var okNumeros = await saveList('cliente_numeros_v3', CLIENTE_NUMEROS);
+      var erroNumeros = okNumeros ? '' : ULTIMO_ERRO_CONFIG;
       await saveList('cliente_detalhes_v1', CLIENTE_DETALHES);
+      var ok1 = await saveList('clientes_v2', CLIENTES);
       closeModal();
-      toast(ok1 ? 'Cliente salvo.' : 'Salvo localmente — problema ao sincronizar.');
+      if(!ok1){
+        toast('Não consegui salvar o cliente no servidor. ' + (ULTIMO_ERRO_CONFIG||'') +
+              ' O que você digitou está só nesta tela — recarregue e tente de novo.', 12000);
+      } else if(!okNumeros && numero){
+        // O nome salvou, mas o Nº do cliente não foi aceito no lugar de sempre. Ele ainda fica
+        // gravado junto do cliente (acima), então normalmente sobrevive — mas é melhor avisar.
+        toast('Cliente salvo. O Nº do cliente não foi aceito no cadastro de configurações do ' +
+              'servidor (' + (erroNumeros||'motivo não informado') + '), então gravei junto do ' +
+              'cliente. Recarregue a tela pra confirmar que o número continua aí.', 14000);
+      } else {
+        toast('Cliente salvo.');
+      }
       renderClientesTab();
       renderCadastroHub();
     };
@@ -6033,10 +6130,12 @@
           });
         });
         var ok = true;
-        if(a.cliNovos.length){ ok = await saveList('clientes_v2', CLIENTES) && ok; }
         if(a.cliNovos.length || a.cliSemNumero.length){
           await saveList('cliente_numeros_v3', CLIENTE_NUMEROS);
           await saveList('cliente_detalhes_v1', CLIENTE_DETALHES);
+          // Grava a lista de clientes por último: cada item leva o Nº e o CNPJ junto, e assim
+          // os números sobrevivem mesmo se o servidor não guardar as "configurações".
+          ok = await saveList('clientes_v2', CLIENTES) && ok;
         }
         if(a.ordNovas.length){ ok = await saveList('ordens_v9', state.ordens) && ok; }
         closeModal();
@@ -10416,6 +10515,21 @@
     CLIENTES = cli.slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     CLIENTE_NUMEROS = cliNum;
     CLIENTE_DETALHES = cliDetalhes || {};
+    // Rede de segurança: se as "configurações" voltaram sem o Nº do cliente (ou sem o CNPJ),
+    // usa o que veio gravado dentro do próprio item do cliente. O que está nas configurações
+    // continua tendo prioridade — isto aqui só preenche o que faltou.
+    (CLIENTES_ITENS_BRUTOS || []).forEach(function(it){
+      if(!it || !it.nome) return;
+      if(it.numero && !String(CLIENTE_NUMEROS[it.nome]||'').trim()){
+        CLIENTE_NUMEROS[it.nome] = String(it.numero).trim();
+      }
+      if(it.cnpj || it.contato){
+        var atual = CLIENTE_DETALHES[it.nome] || {};
+        if(!atual.cnpj && it.cnpj) atual.cnpj = String(it.cnpj).trim();
+        if(!atual.contato && it.contato) atual.contato = String(it.contato).trim();
+        CLIENTE_DETALHES[it.nome] = atual;
+      }
+    });
     MATERIAIS_PESAGEM = (matPesagem||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     SERVICOS_HORA = (servHora||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     SERVICOS_VERBA = (servVerba||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
