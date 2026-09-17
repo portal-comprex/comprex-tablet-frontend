@@ -6,7 +6,7 @@
 // do site da Controladoria, e não mais de uma cópia nossa. O arquivo
 // apropriacao.html continua no repositório só como plano B, e por isso não
 // precisa mais ocupar espaço no cache do tablet.
-const CACHE_NAME = 'comprex-tablet-v5';
+const CACHE_NAME = 'comprex-tablet-v6';
 const ARQUIVOS_DO_CASCO = [
   './',
   './index.html',
