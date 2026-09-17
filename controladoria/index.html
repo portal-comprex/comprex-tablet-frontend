@@ -923,6 +923,7 @@
               <input type="text" id="filtroClienteNome" placeholder="Buscar pelo nome…" style="width:220px;">
               <input type="text" id="filtroClienteNumero" placeholder="Buscar nº do cliente…" style="width:180px;">
             </div>
+            <span id="importPlanilhaWrap" style="display:none;"><button type="button" class="btn" id="importPlanilhaBtn" style="background:#E8720C;color:#fff;border-color:#E8720C;">📥 Importar planilha (Ordens e Clientes)</button></span>
             <button class="btn btn-primary" id="novoClienteCadastroBtn">+ Novo cliente</button>
           </div>
           <div class="card">
@@ -4374,17 +4375,39 @@
     // confiável do que tentar bater o texto do Local igualzinho entre o cadastro do equipamento e
     // o cadastro da Ordem (que pode divergir por causa de como cada um foi digitado).
     function extrairNumeroOrdemDoLocal(localTexto){
-      var m = String(localTexto||'').match(/(\d{3,})\s*$/);
-      return m ? m[1] : '';
+      var texto = String(localTexto||'');
+      // Primeiro tenta o número no FIM do Local ("AMT - Pá Carregadeira - 500014"), que é a
+      // convenção. Se não terminar em número (ex.: "500014 - AMT Pá Carregadeira", ou com um
+      // sufixo depois), pega o último bloco de 4 a 8 dígitos que aparecer em qualquer lugar —
+      // assim o Nº da Ordem continua sendo achado mesmo quando o Local foi digitado diferente.
+      var m = texto.match(/(\d{3,})\s*$/);
+      if(m) return m[1];
+      var todos = texto.match(/\d{4,8}/g);
+      return todos ? todos[todos.length-1] : '';
     }
-    function autoPreencherPorEquipamentoAp(){
+    // Guarda qual equipamento gerou o preenchimento atual. Trocou de equipamento => refaz tudo,
+    // mesmo que os campos de Ordem já tenham valor (senão o operador troca de máquina e fica
+    // com a ordem da máquina anterior). Mesmo equipamento => respeita o que estiver preenchido.
+    var equipDoAutoPreenchimento = null;
+    function autoPreencherPorEquipamentoAp(forcar){
       var equipTexto = document.getElementById('apEquip').value.trim();
       var equipObj = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTexto; })[0];
       atualizarFotoEquipamentoAp(equipObj ? equipObj.codigo : null);
       if(restringirOrdem) return; // já travado numa ordem específica — não mexe
       if(!equipObj || !equipObj.local) return;
-      if(document.getElementById('apOrdem').value.trim()) return; // já tem valor — não atropela
+      var trocouDeEquipamento = equipDoAutoPreenchimento !== equipObj.id;
+      equipDoAutoPreenchimento = equipObj.id;
+      var jaTemOrdem = !!document.getElementById('apOrdem').value.trim();
+      // Não atropela uma escolha manual feita para ESTE mesmo equipamento.
+      if(jaTemOrdem && !trocouDeEquipamento && !forcar) return;
       var localTexto = String(equipObj.local).trim();
+      // Zera Nº Ordem e Nº Cliente antes de repreencher: senão, ao trocar de equipamento, o
+      // número da ordem (ou do cliente) da máquina anterior ficava "grudado" quando o novo
+      // Local não permitia descobrir esses valores.
+      if(modoOperadorSimplificado){
+        document.getElementById('apOrdemNumero').value = '';
+        document.getElementById('apNCliente').value = '';
+      }
       // No tablet, o campo (que mostra o Local, mesmo continuando rotulado "Descrição Ordem")
       // sempre mostra o Local do equipamento — igual o Checklist — não depende de achar uma Ordem
       // cadastrada com esse Local igualzinho.
@@ -4404,14 +4427,38 @@
         var candidatas = ordensOrdenadas.filter(function(o){ return normalizarLocalParaComparar(o.local)===alvo; });
         if(candidatas.length===1) achada = candidatas[0];
       }
+      if(!achada){
+        // Última tentativa: o Local do equipamento costuma repetir o NOME da Ordem
+        // ("AMT - Pá Carregadeira - 500014" x Ordem "AMT PÁ CARREGADEIRA"). Se o nome de uma
+        // única ordem couber dentro do texto do Local, é ela.
+        var alvoTexto = normalizarLocalParaComparar(localTexto);
+        var porNome = ordensOrdenadas.filter(function(o){
+          var n = normalizarLocalParaComparar(o.nome);
+          return n && n.length >= 6 && alvoTexto.indexOf(n) !== -1;
+        });
+        if(porNome.length===1) achada = porNome[0];
+      }
+      var infoEl = document.getElementById('apOrdemError');
       if(achada){
         document.getElementById('apOrdemNumero').value = achada.numero || '';
         if(!modoOperadorSimplificado) document.getElementById('apOrdem').value = ordemLabelAtual(achada);
-        document.getElementById('apNCliente').value = CLIENTE_NUMEROS[achada.cliente] || '';
+        // Nº do Cliente: vem do Cliente cadastrado NA ORDEM (Cadastrar → Ordens de Trabalho),
+        // cruzado com o número dele em Cadastrar → Clientes. É esse o vínculo.
+        var numeroClienteAchado = CLIENTE_NUMEROS[achada.cliente] || '';
+        document.getElementById('apNCliente').value = numeroClienteAchado;
+        if(infoEl){
+          infoEl.innerHTML = (!numeroClienteAchado && achada.cliente)
+            ? '<div class="muted-tag" style="margin-top:4px;">Cliente da ordem: '+esc(achada.cliente)+' — sem Nº de cliente cadastrado ainda (Cadastrar → Clientes).</div>'
+            : '';
+        }
+      } else if(infoEl){
+        infoEl.innerHTML = numeroExtraido
+          ? '<div class="muted-tag" style="margin-top:4px;">Não achei a ordem nº '+esc(numeroExtraido)+' no cadastro — por isso o Nº do cliente não preencheu. Confira em Cadastrar → Ordens de Trabalho.</div>'
+          : '<div class="muted-tag" style="margin-top:4px;">O Local deste equipamento ("'+esc(localTexto)+'") não tem um nº de ordem no fim, então não dá pra descobrir a ordem sozinho.</div>';
       }
       atualizarServicoTarifa(); atualizarServicoHora();
     }
-    document.getElementById('apEquip').addEventListener('change', autoPreencherPorEquipamentoAp);
+    document.getElementById('apEquip').addEventListener('change', function(){ autoPreencherPorEquipamentoAp(true); });
     if(!editRecord) autoPreencherPorEquipamentoAp();
     else { var equipInicialEdicao = getEquip(editRecord.equipamentoId); atualizarFotoEquipamentoAp(equipInicialEdicao ? equipInicialEdicao.codigo : null); }
     if(modoOperadorSimplificado){
@@ -4425,9 +4472,38 @@
           var texto = el.value.trim();
           if(texto && !state.equipamentos.some(function(e){ return equipLabel(e)===texto; })){
             el.value = '';
-            autoPreencherPorEquipamentoAp();
+            equipDoAutoPreenchimento = null;
+            autoPreencherPorEquipamentoAp(true);
           }
         }, 200);
+      });
+      /* Rede de segurança: basta o operador tocar no campo "Descrição Ordem" e apagar/editar
+         uma letra pra limpeza automática do trio zerar o Nº Ordem e o Nº Cliente — e, antes,
+         nada trazia esses valores de volta. Agora, ao sair do campo, o sistema reconstrói o que
+         faltou: Nº Ordem a partir do número no texto do Local, e Nº Cliente a partir da Ordem
+         (Ordem → Cliente → Nº do cliente cadastrado em Cadastrar → Clientes). Se os dois campos
+         ficarem vazios, refaz o preenchimento inteiro a partir do equipamento. */
+      function recuperarCamposOrdemTablet(){
+        var elNum = document.getElementById('apOrdemNumero');
+        var elDesc = document.getElementById('apOrdem');
+        var elNCli = document.getElementById('apNCliente');
+        if(!elNum || !elDesc) return;
+        var desc = elDesc.value.trim();
+        if(!desc && !elNum.value.trim()){ autoPreencherPorEquipamentoAp(true); return; }
+        if(!elNum.value.trim() && desc){
+          var n = extrairNumeroOrdemDoLocal(desc);
+          if(n) elNum.value = n;
+        }
+        var numAtual = elNum.value.trim();
+        if(numAtual && elNCli && !elNCli.value.trim()){
+          var ord = state.ordens.filter(function(o){ return String(o.numero||'').trim()===numAtual; })[0];
+          if(ord) elNCli.value = CLIENTE_NUMEROS[ord.cliente] || '';
+        }
+        atualizarServicoTarifa(); atualizarServicoHora();
+      }
+      ['apOrdem','apOrdemNumero','apNCliente'].forEach(function(idCampo){
+        var elCampo = document.getElementById(idCampo);
+        if(elCampo) elCampo.addEventListener('blur', function(){ setTimeout(recuperarCamposOrdemTablet, 250); });
       });
     }
     function resolverOrdemAtual(){
@@ -5322,6 +5398,7 @@
     var buscaNomeEl = document.getElementById('filtroClienteNome');
     var buscaNumeroEl = document.getElementById('filtroClienteNumero');
     if(!buscaNomeEl) return;
+    if(typeof atualizarBotaoImportPlanilha === 'function') atualizarBotaoImportPlanilha();
     var buscaNome = buscaNomeEl.value.trim().toLowerCase();
     var buscaNumero = buscaNumeroEl.value.trim().toLowerCase();
     var lista = CLIENTES.filter(function(nome){
@@ -5636,18 +5713,26 @@
       var el = document.getElementById(id);
       if(el) el.textContent = map[id];
     });
-    // Botão de importação da planilha: só administrador vê, e some sozinho
-    // quando tudo o que estava na planilha já foi importado.
+    atualizarBotaoImportPlanilha();
+  }
+
+  /* Botão de importação da planilha: mora na barra da tela Cadastrar → Clientes (antes ficava
+     na Central de Cadastros, que deixou de existir). Só administrador vê, e ele some sozinho
+     quando não há mais nada pendente — inclusive Nº de cliente faltando num cliente que já
+     existe, que é o que o tablet usa pra preencher o "Nº Cliente" automaticamente. */
+  function atualizarBotaoImportPlanilha(){
     var impWrap = document.getElementById('importPlanilhaWrap');
-    if(impWrap){
-      var pendente = 0;
-      if(typeof importPlanilhaAnalisar === 'function' && state.perfil==='admin'){
-        try{ var a = importPlanilhaAnalisar(); pendente = a.cliNovos.length + a.ordNovas.length; }catch(e){ pendente = 0; }
-      }
-      impWrap.style.display = pendente > 0 ? 'block' : 'none';
-      var impBtn = document.getElementById('importPlanilhaBtn');
-      if(impBtn) impBtn.onclick = importPlanilhaAbrir;
+    if(!impWrap) return;
+    var pendente = 0;
+    if(typeof importPlanilhaAnalisar === 'function' && state.perfil==='admin'){
+      try{
+        var a = importPlanilhaAnalisar();
+        pendente = a.cliNovos.length + a.ordNovas.length + a.cliSemNumero.length;
+      }catch(e){ pendente = 0; }
     }
+    impWrap.style.display = pendente > 0 ? 'inline-block' : 'none';
+    var impBtn = document.getElementById('importPlanilhaBtn');
+    if(impBtn) impBtn.onclick = importPlanilhaAbrir;
   }
 
 
@@ -5663,16 +5748,24 @@
   function importPlanilhaAnalisar(){
     var existeCli = {}; CLIENTES.forEach(function(c){ existeCli[String(c).trim().toLowerCase()] = c; });
     var existeOrdNum = {}; state.ordens.forEach(function(o){ var n=String(o.numero||'').trim(); if(n) existeOrdNum[n]=o; });
-    var cliNovos=[], cliJa=[], ordNovas=[], ordJa=[];
+    var cliNovos=[], cliJa=[], ordNovas=[], ordJa=[], cliSemNumero=[];
     IMPORT_PLANILHA.clientes.forEach(function(c){
       var nome = normalizarEspacos(c.nome);
-      if(existeCli[nome.toLowerCase()]) cliJa.push(nome); else cliNovos.push(c);
+      var jaExiste = existeCli[nome.toLowerCase()];
+      if(jaExiste){
+        cliJa.push(nome);
+        // Cliente já cadastrado, mas sem o Nº de cliente preenchido: a importação também
+        // conserta isso (é esse número que o tablet usa pra preencher o "Nº Cliente" sozinho).
+        if(c.numero && !String(CLIENTE_NUMEROS[jaExiste]||'').trim()){
+          cliSemNumero.push({ nome: jaExiste, numero: String(c.numero).trim(), cnpj: c.cnpj });
+        }
+      } else cliNovos.push(c);
     });
     IMPORT_PLANILHA.ordens.forEach(function(o){
       var num = String(o.numero||'').trim();
       if(num && existeOrdNum[num]) ordJa.push(o); else ordNovas.push(o);
     });
-    return { cliNovos:cliNovos, cliJa:cliJa, ordNovas:ordNovas, ordJa:ordJa };
+    return { cliNovos:cliNovos, cliJa:cliJa, ordNovas:ordNovas, ordJa:ordJa, cliSemNumero:cliSemNumero };
   }
   function importPlanilhaAbrir(){
     if(state.perfil!=='admin'){ toast('Só administrador pode importar a planilha.'); return; }
@@ -5688,12 +5781,13 @@
       '<div class="consol-box" style="margin-bottom:10px;">' +
         '<div class="consol-line"><span>Clientes novos</span><b>'+a.cliNovos.length+'</b></div>' +
         '<div class="consol-line"><span>Clientes que já existem (ignorados)</span><b>'+a.cliJa.length+'</b></div>' +
+        '<div class="consol-line"><span>Clientes existentes que vão ganhar o Nº de cliente</span><b>'+a.cliSemNumero.length+'</b></div>' +
         '<div class="consol-line"><span>Ordens novas</span><b>'+a.ordNovas.length+'</b></div>' +
         '<div class="consol-line"><span>Ordens que já existem (ignoradas)</span><b>'+a.ordJa.length+'</b></div>' +
       '</div>' + listaOrdJa +
       '<div id="importPlanilhaErro"></div>' +
       '<div class="modal-actions"><button class="btn btn-outline" id="impCancel">Cancelar</button>' +
-      '<button class="btn btn-primary" id="impOk"'+((a.cliNovos.length+a.ordNovas.length)?'':' disabled')+'>Importar</button></div>'
+      '<button class="btn btn-primary" id="impOk"'+((a.cliNovos.length+a.ordNovas.length+a.cliSemNumero.length)?'':' disabled')+'>Importar</button></div>'
     );
     document.getElementById('impCancel').onclick = closeModal;
     var btn = document.getElementById('impOk');
@@ -5706,6 +5800,14 @@
           if(!CLIENTES.some(function(x){ return String(x).toLowerCase()===nome.toLowerCase(); })) CLIENTES.push(nome);
           if(c.numero) CLIENTE_NUMEROS[nome] = String(c.numero).trim();
           if(c.cnpj) CLIENTE_DETALHES[nome] = Object.assign({}, CLIENTE_DETALHES[nome]||{}, {cnpj:String(c.cnpj).trim()});
+        });
+        // 1b) Clientes que já existiam mas estavam sem o Nº de cliente — só completa o número
+        //     (e o CNPJ, se ainda não tinha). Nome e demais dados ficam como estão.
+        a.cliSemNumero.forEach(function(c){
+          CLIENTE_NUMEROS[c.nome] = c.numero;
+          if(c.cnpj && !(CLIENTE_DETALHES[c.nome]||{}).cnpj){
+            CLIENTE_DETALHES[c.nome] = Object.assign({}, CLIENTE_DETALHES[c.nome]||{}, {cnpj:String(c.cnpj).trim()});
+          }
         });
         CLIENTES.sort(function(x,y){ return String(x).localeCompare(String(y),'pt-BR'); });
         // 2) Ordens
@@ -5727,15 +5829,16 @@
           });
         });
         var ok = true;
-        if(a.cliNovos.length){
-          ok = await saveList('clientes_v2', CLIENTES) && ok;
+        if(a.cliNovos.length){ ok = await saveList('clientes_v2', CLIENTES) && ok; }
+        if(a.cliNovos.length || a.cliSemNumero.length){
           await saveList('cliente_numeros_v3', CLIENTE_NUMEROS);
           await saveList('cliente_detalhes_v1', CLIENTE_DETALHES);
         }
         if(a.ordNovas.length){ ok = await saveList('ordens_v9', state.ordens) && ok; }
         closeModal();
         toast(ok
-          ? ('Importação concluída: '+a.cliNovos.length+' cliente(s) e '+a.ordNovas.length+' ordem(ns) adicionadas.')
+          ? ('Importação concluída: '+a.cliNovos.length+' cliente(s) e '+a.ordNovas.length+' ordem(ns) adicionadas'+
+             (a.cliSemNumero.length ? (', '+a.cliSemNumero.length+' cliente(s) ganharam o Nº de cliente') : '')+'.')
           : 'Importado localmente — houve um problema ao sincronizar com o servidor.', 8000);
         renderAll();
       }catch(e){
