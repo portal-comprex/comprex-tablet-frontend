@@ -570,10 +570,6 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg>
         Dashboard
       </button>
-      <button class="nav-item" data-view="cadastro" data-role-only="controladoria">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
-        Cadastros
-      </button>
       <button class="nav-item" data-view="consolidado" data-role-only="controladoria">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M4 15l4-5 4 3 5-7"/></svg>
         Consolidado
@@ -916,104 +912,10 @@
     <!-- CADASTRO -->
     <section class="view" id="view-cadastro">
 
-      <div id="cadastroHub">
-        <div class="cadastro-hero">
-          <div class="cadastro-hero-glow"></div>
-          <div class="cadastro-hero-eyebrow">Central de Cadastros</div>
-          <h1 class="cadastro-hero-title">Base de dados operacional</h1>
-          <div class="cadastro-hero-sub">Mantenha equipamentos, ordens de trabalho e operadores organizados em um só lugar. Estes cadastros alimentam automaticamente os lançamentos de apropriação, o consolidado, os indicadores e os relatórios do painel.</div>
-        </div>
-        <div id="importPlanilhaWrap" style="display:none;margin-bottom:18px;border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:10px;padding:14px 16px;background:#fff;">
-          <button type="button" class="btn btn-primary" id="importPlanilhaBtn">📥 Importar planilha (Ordens e Clientes)</button>
-          <div style="font-size:11.5px;color:var(--text-muted);margin-top:6px;">Carga inicial das planilhas enviadas — só adiciona o que ainda não existe, não sobrescreve nada.</div>
-        </div>
-        <div class="cadastro-cards-grid">
-          <div class="cadastro-card" data-hub-target="clientes">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountClientes">—</div>
-            </div>
-            <div class="cadastro-card-title">Clientes</div>
-            <div class="cadastro-card-desc">Cadastro central de clientes: nome, número, CNPJ e contato. Usado por Ordens, filtros e relatórios em todo o sistema.</div>
-            <div class="cadastro-card-link">GERENCIAR CLIENTES →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="equip">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="7" width="15" height="10" rx="1"/><path d="M16 10h3l3 3v4h-6z"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountEquip">—</div>
-            </div>
-            <div class="cadastro-card-title">Equipamentos</div>
-            <div class="cadastro-card-desc">Frota da Comprex: código, tipo e status atual de cada máquina. Base para apropriações, indicadores e medição.</div>
-            <div class="cadastro-card-link">GERENCIAR FROTA →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="ordens">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountOrdens">—</div>
-            </div>
-            <div class="cadastro-card-title">Ordens de trabalho</div>
-            <div class="cadastro-card-desc">Contratos ativos por cliente e vendedor. Vinculam apropriações a receita, consolidado e relatórios financeiros.</div>
-            <div class="cadastro-card-link">GERENCIAR ORDENS →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="operadores">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountOperadores">—</div>
-            </div>
-            <div class="cadastro-card-title">Operadores</div>
-            <div class="cadastro-card-desc">Equipe de campo: matrícula, cargo, local e escala. Alimenta os lançamentos e a distribuição de horas por ordem.</div>
-            <div class="cadastro-card-link">GERENCIAR EQUIPE →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="paradas">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountParadas">—</div>
-            </div>
-            <div class="cadastro-card-title">Paradas</div>
-            <div class="cadastro-card-desc">Catálogo de motivos de parada: número, descrição e tipo. Utilizado nos lançamentos de apropriação diária.</div>
-            <div class="cadastro-card-link">GERENCIAR PARADAS →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="escalas">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountEscalas">—</div>
-            </div>
-            <div class="cadastro-card-title">Escalas</div>
-            <div class="cadastro-card-desc">Jornadas de trabalho contratuais (4x4, 3x3, 2x2): ciclo, horário e turnos. Preenche automaticamente o lançamento de apropriação.</div>
-            <div class="cadastro-card-link">GERENCIAR ESCALAS →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="tarifas">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountTarifas">—</div>
-            </div>
-            <div class="cadastro-card-title">Tarifas</div>
-            <div class="cadastro-card-desc">Valores por tonelada de cada serviço (vinculados à Ordem) e contratos de hora mínima por equipamento + ordem. Alimentam o cálculo de produção e a Medição por hora.</div>
-            <div class="cadastro-card-link">GERENCIAR TARIFAS →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="sugestoes">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountSugestoes">—</div>
-            </div>
-            <div class="cadastro-card-title">Sugestões</div>
-            <div class="cadastro-card-desc">Listas de nomes que aparecem como sugestão automática ao lançar Materiais de Pesagem, Serviços de Hora e Serviços de Verba. Remova nomes digitados errado ou duplicados.</div>
-            <div class="cadastro-card-link">GERENCIAR SUGESTÕES →</div>
-          </div>
-          <div class="cadastro-card" data-hub-target="metas">
-            <div class="cadastro-card-top">
-              <div class="cadastro-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg></div>
-              <div class="cadastro-card-count" id="hubCountMetas">—</div>
-            </div>
-            <div class="cadastro-card-title">Metas</div>
-            <div class="cadastro-card-desc">Meta mensal de cada serviço, com histórico por mês — igual à vigência da Tarifa. Defina uma meta nova a partir de um mês, sem precisar recadastrar todo mês.</div>
-            <div class="cadastro-card-link">GERENCIAR METAS →</div>
-          </div>
-        </div>
-      </div>
+      <!-- Central de Cadastros (hub de cards) removida a pedido: os cadastros agora
+           são acessados pelo menu CADASTRAR do Portal, na coluna da esquerda. -->
 
       <div id="cadastroDetail" style="display:none;">
-        <button class="btn-back" id="voltarHubBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>Voltar para Central de Cadastros</button>
 
         <div class="subview" id="subview-clientes">
           <div class="toolbar">
@@ -1722,6 +1624,11 @@
       if (!dados) return;
       if (dados.tipo === 'ctrl-ir' && typeof window.__comprexTrocarTela === 'function') {
         window.__comprexTrocarTela(dados.view);
+      }
+      // Menu CADASTRAR do Portal pedindo um cadastro específico (Clientes,
+      // Ordens, Paradas…) — a Central de Cadastros deixou de existir aqui.
+      if (dados.tipo === 'ctrl-cadastro' && typeof window.__comprexAbrirCadastro === 'function') {
+        window.__comprexAbrirCadastro(dados.sub);
       }
       if (dados.tipo === 'ctrl-token' && dados.token) {
         aplicarTokenPortal(dados.token);
@@ -4279,6 +4186,16 @@
     return '<div class="consol-box" style="background:#FFF3CD;border-color:#F1DDA0;margin-bottom:14px;"><div class="consol-line"><span>'+texto+'</span><b><button type="button" class="btn-ghost" id="cancelarEdicaoBtn" style="padding:2px 6px;">Cancelar edição</button></b></div></div>';
   }
 
+  // ===================== MODO DE TESTE DO TABLET =====================
+  // Enquanto estiver true, o lançamento de parte diária FEITO NO TABLET (operador lançando o
+  // próprio dia — modoOperadorSimplificado) aceita qualquer horário e qualquer horímetro:
+  // as travas de horímetro (menor que o último lançamento, salto acima de 13h, final menor
+  // que o inicial) e a trava de "horas de horímetro maiores que as horas programadas" ficam
+  // apenas como AVISO, sem impedir de salvar.
+  // O Escritório/Administrador (formulário completo) continua com TODAS as regras valendo.
+  // >>> Para voltar ao normal depois dos testes, basta trocar para false nesta linha. <<<
+  var MODO_TESTE_TABLET = true;
+
   function renderApropriacaoForm(editRecord, isRascunho){
     var wrap = document.getElementById('apropriacaoFormWrap');
     if(state.equipamentos.length===0 || state.ordens.length===0){
@@ -4363,6 +4280,7 @@
       (modoOperadorSimplificado ? (
       '<div class="form-section form-section-timeline">' +
         '<div class="form-section-title"><span class="dot"></span>Lançamento do dia</div>' +
+        ((typeof MODO_TESTE_TABLET !== 'undefined' && MODO_TESTE_TABLET) ? '<div class="muted-tag" style="margin-bottom:8px;background:#FFF3CD;border:1px solid #F1DDA0;border-radius:6px;padding:6px 8px;color:#7a5b00;">⚠ <b>Modo de teste ligado</b> — as travas de horímetro e de horas programadas estão liberadas neste aparelho. Desligar antes de usar de verdade.</div>' : '') +
         '<div id="apTimelineWrap"></div>' +
       '</div>') : '') +
 
@@ -4719,16 +4637,20 @@
         return a.equipamentoId===equipamentoId && a.data <= data && a.id!==state.editingApropriacaoId;
       }).sort(function(a,b){ return a.data.localeCompare(b.data) || (a.entrada||'').localeCompare(b.entrada||''); });
       var ultimoLancamentoEquip = lancamentosAnterioresEquip[lancamentosAnterioresEquip.length-1];
+      // Modo de teste do tablet: as travas de horímetro abaixo viram só aviso (não impedem salvar).
+      var testeTabletLiberado = (typeof MODO_TESTE_TABLET !== 'undefined') && MODO_TESTE_TABLET && modoOperadorSimplificado;
       if(ultimoLancamentoEquip && typeof ultimoLancamentoEquip.horimetroFinal==='number' && hi < ultimoLancamentoEquip.horimetroFinal){
-        errBox.innerHTML = '<div class="form-error">O horímetro inicial ('+brNum(hi,1)+') não pode ser menor que o horímetro final do último lançamento desse equipamento, em '+brDate(ultimoLancamentoEquip.data)+' ('+brNum(ultimoLancamentoEquip.horimetroFinal,1)+'). O horímetro só é zerado em caso de troca de painel — se foi isso, me avise para ajustarmos manualmente.</div>';
-        return;
+        if(!testeTabletLiberado){
+          errBox.innerHTML = '<div class="form-error">O horímetro inicial ('+brNum(hi,1)+') não pode ser menor que o horímetro final do último lançamento desse equipamento, em '+brDate(ultimoLancamentoEquip.data)+' ('+brNum(ultimoLancamentoEquip.horimetroFinal,1)+'). O horímetro só é zerado em caso de troca de painel — se foi isso, me avise para ajustarmos manualmente.</div>';
+          return;
+        }
       }
       // Salto de horímetro maior que 13h desde o último lançamento: passou a BLOQUEAR de vez —
       // não deixa salvar. Se for legítimo (troca de painel, por exemplo), precisa ajuste manual.
       var saltoHorimetro = null;
       if(ultimoLancamentoEquip && typeof ultimoLancamentoEquip.horimetroFinal==='number'){
         var gapHorimetro = hi - ultimoLancamentoEquip.horimetroFinal;
-        if(gapHorimetro > 13){
+        if(gapHorimetro > 13 && !testeTabletLiberado){
           errBox.innerHTML = '<div class="form-error">O horímetro inicial ('+brNum(hi,1)+'h) está '+brNum(gapHorimetro,1)+'h à frente do último lançamento registrado desse equipamento ('+brNum(ultimoLancamentoEquip.horimetroFinal,1)+'h, em '+brDate(ultimoLancamentoEquip.data)+'). Saltos acima de 13h não são permitidos — confira o valor digitado. Se for uma troca de painel de verdade, fale com a Controladoria para ajuste manual.</div>';
           return;
         }
@@ -4780,7 +4702,16 @@
       if(hf===null || isNaN(hf)){ errBox.innerHTML = '<div class="form-error">Informe o horímetro final.</div>'; return; }
       if(tipoIntervalo!=='Sem intervalo' && (!intIni || !intFim)){ errBox.innerHTML = '<div class="form-error">Informe o início e o fim do intervalo, ou selecione "Sem intervalo".</div>'; return; }
       var horasOperador = computeHorasOperador(entrada, tipoIntervalo, intIni, intFim, saida);
-      if(horasOperador===null || horasOperador<=0){ errBox.innerHTML = '<div class="form-error">Verifique os horários informados — o intervalo não pode ser maior ou igual ao turno.</div>'; return; }
+      if(horasOperador===null || horasOperador<=0){
+        if(testeTabletLiberado){
+          // Modo de teste: aceita qualquer horário. Cai para o turno cheio (entrada→saída) e,
+          // se nem isso der um número positivo, grava 0 em vez de bloquear o lançamento.
+          var horasBrutasTeste = diffHoras(entrada, saida);
+          horasOperador = (typeof horasBrutasTeste === 'number' && horasBrutasTeste > 0) ? Math.round(horasBrutasTeste*100)/100 : 0;
+        } else {
+          errBox.innerHTML = '<div class="form-error">Verifique os horários informados — o intervalo não pode ser maior ou igual ao turno.</div>'; return;
+        }
+      }
       // No lançamento por linha do tempo (tablet), o intervalo de almoço deixou de ser um campo à
       // parte — é só mais uma parada (motivo "Almoço"), igual qualquer outra. Por isso, só aqui,
       // as horas do operador saem do turno inteiro (entrada→saída) menos TODAS as paradas do dia
@@ -4790,11 +4721,11 @@
         var totalHorasParadasTl = formParadas.filter(function(p){ return p.horas>0; }).reduce(function(s,p){ return s+p.horas; },0);
         horasOperador = Math.max(0, Math.round((horasOperador - totalHorasParadasTl)*100)/100);
       }
-      if(hf < hi){ errBox.innerHTML = '<div class="form-error">Horímetro final não pode ser menor que o horímetro inicial — verifique os valores.</div>'; return; }
+      if(hf < hi && !testeTabletLiberado){ errBox.innerHTML = '<div class="form-error">Horímetro final não pode ser menor que o horímetro inicial — verifique os valores.</div>'; return; }
       var paradaForaDoTurno = formParadas.filter(function(p){ return p.horas>0; }).filter(function(p){
         return p.inicio && paradaAntesDaEntrada(entrada, saida, p.inicio);
       })[0];
-      if(paradaForaDoTurno){
+      if(paradaForaDoTurno && !testeTabletLiberado){
         errBox.innerHTML = '<div class="form-error">O início de uma parada ('+esc(paradaForaDoTurno.inicio)+') está fora do turno do operador (entrada '+esc(entrada)+', saída '+esc(saida)+'). Confira o horário digitado.</div>';
         return;
       }
@@ -4811,7 +4742,7 @@
       var horasDoDia = Math.round((horasOperador + horasOutrosLancamentosDoDia)*100)/100;
       var excedeuJornada = horasDoDia > 12 ? Math.round((horasDoDia-12)*100)/100 : null;
       var horasHorimetro = Math.round((hf-hi)*100)/100;
-      if(horasHorimetro > horasOperador + 0.01){
+      if(horasHorimetro > horasOperador + 0.01 && !testeTabletLiberado){
         errBox.innerHTML = '<div class="form-error">Horas de horímetro ('+brNum(horasHorimetro,2)+') não podem ser maiores que as horas programadas ('+brNum(horasOperador,2)+').</div>';
         return;
       }
@@ -5211,7 +5142,8 @@
           var h = parseFloat(hRaw);
           var erroEl = document.getElementById('apTlFinalErro');
           if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro final.</div>'; return; }
-          if(h < ultimoTl.horimetroIni){ erroEl.innerHTML = '<div class="form-error">O horímetro final não pode ser menor que o horímetro deste período em operação ('+brNum(ultimoTl.horimetroIni,1)+').</div>'; return; }
+          var testeTlLiberado = (typeof MODO_TESTE_TABLET !== 'undefined') && MODO_TESTE_TABLET;
+          if(h < ultimoTl.horimetroIni && !testeTlLiberado){ erroEl.innerHTML = '<div class="form-error">O horímetro final não pode ser menor que o horímetro deste período em operação ('+brNum(ultimoTl.horimetroIni,1)+').</div>'; return; }
           var agoraTl = horaAtualHHMM();
           ultimoTl.horimetroFim = h; ultimoTl.fim = agoraTl;
           document.getElementById('apSaida').value = agoraTl;
@@ -5814,14 +5746,29 @@
     };
   }
 
+  /* A "Central de Cadastros" (hub de cards) saiu: agora cada cadastro é aberto
+     direto pelo menu CADASTRAR do Portal. Sem hub pra voltar, showCadastroHub()
+     passa a abrir o primeiro cadastro (Clientes) como padrão, pra nenhuma
+     chamada antiga quebrar. */
+  var CADASTRO_SUB_PADRAO = 'clientes';
+  var cadastroSubPedido = null; // setado por abrirCadastroPorChave, consumido aqui
   function showCadastroHub(){
-    document.getElementById('cadastroHub').style.display = 'block';
-    document.getElementById('cadastroDetail').style.display = 'none';
+    var alvo = cadastroSubPedido || CADASTRO_SUB_PADRAO;
+    cadastroSubPedido = null;
+    showCadastroDetail(alvo);
   }
   function showCadastroDetail(subtab){
-    document.getElementById('cadastroHub').style.display = 'none';
+    var hub = document.getElementById('cadastroHub');
+    if(hub) hub.style.display = 'none';
     document.getElementById('cadastroDetail').style.display = 'block';
     switchSubtab(subtab);
+  }
+  /* Chamado pelo Portal (menu CADASTRAR) pra abrir um cadastro específico. */
+  function abrirCadastroPorChave(chave){
+    if(chave==='operadores'){ switchView('operadores'); return; }
+    cadastroSubPedido = chave || CADASTRO_SUB_PADRAO;
+    switchView('cadastro');            // já abre direto no cadastro pedido
+    showCadastroDetail(chave || CADASTRO_SUB_PADRAO); // garante mesmo se já estava na aba
   }
 
   /* ============ RENDER: APROPRIAÇÃO TABLE ============ */
@@ -9695,15 +9642,10 @@
   document.getElementById('excluirTudoBtn').addEventListener('click', function(){
     abrirConfirmacaoExclusao('TODOS os dados de teste do sistema', executarExclusaoTudo);
   });
-  document.getElementById('voltarHubBtn').addEventListener('click', showCadastroHub);
-  document.getElementById('voltarHubBtnOperadores').addEventListener('click', function(){ switchView('cadastro'); });
-  document.querySelectorAll('.cadastro-card').forEach(function(card){
-    card.addEventListener('click', function(){
-      var target = card.getAttribute('data-hub-target');
-      if(target==='operadores'){ switchView('operadores'); return; }
-      showCadastroDetail(target);
-    });
-  });
+  // O botão "Voltar para Central de Cadastros" e os cards do hub saíram junto
+  // com a Central — os cadastros agora vêm pelo menu CADASTRAR do Portal.
+  var voltarOperBtn = document.getElementById('voltarHubBtnOperadores');
+  if(voltarOperBtn) voltarOperBtn.addEventListener('click', function(){ switchView('cadastro'); });
   document.getElementById('exportMedBtn').addEventListener('click', function(){
     var lista = medicaoFiltrarLista();
     var linhas = medicaoPorTarifa(lista);
@@ -10208,7 +10150,10 @@
   }
   // Embutido no Portal Comprex: a troca de tela fica acessível de fora, porque
   // quem navega passa a ser o menu do Portal, não o menu daqui.
-  if (window.__comprexEmbed || window.__comprexEmbedPortal) { window.__comprexTrocarTela = switchView; }
+  if (window.__comprexEmbed || window.__comprexEmbedPortal) {
+    window.__comprexTrocarTela = switchView;
+    window.__comprexAbrirCadastro = abrirCadastroPorChave;
+  }
   if (window.__comprexEmbed || window.__comprexEmbedPortal) { window.__comprexIniciar = init; }
   else if (!window.__comprexAcessoBloqueado) { init(); }
 
