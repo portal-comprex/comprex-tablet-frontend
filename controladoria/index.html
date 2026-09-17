@@ -336,6 +336,39 @@
   .btn-back:hover svg{transform:translateX(-3px);}
   .btn-back:active{transform:scale(.97);}
   .btn-danger-ghost{background:#fff;color:var(--danger);padding:5px 12px;border:1px solid var(--danger);border-radius:20px;font-weight:600;}
+  /* ---------- Botões grandes da Parte Diária no tablet ----------
+     Feitos pra dedo com luva: altura confortável, ícone grande em cima do texto e cor que
+     diz o que o botão faz (verde = começar, laranja = encerrar, âmbar = parada). Só aparecem
+     nesse modo — o formulário do Escritório continua com os botões de sempre. */
+  .tl-acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+  .btn-tl{flex:1 1 150px;min-height:76px;border-radius:14px;border:2px solid transparent;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-size:15px;font-weight:800;letter-spacing:.2px;line-height:1.15;text-align:center;
+    padding:12px 10px;cursor:pointer;transition:transform .12s, box-shadow .12s, filter .12s;}
+  .btn-tl .tl-ico{font-size:26px;line-height:1;}
+  .btn-tl:active{transform:scale(.97);}
+  .btn-tl-iniciar{background:linear-gradient(135deg,#2E9E5B,#1F7A44);color:#fff;box-shadow:0 3px 10px rgba(31,122,68,.35);}
+  .btn-tl-parada{background:#fff;color:#8A5B00;border-color:#E0A02A;box-shadow:0 2px 6px rgba(224,160,42,.18);}
+  .btn-tl-parada-forte{background:linear-gradient(135deg,#E0A02A,#B87B14);color:#fff;box-shadow:0 3px 10px rgba(184,123,20,.35);}
+  .btn-tl-finalizar{background:linear-gradient(135deg,var(--orange),var(--orange-deep));color:#fff;box-shadow:0 3px 10px rgba(196,102,31,.35);}
+  .btn-tl-salvar{background:linear-gradient(135deg,#2E75B6,#1B4C7E);color:#fff;box-shadow:0 3px 10px rgba(27,76,126,.35);width:100%;}
+  .btn-tl-refazer{flex:0 0 auto;min-height:0;padding:9px 16px;border-radius:20px;background:#fff;
+    color:var(--text-muted);border:1px solid var(--border);font-size:13px;font-weight:600;flex-direction:row;}
+  .btn-tl-refazer .tl-ico{font-size:15px;}
+  /* Campos da linha do tempo também crescem, senão o botão grande fica sozinho na página. */
+  .tl-campo input, .tl-campo select{min-height:52px;font-size:17px;font-weight:700;padding:10px 12px;}
+  .tl-campo label{font-size:12px;}
+  /* Cartões de "Meus lançamentos" (histórico do operador no tablet). */
+  .tl-hist-card{border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#fff;}
+  .tl-hist-topo{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;}
+  .tl-hist-data{font-size:16px;font-weight:800;color:var(--navy);}
+  .tl-hist-horas{font-size:16px;font-weight:800;color:var(--orange-deep);white-space:nowrap;}
+  .tl-hist-linha{font-size:13.5px;color:var(--text-muted);line-height:1.5;}
+  .tl-hist-linha b{color:var(--navy);font-weight:700;}
+  .tl-abas{display:flex;gap:8px;margin-bottom:14px;}
+  .tl-aba{flex:1;min-height:46px;border-radius:10px;border:1px solid var(--border);background:#fff;
+    color:var(--text-muted);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;}
+  .tl-aba.ativa{background:var(--navy);color:#fff;border-color:var(--navy);}
   .btn-danger-ghost:hover{background:#FBEDED;}
   .btn-sm{padding:5px 9px;font-size:12px;}
 
@@ -1254,9 +1287,20 @@
         <h1 class="cadastro-hero-title">Lançar Parte Diária</h1>
         <div class="cadastro-hero-sub">Horário do operador, horímetro e paradas por lançamento</div>
       </div>
-      <div class="card">
+      <!-- Abas do tablet: "Lançar" e "Meus lançamentos". Ficam escondidas fora do tablet —
+           no Escritório quem navega é o menu lateral / o menu do Portal. -->
+      <div class="tl-abas" id="tabletAbas" style="display:none;">
+        <button type="button" class="tl-aba ativa" id="tabletAbaLancar">📝 Lançar</button>
+        <button type="button" class="tl-aba" id="tabletAbaHistorico">📋 Meus lançamentos</button>
+      </div>
+      <div class="card" id="apropriacaoCard">
         <h2 style="margin:0 0 8px;">Lançar parte diária</h2>
         <div id="apropriacaoFormWrap"></div>
+      </div>
+      <div class="card" id="tabletHistoricoCard" style="display:none;">
+        <h2 style="margin:0 0 4px;">Meus lançamentos</h2>
+        <div class="muted-tag" style="margin-bottom:12px;" id="tabletHistoricoSub">Últimos 30 dias</div>
+        <div id="tabletHistoricoLista"></div>
       </div>
     </section>
 
@@ -1742,7 +1786,14 @@
   window.addEventListener('message', function(evento){
     if (ORIGENS_AUTORIZADAS.indexOf(evento.origin) === -1) return;
     var dados = evento.data;
-    if (!dados || dados.tipo !== 'comprex-sessao') return;
+    if (!dados) return;
+    // O tablet pede pra voltar à aba "Lançar" toda vez que o operador entra na Parte Diária —
+    // senão ele reabre no lugar onde parou (por exemplo em "Meus lançamentos").
+    if (dados.tipo === 'sispoc-ir-lancar') {
+      if (typeof window.__comprexTabletLancar === 'function') window.__comprexTabletLancar();
+      return;
+    }
+    if (dados.tipo !== 'comprex-sessao') return;
     if (window.__comprexJaIniciou) return;      // uma vez só
     window.__comprexJaIniciou = true;
     aplicarTokenTablet(dados.token);
@@ -4088,8 +4139,89 @@
     var d = new Date();
     return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
   }
+  /* ===== "Meus lançamentos" — histórico do próprio operador, dentro da Parte Diária do tablet.
+     O operador não tem o menu lateral da Controladoria, então o histórico vira uma aba aqui.
+     Mostra só o que ELE lançou, nos últimos 30 dias, em cartões (a tabela do Escritório tem 19
+     colunas e não cabe num tablet). Somente leitura — corrigir continua sendo da Controladoria. */
+  var TABLET_HIST_DIAS = 30;
+  function lancamentosDoOperadorLogado(){
+    var op = operadorDoLoginAtual();
+    if(!op) return [];
+    var alvo = normalizarNomeComparacao(op.nome);
+    var limite = new Date();
+    limite.setDate(limite.getDate() - TABLET_HIST_DIAS);
+    var limiteISO = limite.toISOString().slice(0,10);
+    return state.apropriacoes.filter(function(a){
+      return normalizarNomeComparacao(a.operador)===alvo && String(a.data||'') >= limiteISO;
+    }).sort(function(a,b){
+      return String(b.data||'').localeCompare(String(a.data||'')) ||
+             String(b.entrada||'').localeCompare(String(a.entrada||''));
+    });
+  }
+  function renderTabletHistorico(){
+    var lista = document.getElementById('tabletHistoricoLista');
+    if(!lista) return;
+    var itens = lancamentosDoOperadorLogado();
+    var sub = document.getElementById('tabletHistoricoSub');
+    if(sub) sub.textContent = itens.length
+      ? ('Últimos '+TABLET_HIST_DIAS+' dias · '+itens.length+' lançamento'+(itens.length>1?'s':''))
+      : ('Últimos '+TABLET_HIST_DIAS+' dias');
+    if(!itens.length){
+      lista.innerHTML = '<div class="muted-tag">Você ainda não tem lançamentos concluídos nos últimos '+TABLET_HIST_DIAS+' dias.</div>';
+      return;
+    }
+    lista.innerHTML = itens.map(function(a){
+      var eq = getEquip(a.equipamentoId);
+      var ord = getOrdem(a.ordemId);
+      var numOrdem = ord ? (ord.numero||'') : (a.ordemNumeroTexto||'');
+      var descOrdem = ord ? (ord.nome || ord.local || '') : (a.ordemDescricaoTexto||'');
+      var nCliente = ord ? numeroDoClientePorNome(ord.cliente) : '';
+      var hi = (typeof a.horimetroInicial==='number') ? brNum(a.horimetroInicial,1) : '—';
+      var hf = (typeof a.horimetroFinal==='number') ? brNum(a.horimetroFinal,1) : '—';
+      var horas = (typeof a.horasOperador==='number') ? brNum(a.horasOperador,2)+'h' : '—';
+      var qtdParadas = (a.paradas||[]).filter(function(p){ return p.horas>0; }).length;
+      return '<div class="tl-hist-card">' +
+        '<div class="tl-hist-topo"><span class="tl-hist-data">'+esc(brDate(a.data))+'</span>' +
+          '<span class="tl-hist-horas">'+esc(horas)+'</span></div>' +
+        '<div class="tl-hist-linha">🚜 <b>'+esc(eq?eq.codigo.toUpperCase():'—')+'</b>'+(eq&&eq.descricao?' · '+esc(eq.descricao):'')+'</div>' +
+        '<div class="tl-hist-linha">📄 Ordem <b>'+esc(numOrdem||'—')+'</b>'+(descOrdem?' · '+esc(descOrdem):'')+
+          (nCliente?' · cliente <b>'+esc(nCliente)+'</b>':'')+'</div>' +
+        '<div class="tl-hist-linha">🕐 '+esc(a.entrada||'—')+'–'+esc(a.saida||'—')+
+          ' · ⏱ horímetro <b>'+esc(hi)+' → '+esc(hf)+'</b>'+
+          (qtdParadas?' · ⏸ '+qtdParadas+' parada'+(qtdParadas>1?'s':''):'')+'</div>' +
+      '</div>';
+    }).join('');
+  }
+  function mostrarAbaTablet(qual){
+    var cardForm = document.getElementById('apropriacaoCard');
+    var cardHist = document.getElementById('tabletHistoricoCard');
+    var abaL = document.getElementById('tabletAbaLancar');
+    var abaH = document.getElementById('tabletAbaHistorico');
+    if(!cardForm || !cardHist) return;
+    var ehHistorico = qual==='historico';
+    cardForm.style.display = ehHistorico ? 'none' : '';
+    cardHist.style.display = ehHistorico ? '' : 'none';
+    if(abaL) abaL.classList.toggle('ativa', !ehHistorico);
+    if(abaH) abaH.classList.toggle('ativa', ehHistorico);
+    if(ehHistorico) renderTabletHistorico();
+  }
+  function montarAbasTabletParteDiaria(){
+    var abas = document.getElementById('tabletAbas');
+    if(!abas) return;
+    // Só no tablet (operador de campo). No Escritório o histórico é a tela própria dele.
+    if(state.perfil!=='campo' || !operadorDoLoginAtual()){ abas.style.display = 'none'; return; }
+    abas.style.display = 'flex';
+    if(!abas.dataset.wired){
+      abas.dataset.wired = '1';
+      document.getElementById('tabletAbaLancar').addEventListener('click', function(){ mostrarAbaTablet('lancar'); });
+      document.getElementById('tabletAbaHistorico').addEventListener('click', function(){ mostrarAbaTablet('historico'); });
+    }
+    mostrarAbaTablet('lancar');
+  }
+
   function renderApropriacaoEntry(){
     var wrap = document.getElementById('apropriacaoFormWrap');
+    montarAbasTabletParteDiaria();
     var operadorAuto = operadorDoLoginAtual();
     if(operadorAuto){
       var hoje = todayISO();
@@ -4270,14 +4402,31 @@
     // editando) no modo simplificado. Se o equipamento salvo não existir mais no cadastro, cai
     // de volta no comportamento de sempre (primeiro da lista ordenada).
     var equipUltimoUsado = null;
+    // Último lançamento CONCLUÍDO deste operador — é dele que saem Equipamento, Nº Ordem,
+    // Descrição e Nº Cliente já preenchidos quando ele abre um lançamento novo. Na prática o
+    // operador volta pra mesma máquina e mesma obra no dia seguinte, então isso poupa quatro
+    // campos; se mudou, é só trocar o equipamento que tudo se repreenche.
+    var ultimoLancamentoOperador = null;
+    if(!editRecord && modoOperadorSimplificado && operadorAuto){
+      var alvoOperadorUlt = normalizarNomeComparacao(operadorAuto.nome);
+      ultimoLancamentoOperador = state.apropriacoes.filter(function(a){
+        return normalizarNomeComparacao(a.operador)===alvoOperadorUlt;
+      }).sort(function(a,b){
+        return String(a.data||'').localeCompare(String(b.data||'')) ||
+               String(a.entrada||'').localeCompare(String(b.entrada||''));
+      }).slice(-1)[0] || null;
+    }
     if(!editRecord && modoOperadorSimplificado && operadorAuto && operadorAuto.ultimoEquipamentoCodigo){
       var codigoUltimo = String(operadorAuto.ultimoEquipamentoCodigo).trim().toUpperCase();
       equipUltimoUsado = codigoUltimo ? state.equipamentos.filter(function(e){ return String(e.codigo).trim().toUpperCase()===codigoUltimo; })[0] || null : null;
     }
+    // Se o equipamento salvo no cadastro do operador não existir mais, usa o do último lançamento.
+    if(!equipUltimoUsado && ultimoLancamentoOperador) equipUltimoUsado = getEquip(ultimoLancamentoOperador.equipamentoId) || null;
+    var ordemUltimoLancamento = ultimoLancamentoOperador ? getOrdem(ultimoLancamentoOperador.ordemId) : null;
     var equipValorInicial = editRecord ? equipLabel(getEquip(editRecord.equipamentoId)) : equipLabel(equipUltimoUsado || equipamentosOrdenados[0]);
-    var ordemValorInicial = editRecord ? ordemLabelAtual(getOrdem(editRecord.ordemId)) : (restringirOrdem && ordensOrdenadas[0] ? ordemLabelAtual(ordensOrdenadas[0]) : '');
-    var ordemNumeroValorInicial = editRecord ? (getOrdem(editRecord.ordemId)||{}).numero||'' : (restringirOrdem && ordensOrdenadas[0] ? (ordensOrdenadas[0].numero||'') : '');
-    var nClienteValorInicial = editRecord ? (CLIENTE_NUMEROS[(getOrdem(editRecord.ordemId)||{}).cliente]||'') : (clienteRestrito ? (CLIENTE_NUMEROS[clienteRestrito]||'') : (restringirOrdem && ordensOrdenadas[0] ? (CLIENTE_NUMEROS[ordensOrdenadas[0].cliente]||'') : ''));
+    var ordemValorInicial = editRecord ? ordemLabelAtual(getOrdem(editRecord.ordemId)) : (restringirOrdem && ordensOrdenadas[0] ? ordemLabelAtual(ordensOrdenadas[0]) : ((modoOperadorSimplificado && equipUltimoUsado && equipUltimoUsado.local) ? String(equipUltimoUsado.local).trim() : (ordemUltimoLancamento ? ordemLabelAtual(ordemUltimoLancamento) : (ultimoLancamentoOperador ? (ultimoLancamentoOperador.ordemDescricaoTexto||'') : ''))));
+    var ordemNumeroValorInicial = editRecord ? (getOrdem(editRecord.ordemId)||{}).numero||'' : (restringirOrdem && ordensOrdenadas[0] ? (ordensOrdenadas[0].numero||'') : (ordemUltimoLancamento ? (ordemUltimoLancamento.numero||'') : (ultimoLancamentoOperador ? (ultimoLancamentoOperador.ordemNumeroTexto||'') : '')));
+    var nClienteValorInicial = editRecord ? numeroDoClientePorNome((getOrdem(editRecord.ordemId)||{}).cliente) : (clienteRestrito ? numeroDoClientePorNome(clienteRestrito) : (restringirOrdem && ordensOrdenadas[0] ? numeroDoClientePorNome(ordensOrdenadas[0].cliente) : (ordemUltimoLancamento ? numeroDoClientePorNome(ordemUltimoLancamento.cliente) : '')));
 
     wrap.innerHTML =
       (editRecord ? renderApBannerEdicao(editRecord, isRascunho) : '') +
@@ -4407,7 +4556,12 @@
     // Guarda qual equipamento gerou o preenchimento atual. Trocou de equipamento => refaz tudo,
     // mesmo que os campos de Ordem já tenham valor (senão o operador troca de máquina e fica
     // com a ordem da máquina anterior). Mesmo equipamento => respeita o que estiver preenchido.
-    var equipDoAutoPreenchimento = null;
+    // Quando os campos já vieram do último lançamento do operador E o equipamento é o mesmo
+    // desse lançamento, o auto-preenchimento por Local não precisa (nem deve) rodar por cima:
+    // marca esse equipamento como "já preenchido". Trocar de equipamento continua refazendo tudo.
+    var equipDoAutoPreenchimento = (ultimoLancamentoOperador && equipUltimoUsado &&
+        ultimoLancamentoOperador.equipamentoId === equipUltimoUsado.id && ordemNumeroValorInicial)
+      ? equipUltimoUsado.id : null;
     function autoPreencherPorEquipamentoAp(forcar){
       var equipTexto = document.getElementById('apEquip').value.trim();
       var equipObj = state.equipamentos.filter(function(e){ return equipLabel(e)===equipTexto; })[0];
@@ -5006,6 +5160,31 @@
     // Contador compacto (ex.: "1h05") do tempo decorrido desde que o evento em aberto (atividade
     // ou parada) começou — só mostra, não recalcula nada: quem manda no valor salvo continua
     // sendo o horário de início/fim de cada evento, igual sempre foi.
+    /* Horímetro no mesmo padrão do Checklist: o operador só digita números e a vírgula entra
+       sozinha, sempre com uma casa decimal (digitou "10245" → mostra "1024,5"). Evita o teclado
+       decimal do Android, que em alguns aparelhos nem oferece a vírgula. */
+    function aplicarMascaraHorimetroTl(campo){
+      var digitos = String(campo.value||'').replace(/[^0-9]/g, '');
+      if(!digitos){ campo.value = ''; return; }
+      if(digitos.length === 1){ campo.value = '0,' + digitos; return; }
+      var dec = digitos.slice(-1);
+      var inteiro = digitos.slice(0, -1).replace(/^0+/, '') || '0';
+      campo.value = inteiro + ',' + dec;
+      try{ campo.setSelectionRange(campo.value.length, campo.value.length); }catch(e){}
+    }
+    function horimetroParaNumero(texto){
+      var limpo = String(texto==null?'':texto).trim().replace(/\./g,'').replace(',', '.');
+      if(limpo==='') return NaN;
+      return parseFloat(limpo);
+    }
+    function ligarMascaraHorimetroTl(){
+      ['apTlHorimetro','apTlParadaHorimetro','apTlHorimetroFinal'].forEach(function(id){
+        var el = document.getElementById(id);
+        if(!el || el.dataset.mascaraHorimetro) return;
+        el.dataset.mascaraHorimetro = '1';
+        el.addEventListener('input', function(){ aplicarMascaraHorimetroTl(this); });
+      });
+    }
     function formatarDuracaoTl(horasDecimal){
       var totalMin = Math.max(0, Math.round(horasDecimal*60));
       var h = Math.floor(totalMin/60), m = totalMin%60;
@@ -5054,61 +5233,60 @@
       if(!ultimoTl || ultimoTl.fim){
         acaoHtmlTl =
           '<div class="field-row">' +
-            '<div class="field"><label>Horímetro</label><input type="number" step="0.1" id="apTlHorimetro" placeholder="0,0"></div>' +
-            '<div class="field"><label>Iniciar em</label><select id="apTlSituacao">'+optionsList(['Operação','À disposição'],'Operação')+'</select></div>' +
+            '<div class="field tl-campo"><label>Horímetro</label><input type="text" inputmode="numeric" id="apTlHorimetro" placeholder="0,0"></div>' +
+            '<div class="field tl-campo"><label>Iniciar em</label><select id="apTlSituacao">'+optionsList(['Operação','À disposição'],'Operação')+'</select></div>' +
           '</div>' +
           '<div id="apTlErro"></div>' +
-          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-            '<button type="button" class="btn btn-primary" style="flex:1" id="apTlIniciarBtn">Iniciar</button>' +
-            '<button type="button" class="btn btn-outline" style="flex:1" id="apTlIniciarEmParadaBtn">+ Iniciar já em parada</button>' +
+          '<div class="tl-acoes">' +
+            '<button type="button" class="btn-tl btn-tl-iniciar" id="apTlIniciarBtn"><span class="tl-ico">▶️</span>Iniciar</button>' +
+            '<button type="button" class="btn-tl btn-tl-parada" id="apTlIniciarEmParadaBtn"><span class="tl-ico">⏸️</span>Iniciar já em parada</button>' +
           '</div>' +
           '<div id="apTlParadaForm" style="display:none;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">' +
             '<div class="field-row">' +
-              '<div class="field"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
-              '<div class="field"><label>Serviço</label><select id="apTlParadaServico"><option value="">Escolha o motivo primeiro…</option></select></div>' +
-              '<div class="field"><label>Horímetro</label><input type="number" step="0.1" id="apTlParadaHorimetro" placeholder="0,0"></div>' +
+              '<div class="field tl-campo"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
+              '<div class="field tl-campo"><label>Serviço</label><select id="apTlParadaServico"><option value="">Escolha o motivo primeiro…</option></select></div>' +
+              '<div class="field tl-campo"><label>Horímetro</label><input type="text" inputmode="numeric" id="apTlParadaHorimetro" placeholder="0,0"></div>' +
             '</div>' +
             '<div class="field"><label>Observação (opcional)</label><input type="text" id="apTlParadaObs" placeholder="Ex: aguardando liberação"></div>' +
             '<div id="apTlParadaErro"></div>' +
-            '<button type="button" class="btn btn-outline btn-sm" id="apTlParadaIniciarBtn">Iniciar parada</button>' +
+            '<button type="button" class="btn-tl btn-tl-parada-forte" style="width:100%" id="apTlParadaIniciarBtn"><span class="tl-ico">⏸️</span>Iniciar parada</button>' +
           '</div>';
       } else if(abertoAtividadeTl){
         acaoHtmlTl =
           '<div class="muted-tag" style="margin-bottom:8px;">Em '+esc(ultimoTl.situacao)+' desde '+esc(ultimoTl.inicio)+' (horímetro '+brNum(ultimoTl.horimetroIni,1)+') · <b id="apTlContador" style="color:var(--navy);">00:00:00</b></div>' +
           '<div id="apTlParadaForm" style="display:none;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--border);">' +
             '<div class="field-row">' +
-              '<div class="field"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
-              '<div class="field"><label>Serviço</label><select id="apTlParadaServico"><option value="">Escolha o motivo primeiro…</option></select></div>' +
-              '<div class="field"><label>Horímetro</label><input type="number" step="0.1" id="apTlParadaHorimetro" placeholder="0,0"></div>' +
+              '<div class="field tl-campo"><label>Motivo</label><select id="apTlParadaCategoria"><option value="">Selecione…</option>'+optionsList(CATEGORIAS_PARADA,'')+'</select></div>' +
+              '<div class="field tl-campo"><label>Serviço</label><select id="apTlParadaServico"><option value="">Escolha o motivo primeiro…</option></select></div>' +
+              '<div class="field tl-campo"><label>Horímetro</label><input type="text" inputmode="numeric" id="apTlParadaHorimetro" placeholder="0,0"></div>' +
             '</div>' +
             '<div class="field"><label>Observação (opcional)</label><input type="text" id="apTlParadaObs" placeholder="Ex: aguardando liberação"></div>' +
             '<div id="apTlParadaErro"></div>' +
-            '<button type="button" class="btn btn-outline btn-sm" id="apTlParadaIniciarBtn">Iniciar parada</button>' +
+            '<button type="button" class="btn-tl btn-tl-parada-forte" style="width:100%" id="apTlParadaIniciarBtn"><span class="tl-ico">⏸️</span>Iniciar parada</button>' +
           '</div>' +
           '<div id="apTlFinalForm" style="display:none;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--border);">' +
-            '<div class="field"><label>Horímetro final</label><input type="number" step="0.1" id="apTlHorimetroFinal" placeholder="0,0"></div>' +
+            '<div class="field tl-campo"><label>Horímetro final</label><input type="text" inputmode="numeric" id="apTlHorimetroFinal" placeholder="0,0"></div>' +
             '<div id="apTlFinalErro"></div>' +
-            '<button type="button" class="btn btn-primary btn-sm" id="apTlFinalConfirmarBtn">Salvar lançamento</button>' +
+            '<button type="button" class="btn-tl btn-tl-salvar" id="apTlFinalConfirmarBtn"><span class="tl-ico">💾</span>Salvar lançamento</button>' +
           '</div>' +
-          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-            '<button type="button" class="btn btn-outline" id="apTlAddParadaBtn">+ Adicionar parada</button>' +
-            '<button type="button" class="btn btn-outline" id="apTlFinalizarBtn">Finalizar lançamento</button>' +
+          '<div class="tl-acoes">' +
+            '<button type="button" class="btn-tl btn-tl-parada" id="apTlAddParadaBtn"><span class="tl-ico">⏸️</span>Adicionar parada</button>' +
+            '<button type="button" class="btn-tl btn-tl-finalizar" id="apTlFinalizarBtn"><span class="tl-ico">⏹️</span>Finalizar lançamento</button>' +
           '</div>';
       } else if(abertoParadaTl){
         acaoHtmlTl =
           '<div class="muted-tag" style="margin-bottom:8px;">Parado — '+esc(ultimoTl.motivo)+' — desde '+esc(ultimoTl.inicio)+' · <b id="apTlContador" style="color:var(--ru);">00:00:00</b></div>' +
-          '<button type="button" class="btn btn-primary" id="apTlFinalizarParadaBtn">Finalizar parada</button>';
+          '<div class="tl-acoes"><button type="button" class="btn-tl btn-tl-iniciar" id="apTlFinalizarParadaBtn"><span class="tl-ico">▶️</span>Voltar a operar (finalizar parada)</button></div>';
       }
 
       var testeHtmlTl =
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);">' +
-          '<button type="button" class="btn btn-outline btn-sm" id="apTlCancelarBtn">Cancelar lançamento</button>' +
-          '<button type="button" class="btn btn-outline btn-sm" id="apTlRefazerBtn">Refazer lançamento</button>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);">' +
+          '<button type="button" class="btn-tl btn-tl-refazer" id="apTlRefazerBtn"><span class="tl-ico">↺</span>Refazer lançamento</button>' +
         '</div>';
 
       wrapT.innerHTML = historicoHtmlTl + acaoHtmlTl + testeHtmlTl;
-      document.getElementById('apTlCancelarBtn').onclick = cancelarOuRefazerLancamentoTl;
       document.getElementById('apTlRefazerBtn').onclick = cancelarOuRefazerLancamentoTl;
+      ligarMascaraHorimetroTl();
 
       // Contador ao vivo: atualiza a cada 15s enquanto houver uma atividade ou parada em
       // aberto. Pequeno de propósito (só o texto em negrito acima) — não é mais um campo,
@@ -5126,7 +5304,7 @@
       if(!ultimoTl || ultimoTl.fim){
         document.getElementById('apTlIniciarBtn').onclick = function(){
           var hRaw = document.getElementById('apTlHorimetro').value;
-          var h = parseFloat(hRaw);
+          var h = horimetroParaNumero(hRaw);
           var erroEl = document.getElementById('apTlErro');
           if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro.</div>'; return; }
           var situacaoTl = document.getElementById('apTlSituacao').value;
@@ -5153,7 +5331,7 @@
         document.getElementById('apTlParadaIniciarBtn').onclick = function(){
           var servico = document.getElementById('apTlParadaServico').value;
           var hRaw = document.getElementById('apTlParadaHorimetro').value;
-          var h = parseFloat(hRaw);
+          var h = horimetroParaNumero(hRaw);
           var erroEl = document.getElementById('apTlParadaErro');
           if(!servico){ erroEl.innerHTML = '<div class="form-error">Selecione o motivo/serviço da parada.</div>'; return; }
           if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro.</div>'; return; }
@@ -5186,7 +5364,7 @@
         document.getElementById('apTlParadaIniciarBtn').onclick = function(){
           var servico = document.getElementById('apTlParadaServico').value;
           var hRaw = document.getElementById('apTlParadaHorimetro').value;
-          var h = parseFloat(hRaw);
+          var h = horimetroParaNumero(hRaw);
           var erroEl = document.getElementById('apTlParadaErro');
           if(!servico){ erroEl.innerHTML = '<div class="form-error">Selecione o motivo/serviço da parada.</div>'; return; }
           if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro.</div>'; return; }
@@ -5234,7 +5412,7 @@
       if(finalConfirmarBtnTl){
         finalConfirmarBtnTl.onclick = function(){
           var hRaw = document.getElementById('apTlHorimetroFinal').value;
-          var h = parseFloat(hRaw);
+          var h = horimetroParaNumero(hRaw);
           var erroEl = document.getElementById('apTlFinalErro');
           if(hRaw===''||isNaN(h)){ erroEl.innerHTML = '<div class="form-error">Informe o horímetro final.</div>'; return; }
           var testeTlLiberado = (typeof MODO_TESTE_TABLET !== 'undefined') && MODO_TESTE_TABLET;
@@ -10285,6 +10463,11 @@
   if (window.__comprexEmbed || window.__comprexEmbedPortal) {
     window.__comprexTrocarTela = switchView;
     window.__comprexAbrirCadastro = abrirCadastroPorChave;
+    // Usado pelo tablet: volta pra tela de lançamento, na aba "Lançar".
+    window.__comprexTabletLancar = function(){
+      switchView('apropriacao');
+      mostrarAbaTablet('lancar');
+    };
   }
   if (window.__comprexEmbed || window.__comprexEmbedPortal) { window.__comprexIniciar = init; }
   else if (!window.__comprexAcessoBloqueado) { init(); }
