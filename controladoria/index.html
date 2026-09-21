@@ -1845,6 +1845,23 @@
      uma letra maiúscula fora do lugar pra busca exata não achar nada — foi o que fazia o
      "Nº Cliente" ficar vazio no tablet mesmo com o número cadastrado. Aqui compara ignorando
      acento, caixa e espaços sobrando. */
+  /* Carimba o Nº do cliente dentro de todas as Ordens desse cliente. É o que faz o número
+     sobreviver ao F5 neste servidor: a lista de Ordens guarda todos os campos, enquanto as
+     "configurações" e os campos extras do cliente estão sendo descartados.
+     Devolve quantas ordens mudaram (0 = nada pra gravar). */
+  function carimbarNumeroClienteNasOrdens(nomeCliente, numero){
+    if(!nomeCliente) return 0;
+    var alvo = normalizarNomeComparacao(nomeCliente);
+    var valor = String(numero||'').trim();
+    var mudou = 0;
+    state.ordens.forEach(function(o){
+      if(normalizarNomeComparacao(o.cliente) !== alvo) return;
+      if(String(o.numeroCliente||'') === valor) return;
+      o.numeroCliente = valor;
+      mudou++;
+    });
+    return mudou;
+  }
   function numeroDoClientePorNome(nome){
     if(!nome) return '';
     var direto = CLIENTE_NUMEROS[nome];
@@ -3070,7 +3087,7 @@
     function aplicarOrdem(ord){
       document.getElementById(idNumero).value = ord.numero || '';
       document.getElementById(idNome).value = labelFn(ord);
-      if(idNCliente) document.getElementById(idNCliente).value = numeroDoClientePorNome(ord.cliente);
+      if(idNCliente) document.getElementById(idNCliente).value = String(ord.numeroCliente||'').trim() || numeroDoClientePorNome(ord.cliente);
       if(idCliente) document.getElementById(idCliente).value = ord.cliente || '';
     }
     wireComboBox(idNumero, idNumero+'List', function(){ return ordensFiltradas().filter(function(o){ return o.numero; }).map(function(o){ return o.numero; }); }, ordensFiltradas().map(function(o){ return o.cliente; }), function(){
@@ -4684,7 +4701,8 @@
         if(!modoOperadorSimplificado) document.getElementById('apOrdem').value = ordemLabelAtual(achada);
         // Nº do Cliente: vem do Cliente cadastrado NA ORDEM (Cadastrar → Ordens de Trabalho),
         // cruzado com o número dele em Cadastrar → Clientes. É esse o vínculo.
-        var numeroClienteAchado = numeroDoClientePorNome(achada.cliente);
+        // O número gravado na própria Ordem tem prioridade: é o que sobrevive neste servidor.
+        var numeroClienteAchado = String(achada.numeroCliente||'').trim() || numeroDoClientePorNome(achada.cliente);
         document.getElementById('apNCliente').value = numeroClienteAchado;
         if(infoEl){
           if(!numeroClienteAchado && achada.cliente){
@@ -4743,7 +4761,7 @@
         var numAtual = elNum.value.trim();
         if(numAtual && elNCli && !elNCli.value.trim()){
           var ord = state.ordens.filter(function(o){ return String(o.numero||'').trim()===numAtual; })[0];
-          if(ord) elNCli.value = numeroDoClientePorNome(ord.cliente);
+          if(ord) elNCli.value = String(ord.numeroCliente||'').trim() || numeroDoClientePorNome(ord.cliente);
         }
         atualizarServicoTarifa(); atualizarServicoHora();
       }
@@ -5958,19 +5976,26 @@
       // item, então precisa ser gravado DEPOIS de CLIENTE_NUMEROS/CLIENTE_DETALHES já estarem
       // atualizados na memória (o que acontece logo acima).
       var okNumeros = await saveList('cliente_numeros_v3', CLIENTE_NUMEROS);
-      var erroNumeros = okNumeros ? '' : ULTIMO_ERRO_CONFIG;
       await saveList('cliente_detalhes_v1', CLIENTE_DETALHES);
       var ok1 = await saveList('clientes_v2', CLIENTES);
+      // Grava o Nº do cliente DENTRO das Ordens desse cliente. Neste servidor é o único
+      // depósito que sobrevive ao F5 — as "configurações" e os campos extras do cliente estão
+      // sendo descartados. Se o cliente ainda não tem nenhuma Ordem, não há onde carimbar.
+      var ordensCarimbadas = carimbarNumeroClienteNasOrdens(nome, numero);
+      var okOrdens = true;
+      if(ordensCarimbadas > 0) okOrdens = await saveList('ordens_v9', state.ordens);
       closeModal();
       if(!ok1){
         toast('Não consegui salvar o cliente no servidor. ' + (ULTIMO_ERRO_CONFIG||'') +
               ' O que você digitou está só nesta tela — recarregue e tente de novo.', 12000);
-      } else if(!okNumeros && numero){
-        // O nome salvou, mas o Nº do cliente não foi aceito no lugar de sempre. Ele ainda fica
-        // gravado junto do cliente (acima), então normalmente sobrevive — mas é melhor avisar.
-        toast('Cliente salvo. O Nº do cliente não foi aceito no cadastro de configurações do ' +
-              'servidor (' + (erroNumeros||'motivo não informado') + '), então gravei junto do ' +
-              'cliente. Recarregue a tela pra confirmar que o número continua aí.', 14000);
+      } else if(numero && !okNumeros && ordensCarimbadas > 0 && okOrdens){
+        toast('Cliente salvo. O Nº do cliente ficou gravado nas ' + ordensCarimbadas +
+              ' ordem(ns) deste cliente — é de lá que o sistema vai lê-lo, porque o depósito ' +
+              'de configurações do servidor não está guardando. Pode recarregar e conferir.', 12000);
+      } else if(numero && !okNumeros && ordensCarimbadas === 0){
+        toast('Cliente salvo, mas o Nº do cliente pode não sobreviver ao recarregar: o servidor ' +
+              'não está guardando esse campo e este cliente ainda não tem nenhuma Ordem ' +
+              'cadastrada pra guardá-lo. Cadastre uma Ordem para ele e salve o número de novo.', 14000);
       } else {
         toast('Cliente salvo.');
       }
@@ -6137,7 +6162,12 @@
           // os números sobrevivem mesmo se o servidor não guardar as "configurações".
           ok = await saveList('clientes_v2', CLIENTES) && ok;
         }
-        if(a.ordNovas.length){ ok = await saveList('ordens_v9', state.ordens) && ok; }
+        // E carimba o Nº do cliente dentro de cada Ordem — o depósito que sobrevive de verdade.
+        var ordensCarimbadas = 0;
+        Object.keys(CLIENTE_NUMEROS).forEach(function(nomeCli){
+          ordensCarimbadas += carimbarNumeroClienteNasOrdens(nomeCli, CLIENTE_NUMEROS[nomeCli]);
+        });
+        if(a.ordNovas.length || ordensCarimbadas) ok = await saveList('ordens_v9', state.ordens) && ok;
         closeModal();
         toast(ok
           ? ('Importação concluída: '+a.cliNovos.length+' cliente(s) e '+a.ordNovas.length+' ordem(ns) adicionadas'+
@@ -10528,6 +10558,16 @@
         if(!atual.cnpj && it.cnpj) atual.cnpj = String(it.cnpj).trim();
         if(!atual.contato && it.contato) atual.contato = String(it.contato).trim();
         CLIENTE_DETALHES[it.nome] = atual;
+      }
+    });
+    // Terceira fonte, e a mais confiável neste servidor: o Nº do cliente gravado DENTRO da
+    // Ordem. As Ordens são a única lista que comprovadamente guarda todos os campos aqui —
+    // as "configurações" (onde o Nº morava) e os campos extras do cliente estão sendo
+    // descartados pelo servidor. Ver saveList/carimbarNumeroClienteNasOrdens.
+    (ord || []).forEach(function(o){
+      if(!o || !o.cliente || !o.numeroCliente) return;
+      if(!String(CLIENTE_NUMEROS[o.cliente]||'').trim()){
+        CLIENTE_NUMEROS[o.cliente] = String(o.numeroCliente).trim();
       }
     });
     MATERIAIS_PESAGEM = (matPesagem||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
