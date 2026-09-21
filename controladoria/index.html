@@ -1229,6 +1229,7 @@
         <div class="filters">
           <input type="text" id="filtroOperadorBusca" placeholder="Buscar pelo nome…" style="width:220px;">
         </div>
+        <button class="btn btn-outline" id="limparDuplicadosOperBtn" style="display:none;">Limpar duplicados</button>
         <button class="btn btn-outline" id="importarOperadoresBtn">Importar planilha</button>
         <button class="btn btn-primary" id="novoOperadorBtn">+ Novo operador</button>
       </div>
@@ -4018,8 +4019,50 @@
   }
 
   function valoresColunaOperador(o){ return { matricula: o.matricula||'—', nome: o.nome||'—', cargo: o.cargo||'—' }; }
+  /* Nomes repetidos no cadastro (ignorando quem já está desativado). Uma importação que roda
+     duas vezes deixa o mesmo operador em dobro — isso encontra os casos. */
+  function duplicadosDeOperadores(){
+    var porNome = {};
+    state.operadores.forEach(function(o){
+      if(o.ativo === false) return;
+      var k = normalizarNomeComparacao(o.nome);
+      if(!k) return;
+      (porNome[k] = porNome[k] || []).push(o);
+    });
+    var grupos = [];
+    Object.keys(porNome).forEach(function(k){ if(porNome[k].length > 1) grupos.push(porNome[k]); });
+    return grupos;
+  }
+  function limparDuplicadosOperadores(){
+    var grupos = duplicadosDeOperadores();
+    if(!grupos.length){ toast('Nenhum operador repetido encontrado.'); return; }
+    var sobrando = grupos.reduce(function(n,g){ return n + (g.length-1); }, 0);
+    confirmModal('Limpar operadores repetidos',
+      'Encontrei '+grupos.length+' nome(s) repetido(s), somando '+sobrando+' cópia(s) a mais. ' +
+      'Vou DESATIVAR as cópias extras — elas saem da lista de uso mas continuam no servidor, ' +
+      'e dá pra reativar uma a uma se precisar. De cada nome fica a cópia que já tem login do tablet ' +
+      '(ou a primeira, se nenhuma tiver). Continuar?',
+      async function(){
+        var desativados = 0;
+        grupos.forEach(function(g){
+          var manter = g.filter(function(o){ return o.usuario; })[0] || g[0];
+          g.forEach(function(o){ if(o.id !== manter.id){ o.ativo = false; desativados++; } });
+        });
+        var ok = await saveList('operadores_v4', state.operadores);
+        toast(ok ? (desativados + ' cópia(s) desativada(s).') : 'Desativado localmente — problema ao sincronizar.', 9000);
+        renderOperadoresTab();
+      });
+  }
+
   function renderOperadoresTab(){
     var busca = document.getElementById('filtroOperadorBusca').value.trim().toLowerCase();
+    var btnDup = document.getElementById('limparDuplicadosOperBtn');
+    if(btnDup){
+      var gruposDup = duplicadosDeOperadores();
+      btnDup.style.display = gruposDup.length ? 'inline-flex' : 'none';
+      btnDup.textContent = 'Limpar duplicados (' + gruposDup.length + ')';
+      btnDup.onclick = limparDuplicadosOperadores;
+    }
     var list = state.operadores.filter(function(o){
       if(busca && o.nome.toLowerCase().indexOf(busca)===-1) return false;
       return true;
@@ -4270,6 +4313,16 @@
     if(state.perfil!=='campo' || !state.usuarioLogado || !state.usuarioLogado.nome) return null;
     var alvo = normalizarNomeComparacao(state.usuarioLogado.nome);
     return state.operadores.filter(function(o){ return normalizarNomeComparacao(o.nome)===alvo; })[0] || null;
+  }
+  /* Quem enxerga "Cancelar lançamento" e "Refazer lançamento" no tablet. São botões de teste
+     (descartam o lançamento em andamento), então ficam restritos. Para liberar mais alguém,
+     é só acrescentar o usuário do login do tablet nesta lista. */
+  var USUARIOS_COM_CANCELAR = ['vnicanor'];
+  function podeCancelarLancamentoTl(){
+    if(state.perfil !== 'campo') return true;               // Escritório/Administrador: sem restrição
+    var op = operadorDoLoginAtual();
+    var usuario = op && op.usuario ? String(op.usuario).trim().toLowerCase() : '';
+    return USUARIOS_COM_CANCELAR.indexOf(usuario) > -1;
   }
   function horaAtualHHMM(){
     var d = new Date();
@@ -5444,15 +5497,19 @@
           '<div class="tl-acoes"><button type="button" class="btn-tl btn-tl-iniciar" id="apTlFinalizarParadaBtn"><span class="tl-ico">▶️</span>Voltar a operar (finalizar parada)</button></div>';
       }
 
-      var testeHtmlTl =
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);">' +
+      // Cancelar/Refazer são ferramenta de teste: só aparecem para os logins autorizados
+      // (USUARIOS_COM_CANCELAR). Para o resto da equipe, a linha some da tela.
+      var testeHtmlTl = podeCancelarLancamentoTl() ?
+        ('<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);">' +
           '<button type="button" class="btn-tl btn-tl-refazer" id="apTlCancelarBtn"><span class="tl-ico">✕</span>Cancelar lançamento</button>' +
           '<button type="button" class="btn-tl btn-tl-refazer" id="apTlRefazerBtn"><span class="tl-ico">↺</span>Refazer lançamento</button>' +
-        '</div>';
+        '</div>') : '';
 
       wrapT.innerHTML = historicoHtmlTl + acaoHtmlTl + testeHtmlTl;
-      document.getElementById('apTlRefazerBtn').onclick = function(){ cancelarOuRefazerLancamentoTl(false); };
-      document.getElementById('apTlCancelarBtn').onclick = function(){ cancelarOuRefazerLancamentoTl(true); };
+      var btnRefazerTl = document.getElementById('apTlRefazerBtn');
+      if(btnRefazerTl) btnRefazerTl.onclick = function(){ cancelarOuRefazerLancamentoTl(false); };
+      var btnCancelarTl = document.getElementById('apTlCancelarBtn');
+      if(btnCancelarTl) btnCancelarTl.onclick = function(){ cancelarOuRefazerLancamentoTl(true); };
       ligarMascaraHorimetroTl();
 
       // Contador ao vivo: atualiza a cada 15s enquanto houver uma atividade ou parada em
@@ -6052,7 +6109,7 @@
       var soOperacao = document.getElementById('impOperSoOperacao').checked;
       try{
         var linhas = await lerPlanilhaComoLinhas(arquivoAtual);
-        var novos = [], duplicados = 0, semNome = 0, foraDoFiltro = 0, semCpf = 0;
+        var novos = [], semLogin = [], duplicados = 0, semNome = 0, foraDoFiltro = 0, semCpf = 0;
         var vistos = {};
         linhas.forEach(function(l){
           var nomeRaw = normalizarEspacos(valorColuna(l, ['nome']));
@@ -6063,14 +6120,23 @@
           if(soOperacao && !ehCargoDeOperacao(cargoRaw)){ foraDoFiltro++; return; }
           var nome = capitalizarNomePessoa(nomeRaw);
           var chave = nome.toLowerCase();
-          if(state.operadores.some(function(o){ return String(o.nome||'').toLowerCase()===chave; }) || vistos[chave]){ duplicados++; return; }
+          if(vistos[chave]) { duplicados++; return; }
           vistos[chave] = true;
           var senha = senhaDoCpf(cpf);
           if(!senha) semCpf++;
+          var jaCadastrado = state.operadores.filter(function(o){ return String(o.nome||'').toLowerCase()===chave; })[0];
+          if(jaCadastrado){
+            // Já está no cadastro. Se ainda não tem login do tablet, entra só pra ganhar o login
+            // — foi o que faltou na primeira importação. Se já tem login, é ignorado de vez.
+            if(jaCadastrado.usuario){ duplicados++; return; }
+            semLogin.push({ id:jaCadastrado.id, matricula:jaCadastrado.matricula, nome:jaCadastrado.nome,
+                            cargo:jaCadastrado.cargo, ativo:true, __senha:senha, __jaExiste:true });
+            return;
+          }
           novos.push({ id:uid(), matricula:matricula, nome:nome, cargo:capitalizarCargo(cargoRaw), ativo:true, __senha:senha });
         });
-        distribuirUsuarios(novos);
-        linhasParaImportar = novos;
+        distribuirUsuarios(novos.concat(semLogin));
+        linhasParaImportar = novos.concat(semLogin);
         var amostra = novos.slice(0,5).map(function(n){
           return '<tr><td style="padding:2px 8px 2px 0;">'+esc(n.nome)+'</td>' +
                  '<td style="padding:2px 8px 2px 0;color:var(--text-muted);">'+esc(n.cargo||'—')+'</td>' +
@@ -6078,8 +6144,9 @@
                  '<td style="padding:2px 0;">'+esc(n.__senha||'(sem CPF)')+'</td></tr>';
         }).join('');
         previewBox.innerHTML = '<div class="shared-note" style="display:block;">'+
-          '<b>'+novos.length+'</b> operador(es) prontos para importar.'+
-          (duplicados?' '+duplicados+' já existiam e foram ignorados.':'')+
+          '<b>'+novos.length+'</b> operador(es) novos para cadastrar.'+
+          (semLogin.length?' <b>'+semLogin.length+'</b> já estão cadastrados mas <b>sem login</b> — vão ganhar só o login.':'')+
+          (duplicados?' '+duplicados+' já estão completos (ou repetidos na planilha) e foram ignorados.':'')+
           (foraDoFiltro?' '+foraDoFiltro+' fora dos cargos de operação.':'')+
           (semNome?' '+semNome+' linha(s) sem nome.':'')+
           (semCpf?' <b>'+semCpf+' sem CPF</b> — esses entram sem senha e o login terá que ser definido na mão.':'')+
@@ -6116,8 +6183,9 @@
          aparecia na lista). Agora vai de 3 em 3, continua mesmo se alguma falhar, e mostra
          o motivo da primeira falha em vez de um "problema ao sincronizar" genérico. */
       var criados = 0, erros = 0, primeiroErro = '';
-      var fila = linhasParaImportar.slice();
+      var fila = linhasParaImportar.filter(function(r){ return !r.__jaExiste; });   // só os novos
       var totalFila = fila.length;
+      var jaExistiam = linhasParaImportar.length - totalFila;
       async function enviarUm(reg){
         try{
           await ctrlFetch('/api/ctrl/operadores', {
@@ -6154,7 +6222,7 @@
 
       /* 3) LOGIN DO TABLET, um a um, só para quem realmente está no servidor. */
       var logins = 0, falhasLogin = 0, primeiroErroLogin = '';
-      if(criarLogin && confirmados > 0){
+      if(criarLogin && (confirmados > 0 || jaExistiam > 0)){
         var porNome2 = {};
         state.operadores.forEach(function(o){ porNome2[String(o.nome||'').toLowerCase()] = o; });
         for(var j=0;j<linhasParaImportar.length;j++){
@@ -6181,9 +6249,10 @@
       }
 
       /* 4) RESULTADO honesto: o que o servidor confirmou, não o que eu tentei enviar. */
-      var resumo = confirmados + ' de ' + totalFila + ' operador(es) confirmados no servidor.' +
-        (criarLogin ? (' ' + logins + ' login(s) de tablet criado(s).') : '');
-      if(erros || falhasLogin || confirmados < totalFila){
+      var resumo = (totalFila ? (confirmados + ' de ' + totalFila + ' operador(es) novos confirmados no servidor. ') : '') +
+        (jaExistiam ? (jaExistiam + ' já estavam cadastrados. ') : '') +
+        (criarLogin ? (logins + ' login(s) de tablet criado(s).') : '');
+      if(erros || falhasLogin || confirmados < totalFila || (criarLogin && logins === 0 && linhasParaImportar.length > 0)){
         var detalhe = [];
         if(erros) detalhe.push(erros + ' falharam ao cadastrar (' + esc(primeiroErro) + ')');
         if(falhasLogin) detalhe.push(falhasLogin + ' falharam no login (' + esc(primeiroErroLogin || 'motivo não informado') + ')');
