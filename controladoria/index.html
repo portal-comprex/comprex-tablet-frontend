@@ -3923,7 +3923,7 @@
         '<label>Login do tablet (Parte Diária)</label>' +
         '<div id="operSenhaWrap" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">' +
           '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">Usuário</label><input type="text" id="fOperUsuario" value="'+esc(op.usuario||'')+'" placeholder="ex: joao.silva" style="width:160px;"></div>' +
-          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">'+(op.usuario?'Nova senha':'Senha')+'</label><input type="password" id="fOperSenha" placeholder="Mínimo 6 caracteres" style="width:160px;"></div>' +
+          '<div class="field" style="margin-bottom:0;"><label style="font-weight:400;font-size:11.5px;">'+(op.usuario?'Nova senha':'Senha')+'</label><input type="password" id="fOperSenha" placeholder="Mínimo 5 caracteres" style="width:160px;"></div>' +
         '</div>' +
         '<div class="shared-note" style="display:block;margin-top:6px;">'+(op.usuario ?
           'Este operador já tem login com o usuário acima. Deixe a senha em branco se não quiser trocá-la agora.' :
@@ -3947,7 +3947,7 @@
       var fSenha = document.getElementById('fOperSenha');
       var usuarioLogin = fUsuario ? normalizarEspacos(fUsuario.value).toLowerCase() : '';
       var senhaLogin = fSenha ? fSenha.value : '';
-      if(senhaLogin && senhaLogin.length < 6){ errBox.innerHTML = '<div class="form-error">A senha do login do tablet precisa ter pelo menos 6 caracteres.</div>'; return; }
+      if(senhaLogin && senhaLogin.length < 5){ errBox.innerHTML = '<div class="form-error">A senha do login do tablet precisa ter pelo menos 5 caracteres.</div>'; return; }
       var record = {
         id: isEdit ? op.id : uid(), matricula: matricula, nome: nome,
         cargo: normalizarEspacos(document.getElementById('fOperCargo').value),
@@ -5941,55 +5941,190 @@
     };
   }
 
+  /* ===== Login de tablet gerado a partir da planilha do RH =====
+     Usuário  = 1ª letra do primeiro nome + último sobrenome (sem acento, minúsculo).
+                Se der repetido, entra a inicial do nome do meio; se ainda repetir, um número.
+     Senha    = os 5 primeiros dígitos do CPF (o CPF é completado com zero à esquerda, porque
+                o Excel come o zero de quem tem CPF começando em 0).
+     Cargos de operação: só quem opera máquina — "OPERADOR ...", "OPER.xxx" e "OP DE MAQ ...".
+     Não pega COORDENADOR/SUPERVISOR/ENCARREGADO OPERACIONAL nem MOT OPER (motorista).      */
+  var CONECTORES_NOME = ['da','de','do','das','dos','e','d'];
+  function semAcentoSimples(txt){
+    return String(txt||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  }
+  function partesUteisDoNome(nome){
+    return semAcentoSimples(nome).toLowerCase().split(/\s+/)
+      .filter(function(p){ return p && CONECTORES_NOME.indexOf(p)===-1; })
+      .map(function(p){ return p.replace(/[^a-z0-9]/g,''); })
+      .filter(Boolean);
+  }
+  function usuarioBaseDoNome(nome, comInicialDoMeio){
+    var p = partesUteisDoNome(nome);
+    if(!p.length) return '';
+    var primeira = p[0].charAt(0);
+    var ultimo = p.length>1 ? p[p.length-1] : p[0];
+    var meio = (comInicialDoMeio && p.length>2) ? p[1].charAt(0) : '';
+    return primeira + meio + ultimo;
+  }
+  function senhaDoCpf(cpf){
+    var d = String(cpf||'').replace(/\D/g,'');
+    if(!d) return '';
+    if(d.length < 11) d = ('00000000000' + d).slice(-11);   // Excel comeu o zero à esquerda
+    return d.slice(0,5);
+  }
+  /* Cargo em Caixa Alta e baixa, mas preservando algarismos romanos e siglas:
+     "OPERADOR MAQUINAS MOVEIS III" -> "Operador Maquinas Moveis III" (e não "Iii"). */
+  var SIGLAS_CARGO = ['I','II','III','IV','V','VI','VII','VIII','IX','X','PCM','RH','ADM','TI','SSMA','CNH'];
+  function capitalizarCargo(txt){
+    var base = capitalizarNomePessoa(txt);
+    if(!base) return base;
+    return base.split(' ').map(function(palavra){
+      var limpo = palavra.replace(/[^A-Za-zÀ-ÿ]/g,'').toUpperCase();
+      return SIGLAS_CARGO.indexOf(limpo)>-1 ? palavra.toUpperCase() : palavra;
+    }).join(' ');
+  }
+  function ehCargoDeOperacao(cargo){
+    var c = semAcentoSimples(cargo).toUpperCase().trim();
+    if(!c) return false;
+    return c.indexOf('OPERADOR') === 0 || c.indexOf('OPER.') === 0 || c.indexOf('OP DE MAQ') === 0;
+  }
+  /* Distribui usuários únicos: tenta o básico, depois com inicial do meio, depois numerando.
+     Leva em conta os logins que JÁ existem no cadastro, pra não colidir com quem está lá. */
+  function distribuirUsuarios(pessoas){
+    var usados = {};
+    state.operadores.forEach(function(o){ if(o.usuario) usados[String(o.usuario).toLowerCase()] = true; });
+    var contagemBase = {};
+    pessoas.forEach(function(p){
+      var b = usuarioBaseDoNome(p.nome, false);
+      contagemBase[b] = (contagemBase[b]||0) + 1;
+    });
+    pessoas.forEach(function(p){
+      var base = usuarioBaseDoNome(p.nome, false);
+      var candidato = base;
+      // Repetiu dentro da própria planilha, ou já existe alguém com esse login: usa o do meio.
+      if(contagemBase[base] > 1 || usados[candidato]) candidato = usuarioBaseDoNome(p.nome, true) || base;
+      var escolhido = candidato, n = 1;
+      while(!escolhido || usados[escolhido]){ n++; escolhido = candidato + n; }
+      usados[escolhido] = true;
+      p.usuario = escolhido;
+    });
+    return pessoas;
+  }
+
   function openImportarOperadoresModal(){
     openModal(
       '<h3>Importar Operadores de planilha</h3>' +
-      '<p style="font-size:12.5px;color:var(--text-muted);line-height:1.5;">A planilha (.xlsx) precisa ter, na primeira linha, as colunas <b>Nome</b>, <b>Matrícula</b> e opcionalmente <b>Cargo</b>. Operadores com o mesmo nome já cadastrado são ignorados.</p>' +
+      '<p style="font-size:12.5px;color:var(--text-muted);line-height:1.5;">A planilha (.xlsx) precisa ter, na primeira linha, a coluna <b>Nome</b>. As colunas <b>CPF</b>, <b>Cargo</b> (ou "Título Reduzido (Cargo)") e <b>Matrícula</b> são opcionais.<br>' +
+      'Havendo CPF, o sistema já cria o <b>login do tablet</b>: usuário = 1ª letra do nome + último sobrenome; senha = os <b>5 primeiros dígitos do CPF</b>. Quem já está cadastrado é ignorado.</p>' +
+      '<div class="field" style="margin-bottom:6px;"><label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">' +
+        '<input type="checkbox" id="impOperSoOperacao" checked style="width:auto;margin:0;"> Importar só cargos de operação de máquina</label>' +
+        '<div class="muted-tag" style="margin-top:2px;">Operador de Máquinas Móveis, Retroescavadeira, Pá Carregadeira etc. Desmarque para trazer todos os cargos da planilha.</div></div>' +
+      '<div class="field" style="margin-bottom:6px;"><label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">' +
+        '<input type="checkbox" id="impOperCriarLogin" checked style="width:auto;margin:0;"> Criar também o login do tablet (usuário e senha)</label></div>' +
       '<div id="impOperError"></div>' +
       '<div class="field"><input type="file" id="fImpOperArquivo" accept=".xlsx,.xls"></div>' +
       '<div id="impOperPreview"></div>' +
       '<div class="modal-actions"><button class="btn btn-outline" id="impOperCancel">Cancelar</button><button class="btn btn-primary" id="impOperConfirmar" disabled>Importar</button></div>'
     );
     var linhasParaImportar = [];
+    var arquivoAtual = null;
     document.getElementById('impOperCancel').onclick = closeModal;
-    document.getElementById('fImpOperArquivo').addEventListener('change', async function(e){
+
+    async function analisarArquivo(){
       var errBox = document.getElementById('impOperError');
       var previewBox = document.getElementById('impOperPreview');
       var confirmarBtn = document.getElementById('impOperConfirmar');
       errBox.innerHTML = ''; previewBox.innerHTML = ''; confirmarBtn.disabled = true; linhasParaImportar = [];
-      var file = e.target.files[0];
-      if(!file) return;
+      if(!arquivoAtual) return;
+      var soOperacao = document.getElementById('impOperSoOperacao').checked;
       try{
-        var linhas = await lerPlanilhaComoLinhas(file);
-        var novos = [], duplicados = 0, semNome = 0;
+        var linhas = await lerPlanilhaComoLinhas(arquivoAtual);
+        var novos = [], duplicados = 0, semNome = 0, foraDoFiltro = 0, semCpf = 0;
         var vistos = {};
         linhas.forEach(function(l){
           var nomeRaw = normalizarEspacos(valorColuna(l, ['nome']));
           var matricula = normalizarEspacos(valorColuna(l, ['matricula','cadastro']));
-          var cargo = normalizarEspacos(valorColuna(l, ['cargo','titulo reduzido (cargo)','titulo reduzido','titulo']));
+          var cargoRaw = normalizarEspacos(valorColuna(l, ['cargo','titulo reduzido (cargo)','titulo reduzido','titulo']));
+          var cpf = normalizarEspacos(valorColuna(l, ['cpf','c.p.f','n cpf','numero cpf']));
           if(!nomeRaw){ semNome++; return; }
+          if(soOperacao && !ehCargoDeOperacao(cargoRaw)){ foraDoFiltro++; return; }
           var nome = capitalizarNomePessoa(nomeRaw);
-          if(state.operadores.some(function(o){ return o.nome.toLowerCase()===nome.toLowerCase(); }) || vistos[nome.toLowerCase()]){ duplicados++; return; }
-          vistos[nome.toLowerCase()] = true;
-          novos.push({id:uid(), matricula:matricula, nome:nome, cargo:cargo, ativo:true});
+          var chave = nome.toLowerCase();
+          if(state.operadores.some(function(o){ return String(o.nome||'').toLowerCase()===chave; }) || vistos[chave]){ duplicados++; return; }
+          vistos[chave] = true;
+          var senha = senhaDoCpf(cpf);
+          if(!senha) semCpf++;
+          novos.push({ id:uid(), matricula:matricula, nome:nome, cargo:capitalizarCargo(cargoRaw), ativo:true, __senha:senha });
         });
+        distribuirUsuarios(novos);
         linhasParaImportar = novos;
+        var amostra = novos.slice(0,5).map(function(n){
+          return '<tr><td style="padding:2px 8px 2px 0;">'+esc(n.nome)+'</td>' +
+                 '<td style="padding:2px 8px 2px 0;color:var(--text-muted);">'+esc(n.cargo||'—')+'</td>' +
+                 '<td style="padding:2px 8px 2px 0;"><b>'+esc(n.usuario)+'</b></td>' +
+                 '<td style="padding:2px 0;">'+esc(n.__senha||'(sem CPF)')+'</td></tr>';
+        }).join('');
         previewBox.innerHTML = '<div class="shared-note" style="display:block;">'+
           '<b>'+novos.length+'</b> operador(es) prontos para importar.'+
           (duplicados?' '+duplicados+' já existiam e foram ignorados.':'')+
-          (semNome?' '+semNome+' linha(s) sem nome foram ignoradas.':'')+
-          '</div>';
+          (foraDoFiltro?' '+foraDoFiltro+' fora dos cargos de operação.':'')+
+          (semNome?' '+semNome+' linha(s) sem nome.':'')+
+          (semCpf?' <b>'+semCpf+' sem CPF</b> — esses entram sem senha e o login terá que ser definido na mão.':'')+
+          '</div>' +
+          (novos.length ? ('<div style="margin-top:8px;font-size:12px;">Amostra:<table style="margin-top:4px;font-size:12px;">'+
+            '<tr style="color:var(--text-muted);"><th style="text-align:left;padding-right:8px;">Nome</th><th style="text-align:left;padding-right:8px;">Cargo</th><th style="text-align:left;padding-right:8px;">Usuário</th><th style="text-align:left;">Senha</th></tr>'+
+            amostra+'</table></div>') : '');
         confirmarBtn.disabled = novos.length===0;
       }catch(erro){
         errBox.innerHTML = '<div class="form-error">Não foi possível ler o arquivo. Confira se é um .xlsx válido.</div>';
       }
+    }
+    document.getElementById('fImpOperArquivo').addEventListener('change', function(e){
+      arquivoAtual = e.target.files[0] || null;
+      analisarArquivo();
     });
+    document.getElementById('impOperSoOperacao').addEventListener('change', analisarArquivo);
+
     document.getElementById('impOperConfirmar').onclick = async function(){
       if(linhasParaImportar.length===0) return;
-      state.operadores = state.operadores.concat(linhasParaImportar);
+      var criarLogin = document.getElementById('impOperCriarLogin').checked;
+      var btn = document.getElementById('impOperConfirmar');
+      var previewBox = document.getElementById('impOperPreview');
+      btn.disabled = true; btn.textContent = 'Importando…';
+      // 1) Cria os operadores (nome, cargo, matrícula). saveList recarrega a lista do servidor
+      //    depois de gravar, então os ids passam a ser os reais — é deles que a senha precisa.
+      var paraSalvar = linhasParaImportar.map(function(n){
+        return { id:n.id, matricula:n.matricula, nome:n.nome, cargo:n.cargo, ativo:true };
+      });
+      state.operadores = state.operadores.concat(paraSalvar);
       var ok = await saveList('operadores_v4', state.operadores);
+      // 2) Define o login de cada um, um por vez, mostrando o progresso.
+      var logins = 0, falhas = 0;
+      if(criarLogin){
+        for(var i=0;i<linhasParaImportar.length;i++){
+          var reg = linhasParaImportar[i];
+          if(!reg.__senha || !reg.usuario) continue;
+          var alvo = state.operadores.filter(function(o){
+            return String(o.nome||'').toLowerCase() === String(reg.nome).toLowerCase();
+          })[0];
+          if(!alvo){ falhas++; continue; }
+          try{
+            await ctrlFetch('/api/ctrl/operadores/'+alvo.id+'/senha', {
+              method:'PATCH', headers: ctrlCabecalhos(),
+              body: JSON.stringify({ usuario: reg.usuario, senha: reg.__senha })
+            });
+            alvo.usuario = reg.usuario;
+            logins++;
+          }catch(e){ falhas++; }
+          if(previewBox && (i % 5 === 0 || i === linhasParaImportar.length-1)){
+            previewBox.innerHTML = '<div class="shared-note" style="display:block;">Criando logins… <b>'+
+              (i+1)+' de '+linhasParaImportar.length+'</b>'+(falhas?(' · '+falhas+' com problema'):'')+'</div>';
+          }
+        }
+      }
       closeModal();
-      toast(ok ? linhasParaImportar.length+' operador(es) importado(s).' : 'Importado localmente — problema ao sincronizar.');
+      toast((ok ? linhasParaImportar.length+' operador(es) importado(s).' : 'Importado localmente — problema ao sincronizar.') +
+            (criarLogin ? (' ' + logins + ' login(s) de tablet criado(s)' + (falhas ? (', ' + falhas + ' falharam.') : '.')) : ''), 12000);
       renderOperadoresTab();
       renderCadastroHub();
     };
