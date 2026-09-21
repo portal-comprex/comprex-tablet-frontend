@@ -1231,11 +1231,15 @@
       <div class="toolbar">
         <div class="filters">
           <input type="text" id="filtroOperadorBusca" placeholder="Buscar pelo nome…" style="width:220px;">
+          <label style="display:none;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" id="filtroOperadorInativos" style="width:auto;margin:0;">
+            <span id="filtroOperadorInativosLabel">Mostrar desativados</span></label>
         </div>
-        <button class="btn btn-outline" id="limparDuplicadosOperBtn" style="display:none;">Limpar duplicados</button>
+        <button class="btn btn-outline" id="limparDuplicadosOperBtn" style="display:none;">Remover cópias sem login</button>
         <button class="btn btn-outline" id="importarOperadoresBtn">Importar planilha</button>
         <button class="btn btn-primary" id="novoOperadorBtn">+ Novo operador</button>
       </div>
+      <div id="operadoresResumo" class="shared-note" style="display:block;margin-bottom:10px;"></div>
       <div class="card">
         <div class="table-wrap">
           <table>
@@ -3058,7 +3062,9 @@
   function confirmModal(title, msg, onConfirm){
     openModal(
       '<h3>'+esc(title)+'</h3>' +
-      '<p style="font-size:13px;color:var(--text-muted);line-height:1.5;">'+esc(msg)+'</p>' +
+      // white-space:pre-line pra que confirmações com várias linhas (ex.: o resumo do
+      // "Resolver repetidos") saiam em lista de verdade, e não tudo grudado num parágrafo.
+      '<p style="font-size:13px;color:var(--text-muted);line-height:1.5;white-space:pre-line;">'+esc(msg)+'</p>' +
       '<div class="modal-actions">' +
         '<button class="btn btn-outline" id="cmCancel">Cancelar</button>' +
         '<button class="btn btn-primary" id="cmOk">Confirmar</button>' +
@@ -4041,12 +4047,21 @@
   }
 
   function valoresColunaOperador(o){ return { matricula: o.matricula||'—', nome: o.nome||'—', cargo: o.cargo||'—' }; }
-  /* Nomes repetidos no cadastro (ignorando quem já está desativado). Uma importação que roda
-     duas vezes deixa o mesmo operador em dobro — isso encontra os casos. */
+
+  /* ---------------------------------------------------------------------------
+     DUPLICADOS DE OPERADOR
+
+     Antes esta busca PULAVA quem estava desativado. Isso escondia justamente o
+     caso que aconteceu de verdade: a importação rodou duas vezes, o login foi
+     parar numa das cópias, e depois a limpeza desativou essa cópia — sobrando
+     na tela uma cópia ATIVA sem login e uma cópia DESATIVADA com o login.
+     Como uma das duas estava desativada, o contador dava zero e o botão sumia.
+
+     Agora o agrupamento olha TODAS as cópias, ativas e desativadas.
+  --------------------------------------------------------------------------- */
   function duplicadosDeOperadores(){
     var porNome = {};
     state.operadores.forEach(function(o){
-      if(o.ativo === false) return;
       var k = normalizarNomeComparacao(o.nome);
       if(!k) return;
       (porNome[k] = porNome[k] || []).push(o);
@@ -4055,37 +4070,251 @@
     Object.keys(porNome).forEach(function(k){ if(porNome[k].length > 1) grupos.push(porNome[k]); });
     return grupos;
   }
-  function limparDuplicadosOperadores(){
-    var grupos = duplicadosDeOperadores();
-    if(!grupos.length){ toast('Nenhum operador repetido encontrado.'); return; }
-    var sobrando = grupos.reduce(function(n,g){ return n + (g.length-1); }, 0);
-    confirmModal('Limpar operadores repetidos',
-      'Encontrei '+grupos.length+' nome(s) repetido(s), somando '+sobrando+' cópia(s) a mais. ' +
-      'Vou DESATIVAR as cópias extras — elas saem da lista de uso mas continuam no servidor, ' +
-      'e dá pra reativar uma a uma se precisar. De cada nome fica a cópia que já tem login do tablet ' +
-      '(ou a primeira, se nenhuma tiver). Continuar?',
-      async function(){
-        var desativados = 0;
-        grupos.forEach(function(g){
-          var manter = g.filter(function(o){ return o.usuario; })[0] || g[0];
-          g.forEach(function(o){ if(o.id !== manter.id){ o.ativo = false; desativados++; } });
+
+  /* Qual cópia FICA, em ordem de preferência:
+       1) ativa e com login do tablet  (a ideal)
+       2) desativada mas com login     (fica e é REATIVADA — o login é o que custa caro:
+                                        o nome de usuário dela está ocupado no servidor e
+                                        não dá pra transferir pra outra cópia)
+       3) ativa sem login              (pelo menos está em uso; o login entra na importação)
+       4) a primeira que aparecer                                                          */
+  function copiaDeOperadorQueFica(grupo){
+    return grupo.filter(function(o){ return o.usuario && o.ativo !== false; })[0]
+        || grupo.filter(function(o){ return o.usuario; })[0]
+        || grupo.filter(function(o){ return o.ativo !== false; })[0]
+        || grupo[0];
+  }
+
+  /* Grava as alterações de operador de 3 em 3, com contador na tela.
+     NÃO usa saveList() de propósito: ele dispara todas as gravações de uma vez
+     (Promise.all), e com 300+ linhas o servidor derruba o lote inteiro — foi
+     exatamente o que fez a primeira importação não aparecer. */
+  async function gravarOperadoresEmLote(itens, aoProgredir){
+    var ok = 0, falhas = 0, primeiroErro = '';
+    async function enviarUm(reg){
+      try{
+        await ctrlFetch('/api/ctrl/operadores/'+encodeURIComponent(reg.id), {
+          method:'PATCH', headers: ctrlCabecalhos(), body: JSON.stringify({ item: reg })
         });
-        var ok = await saveList('operadores_v4', state.operadores);
-        toast(ok ? (desativados + ' cópia(s) desativada(s).') : 'Desativado localmente — problema ao sincronizar.', 9000);
-        renderOperadoresTab();
+        ok++;
+      }catch(e){
+        falhas++;
+        if(!primeiroErro) primeiroErro = (e && e.message) ? e.message : 'falha de rede';
+      }
+      if(aoProgredir) aoProgredir(ok + falhas, itens.length, falhas);
+    }
+    var LOTE = 3;
+    for(var i=0;i<itens.length;i+=LOTE){
+      await Promise.all(itens.slice(i, i+LOTE).map(enviarUm));
+    }
+    return { ok: ok, falhas: falhas, primeiroErro: primeiroErro };
+  }
+
+  /* Monta o que PRECISA mudar. Um nome que tem duas linhas mas só uma ativa já está
+     resolvido — não entra na conta. Sem isso o contador do botão nunca zerava, porque
+     as cópias desativadas continuam existindo no servidor pra sempre. */
+  /* ---------------------------------------------------------------------------
+     REMOVER A SEGUNDA LEVA (as cópias sem login)
+
+     O que aconteceu no cadastro do Lucas: a importação rodou duas vezes. A segunda
+     leva entrou sem login nenhum, e o login ficou na leva anterior. Então a cópia
+     que presta é a QUE TEM LOGIN, e a que sobra é a sem login.
+
+     Regra de segurança que este plano nunca quebra:
+       • só entra na remoção uma cópia que tem IRMÃ com o mesmo nome;
+       • a irmã que fica é sempre a que tem login;
+       • quem está sozinho no cadastro NUNCA é removido, mesmo sem login —
+         são os operadores que simplesmente ainda não ganharam o login, e apagar
+         esses seria perder gente de verdade.
+  --------------------------------------------------------------------------- */
+  function planoDeDuplicados(){
+    var remover = [], reativar = [], nomes = 0, semLoginSozinhos = 0, gruposSemLoginNenhum = 0;
+    var grupos = {};
+    state.operadores.forEach(function(o){
+      var k = normalizarNomeComparacao(o.nome);
+      if(!k) return;
+      (grupos[k] = grupos[k] || []).push(o);
+    });
+    Object.keys(grupos).forEach(function(k){
+      var g = grupos[k];
+      if(g.length === 1){
+        if(!g[0].usuario) semLoginSozinhos++;      // só falta o login — não se mexe
+        return;
+      }
+      var fica = copiaDeOperadorQueFica(g);
+      if(!fica.usuario) gruposSemLoginNenhum++;    // nenhuma das cópias tem login
+      var alvos = g.filter(function(o){
+        // as sobras: irmãs sem login que ainda estão em uso. Cópia já desativada
+        // fica quieta onde está — se o servidor não apagar de vez (esta lista é
+        // compartilhada com o tablet), ela não pode voltar a ser "pendente" pra
+        // sempre, senão o botão nunca sumia da tela.
+        return o.id !== fica.id && !o.usuario && o.ativo !== false;
       });
+      var precisaReativar = (fica.ativo === false);
+      if(!alvos.length && !precisaReativar) return;
+      nomes++;
+      remover = remover.concat(alvos);
+      if(precisaReativar) reativar.push(fica);
+    });
+    return { remover: remover, reativar: reativar, nomes: nomes,
+             semLoginSozinhos: semLoginSozinhos, gruposSemLoginNenhum: gruposSemLoginNenhum };
+  }
+
+  function limparDuplicadosOperadores(){
+    var d = planoDeDuplicados();
+
+    if(!d.remover.length && !d.reativar.length){
+      toast('Nenhuma cópia repetida pendente. Cada nome já aparece uma vez só.' +
+            (d.semLoginSozinhos ? (' (' + d.semLoginSozinhos + ' operador(es) continuam sem login — use "Importar planilha".)') : ''), 11000);
+      renderOperadoresTab();
+      return;
+    }
+
+    var texto = 'Encontrei ' + d.nomes + ' nome(s) repetido(s) no cadastro.\n\n' +
+      'O que vai acontecer:\n' +
+      (d.remover.length ? ('• ' + d.remover.length + ' cópia(s) SEM LOGIN vão ser removidas — é a segunda leva da importação.\n') : '') +
+      (d.reativar.length ? ('• ' + d.reativar.length + ' cópia(s) com login que estão desativadas vão ser REATIVADAS, e são elas que ficam.\n') : '') +
+      '\nNunca removo quem está sozinho no cadastro' +
+      (d.semLoginSozinhos ? (' — os ' + d.semLoginSozinhos + ' operador(es) que estão sem login e sem cópia ficam intactos, e ganham login na próxima importação.') : '.') +
+      (d.gruposSemLoginNenhum ? ('\n\nAtenção: em ' + d.gruposSemLoginNenhum + ' nome(s) NENHUMA das cópias tem login. Nesses, fica uma cópia e as outras saem.') : '') +
+      '\n\nContinuar?';
+
+    confirmModal('Remover as cópias sem login', texto, async function(){
+      var el = function(){ return document.getElementById('operadoresResumo'); };
+      var idsRemover = {};
+      d.remover.forEach(function(o){ idsRemover[o.id] = true; });
+
+      // 1) Reativa primeiro quem fica — se algo der errado no meio, o cadastro
+      //    bom já está de pé e ninguém some da lista de uso.
+      var rReativar = { ok:0, falhas:0, primeiroErro:'' };
+      if(d.reativar.length){
+        var paraReativar = d.reativar.map(function(o){ o.ativo = true; return o; });
+        rReativar = await gravarOperadoresEmLote(paraReativar, function(f,t,x){
+          var e = el(); if(e) e.innerHTML = 'Reativando os cadastros que ficam… <b>'+f+' de '+t+'</b>' + (x?(' · '+x+' com problema'):'');
+        });
+      }
+
+      // 2) Remove as cópias sem login, de 3 em 3.
+      var removidos = 0, falhasRemover = 0, primeiroErroRemover = '';
+      async function removerUm(o){
+        try{
+          await ctrlFetch('/api/ctrl/operadores/'+encodeURIComponent(o.id), { method:'DELETE', headers: ctrlCabecalhos() });
+          removidos++;
+        }catch(e){
+          falhasRemover++;
+          if(!primeiroErroRemover) primeiroErroRemover = (e && e.message) ? e.message : 'falha de rede';
+        }
+        var e2 = el();
+        if(e2) e2.innerHTML = 'Removendo cópias sem login… <b>'+(removidos+falhasRemover)+' de '+d.remover.length+'</b>' +
+                              (falhasRemover?(' · '+falhasRemover+' com problema'):'');
+      }
+      for(var i=0;i<d.remover.length;i+=3){
+        await Promise.all(d.remover.slice(i, i+3).map(removerUm));
+      }
+
+      /* 3) Relê do servidor e CONFERE o que de fato aconteceu. Esta lista é
+            compartilhada com o tablet e o Portal; dependendo de como o servidor
+            trata a exclusão dela, a linha pode sumir de vez OU só ficar marcada
+            como desativada. Em vez de adivinhar, eu leio e digo a verdade. */
+      var sumiram = 0, viraramDesativados = 0, continuamAtivos = 0;
+      try{
+        var resp = await ctrlFetch('/api/ctrl/operadores', { headers: ctrlCabecalhos() });
+        state.operadores = resp.itens || [];
+        CTRL_BASELINE['operadores_v4'] = JSON.parse(JSON.stringify(state.operadores));
+        var aindaLa = {};
+        state.operadores.forEach(function(o){ if(idsRemover[o.id]) aindaLa[o.id] = o; });
+        Object.keys(idsRemover).forEach(function(id){
+          var o = aindaLa[id];
+          if(!o) sumiram++;
+          else if(o.ativo === false) viraramDesativados++;
+          else continuamAtivos++;
+        });
+      }catch(e){
+        toast('Removi as cópias, mas não consegui reler a lista pra conferir: ' + (e.message||''), 14000);
+      }
+
+      var partes = [];
+      if(sumiram) partes.push(sumiram + ' cópia(s) apagada(s) de vez');
+      if(viraramDesativados) partes.push(viraramDesativados + ' marcada(s) como desativada(s) pelo servidor (essa lista é compartilhada com o tablet e ele não apaga de vez — some da lista com o filtro "Mostrar desativados" desligado)');
+      if(continuamAtivos) partes.push(continuamAtivos + ' NÃO saíram');
+      if(rReativar.ok) partes.unshift(rReativar.ok + ' cadastro(s) com login reativado(s)');
+      var falhas = falhasRemover + rReativar.falhas;
+      if(falhas) partes.push(falhas + ' falharam (' + (primeiroErroRemover || rReativar.primeiroErro || 'motivo não informado') + ')');
+      if(d.semLoginSozinhos) partes.push(d.semLoginSozinhos + ' operador(es) seguem sem login — rode "Importar planilha"');
+
+      toast(partes.join(' · ') + (falhas ? '. Pode clicar de novo: o que já saiu é ignorado.' : '.'), 16000);
+      renderOperadoresTab();
+      renderCadastroHub();
+    });
+  }
+
+  /* Linha de resumo em cima da tabela: quantos estão em uso, quantos têm login,
+     quantos faltam e quantos estão desativados. É o que responde de bate-pronto
+     "alguns não foram criados e alguns estão desativados". */
+  /* Nome (minúsculo) -> a cópia que vale, quando o mesmo nome aparece mais de uma vez.
+     Antes era um "último ganha", o que fazia o login ser gravado numa cópia qualquer. */
+  function mapaDeOperadoresPorNome(){
+    var grupos = {};
+    state.operadores.forEach(function(o){
+      var k = normalizarNomeComparacao(o.nome);
+      if(!k) return;
+      (grupos[k] = grupos[k] || []).push(o);
+    });
+    var mapa = {};
+    Object.keys(grupos).forEach(function(k){ mapa[k] = copiaDeOperadorQueFica(grupos[k]); });
+    return mapa;
+  }
+
+  function resumoDeOperadores(){
+    var ativos = 0, inativos = 0, comLogin = 0, semLogin = 0, loginNumerado = 0;
+    state.operadores.forEach(function(o){
+      if(o.ativo === false){ inativos++; return; }
+      ativos++;
+      if(o.usuario){
+        comLogin++;
+        // Usuário terminando em número veio de um desempate ("asouza2") — só acontece
+        // quando dois cadastros disputaram o mesmo nome. Depois de resolver os repetidos
+        // normalmente sobra nome livre, mas trocar exige redefinir a senha junto.
+        if(/[0-9]$/.test(String(o.usuario))) loginNumerado++;
+      } else semLogin++;
+    });
+    return { total: state.operadores.length, ativos: ativos, inativos: inativos,
+             comLogin: comLogin, semLogin: semLogin, loginNumerado: loginNumerado };
   }
 
   function renderOperadoresTab(){
     var busca = document.getElementById('filtroOperadorBusca').value.trim().toLowerCase();
     var btnDup = document.getElementById('limparDuplicadosOperBtn');
+    var plano = planoDeDuplicados();
+    var pendentes = plano.nomes;
     if(btnDup){
-      var gruposDup = duplicadosDeOperadores();
-      btnDup.style.display = gruposDup.length ? 'inline-flex' : 'none';
-      btnDup.textContent = 'Limpar duplicados (' + gruposDup.length + ')';
+      btnDup.style.display = pendentes ? 'inline-flex' : 'none';
+      btnDup.textContent = 'Remover cópias sem login (' + plano.remover.length + ')';
       btnDup.onclick = limparDuplicadosOperadores;
     }
+    // Desativados escondidos por padrão: depois de uma limpeza dessas eles são só
+    // entulho no fim da lista. O contador fica no próprio rótulo do filtro.
+    var chkInativos = document.getElementById('filtroOperadorInativos');
+    var mostrarInativos = chkInativos ? chkInativos.checked : false;
+    var resumoBox = document.getElementById('operadoresResumo');
+    var r = resumoDeOperadores();
+    if(chkInativos){
+      var rotulo = document.getElementById('filtroOperadorInativosLabel');
+      if(rotulo) rotulo.textContent = 'Mostrar desativados' + (r.inativos ? (' (' + r.inativos + ')') : '');
+      chkInativos.parentElement.style.display = r.inativos ? 'inline-flex' : 'none';
+    }
+    if(resumoBox){
+      resumoBox.innerHTML =
+        '<b>' + r.ativos + '</b> operador(es) em uso — <b>' + r.comLogin + '</b> com login de tablet' +
+        (r.semLogin ? (' e <b style="color:var(--danger);">' + r.semLogin + ' sem login</b>') : '') + '.' +
+        (r.inativos ? (' ' + r.inativos + ' desativado(s)' + (mostrarInativos ? ' no fim da lista.' : ', escondidos.')) : '') +
+        (pendentes ? (' <b style="color:var(--danger);">' + pendentes + ' nome(s) repetido(s)</b> — use "Remover cópias sem login".') : '') +
+        (r.semLogin && !pendentes ? ' Para criar os logins que faltam: <b>Importar planilha</b> com o ATIVOS.' : '') +
+        (r.loginNumerado ? ('<br><span style="opacity:.85;">' + r.loginNumerado +
+          ' login(s) terminam em número (ex.: "asouza2") — foi desempate de nomes iguais. Funcionam normalmente; me avise se quiser que eu renomeie.</span>') : '');
+    }
     var list = state.operadores.filter(function(o){
+      if(!mostrarInativos && o.ativo === false) return false;
       if(busca && o.nome.toLowerCase().indexOf(busca)===-1) return false;
       return true;
     }).sort(function(a,b){
@@ -6131,7 +6360,7 @@
       var soOperacao = document.getElementById('impOperSoOperacao').checked;
       try{
         var linhas = await lerPlanilhaComoLinhas(arquivoAtual);
-        var novos = [], semLogin = [], duplicados = 0, semNome = 0, foraDoFiltro = 0, semCpf = 0;
+        var novos = [], semLogin = [], duplicados = 0, semNome = 0, foraDoFiltro = 0, semCpf = 0, repetidosNoCadastro = 0, alvoDesativado = 0;
         var vistos = {};
         linhas.forEach(function(l){
           var nomeRaw = normalizarEspacos(valorColuna(l, ['nome']));
@@ -6141,12 +6370,24 @@
           if(!nomeRaw){ semNome++; return; }
           if(soOperacao && !ehCargoDeOperacao(cargoRaw)){ foraDoFiltro++; return; }
           var nome = capitalizarNomePessoa(nomeRaw);
-          var chave = nome.toLowerCase();
+          // Compara SEM acento, igual à tela de Operadores. A planilha do Lucas tem o mesmo
+          // homem escrito das duas formas ("Rodrigo Lourenco Dias" e "Rodrigo Lourenço Dias");
+          // com comparação literal ele virava duas pessoas aqui e uma só lá, e o login da
+          // segunda grafia ficava tentando nascer pra sempre.
+          var chave = normalizarNomeComparacao(nome);
           if(vistos[chave]) { duplicados++; return; }
           vistos[chave] = true;
           var senha = senhaDoCpf(cpf);
           if(!senha) semCpf++;
-          var jaCadastrado = state.operadores.filter(function(o){ return String(o.nome||'').toLowerCase()===chave; })[0];
+          // Havendo mais de uma cópia do mesmo nome, escolhe a mesma cópia que a tela de
+          // Operadores mantém (ativa e com login primeiro) — senão o login era criado numa
+          // cópia e a outra ficava eternamente "sem login".
+          var copiasDoNome = state.operadores.filter(function(o){ return normalizarNomeComparacao(o.nome)===chave; });
+          var jaCadastrado = copiasDoNome.length ? copiaDeOperadorQueFica(copiasDoNome) : null;
+          // Só conta como problema quem AINDA tem mais de uma cópia ATIVA — cópias já
+          // desativadas ficam no servidor pra sempre e não atrapalham nada.
+          if(copiasDoNome.filter(function(o){ return o.ativo !== false; }).length > 1) repetidosNoCadastro++;
+          if(jaCadastrado && jaCadastrado.ativo === false) alvoDesativado++;
           if(jaCadastrado){
             // Já está no cadastro. Se ainda não tem login do tablet, entra só pra ganhar o login
             // — foi o que faltou na primeira importação. Se já tem login, é ignorado de vez.
@@ -6173,6 +6414,12 @@
           (semNome?' '+semNome+' linha(s) sem nome.':'')+
           (semCpf?' <b>'+semCpf+' sem CPF</b> — esses entram sem senha e o login terá que ser definido na mão.':'')+
           '</div>' +
+          (repetidosNoCadastro ? ('<div class="form-error" style="margin-top:8px;"><b>'+repetidosNoCadastro+' nome(s) estão em dobro no cadastro.</b> ' +
+            'Feche aqui e clique em <b>"Resolver repetidos"</b> primeiro — senão o login pode ir parar na cópia errada e ' +
+            'o servidor recusa o nome de usuário dizendo que já está em uso.</div>') : '') +
+          (alvoDesativado ? ('<div class="shared-note" style="display:block;margin-top:8px;">'+alvoDesativado+
+            ' operador(es) da planilha estão <b>desativados</b> no cadastro. Eles recebem o login, mas continuam desativados — ' +
+            'use "Reativar" na lista para os que voltaram a trabalhar.</div>') : '') +
           (novos.length ? ('<div style="margin-top:8px;font-size:12px;">Amostra:<table style="margin-top:4px;font-size:12px;">'+
             '<tr style="color:var(--text-muted);"><th style="text-align:left;padding-right:8px;">Nome</th><th style="text-align:left;padding-right:8px;">Cargo</th><th style="text-align:left;padding-right:8px;">Usuário</th><th style="text-align:left;">Senha</th></tr>'+
             amostra+'</table></div>') : '');
@@ -6241,9 +6488,8 @@
         var resp = await ctrlFetch('/api/ctrl/operadores', { headers: ctrlCabecalhos() });
         state.operadores = resp.itens || [];
         CTRL_BASELINE['operadores_v4'] = JSON.parse(JSON.stringify(state.operadores));
-        var porNome = {};
-        state.operadores.forEach(function(o){ porNome[String(o.nome||'').toLowerCase()] = o; });
-        linhasParaImportar.forEach(function(reg){ if(porNome[reg.nome.toLowerCase()]) confirmados++; });
+        var porNome = mapaDeOperadoresPorNome();
+        linhasParaImportar.forEach(function(reg){ if(porNome[normalizarNomeComparacao(reg.nome)]) confirmados++; });
       }catch(e){
         if(!primeiroErro) primeiroErro = 'não consegui reler a lista de operadores: ' + (e.message||'');
       }
@@ -6251,12 +6497,11 @@
       /* 3) LOGIN DO TABLET, um a um, só para quem realmente está no servidor. */
       var logins = 0, falhasLogin = 0, primeiroErroLogin = '';
       if(criarLogin && (confirmados > 0 || jaExistiam > 0)){
-        var porNome2 = {};
-        state.operadores.forEach(function(o){ porNome2[String(o.nome||'').toLowerCase()] = o; });
+        var porNome2 = mapaDeOperadoresPorNome();
         for(var j=0;j<linhasParaImportar.length;j++){
           var reg2 = linhasParaImportar[j];
           if(!reg2.__senha || !reg2.usuario) continue;
-          var alvo = porNome2[reg2.nome.toLowerCase()];
+          var alvo = porNome2[normalizarNomeComparacao(reg2.nome)];
           if(!alvo){ falhasLogin++; continue; }
           try{
             await ctrlFetch('/api/ctrl/operadores/'+alvo.id+'/senha', {
@@ -10225,6 +10470,7 @@
   document.getElementById('importarOperadoresBtn').addEventListener('click', openImportarOperadoresModal);
   document.getElementById('novoOperadorBtn').addEventListener('click', function(){ openOperadorModal(null); });
   document.getElementById('filtroOperadorBusca').addEventListener('input', renderOperadoresTab);
+  document.getElementById('filtroOperadorInativos').addEventListener('change', renderOperadoresTab);
   ['filtroBusca','filtroEquipTipo'].forEach(function(id){
     document.getElementById(id).addEventListener('input', renderEquipamentosTab);
     document.getElementById(id).addEventListener('change', renderEquipamentosTab);
