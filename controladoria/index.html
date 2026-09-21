@@ -973,6 +973,10 @@
             <span id="importPlanilhaWrap" style="display:none;"><button type="button" class="btn" id="importPlanilhaBtn" style="background:#E8720C;color:#fff;border-color:#E8720C;">📥 Importar planilha (Ordens e Clientes)</button></span>
             <button class="btn btn-primary" id="novoClienteCadastroBtn">+ Novo cliente</button>
           </div>
+          <!-- Resultado da última conferência de gravação do Nº do cliente (fica na tela, não
+               some como o aviso flutuante). Só aparece depois de salvar um cliente com número. -->
+          <div id="diagnosticoClienteBox" style="display:none;margin:0 0 12px;padding:8px 12px;border-radius:8px;
+               border:1px solid #F1DDA0;background:#FFF9E8;color:#6b5200;font-size:12.5px;line-height:1.5;"></div>
           <div class="card">
             <div class="table-wrap">
               <table>
@@ -1861,6 +1865,47 @@
       mudou++;
     });
     return mudou;
+  }
+  /* Depois de salvar, relê do servidor os TRÊS lugares onde o Nº do cliente é gravado e diz
+     qual deles realmente guardou. Serve pra parar de adivinhar: em vez de "salvo" e o número
+     sumir no F5, a tela mostra exatamente onde a informação sobreviveu e onde se perdeu. */
+  var ULTIMO_DIAGNOSTICO_CLIENTE = '';
+  async function diagnosticarDestinosDoNumero(nome, numeroEsperado){
+    var alvo = normalizarNomeComparacao(nome);
+    var esperado = String(numeroEsperado||'').trim();
+    var res = { config:'?', cliente:'?', ordens:'?', ordensQtd:0 };
+    // a) depósito de configurações (/api/ctrl-config/cliente_numeros)
+    try{
+      var c = await ctrlFetch('/api/ctrl-config/cliente_numeros', { headers: ctrlCabecalhos() });
+      var valor = (c && c.valor) || {};
+      var achouCfg = false;
+      Object.keys(valor).forEach(function(k){
+        if(normalizarNomeComparacao(k)===alvo && String(valor[k]||'').trim()===esperado) achouCfg = true;
+      });
+      res.config = achouCfg ? 'ok' : 'perdeu';
+    }catch(e){ res.config = 'erro'; }
+    // b) campo extra dentro do próprio cliente (/api/ctrl/clientes)
+    try{
+      var r = await ctrlFetch('/api/ctrl/clientes', { headers: ctrlCabecalhos() });
+      var item = (r.itens||[]).filter(function(x){ return x && normalizarNomeComparacao(x.nome)===alvo; })[0];
+      res.cliente = (item && String(item.numero||'').trim()===esperado) ? 'ok' : 'perdeu';
+    }catch(e){ res.cliente = 'erro'; }
+    // c) carimbo dentro das Ordens desse cliente (/api/ctrl/ordens)
+    try{
+      var ro = await ctrlFetch('/api/ctrl/ordens', { headers: ctrlCabecalhos() });
+      var doCliente = (ro.itens||[]).filter(function(o){ return o && normalizarNomeComparacao(o.cliente)===alvo; });
+      var comCarimbo = doCliente.filter(function(o){ return String(o.numeroCliente||'').trim()===esperado; });
+      res.ordensQtd = doCliente.length;
+      res.ordens = doCliente.length===0 ? 'sem-ordens' : (comCarimbo.length ? 'ok' : 'perdeu');
+    }catch(e){ res.ordens = 'erro'; }
+    var sinal = function(v){ return v==='ok' ? '✅' : (v==='erro' ? '⚠️ erro' : (v==='sem-ordens' ? '— sem ordens' : '❌')); };
+    ULTIMO_DIAGNOSTICO_CLIENTE =
+      'Onde o Nº ' + esperado + ' de "' + nome + '" ficou gravado no servidor: ' +
+      'configurações ' + sinal(res.config) + ' · dentro do cliente ' + sinal(res.cliente) +
+      ' · dentro das ordens ' + sinal(res.ordens) + (res.ordensQtd ? (' ('+res.ordensQtd+' ordem(ns))') : '');
+    res.resumo = ULTIMO_DIAGNOSTICO_CLIENTE;
+    res.algumOk = (res.config==='ok' || res.cliente==='ok' || res.ordens==='ok');
+    return res;
   }
   function numeroDoClientePorNome(nome){
     if(!nome) return '';
@@ -5703,6 +5748,11 @@
     var buscaNumeroEl = document.getElementById('filtroClienteNumero');
     if(!buscaNomeEl) return;
     if(typeof atualizarBotaoImportPlanilha === 'function') atualizarBotaoImportPlanilha();
+    var diagBox = document.getElementById('diagnosticoClienteBox');
+    if(diagBox){
+      diagBox.style.display = ULTIMO_DIAGNOSTICO_CLIENTE ? 'block' : 'none';
+      diagBox.innerHTML = ULTIMO_DIAGNOSTICO_CLIENTE ? ('🔎 ' + esc(ULTIMO_DIAGNOSTICO_CLIENTE)) : '';
+    }
     var buscaNome = buscaNomeEl.value.trim().toLowerCase();
     var buscaNumero = buscaNumeroEl.value.trim().toLowerCase();
     var lista = CLIENTES.filter(function(nome){
@@ -5988,14 +6038,15 @@
       if(!ok1){
         toast('Não consegui salvar o cliente no servidor. ' + (ULTIMO_ERRO_CONFIG||'') +
               ' O que você digitou está só nesta tela — recarregue e tente de novo.', 12000);
-      } else if(numero && !okNumeros && ordensCarimbadas > 0 && okOrdens){
-        toast('Cliente salvo. O Nº do cliente ficou gravado nas ' + ordensCarimbadas +
-              ' ordem(ns) deste cliente — é de lá que o sistema vai lê-lo, porque o depósito ' +
-              'de configurações do servidor não está guardando. Pode recarregar e conferir.', 12000);
-      } else if(numero && !okNumeros && ordensCarimbadas === 0){
-        toast('Cliente salvo, mas o Nº do cliente pode não sobreviver ao recarregar: o servidor ' +
-              'não está guardando esse campo e este cliente ainda não tem nenhuma Ordem ' +
-              'cadastrada pra guardá-lo. Cadastre uma Ordem para ele e salve o número de novo.', 14000);
+      } else if(numero){
+        // Confere na fonte: relê os três depósitos e diz o que sobreviveu de verdade.
+        var diag = await diagnosticarDestinosDoNumero(nome, numero);
+        if(diag.algumOk){
+          toast('Cliente salvo e conferido. ' + diag.resumo, 13000);
+        } else {
+          toast('ATENÇÃO: o servidor não guardou o Nº do cliente em nenhum lugar — ele vai sumir ' +
+                'ao recarregar. ' + diag.resumo + ' Mande este texto pra TI.', 20000);
+        }
       } else {
         toast('Cliente salvo.');
       }
