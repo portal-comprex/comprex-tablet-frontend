@@ -326,6 +326,9 @@
   .btn{border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;}
   .btn-primary{background:linear-gradient(135deg, var(--orange), var(--orange-deep));color:#fff;box-shadow:0 2px 8px rgba(196,102,31,0.35);}
   .btn-primary:hover{background:linear-gradient(135deg, var(--orange-deep), var(--orange-deep));box-shadow:0 3px 10px rgba(196,102,31,0.45);transform:translateY(-1px);}
+  /* Botão desativado precisa PARECER desativado — sem isso, um botão bloqueado fica idêntico
+     a um botão normal e o clique "não faz nada" sem explicação. */
+  .btn:disabled, .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none;filter:grayscale(.35);}
   .btn-outline{background:#fff;border-color:var(--border);color:var(--navy);}
   .btn-outline:hover{border-color:var(--blue);}
   .btn-ghost{background:#fff;color:var(--blue);padding:5px 12px;border:1px solid var(--blue);border-radius:20px;font-weight:600;}
@@ -6173,7 +6176,13 @@
           (novos.length ? ('<div style="margin-top:8px;font-size:12px;">Amostra:<table style="margin-top:4px;font-size:12px;">'+
             '<tr style="color:var(--text-muted);"><th style="text-align:left;padding-right:8px;">Nome</th><th style="text-align:left;padding-right:8px;">Cargo</th><th style="text-align:left;padding-right:8px;">Usuário</th><th style="text-align:left;">Senha</th></tr>'+
             amostra+'</table></div>') : '');
-        confirmarBtn.disabled = novos.length===0;
+        // BUG CORRIGIDO: antes o botão só habilitava quando havia gente NOVA. Quando todos já
+        // estavam cadastrados e faltava só o login (0 novos + 318 sem login), o botão ficava
+        // desabilitado e o clique não fazia nada. Agora vale a fila inteira.
+        confirmarBtn.disabled = linhasParaImportar.length===0;
+        confirmarBtn.textContent = novos.length
+          ? ('Importar ' + novos.length + (semLogin.length ? (' + ' + semLogin.length + ' login(s)') : ''))
+          : (semLogin.length ? ('Criar ' + semLogin.length + ' login(s)') : 'Importar');
       }catch(erro){
         errBox.innerHTML = '<div class="form-error">Não foi possível ler o arquivo. Confira se é um .xlsx válido.</div>';
       }
