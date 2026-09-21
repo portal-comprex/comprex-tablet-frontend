@@ -1649,6 +1649,25 @@
       '.profile-screen{background:transparent!important}';
     document.head.appendChild(estiloPortal);
 
+    /* ---- Itens que saíram do menu CADASTRAR do Portal --------------------------------
+       O certo seria apagar a linha lá no portal/index.html. Como Portal e Controladoria
+       são o MESMO site (mesma origem), dá pra esconder daqui com segurança — e assim não
+       depende de um novo deploy do Portal. Vai como <style> no documento de cima: se o
+       Portal reconstruir o menu (ele mostra/esconde itens ao trocar de seção), a regra
+       continua valendo. Pra tirar outro item, é só acrescentar a chave na lista.        */
+    try{
+      var CADASTROS_OCULTOS_NO_PORTAL = ['equip'];   // 🚚 Equipamentos (frota)
+      var docPai = window.parent && window.parent !== window ? window.parent.document : null;
+      if (docPai && !docPai.getElementById('ctrl-esconde-itens-menu')) {
+        var estiloPai = docPai.createElement('style');
+        estiloPai.id = 'ctrl-esconde-itens-menu';
+        estiloPai.textContent = CADASTROS_OCULTOS_NO_PORTAL.map(function(chave){
+          return '.sidebar-item[data-ctrl-cadastro="' + chave + '"]{display:none!important}';
+        }).join('');
+        (docPai.head || docPai.documentElement).appendChild(estiloPai);
+      }
+    }catch(e){ /* origem diferente ou sem pai — segue sem esconder nada */ }
+
     // Perfil confirmado pelo backend (controladoria/escritorio) — loadPerfil()
     // usa este valor em vez de perguntar ao Supabase (que não existe mais).
     window.__ctrlPerfilPortal = null;
