@@ -2134,6 +2134,8 @@
   // Última leitura crua da lista de clientes (com numero/cnpj/contato, quando o servidor guarda
   // esses campos junto). Serve de rede de segurança quando as "configurações" voltam vazias.
   var CLIENTES_ITENS_BRUTOS = [];
+  // Quantos Nº de cliente vieram da planilha embutida (porque o servidor não os guarda).
+  var CLIENTES_NUMEROS_DA_PLANILHA = 0;
 
   // Fotografia da última leitura conhecida de cada lista, por chave interna —
   // é o que permite ao saveList saber se um item ausente no array local foi
@@ -5750,8 +5752,16 @@
     if(typeof atualizarBotaoImportPlanilha === 'function') atualizarBotaoImportPlanilha();
     var diagBox = document.getElementById('diagnosticoClienteBox');
     if(diagBox){
-      diagBox.style.display = ULTIMO_DIAGNOSTICO_CLIENTE ? 'block' : 'none';
-      diagBox.innerHTML = ULTIMO_DIAGNOSTICO_CLIENTE ? ('🔎 ' + esc(ULTIMO_DIAGNOSTICO_CLIENTE)) : '';
+      var linhas = [];
+      if(CLIENTES_NUMEROS_DA_PLANILHA > 0){
+        linhas.push('ℹ️ <b>' + CLIENTES_NUMEROS_DA_PLANILHA + ' Nº de cliente (e os CNPJs) estão vindo da planilha embutida no sistema</b> — ' +
+          'o servidor não devolveu esses números. Eles aparecem aqui e preenchem sozinhos no tablet. ' +
+          'Se você editar um número e ele voltar ao valor antigo depois de recarregar, é porque o servidor não guardou: ' +
+          'nesse caso o campo precisa ser criado no servidor, ou a planilha embutida atualizada.');
+      }
+      if(ULTIMO_DIAGNOSTICO_CLIENTE) linhas.push('🔎 ' + esc(ULTIMO_DIAGNOSTICO_CLIENTE));
+      diagBox.style.display = linhas.length ? 'block' : 'none';
+      diagBox.innerHTML = linhas.join('<hr style="border:none;border-top:1px solid #F1DDA0;margin:6px 0;">');
     }
     var buscaNome = buscaNomeEl.value.trim().toLowerCase();
     var buscaNumero = buscaNumeroEl.value.trim().toLowerCase();
@@ -10621,6 +10631,34 @@
         CLIENTE_NUMEROS[o.cliente] = String(o.numeroCliente).trim();
       }
     });
+    /* ÚLTIMA FONTE — a planilha que veio embutida neste arquivo.
+       O servidor não tem onde guardar Nº de cliente e CNPJ: a rota de configurações não
+       responde, e campos que não existem na lista (dentro do cliente ou dentro da ordem) são
+       descartados na gravação. Provado pelo diagnóstico da própria tela.
+       Como esses 45 números são dado fixo da planilha que o Lucas mandou, eles passam a valer
+       direto daqui — assim o Nº do cliente aparece na Controladoria e preenche no tablet sem
+       depender do servidor. Só preenche o que estiver faltando: se um dia o servidor voltar a
+       guardar, o valor de lá continua tendo prioridade. */
+    CLIENTES_NUMEROS_DA_PLANILHA = 0;
+    try{
+      var porNomeNormalizado = {};
+      Object.keys(CLIENTE_NUMEROS).forEach(function(k){ porNomeNormalizado[normalizarNomeComparacao(k)] = true; });
+      (IMPORT_PLANILHA && IMPORT_PLANILHA.clientes ? IMPORT_PLANILHA.clientes : []).forEach(function(c){
+        if(!c || !c.nome) return;
+        var chaveReal = null;
+        var alvo = normalizarNomeComparacao(c.nome);
+        CLIENTES.forEach(function(nomeCad){ if(!chaveReal && normalizarNomeComparacao(nomeCad)===alvo) chaveReal = nomeCad; });
+        if(!chaveReal) return;                       // cliente da planilha que não está cadastrado
+        if(c.numero && !String(CLIENTE_NUMEROS[chaveReal]||'').trim()){
+          CLIENTE_NUMEROS[chaveReal] = String(c.numero).trim();
+          CLIENTES_NUMEROS_DA_PLANILHA++;
+        }
+        if(c.cnpj){
+          var det = CLIENTE_DETALHES[chaveReal] || {};
+          if(!det.cnpj){ det.cnpj = String(c.cnpj).trim(); CLIENTE_DETALHES[chaveReal] = det; }
+        }
+      });
+    }catch(e){ console.error('Não consegui aplicar os números de cliente da planilha', e); }
     MATERIAIS_PESAGEM = (matPesagem||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     SERVICOS_HORA = (servHora||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
     SERVICOS_VERBA = (servVerba||[]).slice().sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
