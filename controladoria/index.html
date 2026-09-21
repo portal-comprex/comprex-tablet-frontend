@@ -2093,16 +2093,29 @@
     return h;
   }
 
+  // BUG CORRIGIDO: esta função não existia no arquivo. Na primeira falha de qualquer chamada,
+  // a tentativa de esperar quebrava com "esperar is not defined" — então (a) nunca houve
+  // repetição de fato e (b) o motivo real do erro do servidor era substituído por essa
+  // mensagem sem sentido, em TODA a Controladoria.
+  function esperar(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
   async function ctrlFetch(caminho, opcoes, tentativa){
     tentativa = tentativa || 1;
     try{
       var r = await fetch(CTRL_BACKEND_URL + caminho, opcoes);
       var corpo = null;
       try{ corpo = await r.json(); }catch(e){ corpo = null; }
-      if(!r.ok){ throw new Error((corpo && corpo.erro) || ('Falha na requisição ('+r.status+')')); }
+      if(!r.ok){
+        var err = new Error((corpo && corpo.erro) || ('Falha na requisição ('+r.status+')'));
+        err.status = r.status;
+        // Só vale repetir o que é passageiro: servidor ocupado/acordando (429, 502, 503, 504)
+        // e queda de rede (sem status). 4xx é recusa de verdade (dado inválido, permissão,
+        // coluna que não existe) e 500 aqui é rota quebrada — repetir só faz a tela demorar.
+        if([429,502,503,504].indexOf(r.status) === -1) err.naoRepetir = true;
+        throw err;
+      }
       return corpo;
     }catch(e){
-      if(tentativa < 3){
+      if(tentativa < 3 && !(e && e.naoRepetir)){
         await esperar(600*tentativa);
         return ctrlFetch(caminho, opcoes, tentativa+1);
       }
@@ -6090,41 +6103,100 @@
       var criarLogin = document.getElementById('impOperCriarLogin').checked;
       var btn = document.getElementById('impOperConfirmar');
       var previewBox = document.getElementById('impOperPreview');
+      var errBox = document.getElementById('impOperError');
       btn.disabled = true; btn.textContent = 'Importando…';
-      // 1) Cria os operadores (nome, cargo, matrícula). saveList recarrega a lista do servidor
-      //    depois de gravar, então os ids passam a ser os reais — é deles que a senha precisa.
-      var paraSalvar = linhasParaImportar.map(function(n){
-        return { id:n.id, matricula:n.matricula, nome:n.nome, cargo:n.cargo, ativo:true };
-      });
-      state.operadores = state.operadores.concat(paraSalvar);
-      var ok = await saveList('operadores_v4', state.operadores);
-      // 2) Define o login de cada um, um por vez, mostrando o progresso.
-      var logins = 0, falhas = 0;
-      if(criarLogin){
-        for(var i=0;i<linhasParaImportar.length;i++){
-          var reg = linhasParaImportar[i];
-          if(!reg.__senha || !reg.usuario) continue;
-          var alvo = state.operadores.filter(function(o){
-            return String(o.nome||'').toLowerCase() === String(reg.nome).toLowerCase();
-          })[0];
-          if(!alvo){ falhas++; continue; }
+
+      function progresso(texto){
+        if(previewBox) previewBox.innerHTML = '<div class="shared-note" style="display:block;">'+texto+'</div>';
+      }
+
+      /* 1) CRIA OS OPERADORES, UM A UM.
+         Antes eu usava saveList(), que dispara todas as gravações de uma vez — com 318 pessoas
+         isso vira 318 chamadas simultâneas e o servidor derruba o lote inteiro (e aí nada
+         aparecia na lista). Agora vai de 3 em 3, continua mesmo se alguma falhar, e mostra
+         o motivo da primeira falha em vez de um "problema ao sincronizar" genérico. */
+      var criados = 0, erros = 0, primeiroErro = '';
+      var fila = linhasParaImportar.slice();
+      var totalFila = fila.length;
+      async function enviarUm(reg){
+        try{
+          await ctrlFetch('/api/ctrl/operadores', {
+            method:'POST', headers: ctrlCabecalhos(),
+            body: JSON.stringify({ item: { id:reg.id, matricula:reg.matricula, nome:reg.nome, cargo:reg.cargo, ativo:true } })
+          });
+          criados++;
+        }catch(e){
+          erros++;
+          if(!primeiroErro) primeiroErro = (e && e.message) ? e.message : 'falha de rede';
+        }
+        progresso('Cadastrando operadores… <b>'+(criados+erros)+' de '+totalFila+'</b>' +
+                  (erros ? (' · '+erros+' com problema') : ''));
+      }
+      var LOTE = 3;
+      for(var i=0;i<fila.length;i+=LOTE){
+        await Promise.all(fila.slice(i, i+LOTE).map(enviarUm));
+      }
+
+      /* 2) RECARREGA a lista do servidor: é isso que confirma o que realmente entrou e traz os
+            ids verdadeiros (é deles que o login precisa). */
+      progresso('Conferindo no servidor…');
+      var confirmados = 0;
+      try{
+        var resp = await ctrlFetch('/api/ctrl/operadores', { headers: ctrlCabecalhos() });
+        state.operadores = resp.itens || [];
+        CTRL_BASELINE['operadores_v4'] = JSON.parse(JSON.stringify(state.operadores));
+        var porNome = {};
+        state.operadores.forEach(function(o){ porNome[String(o.nome||'').toLowerCase()] = o; });
+        linhasParaImportar.forEach(function(reg){ if(porNome[reg.nome.toLowerCase()]) confirmados++; });
+      }catch(e){
+        if(!primeiroErro) primeiroErro = 'não consegui reler a lista de operadores: ' + (e.message||'');
+      }
+
+      /* 3) LOGIN DO TABLET, um a um, só para quem realmente está no servidor. */
+      var logins = 0, falhasLogin = 0, primeiroErroLogin = '';
+      if(criarLogin && confirmados > 0){
+        var porNome2 = {};
+        state.operadores.forEach(function(o){ porNome2[String(o.nome||'').toLowerCase()] = o; });
+        for(var j=0;j<linhasParaImportar.length;j++){
+          var reg2 = linhasParaImportar[j];
+          if(!reg2.__senha || !reg2.usuario) continue;
+          var alvo = porNome2[reg2.nome.toLowerCase()];
+          if(!alvo){ falhasLogin++; continue; }
           try{
             await ctrlFetch('/api/ctrl/operadores/'+alvo.id+'/senha', {
               method:'PATCH', headers: ctrlCabecalhos(),
-              body: JSON.stringify({ usuario: reg.usuario, senha: reg.__senha })
+              body: JSON.stringify({ usuario: reg2.usuario, senha: reg2.__senha })
             });
-            alvo.usuario = reg.usuario;
+            alvo.usuario = reg2.usuario;
             logins++;
-          }catch(e){ falhas++; }
-          if(previewBox && (i % 5 === 0 || i === linhasParaImportar.length-1)){
-            previewBox.innerHTML = '<div class="shared-note" style="display:block;">Criando logins… <b>'+
-              (i+1)+' de '+linhasParaImportar.length+'</b>'+(falhas?(' · '+falhas+' com problema'):'')+'</div>';
+          }catch(e){
+            falhasLogin++;
+            if(!primeiroErroLogin) primeiroErroLogin = (e && e.message) ? e.message : 'falha de rede';
+          }
+          if(j % 5 === 0 || j === linhasParaImportar.length-1){
+            progresso('Criando logins… <b>'+(j+1)+' de '+linhasParaImportar.length+'</b>' +
+                      (falhasLogin ? (' · '+falhasLogin+' com problema') : ''));
           }
         }
       }
+
+      /* 4) RESULTADO honesto: o que o servidor confirmou, não o que eu tentei enviar. */
+      var resumo = confirmados + ' de ' + totalFila + ' operador(es) confirmados no servidor.' +
+        (criarLogin ? (' ' + logins + ' login(s) de tablet criado(s).') : '');
+      if(erros || falhasLogin || confirmados < totalFila){
+        var detalhe = [];
+        if(erros) detalhe.push(erros + ' falharam ao cadastrar (' + esc(primeiroErro) + ')');
+        if(falhasLogin) detalhe.push(falhasLogin + ' falharam no login (' + esc(primeiroErroLogin || 'motivo não informado') + ')');
+        if(errBox) errBox.innerHTML = '<div class="form-error">' + esc(resumo) + ' ' + detalhe.join(' · ') +
+          '. Pode rodar a importação de novo: quem já entrou é ignorado.</div>';
+        btn.disabled = false; btn.textContent = 'Tentar de novo';
+        progresso('Terminado com pendências — veja a mensagem acima.');
+        renderOperadoresTab();
+        renderCadastroHub();
+        return;   // deixa o modal aberto pra você ver o motivo
+      }
       closeModal();
-      toast((ok ? linhasParaImportar.length+' operador(es) importado(s).' : 'Importado localmente — problema ao sincronizar.') +
-            (criarLogin ? (' ' + logins + ' login(s) de tablet criado(s)' + (falhas ? (', ' + falhas + ' falharam.') : '.')) : ''), 12000);
+      toast(resumo, 12000);
       renderOperadoresTab();
       renderCadastroHub();
     };
