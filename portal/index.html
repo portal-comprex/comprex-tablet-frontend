@@ -1491,7 +1491,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <div class="submenu-divisor">Controladoria</div>
         <div class="sidebar-item acao" data-ctrl-cadastro="clientes" style="padding-left:32px"><i>🏢</i> Clientes</div>
         <div class="sidebar-item acao" data-ctrl-cadastro="ordens" style="padding-left:32px"><i>📄</i> Ordens de Trabalho</div>
-        <div class="sidebar-item acao" data-ctrl-cadastro="equip" style="padding-left:32px"><i>🚚</i> Equipamentos (frota)</div>
+        <!-- "Equipamentos (frota)" removido do menu CADASTRAR a pedido do Lucas (set/2026). -->
         <div class="sidebar-item acao" data-ctrl-cadastro="operadores" style="padding-left:32px"><i>👷</i> Operadores</div>
         <div class="sidebar-item acao" data-ctrl-cadastro="paradas" style="padding-left:32px"><i>⛔</i> Paradas</div>
         <div class="sidebar-item acao" data-ctrl-cadastro="escalas" style="padding-left:32px"><i>🕐</i> Escalas</div>
@@ -2331,14 +2331,10 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div id="dash-mov-rank-manutencao"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
   </div>
-  <div class="dash-row">
-    <div class="dash-card" style="flex:1 1 100%">
-      <h3 style="display:flex;justify-content:space-between;align-items:center">🏭 Quantidade de equipamentos por local (agrupado)
-        <button type="button" class="rel-btn-secundario" id="dash-mov-ver-detalhes" style="font-size:11.5px;padding:5px 10px">Ver detalhes completos →</button>
-      </h3>
-      <div id="dash-mov-qtd-por-local"><div class="lista-vazia-dash">Carregando…</div></div>
-    </div>
-  </div>
+  <!-- REMOVIDO (set/2026): "Quantidade de equipamentos por local (agrupado)" saiu
+       daqui porque repetia exatamente o que a tela "Status dos Equipamentos" já
+       mostra. A função dashMovRenderizarQtdPorLocal() continua no arquivo, só
+       não é mais chamada. -->
 </div>
 <div class="view" id="view-status-equipamentos">
   <div class="cab">
@@ -3415,9 +3411,14 @@ async function entrarComoLogado(conta){
   // Se voltamos de um redirect de renovação de token, retorna pra tela onde o usuário estava
   var viewSalva = null;
   try { viewSalva = sessionStorage.getItem('viewAntesDoRedirect'); sessionStorage.removeItem('viewAntesDoRedirect'); } catch(e) {}
-  if (viewSalva && viewSalva !== 'novo') {
-    setTimeout(function(){ mostrarView(viewSalva); }, 300);
-  }
+  // AJUSTE (Lucas, set/2026): o Portal deve SEMPRE abrir na aba "Checklists".
+  // Antes, ao voltar do redirect de renovacao de token da Microsoft, ele reabria
+  // a tela em que a pessoa estava quando a sessao expirou (em geral a
+  // Controladoria). Para voltar ao comportamento anterior, basta descomentar as
+  // tres linhas abaixo.
+  // if (viewSalva && viewSalva !== 'novo') {
+  //   setTimeout(function(){ mostrarView(viewSalva); }, 300);
+  // }
 }
 /* =====================================================================
    GRAPH API — helpers
@@ -5677,8 +5678,11 @@ async function carregarDashboardMov(){
     .map(function(k){ return {label:k, valor:porEquipManutencao[k], valorFmt: porEquipManutencao[k] + (porEquipManutencao[k]===1?' dia':' dias')}; })
     .sort(function(a,b){ return b.valor - a.valor; }).slice(0, 8);
   pdRenderizarRanking('dash-mov-rank-manutencao', rankManutencao, 'var(--ru)', 'equipamento');
-  dashMovRenderizarQtdPorLocal();
-  document.getElementById('dash-mov-ver-detalhes').onclick = function(){ mostrarView('status-equipamentos'); };
+  // O bloco agrupado saiu do Dashboard (repetia "Status dos Equipamentos").
+  if (document.getElementById('dash-mov-qtd-por-local')) {
+    dashMovRenderizarQtdPorLocal();
+    document.getElementById('dash-mov-ver-detalhes').onclick = function(){ mostrarView('status-equipamentos'); };
+  }
 }
 /** Mostra, de forma grande e agrupada, quantos equipamentos existem em cada
  *  local — agrupado pelo prefixo (AMT, AMB, VALE...), com o detalhe de cada
@@ -8687,10 +8691,17 @@ function preencherFiltrosOcorrencias(){
 }
 function preencherFiltroSelectComLista(idSelect, lista){
   const select = document.getElementById(idSelect);
+  // CORRIGIDO (set/2026): esta função apaga e recria as opções, e é chamada
+  // no início de carregarIndicadoresV2(), que roda no "change" do próprio
+  // select. Resultado: escolher um Local/Obra disparava o change, as opções
+  // eram recriadas e a escolha voltava pra "Todos" — era impossível filtrar.
+  // Agora a escolha é guardada antes e devolvida depois.
+  const escolhaAtual = select.value;
   while (select.options.length > 1) select.remove(1);
   lista.forEach(function(n){
     const o = document.createElement('option'); o.value = n; o.textContent = n; select.appendChild(o);
   });
+  if (escolhaAtual) select.value = escolhaAtual;
 }
 function obterOcorrenciasFiltradas(){
   const deFiltro = document.getElementById('oc-filtro-de').value;
@@ -9824,7 +9835,39 @@ function mostrarEquipamentosDoLocalTooltip(elemento, local){
     });
   }, 10);
 }
+// CORRIGIDO (set/2026): ITENS_SEGURANCA_LABELS era usada em renderSegurancaV2
+// mas NUNCA foi definida em lugar nenhum do arquivo — a função estourava com
+// ReferenceError toda vez e o card ficava eternamente em "Carregando…".
+// Lista de candidatos (nomes exatamente como vêm da planilha do checklist).
+const ITENS_SEGURANCA_CANDIDATOS = [
+  'EXTINTOR DE INCÊNDIO',
+  'CINTO DE SEGURANÇA',
+  'ALARME SONORO PARA CINTO DE SEGURANÇA (FUNCIONA)',
+  'MARTELINHO DE SEGURANÇA',
+  'FREIOS',
+  'ALARME SONORO E/OU VISUAL PARA FREIO DE ESTACIONAMENTO (FUNCIONA)',
+  'ALARME DE RÉ (FUNCIONA)',
+  'SENSOR DE RÉ (FUNCIONA)',
+  'CÂMERA DE RÉ (FUNCIONA)',
+  'SISTEMA DE DETECÇÃO DE PROXIMIDADE (FUNCIONA)',
+  'GIROFLEX',
+  'ESTADO DAS LANTERNAS',
+  'RETROVISORES',
+  'VIDROS',
+  'LIMPADOR DE PARA-BRISA',
+  'ESTRIBOS/ESCADAS/CORRIMÃO',
+  'COMANDOS DA MÁQUINA/RESPOSTA'
+];
+// Só entram os itens que realmente existem nos checklists carregados — assim o
+// card não mostra linha morta, e não quebra se a planilha mudar de itens.
+function itensSegurancaPresentes(itens){
+  const vistos = {};
+  itens.forEach(function(h){ Object.keys(h.campos || {}).forEach(function(k){ vistos[k] = true; }); });
+  const achados = ITENS_SEGURANCA_CANDIDATOS.filter(function(l){ return vistos[l]; });
+  return achados.length ? achados : ITENS_SEGURANCA_CANDIDATOS;
+}
 function renderSegurancaV2(itens, itensAnterior){
+  const ITENS_SEGURANCA_LABELS = itensSegurancaPresentes(itens.concat(itensAnterior || []));
   const cont = document.getElementById('ind2-seguranca-v2');
   function pctNaoConforme(lista, label){
     if (!lista.length) return 0;
@@ -10678,6 +10721,26 @@ async function carregarRaioXObra(){
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
   else wire();
+})();
+/* NOVO (set/2026): Esc fecha o painel aberto.
+   Todos os painéis do Portal usam a mesma classe .modal-overlay + .aberto, então
+   um único listener resolve todos. Fecha o de cima primeiro (se houver dois) e,
+   quando o painel tem botão de fechar próprio, clica nele em vez de só tirar a
+   classe — assim a limpeza que cada um faz (timers, estado) continua rodando. */
+(function(){
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape' && e.keyCode !== 27) return;
+    var tt = document.getElementById('tooltip-global');
+    if (tt && tt.style.display === 'block') { tt.style.display = 'none'; return; }
+    var hp = document.getElementById('hover-prev-tooltip');
+    if (hp && hp.style.display === 'block') { hp.style.display = 'none'; return; }
+    var abertos = Array.prototype.slice.call(document.querySelectorAll('.modal-overlay.aberto'));
+    if (!abertos.length) return;
+    var topo = abertos[abertos.length - 1];
+    var btn = topo.querySelector('[id$="-fechar"], .modal-fechar, [id$="-close"]');
+    if (btn && typeof btn.click === 'function') btn.click();
+    else topo.classList.remove('aberto');
+  });
 })();
 </script>
 </body>
