@@ -1407,6 +1407,13 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .raiox-chip{background:var(--cream);border:1px solid var(--linha);border-radius:7px;padding:3px 8px;font-size:10.5px;
     font-weight:700;color:var(--tinta);cursor:pointer;transition:all .12s ease}
   .raiox-chip:hover{border-color:var(--navy);color:var(--navy);background:#fff}
+  .raiox-card{cursor:pointer}
+  .raiox-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  .raiox-card-acoes{display:flex;gap:8px;margin-top:2px}
+  .raiox-card-acoes button{flex:1;font-size:11px;padding:6px 8px}
+  .raiox-card-acoes button.raiox-btn-imp{color:#7a1f16;border-color:#f0b7ae}
+  @keyframes raioxDestaquePulso{0%{background:#fff3cd}100%{background:transparent}}
+  .arv-folha.arv-destaque-raiox{animation:raioxDestaquePulso 1.6s ease-out 2}
   .raiox-chip.imp{background:#fdeeee;border-color:#f0b7ae;color:#7a1f16}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1760,6 +1767,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <div class="painel-filtro-campo" style="min-width:0;flex:0 0 auto;justify-content:flex-end">
           <label>&nbsp;</label>
           <div style="display:flex;gap:6px">
+            <button type="button" class="rel-btn-primario" id="painel-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
             <button type="button" class="rel-btn-secundario" id="painel-limpar-filtros" style="padding:8px 12px;font-size:11.5px;white-space:nowrap">Limpar filtros</button>
             <button type="button" class="arv-btn-detalhe" id="painel-imprimir" style="font-size:14px;padding:8px 10px;flex-shrink:0" title="Imprimir / Salvar em PDF (histórico dos equipamentos filtrados)">🖨️</button>
           </div>
@@ -2010,6 +2018,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+<button type="button" class="rel-btn-primario" id="hist-pd-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="hist-pd-limpar-filtros">Limpar filtros</button>
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
@@ -2076,6 +2085,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="ind-pd-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="ind-pd-limpar">Limpar filtros</button>
     </div>
   </div>
@@ -2095,7 +2105,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   <div class="cab">
     <div class="grid">
       <div class="campo">
-        <label>Equipamento principal <span class="obrig">*</span></label>
+        <label>Equipamento</label>
         <div class="busca-wrap">
           <span class="busca-icone">🔍</span>
           <input type="text" id="mov-equipamento" placeholder="Buscar equipamento…" autocomplete="off">
@@ -2103,10 +2113,22 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
           <span class="busca-seta">⌄</span>
           <div class="busca-lista"></div>
         </div>
+        <div class="modal-dica" style="margin-top:4px">Preencha Equipamento e/ou Implemento (pelo menos um).</div>
+      </div>
+      <div class="campo">
+        <label>Implemento</label>
+        <div class="busca-wrap">
+          <span class="busca-icone">🔍</span>
+          <input type="text" id="mov-implemento" placeholder="Buscar implemento…" autocomplete="off">
+          <button type="button" class="busca-limpar" style="display:none">✕</button>
+          <span class="busca-seta">⌄</span>
+          <div class="busca-lista"></div>
+        </div>
+        <div class="modal-dica" id="mov-implemento-dica" style="margin-top:4px;display:none">Preenchido automaticamente porque está montado no equipamento acima — pode trocar ou apagar.</div>
       </div>
       <div class="campo">
         <label>Local atual</label>
-        <input type="text" id="mov-local-atual" disabled placeholder="Selecione um equipamento" style="background:#eef1ee;color:var(--cinza)">
+        <input type="text" id="mov-local-atual" disabled placeholder="Selecione um equipamento ou implemento" style="background:#eef1ee;color:var(--cinza)">
       </div>
       <div class="campo">
         <label>Novo local <span class="obrig">*</span></label>
@@ -2135,11 +2157,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       </div>
     </div>
     <div class="mov-vinculo" id="mov-vinculo" style="display:none">
-      <span>🔧 Implemento vinculado: <b id="mov-vinculo-nome">—</b></span>
-      <div style="display:flex;gap:14px;flex-wrap:wrap">
-        <label><input type="checkbox" id="mov-mover-equip" checked> Mover o equipamento</label>
-        <label><input type="checkbox" id="mov-mover-implemento" checked> Mover o implemento</label>
-      </div>
+      <span>🔧 Implemento montado atualmente: <b id="mov-vinculo-nome">—</b></span>
     </div>
   </div>
   <div class="dash-row" style="align-items:flex-start;margin-top:14px">
@@ -2173,7 +2191,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <label>Observação (opcional)</label>
     <textarea id="mov-observacao" rows="2" placeholder="Algum detalhe sobre essa movimentação…" style="width:100%;padding:10px;border:1px solid var(--linha);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;background:var(--card);color:var(--tinta)"></textarea>
   </div>
-  <button type="button" class="rel-btn-primario" id="mov-salvar" style="margin-top:16px">📦 Mover equipamento</button>
+  <button type="button" class="rel-btn-primario" id="mov-salvar" style="margin-top:16px">📦 Mover</button>
   <div class="erro-msg" id="mov-erro-msg"></div>
   <div class="ok-msg" id="mov-ok-msg">✔ Equipamento movido com sucesso!</div>
 </div>
@@ -2190,6 +2208,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="loc-atual-pesquisar" style="margin-right:8px">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-primario" id="loc-atual-imprimir">🖨️ Imprimir / Exportar PDF</button>
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
@@ -2231,6 +2250,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="hist-mov-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="hist-mov-limpar-filtros">Limpar filtros</button>
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
@@ -2279,29 +2299,30 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="dash-mov-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="dash-mov-limpar">Limpar filtros</button>
     </div>
   </div>
   <div class="dash-kpis">
-    <div class="kpi-card">
+    <div class="kpi-card" id="dash-mov-kpi-total" style="cursor:pointer" title="Ver a lista de movimentações deste período">
       <div class="kpi-top">
         <div class="kpi-icone azul">📦</div>
         <div><div class="kpi-num" id="kpi-mov-total">—</div><div class="kpi-lbl">Movimentações no período</div></div>
       </div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" id="dash-mov-kpi-equip" style="cursor:pointer" title="Ver a lista de movimentações deste período">
       <div class="kpi-top">
         <div class="kpi-icone" style="background:#e9f4ee;color:var(--ok)">🚜</div>
         <div><div class="kpi-num" id="kpi-mov-equip">—</div><div class="kpi-lbl">Equipamentos movimentados</div></div>
       </div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" id="dash-mov-kpi-media" style="cursor:pointer" title="Ver a lista de movimentações deste período">
       <div class="kpi-top">
         <div class="kpi-icone tan">📅</div>
         <div><div class="kpi-num" id="kpi-mov-media-dias">—</div><div class="kpi-lbl">Média de dias por local</div></div>
       </div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" id="dash-mov-kpi-locais" style="cursor:pointer" title="Ver a lista de movimentações deste período">
       <div class="kpi-top">
         <div class="kpi-icone" style="background:#eef1fb;color:#3a4ea3">📍</div>
         <div><div class="kpi-num" id="kpi-mov-locais">—</div><div class="kpi-lbl">Locais com movimentação</div></div>
@@ -2364,7 +2385,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <label>Chegada até</label>
         <input type="date" id="status-eq-filtro-chegada-ate">
       </div>
-      <div class="campo" style="justify-content:flex-end;display:flex;align-items:flex-end">
+      <div class="campo" style="justify-content:flex-end;display:flex;align-items:flex-end;gap:8px">
+        <button type="button" class="rel-btn-primario" id="status-eq-pesquisar" style="width:100%">🔍 Pesquisar</button>
         <button type="button" class="rel-btn-secundario" id="status-eq-limpar-filtros" style="width:100%">Limpar filtros</button>
       </div>
     </div>
@@ -2448,6 +2470,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="frota-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="frota-limpar-filtros">Limpar filtros</button>
     </div>
   </div>
@@ -2514,6 +2537,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="hist-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="hist-limpar-filtros">Limpar filtros</button>
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
@@ -2627,6 +2651,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="oc-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="oc-limpar-filtros">Limpar filtros</button>
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
@@ -2697,6 +2722,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
+      <button type="button" class="rel-btn-primario" id="ind2-pesquisar" style="padding:8px 14px;font-size:11.5px;white-space:nowrap">🔍 Pesquisar</button>
       <button type="button" class="rel-btn-secundario" id="ind2-limpar-filtros">Limpar filtros</button>
     </div>
   </div>
@@ -5097,11 +5123,16 @@ function movMontarUltimasLista(eq, titulo){
       '</div>';
     }).join('');
 }
+// Guarda a última sugestão automática de implemento pra não sobrescrever
+// uma escolha manual do usuário (só reage à troca de equipamento).
+var movUltimaSugestaoImplemento = '';
 function movAtualizarPreviaDeParaEVinculo(){
   const eq = document.getElementById('mov-equipamento').value.trim().toUpperCase();
+  const implInput = document.getElementById('mov-implemento');
+  var impl = implInput.value.trim().toUpperCase();
   const novoLocal = document.getElementById('mov-novo-local').value.trim();
-  const localAtual = frotaLocalAtual[eq] || '';
-  document.getElementById('mov-local-atual').value = eq ? (localAtual || 'Sem local registrado') : '';
+  const localAtual = frotaLocalAtual[eq] || frotaLocalAtual[impl] || '';
+  document.getElementById('mov-local-atual').value = (eq || impl) ? (localAtual || 'Sem local registrado') : '';
   const cardFoto = document.getElementById('mov-equip-card');
   const cardUltimas = document.getElementById('mov-ultimas-card');
   if (eq) {
@@ -5123,20 +5154,35 @@ function movAtualizarPreviaDeParaEVinculo(){
     cardFoto.style.display = 'none';
     cardUltimas.style.display = 'none';
   }
-  const vinculado = frotaItemVinculado[eq] || '';
+  // Auto-sugere o implemento hoje montado no equipamento escolhido, mas só
+  // se o campo Implemento estiver vazio ou ainda tiver a última sugestão
+  // automática (ou seja: não sobrescreve o que o usuário digitou na mão).
+  const vinculado = (eq && frotaTipoItem[eq] !== 'implemento') ? (frotaItemVinculado[eq] || '') : '';
+  const dicaImpl = document.getElementById('mov-implemento-dica');
+  if (vinculado && (impl === '' || impl === movUltimaSugestaoImplemento)) {
+    implInput.value = vinculado;
+    impl = vinculado;
+    movUltimaSugestaoImplemento = vinculado;
+    dicaImpl.style.display = 'block';
+  } else {
+    if (impl !== movUltimaSugestaoImplemento) movUltimaSugestaoImplemento = '';
+    dicaImpl.style.display = 'none';
+  }
   const boxVinculo = document.getElementById('mov-vinculo');
   if (vinculado) {
     document.getElementById('mov-vinculo-nome').textContent = vinculado;
     boxVinculo.style.display = 'flex';
-    document.getElementById('mov-mover-equip').checked = true;
-    document.getElementById('mov-mover-implemento').checked = true;
     document.getElementById('mov-ultimas-implemento').innerHTML = movMontarUltimasLista(vinculado, '🔧 ' + vinculado);
+  } else if (impl) {
+    boxVinculo.style.display = 'none';
+    document.getElementById('mov-ultimas-implemento').innerHTML = movMontarUltimasLista(impl, '🔧 ' + impl);
+    cardUltimas.style.display = 'block';
   } else {
     boxVinculo.style.display = 'none';
     document.getElementById('mov-ultimas-implemento').innerHTML = '';
   }
   const setas = document.getElementById('mov-setas');
-  if (eq && novoLocal) {
+  if ((eq || impl) && novoLocal) {
     setas.style.display = 'flex';
     document.getElementById('mov-de-val').textContent = localAtual || 'Sem local registrado';
     document.getElementById('mov-para-val').textContent = novoLocal;
@@ -5145,6 +5191,7 @@ function movAtualizarPreviaDeParaEVinculo(){
   }
 }
 document.getElementById('mov-equipamento').addEventListener('change', movAtualizarPreviaDeParaEVinculo);
+document.getElementById('mov-implemento').addEventListener('change', movAtualizarPreviaDeParaEVinculo);
 document.getElementById('mov-novo-local').addEventListener('change', movAtualizarPreviaDeParaEVinculo);
 function movMostrarErro(msg){
   const el = document.getElementById('mov-erro-msg');
@@ -5154,19 +5201,21 @@ function movMostrarErro(msg){
 }
 document.getElementById('mov-salvar').onclick = async function(){
   const eq = document.getElementById('mov-equipamento').value.trim().toUpperCase();
+  const impl = document.getElementById('mov-implemento').value.trim().toUpperCase();
   const novoLocalInformado = document.getElementById('mov-novo-local').value.trim();
   const novoStatus = document.getElementById('mov-novo-status').value;
   const dataInformada = document.getElementById('mov-data').value;
   const observacao = document.getElementById('mov-observacao').value.trim();
-  const vinculado = frotaItemVinculado[eq] || '';
-  const moverEquip = document.getElementById('mov-mover-equip').checked;
-  const moverImplemento = vinculado && document.getElementById('mov-mover-implemento').checked;
-  if (!eq) { movMostrarErro('Selecione o equipamento.'); return; }
+  if (!eq && !impl) { movMostrarErro('Selecione um equipamento e/ou um implemento.'); return; }
+  if (eq && frotaTipoItem[eq] === 'implemento') { movMostrarErro('"' + eq + '" é um implemento — selecione-o no campo "Implemento", não em "Equipamento".'); return; }
+  if (impl && frotaTipoItem[impl] === 'equipamento') { movMostrarErro('"' + impl + '" é um equipamento — selecione-o no campo "Equipamento", não em "Implemento".'); return; }
+  if (eq && !frotas.includes(eq)) { movMostrarErro('Equipamento "' + eq + '" não encontrado — escolha um item da lista.'); return; }
+  if (impl && !frotas.includes(impl)) { movMostrarErro('Implemento "' + impl + '" não encontrado — escolha um item da lista.'); return; }
   if (!dataInformada) { movMostrarErro('Informe a data da movimentação.'); return; }
-  if (!moverEquip && !moverImplemento) { movMostrarErro('Marque ao menos "Mover o equipamento" ou "Mover o implemento".'); return; }
   if (!novoLocalInformado) { movMostrarErro('Selecione o novo local.'); return; }
-  if (!usuarioPodeEditarLocal(frotaLocalAtual[eq] || '')) {
-    movMostrarErro('Você só pode mover equipamentos da sua localidade. "' + (frotaLocalAtual[eq] || 'Sem local registrado') + '" é somente leitura para você.');
+  const localItemPrincipal = frotaLocalAtual[eq || impl] || '';
+  if (!usuarioPodeEditarLocal(localItemPrincipal)) {
+    movMostrarErro('Você só pode mover equipamentos da sua localidade. "' + (localItemPrincipal || 'Sem local registrado') + '" é somente leitura para você.');
     return;
   }
   const btn = this;
@@ -5174,8 +5223,10 @@ document.getElementById('mov-salvar').onclick = async function(){
   try {
     // Cada item (equipamento e/ou implemento) guarda seu próprio local de
     // origem e ganha seu próprio registro no Histórico — assim é possível
-    // ver "as últimas movimentações" de cada um separadamente.
-    async function moverItem(nomeItem){
+    // ver "as últimas movimentações" de cada um separadamente. O
+    // ItemVinculado de cada registro aponta pro outro item da dupla, quando
+    // os dois estão sendo movidos juntos.
+    async function moverItem(nomeItem, vinculoDoItem){
       const idItem = frotaIdsExtra[nomeItem] || frotasIds[nomeItem];
       const origemItem = frotaLocalAtual[nomeItem] || '—';
       await atualizarCamposItem(LISTA_FROTA_ID, idItem, { LocalAtual: novoLocalInformado, StatusAtual: novoStatus });
@@ -5184,7 +5235,7 @@ document.getElementById('mov-salvar').onclick = async function(){
       await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', {
         fields: {
           Equipamento: nomeItem,
-          ItemVinculado: (nomeItem === eq && moverImplemento) ? vinculado : '',
+          ItemVinculado: vinculoDoItem || '',
           LocalOrigem: origemItem,
           LocalDestino: novoLocalInformado,
           Status: novoStatus,
@@ -5194,22 +5245,24 @@ document.getElementById('mov-salvar').onclick = async function(){
         }
       });
     }
-    if (moverEquip) await moverItem(eq);
-    if (moverImplemento) await moverItem(vinculado);
+    if (eq) await moverItem(eq, impl);
+    if (impl) await moverItem(impl, eq);
     movimentacoesCarregadas = false; // força reconsulta na próxima vez que abrir o histórico
     const ok = document.getElementById('mov-ok-msg');
     ok.style.display = 'block';
     setTimeout(function(){ ok.style.display = 'none'; }, 5000);
     document.getElementById('mov-equipamento').value = '';
+    document.getElementById('mov-implemento').value = '';
     document.getElementById('mov-novo-local').value = '';
     document.getElementById('mov-observacao').value = '';
+    movUltimaSugestaoImplemento = '';
     const hoje2 = new Date();
     document.getElementById('mov-data').value = hoje2.getFullYear() + '-' + String(hoje2.getMonth()+1).padStart(2,'0') + '-' + String(hoje2.getDate()).padStart(2,'0');
     movAtualizarPreviaDeParaEVinculo();
   } catch(err) {
     movMostrarErro('Falha ao mover. Tente novamente. ' + err.message);
   } finally {
-    btn.disabled = false; btn.textContent = '📦 Mover equipamento';
+    btn.disabled = false; btn.textContent = '📦 Mover';
   }
 };
 /* ---- Localização Atual ---- */
@@ -5265,8 +5318,8 @@ function locRenderizarTabela(){
     tr.onclick = function(){ locAbrirModalMover(tr.dataset.equip); };
   });
 }
-document.getElementById('loc-atual-busca').addEventListener('input', locRenderizarTabela);
-document.getElementById('loc-atual-filtro-local').addEventListener('change', locRenderizarTabela);
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+document.getElementById('loc-atual-pesquisar').onclick = locRenderizarTabela;
 function locObterLinhasAtuais(){
   const busca = document.getElementById('loc-atual-busca').value.trim().toUpperCase();
   const filtroLocal = document.getElementById('loc-atual-filtro-local').value;
@@ -5526,13 +5579,10 @@ function movAtualizarExtratoEquipamento(todosItens){
   document.getElementById('hist-mov-extrato-locais').innerHTML = periodosLocal.length ? montarLista(periodosLocal) : '<div class="lista-vazia-dash">Sem dados.</div>';
   document.getElementById('hist-mov-extrato-status').innerHTML = periodosStatus.length ? montarLista(periodosStatus) : '<div class="lista-vazia-dash">Sem dados de status registrados.</div>';
 }
-['hist-mov-filtro-de','hist-mov-filtro-ate','hist-mov-filtro-equip','hist-mov-filtro-local'].forEach(function(id){
-  ['input','change'].forEach(function(evento){
-    document.getElementById(id).addEventListener(evento, function(){
-      garantirDadosMovimentacoes().then(movRenderizarTabelaHistorico);
-    });
-  });
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+document.getElementById('hist-mov-pesquisar').onclick = function(){
+  garantirDadosMovimentacoes().then(movRenderizarTabelaHistorico);
+};
 document.getElementById('hist-mov-limpar-filtros').onclick = function(){
   document.getElementById('hist-mov-filtro-de').value = '';
   document.getElementById('hist-mov-filtro-ate').value = '';
@@ -5601,6 +5651,21 @@ function movFiltrarPorPeriodoELocal(itens){
     return true;
   });
 }
+/** "Abrir a lista por trás do número": copia os filtros atuais do Dashboard
+ *  de Movimentações (período/equipamento/local) pro Histórico de
+ *  Movimentações e já aplica a pesquisa lá. */
+function dashMovAbrirHistoricoComFiltros(){
+  const de = document.getElementById('dash-mov-de').value;
+  const ate = document.getElementById('dash-mov-ate').value;
+  const equip = document.getElementById('dash-mov-filtro-equip').value;
+  const local = document.getElementById('dash-mov-filtro-local').value;
+  mostrarView('historico-mov');
+  document.getElementById('hist-mov-filtro-de').value = de;
+  document.getElementById('hist-mov-filtro-ate').value = ate;
+  document.getElementById('hist-mov-filtro-equip').value = equip;
+  document.getElementById('hist-mov-filtro-local').value = local;
+  garantirDadosMovimentacoes().then(movRenderizarTabelaHistorico);
+}
 async function carregarDashboardMov(){
   await garantirDadosFrotaExtra();
   const todos = await garantirDadosMovimentacoes();
@@ -5612,6 +5677,12 @@ async function carregarDashboardMov(){
     selEquip.innerHTML = '<option value="">Todos</option>' + equips.map(function(e){ return '<option value="'+e+'">'+e.toUpperCase()+'</option>'; }).join('');
     selLocal.innerHTML = '<option value="">Todos</option>' + locaisList.map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
     selEquip.dataset.preenchido = '1';
+    // "Abrir a lista por trás do número": os 4 cards de KPI levam pro
+    // Histórico de Movimentações já com os mesmos filtros de período/
+    // equipamento/local aplicados (a pedido do Lucas, set/2026).
+    ['dash-mov-kpi-total', 'dash-mov-kpi-equip', 'dash-mov-kpi-media', 'dash-mov-kpi-locais'].forEach(function(id){
+      document.getElementById(id).onclick = function(){ dashMovAbrirHistoricoComFiltros(); };
+    });
   }
   const itens = movFiltrarPorPeriodoELocal(todos);
   document.getElementById('kpi-mov-total').textContent = itens.length;
@@ -5661,11 +5732,23 @@ async function carregarDashboardMov(){
       acumulado += pct;
     });
     donutStatus.style.background = 'conic-gradient(' + fatias.join(', ') + ')';
+    // Fatias/legenda clicáveis: "levar pra tela já filtrada" (Status dos
+    // Equipamentos, já com aquele status e o mesmo local do dashboard).
     legendaStatus.innerHTML = ['OPERACIONAL','EM MANUTENÇÃO','EM DISPONIBILIDADE'].map(function(s){
       const cor = s === 'OPERACIONAL' ? '#1b7a43' : (s === 'EM MANUTENÇÃO' ? '#b3453a' : '#c79a3a');
-      return '<div class="resumo-linha"><span class="resumo-dot" style="background:'+cor+'"></span>' +
+      return '<div class="resumo-linha" data-dash-mov-status="'+s+'" style="cursor:pointer" title="Ver esses equipamentos em Status dos Equipamentos"><span class="resumo-dot" style="background:'+cor+'"></span>' +
         '<span class="resumo-lbl">'+s+'</span><b>'+porStatus[s]+' '+(porStatus[s]===1?'equipamento':'equipamentos')+'</b></div>';
     }).join('');
+    legendaStatus.querySelectorAll('[data-dash-mov-status]').forEach(function(linha){
+      linha.onclick = function(){
+        mostrarView('status-equipamentos');
+        document.getElementById('status-eq-filtro-status').value = linha.dataset.dashMovStatus;
+        document.getElementById('status-eq-filtro-local').value = filtroLocalAtual || '';
+        statusEqRenderizar();
+      };
+    });
+    donutStatus.style.cursor = 'pointer';
+    donutStatus.title = 'Clique numa cor da legenda ao lado para ver a lista';
   }
   // ---- Equipamentos com mais dias em manutenção ----
   const porEquipManutencao = {};
@@ -5758,9 +5841,8 @@ function dashMovRenderizarQtdPorLocal(){
     el.onclick = function(e){ e.stopPropagation(); locAbrirModalMover(el.dataset.equip); };
   });
 }
-['dash-mov-de','dash-mov-ate','dash-mov-filtro-equip','dash-mov-filtro-local'].forEach(function(id){
-  document.getElementById(id).addEventListener('input', carregarDashboardMov);
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+document.getElementById('dash-mov-pesquisar').onclick = carregarDashboardMov;
 document.getElementById('dash-mov-limpar').onclick = function(){
   document.getElementById('dash-mov-de').value = '';
   document.getElementById('dash-mov-ate').value = '';
@@ -6331,9 +6413,9 @@ document.getElementById('status-eq-limpar-filtros').onclick = function(){
   document.getElementById('status-eq-filtro-chegada-ate').value = '';
   statusEqRenderizar();
 };
-['status-eq-filtro-local','status-eq-filtro-busca','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){
-  document.getElementById(id).addEventListener('input', statusEqRenderizar);
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+// (os cliques em cards/árvore que já chamam statusEqRenderizar() diretamente continuam funcionando)
+document.getElementById('status-eq-pesquisar').onclick = statusEqRenderizar;
 let pdInicializada = false;
 /** Deixa o horário flexível: aceita digitar só números (ex.: "0930" vira "09:30")
  *  ou já digitar com ":" — sempre no formato HH:MM. */
@@ -6771,11 +6853,10 @@ document.getElementById('pd-detalhe-editar').onclick = function(){
   document.getElementById('pd-salvar').textContent = '💾 Atualizar parte diária';
   document.getElementById('pd-salvar').scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
-['hist-pd-filtro-de','hist-pd-filtro-ate','hist-pd-filtro-equip','hist-pd-filtro-operador','hist-pd-filtro-local'].forEach(function(id){
-  document.getElementById(id).addEventListener('input', function(){
-    garantirDadosPartesDiarias().then(pdRenderizarTabelaHistorico);
-  });
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+document.getElementById('hist-pd-pesquisar').onclick = function(){
+  garantirDadosPartesDiarias().then(pdRenderizarTabelaHistorico);
+};
 document.getElementById('hist-pd-limpar-filtros').onclick = function(){
   document.getElementById('hist-pd-filtro-de').value = '';
   document.getElementById('hist-pd-filtro-ate').value = '';
@@ -6899,9 +6980,8 @@ async function carregarIndicadoresPD(){
   pdRenderizarRanking('ind-pd-rank-trabalhadas', rankTrab, 'var(--ok)', 'equipamento');
   pdRenderizarRanking('ind-pd-rank-paradas', rankPar, '#c79a3a', 'equipamento');
 }
-['ind-pd-de','ind-pd-ate'].forEach(function(id){
-  document.getElementById(id).addEventListener('change', carregarIndicadoresPD);
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+document.getElementById('ind-pd-pesquisar').onclick = carregarIndicadoresPD;
 document.getElementById('ind-pd-limpar').onclick = function(){
   document.getElementById('ind-pd-de').value = '';
   document.getElementById('ind-pd-ate').value = '';
@@ -7315,10 +7395,8 @@ function renderizarHistorico(){
     tr.onclick = function(){ abrirDetalheHistorico(tr.dataset.id); };
   });
 }
-['hist-filtro-de','hist-filtro-ate','hist-filtro-equip','hist-filtro-operador','hist-filtro-local','hist-filtro-status'].forEach(function(id){
-  document.getElementById(id).addEventListener('input', renderizarHistorico);
-  document.getElementById(id).addEventListener('change', renderizarHistorico);
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+document.getElementById('hist-pesquisar').onclick = renderizarHistorico;
 document.getElementById('hist-limpar-filtros').onclick = function(){
   document.getElementById('hist-filtro-de').value = '';
   document.getElementById('hist-filtro-ate').value = '';
@@ -8071,11 +8149,8 @@ async function carregarViewFrota(){
     await garantirDadosFrotaExtra();
     if (!frotaViewCarregada) {
       preencherFiltroSelectComLista('frota-filtro-local', locais);
-      ['frota-busca', 'frota-filtro-local', 'frota-filtro-status'].forEach(function(id){
-        ['input', 'change'].forEach(function(ev){
-          document.getElementById(id).addEventListener(ev, renderizarViewFrota);
-        });
-      });
+      // "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+      document.getElementById('frota-pesquisar').onclick = renderizarViewFrota;
       document.getElementById('frota-limpar-filtros').onclick = function(){
         document.getElementById('frota-busca').value = '';
         document.getElementById('frota-filtro-local').value = '';
@@ -8221,9 +8296,11 @@ async function carregarPainelGeral(forcar){
     if (!painelCarregado) {
       preencherFiltroSelectComLista('painel-filtro-local', locais);
       preencherFiltroSelectComLista('painel-filtro-equip', frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; }));
-      ['painel-filtro-de', 'painel-filtro-ate', 'painel-filtro-equip', 'painel-filtro-local', 'painel-filtro-situacao'].forEach(function(id){
-        document.getElementById(id).addEventListener('change', function(){ painelTabelaExpandida = false; renderizarPainelTabela(); });
-      });
+      // "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+      document.getElementById('painel-pesquisar').onclick = function(){
+        painelTabelaExpandida = false;
+        renderizarPainelTabela();
+      };
       document.getElementById('painel-ver-mais').onclick = function(){ painelTabelaExpandida = true; renderizarPainelTabela(); };
       document.getElementById('painel-limpar-filtros').onclick = function(){
         ['painel-filtro-de', 'painel-filtro-ate', 'painel-filtro-equip', 'painel-filtro-local', 'painel-filtro-situacao']
@@ -8747,6 +8824,75 @@ let ocorrenciasFiltradasAtual = [];
 /** Liga o hover no card "Total de Ocorrências" — mostra um tooltip com os
  *  equipamentos únicos das ocorrências filtradas, cada um clicável. */
 let ocEquipAtual = null;
+/** Monta a seção "Movimentações" do painel Histórico do Equipamento:
+ *  resumo de permanência (dias por local, total de movimentações, média de
+ *  dias por local, dias no local atual), dias acumulados por status, qual
+ *  implemento está montado hoje (+ histórico de troca) e a linha do tempo
+ *  das movimentações em si. Carrega os dados de Movimentações à parte (é
+ *  outra lista do SharePoint) pra não atrasar a abertura do painel. */
+async function montarSecaoMovimentacoesEquip(equip){
+  await Promise.all([garantirDadosMovimentacoes(), garantirDadosFrotaExtra()]);
+  const registros = movimentacoesItens.filter(function(m){ return m.equipamento === equip; })
+    .sort(function(a,b){ return new Date(b.criado) - new Date(a.criado); });
+  if (!registros.length) {
+    return '<h4>🚚 Movimentações</h4><div class="lista-vazia-dash">Nenhuma movimentação registrada para este equipamento.</div>';
+  }
+  const totalMov = registros.length;
+  const totais = statusEqTotaisPorStatus(equip);
+  const porLocalDias = {};
+  registros.forEach(function(m){ if (m.localDestino) porLocalDias[m.localDestino] = (porLocalDias[m.localDestino] || 0) + (m.diasNoLocal || 0); });
+  const locaisOrdenados = Object.keys(porLocalDias).sort(function(a,b){ return porLocalDias[b] - porLocalDias[a]; });
+  const totalDiasSomados = registros.reduce(function(s,m){ return s + (m.diasNoLocal || 0); }, 0);
+  const mediaDiasPorLocal = totalMov ? Math.round(totalDiasSomados / totalMov) : 0;
+  const diasNoLocalAtual = (typeof frotaDiasNoLocal !== 'undefined' && typeof frotaDiasNoLocal[equip] === 'number')
+    ? frotaDiasNoLocal[equip]
+    : (registros[0].aindaNoLocal ? registros[0].diasNoLocal : null);
+  const maxLocalDias = locaisOrdenados.length ? porLocalDias[locaisOrdenados[0]] : 1;
+  const resumoHtml =
+    '<div class="oc-conform-tipos" style="grid-template-columns:repeat(4,1fr)">' +
+      '<div class="oc-conform-tipo ok"><div class="n">'+totalMov+'</div><div class="l">Movimentações</div></div>' +
+      '<div class="oc-conform-tipo min"><div class="n">'+(diasNoLocalAtual===null?'—':diasNoLocalAtual)+'</div><div class="l">Dias no local atual</div></div>' +
+      '<div class="oc-conform-tipo crit"><div class="n">'+mediaDiasPorLocal+'</div><div class="l">Média de dias por local</div></div>' +
+      '<div class="oc-conform-tipo imp"><div class="n">'+locaisOrdenados.length+'</div><div class="l">Locais diferentes</div></div>' +
+    '</div>' +
+    (locaisOrdenados.length ? '<div class="oc-conform-itens"><h4 style="font-size:11.5px;margin:10px 0 6px">Dias por local (acumulado)</h4>' +
+      locaisOrdenados.slice(0, 6).map(function(l){
+        return '<div class="oc-conform-item-linha"><span style="flex:0 0 42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+l+'">'+l+'</span>' +
+          '<div class="barra"><i style="width:'+Math.round(porLocalDias[l]/maxLocalDias*100)+'%"></i></div><b>'+porLocalDias[l]+'d</b></div>';
+      }).join('') + '</div>' : '');
+  const statusHtml =
+    '<div class="oc-conform-tipos" style="grid-template-columns:repeat(3,1fr);margin-top:10px">' +
+      '<div class="oc-conform-tipo ok"><div class="n">'+totais['OPERACIONAL']+'</div><div class="l">Dias operacional</div></div>' +
+      '<div class="oc-conform-tipo imp"><div class="n">'+totais['EM MANUTENÇÃO']+'</div><div class="l">Dias em manutenção</div></div>' +
+      '<div class="oc-conform-tipo min"><div class="n">'+totais['EM DISPONIBILIDADE']+'</div><div class="l">Dias em disponibilidade</div></div>' +
+    '</div>';
+  const implementoAtual = (typeof frotaItemVinculado !== 'undefined' && frotaItemVinculado[equip]) ? frotaItemVinculado[equip] : '';
+  const ascendente = registros.slice().sort(function(a,b){ return new Date(a.criado) - new Date(b.criado); });
+  const eventosVinculo = [];
+  let vinculoAnterior = '';
+  ascendente.forEach(function(m){
+    const v = m.itemVinculado || '';
+    if (v !== vinculoAnterior) { eventosVinculo.push({ data: m.criado, de: vinculoAnterior, para: v }); vinculoAnterior = v; }
+  });
+  const vinculoHtml = '<h4 style="font-size:11.5px;margin:10px 0 6px">🔧 Implemento montado</h4>' +
+    '<div style="font-size:12.5px;margin-bottom:6px">Atualmente: <b>'+(implementoAtual || 'nenhum implemento montado')+'</b></div>' +
+    (eventosVinculo.length ? eventosVinculo.slice(-6).reverse().map(function(ev){
+        const txt = ev.para
+          ? (ev.de ? ('Trocou de <b>'+ev.de+'</b> para <b>'+ev.para+'</b>') : ('Montou <b>'+ev.para+'</b>'))
+          : ('Desmontou <b>'+ev.de+'</b>');
+        return '<div style="font-size:11.5px;padding:2px 0">'+formatarDataHist(ev.data).split(' ')[0]+' — '+txt+'</div>';
+      }).join('')
+      : '<div style="font-size:11.5px;color:var(--cinza)">Sem trocas de implemento registradas.</div>');
+  const timelineHtml = registros.slice(0, 20).map(function(m){
+    return '<div style="padding:5px 0;border-bottom:1px solid var(--linha)">' +
+      '<div style="font-size:12px"><b>'+formatarDataHist(m.criado)+'</b> — '+(m.localOrigem||'—')+' → <b>'+(m.localDestino||'—')+'</b> &nbsp; '+statusEqBadge(m.status)+'</div>' +
+      '<div style="font-size:11px;color:var(--cinza)">👤 '+(m.usuario||'—')+(m.observacao ? (' · 📝 '+m.observacao) : '')+(m.itemVinculado ? (' · 🔧 '+m.itemVinculado) : '')+'</div>' +
+    '</div>';
+  }).join('');
+  return '<h4>🚚 Movimentações — resumo de permanência</h4>' + resumoHtml + statusHtml + vinculoHtml +
+    '<h4 style="margin-top:14px">🕒 Linha do tempo de movimentações</h4>' +
+    (timelineHtml || '<div class="lista-vazia-dash">Nenhuma movimentação registrada.</div>');
+}
 function abrirHistoricoEquipamentoOcorrencias(equip, soImpeditivos){
   ocEquipAtual = equip;
   document.getElementById('oc-equip-titulo').textContent = equip + (soImpeditivos ? ' — itens impeditivos' : '');
@@ -8876,11 +9022,19 @@ function abrirHistoricoEquipamentoOcorrencias(equip, soImpeditivos){
       itensConformHtml +
     '</div>' +
     (diasEquip.length ? '<div class="oc-equip-secao"><h4>📈 Trajetória do equipamento (ocorrências por dia)</h4>' + trajetoriaHtml + '</div>' : '') +
+    '<div class="oc-equip-secao" id="oc-equip-mov-secao"><div class="lista-vazia-dash">Carregando movimentações…</div></div>' +
     '<div class="oc-equip-secao">' +
       '<h4>🕒 Histórico <span style="font-weight:400;font-size:11px;color:var(--cinza)">— clique num registro para ver os itens marcados</span></h4>' +
       (listaHtml || '<div class="lista-vazia-dash">Nenhuma ocorrência registrada.</div>') +
     '</div>';
   document.getElementById('oc-equip-overlay').classList.add('aberto');
+  // Seção de movimentações carrega à parte (dados de outra lista) e só
+  // preenche o placeholder se o painel ainda estiver aberto neste mesmo
+  // equipamento quando terminar (evita sobrescrever se o usuário já trocou).
+  montarSecaoMovimentacoesEquip(equip).then(function(html){
+    const secao = document.getElementById('oc-equip-mov-secao');
+    if (secao && ocEquipAtual === equip) secao.innerHTML = html;
+  });
   const btnIrChk = document.getElementById('oc-equip-ir-checklist');
   if (btnIrChk) btnIrChk.onclick = function(){ abrirDetalheHistorico(btnIrChk.dataset.chkId); };
   document.getElementById('oc-equip-corpo').querySelectorAll('[data-hist-id]').forEach(function(card){
@@ -9128,10 +9282,8 @@ function renderizarOcorrencias(){
   renderizarOcorrenciasEvolucao(filtradas);
   renderizarOcorrenciasTabelaDetalhe(filtradas);
 }
-['oc-filtro-de','oc-filtro-ate','oc-filtro-equip','oc-filtro-operador','oc-filtro-local'].forEach(function(id){
-  document.getElementById(id).addEventListener('input', renderizarOcorrencias);
-  document.getElementById(id).addEventListener('change', renderizarOcorrencias);
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+document.getElementById('oc-pesquisar').onclick = renderizarOcorrencias;
 document.getElementById('oc-limpar-filtros').onclick = function(){
   document.getElementById('oc-filtro-de').value = '';
   document.getElementById('oc-filtro-ate').value = '';
@@ -9439,7 +9591,8 @@ configurarComboBusca('pd-equipamento', function(){ return frotas; }, true);
 configurarComboBusca('pd-operador', function(){ return operadores; });
 configurarComboBusca('pd-local', function(){ return locais; });
 configurarComboBusca('hist-mov-filtro-equip', function(){ return frotas; }, true);
-configurarComboBusca('mov-equipamento', function(){ return frotas; }, true);
+configurarComboBusca('mov-equipamento', function(){ return frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; }); }, true);
+configurarComboBusca('mov-implemento', function(){ return frotas.filter(function(f){ return frotaTipoItem[f] === 'implemento'; }); }, true);
 configurarComboBusca('mov-novo-local', function(){ return locais; });
  /* =====================================================================
    INDICADORES V2 — filtros de período + KPIs com sparkline (Fase 1)
@@ -9600,9 +9753,9 @@ document.getElementById('ind2-limpar-filtros').onclick = function(){
   document.getElementById('ind2-filtro-ate').value = hoje.toISOString().slice(0, 10);
   carregarIndicadoresV2();
 };
-['ind2-filtro-de', 'ind2-filtro-ate', 'ind2-filtro-equip', 'ind2-filtro-local'].forEach(function(id){
-  document.getElementById(id).addEventListener('change', carregarIndicadoresV2);
-});
+// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
+// (cliques nos pontos do gráfico que já chamam carregarIndicadoresV2() direto continuam funcionando)
+document.getElementById('ind2-pesquisar').onclick = carregarIndicadoresV2;
 (function(){
   const hoje = new Date();
   document.getElementById('ind2-filtro-de').value = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
@@ -10565,6 +10718,28 @@ function renderizarPainelResumoDia(){
   box.style.display = 'flex';
 }
 
+/** Abre a tela "Status dos Equipamentos" já limpa de filtros, expandida e
+ *  rolada até o grupo (obra) informado — usado pelos cards do Raio-x por
+ *  Obra (clique no card, "Ver equipamentos" e "Ver impeditivos"). Quando
+ *  `equipsDestaque` é passado, essas linhas piscam por alguns segundos pra
+ *  facilitar achar exatamente os equipamentos com impeditivo em aberto. */
+function raioxAbrirObraNaArvore(grupo, equipsDestaque){
+  mostrarView('status-equipamentos');
+  ['status-eq-filtro-local','status-eq-filtro-busca','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  statusEqColapsados.delete('root');
+  statusEqColapsados.delete('g:' + grupo);
+  statusEqRenderizar();
+  setTimeout(function(){
+    const no = document.querySelector('[data-no="g:' + grupo + '"]');
+    if (no) no.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    (equipsDestaque || []).forEach(function(eq){
+      const folha = document.querySelector('.arv-folha[data-equip="' + eq + '"]');
+      if (folha) folha.classList.add('arv-destaque-raiox');
+    });
+  }, 150);
+}
 /* =====================================================================
    AJUSTES 23 — Raio-x por Obra (comparativo de obras)
    ===================================================================== */
@@ -10664,7 +10839,11 @@ async function carregarRaioXObra(){
       const reincHtml = o.reinc.length
         ? '<div class="raiox-reinc">🔁 '+o.reinc.length+' reincidência(s) de item impeditivo — ex.: '+frotaEsc(o.reinc[0].equipamento)+' ('+o.reinc[0].item+' '+o.reinc[0].vezes+'x)</div>'
         : '';
-      return '<div class="raiox-card'+(o.imp.length?' alerta':'')+'">' +
+      const acoesHtml = '<div class="raiox-card-acoes">' +
+        '<button type="button" class="rel-btn-secundario" data-raiox-ver-equip="'+frotaEsc(o.obra)+'">🚜 Ver equipamentos</button>' +
+        (o.imp.length ? '<button type="button" class="rel-btn-secundario raiox-btn-imp" data-raiox-ver-imp="'+frotaEsc(o.obra)+'">🛡️ Ver impeditivos</button>' : '') +
+      '</div>';
+      return '<div class="raiox-card'+(o.imp.length?' alerta':'')+'" data-raiox-card-obra="'+frotaEsc(o.obra)+'" title="Clique para ver os equipamentos desta obra">' +
         '<div class="raiox-card-topo"><span class="obra">🏗️ '+frotaEsc(o.obra)+'</span><span class="qtd">'+o.equips.length+' equip · '+o.oper.length+' operac.</span></div>' +
         '<div class="raiox-kpis">' +
           '<div class="raiox-kpi '+aderCls+'"><div class="v">'+(o.aderPct===null?'—':o.aderPct+'%')+'</div><div class="l">Aderência hoje</div></div>' +
@@ -10672,11 +10851,29 @@ async function carregarRaioXObra(){
           '<div class="raiox-kpi '+impCls+'"><div class="v">'+o.imp.length+'</div><div class="l">Impeditivos</div></div>' +
           '<div class="raiox-kpi '+reincCls+'"><div class="v">'+o.reinc.length+'</div><div class="l">Reincidências</div></div>' +
         '</div>' +
-        reincHtml + impHtml + itensHtml +
+        reincHtml + impHtml + itensHtml + acoesHtml +
       '</div>';
     }).join('');
+    // Clique no chip de um equipamento impeditivo específico -> histórico dele.
     cardsCont.querySelectorAll('[data-raiox-equip]').forEach(function(chip){
-      chip.onclick = function(){ painelIrParaHistoricoDoEquip(chip.dataset.raioxEquip); };
+      chip.onclick = function(e){ e.stopPropagation(); painelIrParaHistoricoDoEquip(chip.dataset.raioxEquip); };
+    });
+    // Botão "Ver equipamentos" e clique no card inteiro -> Status dos Equipamentos,
+    // já aberto e rolado até o grupo (obra) correspondente.
+    function abrirObraNaArvore(grupo){
+      const O = obras[grupo];
+      raioxAbrirObraNaArvore(grupo, O ? O.imp : []);
+    }
+    cardsCont.querySelectorAll('[data-raiox-ver-equip]').forEach(function(btn){
+      btn.onclick = function(e){ e.stopPropagation(); abrirObraNaArvore(btn.dataset.raioxVerEquip); };
+    });
+    // Botão "Ver impeditivos" -> mesma árvore, mas destacando as linhas
+    // dos equipamentos com impeditivo em aberto naquela obra.
+    cardsCont.querySelectorAll('[data-raiox-ver-imp]').forEach(function(btn){
+      btn.onclick = function(e){ e.stopPropagation(); abrirObraNaArvore(btn.dataset.raioxVerImp); };
+    });
+    cardsCont.querySelectorAll('[data-raiox-card-obra]').forEach(function(card){
+      card.onclick = function(){ abrirObraNaArvore(card.dataset.raioxCardObra); };
     });
   } catch(err){
     cardsCont.innerHTML = '<div class="lista-vazia-dash">⚠️ Erro ao carregar: ' + err.message + '</div>';
