@@ -121,11 +121,11 @@
     <div class="sub">Login do operador — tablet de campo</div>
     <div class="campo">
       <label>Usuário</label>
-      <input type="text" id="login-usuario" autocomplete="username" placeholder="ex: joao.silva">
+      <input type="text" id="login-usuario" autocomplete="off" placeholder="ex: joao.silva">
     </div>
     <div class="campo">
       <label>Senha</label>
-      <input type="password" id="login-senha" autocomplete="current-password" placeholder="••••••••">
+      <input type="password" id="login-senha" autocomplete="off" placeholder="••••••••">
     </div>
     <button class="btn-primario" id="login-btn">Entrar</button>
     <div class="erro-msg" id="login-erro"></div>
@@ -402,15 +402,34 @@ document.getElementById('login-btn').onclick = async function(){
     btn.disabled = false; btn.textContent = 'Entrar';
   }
 };
-document.getElementById('btn-sair').onclick = function(){
-  if (!confirm('Sair? Envios ainda não sincronizados continuam guardados neste tablet.')) return;
+/** Logoff único, usado pelo botão "Sair" e pelo aviso automático de "parte
+ *  diária enviada". Sempre limpa a sessão E os campos de usuário/senha —
+ *  este tablet é compartilhado por vários operadores, então nunca deve
+ *  sobrar usuário/senha de quem acabou de sair pro próximo que for entrar. */
+function efetuarLogoff(avisoToast){
   limparSessao();
   statusApropriacao = 'expirada';
   resetarTelaApropriacao();
   pararPing();
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-senha').value = '';
+  try { localStorage.removeItem('pdEstadoAtual'); } catch(e){ /* rascunho da tela antiga — sem problema se não limpar */ }
   document.getElementById('tela-app').classList.remove('ativa');
   document.getElementById('tela-login').classList.add('ativa');
+  if (avisoToast) mostrarToastMsg(avisoToast);
+}
+document.getElementById('btn-sair').onclick = function(){
+  if (!confirm('Sair? Envios ainda não sincronizados continuam guardados neste tablet.')) return;
+  efetuarLogoff();
 };
+// Logoff automático: a tela de Parte Diária (embutida) avisa quando o
+// operador termina de enviar um lançamento — desloga na hora, pra já ficar
+// pronto pro próximo operador que for usar este mesmo tablet/equipamento.
+window.addEventListener('message', function(evento){
+  if (evento.origin !== SISPOC_ORIGEM) return;
+  if (!evento.data || evento.data.tipo !== 'sispoc-lancamento-salvo') return;
+  efetuarLogoff('Parte diária enviada — você foi desconectado. O próximo operador já pode entrar.');
+});
 
 /* =====================================================================
    DADOS INICIAIS (frotas, locais, operadores, perguntas do checklist)
