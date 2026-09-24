@@ -5514,6 +5514,13 @@
       } else {
         toast(ok ? (wasEditing ? 'Parte diária atualizada.' : 'Parte diária lançada.') : 'Lançamento salvo localmente — houve um problema ao sincronizar.');
       }
+      // Avisa o app do tablet (só existe quando embutido nele) que o lançamento
+      // foi CONCLUÍDO — não dispara pra rascunho (salvarComoRascunho é outra
+      // função) — o tablet usa isso pra deslogar o operador na hora, já que o
+      // mesmo tablet passa de mão em mão entre operadores do mesmo equipamento.
+      if (window.__comprexEmbed) {
+        try { window.parent.postMessage({ tipo: 'sispoc-lancamento-salvo' }, window.location.origin); } catch(e){ /* sem pai — ignora */ }
+      }
       salvarUltimoEquipamentoDoOperador();
       state.editingApropriacaoId = null;
       state.editingRascunhoId = null;
