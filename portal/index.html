@@ -2274,7 +2274,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   </div>
   <div class="hist-wrap">
     <table class="hist-tabela" id="hist-mov-tabela">
-      <thead><tr><th>Data</th><th>Equipamento</th><th>Implemento</th><th>De</th><th>Para</th><th>Status</th><th>Dias no local</th><th>Usuário</th></tr></thead>
+      <thead><tr><th>Data</th><th>Equipamento</th><th>Implemento</th><th>De</th><th>Para</th><th>Status</th><th>Tipo manut.</th><th>Responsável</th><th>Dias no local</th><th>Usuário</th></tr></thead>
       <tbody id="hist-mov-tbody"></tbody>
     </table>
   </div>
@@ -2350,6 +2350,25 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <div class="dash-card">
       <h3>🚜 Equipamentos com mais dias em manutenção</h3>
       <div id="dash-mov-rank-manutencao"><div class="lista-vazia-dash">Carregando…</div></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <h3>🔁 Reincidência — mais entradas em manutenção no período</h3>
+      <div id="dash-mov-rank-reincidencia"><div class="lista-vazia-dash">Carregando…</div></div>
+    </div>
+    <div class="dash-card">
+      <h3>🔧 Manutenção — resumo do período</h3>
+      <div class="dash-kpis" style="grid-template-columns:repeat(2,1fr);gap:10px">
+        <div class="kpi-card">
+          <div class="kpi-top"><div class="kpi-icone tan">🔧</div>
+            <div><div class="kpi-num" id="kpi-mov-manut-agora">—</div><div class="kpi-lbl">Em manutenção agora</div></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top"><div class="kpi-icone" style="background:#fbeaea;color:var(--ru)">⏱️</div>
+            <div><div class="kpi-num" id="kpi-mov-manut-media">—</div><div class="kpi-lbl">Duração média (concluídas no período)</div></div></div>
+        </div>
+      </div>
     </div>
   </div>
   <!-- REMOVIDO (set/2026): "Quantidade de equipamentos por local (agrupado)" saiu
@@ -2973,6 +2992,20 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
           <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
           <option value="EM DISPONIBILIDADE">EM DISPONIBILIDADE</option>
         </select>
+      </div>
+      <div class="campo" id="loc-mover-manut-wrap" style="margin-top:12px;display:none;background:#fdf6ec;border:1px solid #e9d8ad;border-radius:8px;padding:10px 12px">
+        <div class="campo">
+          <label>Tipo de manutenção <span class="obrig">*</span></label>
+          <select id="loc-mover-manut-tipo">
+            <option value="">Selecione…</option>
+            <option value="Preventiva">Preventiva</option>
+            <option value="Corretiva">Corretiva</option>
+          </select>
+        </div>
+        <div class="campo" style="margin-top:10px">
+          <label>Responsável técnico <span class="obrig">*</span></label>
+          <input type="text" id="loc-mover-manut-responsavel" placeholder="Nome do técnico/mecânico responsável">
+        </div>
       </div>
       <div class="campo" style="margin-top:12px">
         <label>Data da movimentação</label>
@@ -5077,6 +5110,8 @@ let frotaIdsExtra = {};      // equipamento -> id do item na lista Frota
 let frotaDescricao = {};     // nome -> descrição curta (ex.: "ESCAVADEIRA HIDRA. DOOSAN DX530LC")
 let frotaObservacaoManutencao = {}; // equipamento -> motivo da manutenção (texto livre)
 let frotaPrevisaoReparo = {};       // equipamento -> data prevista de reparo (AAAA-MM-DD)
+let frotaTipoManutencao = {};       // equipamento -> 'Preventiva' / 'Corretiva' (enquanto em manutenção)
+let frotaResponsavelTecnico = {};   // equipamento -> nome do responsável técnico (enquanto em manutenção)
 const STATUS_EQUIPAMENTO = ['OPERACIONAL', 'EM MANUTENÇÃO', 'EM DISPONIBILIDADE'];
 const REGIMES_TRABALHO = ['8h', '12h', '24h'];
 async function garantirDadosFrotaExtra(forcar){
@@ -5097,6 +5132,8 @@ async function garantirDadosFrotaExtra(forcar){
     frotaDescricao[nome] = f.Descricao || '';
     frotaObservacaoManutencao[nome] = f.ObservacaoManutencao || '';
     frotaPrevisaoReparo[nome] = f.PrevisaoReparo ? String(f.PrevisaoReparo).split('T')[0] : '';
+    frotaTipoManutencao[nome] = f.TipoManutencao || '';
+    frotaResponsavelTecnico[nome] = f.ResponsavelTecnico || '';
   });
   frotaExtraCarregada = true;
 }
@@ -5388,8 +5425,21 @@ function locAbrirModalMover(eq){
   document.getElementById('loc-mover-erro').style.display = 'none';
   document.getElementById('loc-mover-sem-historico').checked = false;
   document.getElementById('loc-mover-sem-historico-wrap').style.display = usuarioEhAdmin(contaAtual) ? 'block' : 'none';
+  // Tipo de manutenção / responsável técnico: só fazem sentido quando o
+  // equipamento está (ou vai ficar) EM MANUTENÇÃO — prefiech com o que já
+  // estiver em andamento, se for o caso de só editar sem trocar o status.
+  document.getElementById('loc-mover-manut-tipo').value = frotaTipoManutencao[eq] || '';
+  document.getElementById('loc-mover-manut-responsavel').value = frotaResponsavelTecnico[eq] || '';
+  locAtualizarVisibilidadeCamposManut();
   document.getElementById('loc-mover-overlay').classList.add('aberto');
 }
+/** Mostra/esconde o bloco de Tipo de manutenção / Responsável técnico no
+ *  modal "Mover equipamento", conforme o <select> de status selecionado. */
+function locAtualizarVisibilidadeCamposManut(){
+  const emManut = document.getElementById('loc-mover-status').value === 'EM MANUTENÇÃO';
+  document.getElementById('loc-mover-manut-wrap').style.display = emManut ? 'block' : 'none';
+}
+document.getElementById('loc-mover-status').addEventListener('change', locAtualizarVisibilidadeCamposManut);
 document.getElementById('loc-mover-fechar').onclick = function(){
   document.getElementById('loc-mover-overlay').classList.remove('aberto');
 };
@@ -5404,9 +5454,21 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
   const dataInformada = document.getElementById('loc-mover-data').value;
   const statusAtual = frotaStatusAtual[eq] || 'OPERACIONAL';
   const erroEl = document.getElementById('loc-mover-erro');
+  const novoTipoManut = document.getElementById('loc-mover-manut-tipo').value;
+  const novoResponsavelManut = document.getElementById('loc-mover-manut-responsavel').value.trim();
   if (!dataInformada) { erroEl.textContent = '⚠️ Informe a data.'; erroEl.style.display = 'block'; return; }
   if (novoLocal === localAtual && novoStatus === statusAtual) {
     erroEl.textContent = '⚠️ Nada mudou — troque o local e/ou o status antes de confirmar.';
+    erroEl.style.display = 'block';
+    return;
+  }
+  if (novoStatus === 'EM MANUTENÇÃO' && !novoTipoManut) {
+    erroEl.textContent = '⚠️ Selecione o tipo de manutenção (Preventiva ou Corretiva).';
+    erroEl.style.display = 'block';
+    return;
+  }
+  if (novoStatus === 'EM MANUTENÇÃO' && !novoResponsavelManut) {
+    erroEl.textContent = '⚠️ Informe o responsável técnico.';
     erroEl.style.display = 'block';
     return;
   }
@@ -5415,9 +5477,39 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
   try {
     const semHistorico = usuarioEhAdmin(contaAtual) && document.getElementById('loc-mover-sem-historico').checked;
     const idEquip = frotaIdsExtra[eq] || frotasIds[eq];
-    await atualizarCamposItem(LISTA_FROTA_ID, idEquip, { LocalAtual: novoLocal, StatusAtual: novoStatus });
+    // Guarda o tipo/responsável que estava em andamento ANTES de mexer em
+    // qualquer coisa — é o que vai pro registro de Movimentações quando o
+    // equipamento está SAINDO da manutenção agora.
+    const tipoManutAntigo = frotaTipoManutencao[eq] || '';
+    const responsavelManutAntigo = frotaResponsavelTecnico[eq] || '';
+    const entrandoEmManut = novoStatus === 'EM MANUTENÇÃO';
+    const saindoDaManut = statusAtual === 'EM MANUTENÇÃO' && !entrandoEmManut;
+    const camposFrota = { LocalAtual: novoLocal, StatusAtual: novoStatus };
+    if (entrandoEmManut) {
+      camposFrota.TipoManutencao = novoTipoManut;
+      camposFrota.ResponsavelTecnico = novoResponsavelManut;
+    } else if (saindoDaManut) {
+      // Conclui a manutenção: limpa tudo que era "em andamento" na Frota —
+      // o registro do que aconteceu já fica preservado no Histórico.
+      camposFrota.TipoManutencao = '';
+      camposFrota.ResponsavelTecnico = '';
+      camposFrota.ObservacaoManutencao = '';
+      camposFrota.PrevisaoReparo = null;
+    }
+    await atualizarCamposItem(LISTA_FROTA_ID, idEquip, camposFrota);
     frotaLocalAtual[eq] = novoLocal;
     frotaStatusAtual[eq] = novoStatus;
+    if (entrandoEmManut) {
+      frotaTipoManutencao[eq] = novoTipoManut;
+      frotaResponsavelTecnico[eq] = novoResponsavelManut;
+    } else if (saindoDaManut) {
+      frotaTipoManutencao[eq] = '';
+      frotaResponsavelTecnico[eq] = '';
+      frotaObservacaoManutencao[eq] = '';
+      frotaPrevisaoReparo[eq] = '';
+    }
+    const tipoManutParaRegistro = entrandoEmManut ? novoTipoManut : (saindoDaManut ? tipoManutAntigo : '');
+    const responsavelParaRegistro = entrandoEmManut ? novoResponsavelManut : (saindoDaManut ? responsavelManutAntigo : '');
     await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', {
       fields: {
         Equipamento: eq,
@@ -5427,7 +5519,9 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
         Status: novoStatus,
         Data: dataInformada + 'T12:00:00',
         Usuario: (contaAtual && (contaAtual.name || contaAtual.username)) || '',
-        Observacao: (semHistorico ? MARCADOR_SEM_HISTORICO + ' ' : '') + 'Movido via Localização Atual'
+        Observacao: (semHistorico ? MARCADOR_SEM_HISTORICO + ' ' : '') + (saindoDaManut ? 'Manutenção concluída — movido via Localização Atual' : 'Movido via Localização Atual'),
+        TipoManutencao: tipoManutParaRegistro,
+        ResponsavelTecnico: responsavelParaRegistro
       }
     });
     movimentacoesCarregadas = false;
@@ -5458,7 +5552,9 @@ async function garantirDadosMovimentacoes(forcar){
       localDestino: f.LocalDestino || '',
       status: f.Status || '',
       usuario: f.Usuario || '',
-      observacao: f.Observacao || ''
+      observacao: f.Observacao || '',
+      tipoManutencao: f.TipoManutencao || '',
+      responsavelTecnico: f.ResponsavelTecnico || ''
     };
   }).sort(function(a,b){ return new Date(b.criado) - new Date(a.criado); });
   // Calcula quantos dias cada registro "durou" — do momento dessa movimentação
@@ -5534,7 +5630,7 @@ function movRenderizarTabelaHistorico(itensCompletos){
   const filtrados = movFiltrarHistorico(itensCompletos);
   const tbody = document.getElementById('hist-mov-tbody');
   if (!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--cinza);padding:24px">Nenhuma movimentação encontrada.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--cinza);padding:24px">Nenhuma movimentação encontrada.</td></tr>';
   } else {
     tbody.innerHTML = filtrados.map(function(m){
       const dias = (typeof m.diasNoLocal !== 'number') ? '—' : (m.diasNoLocal + (m.diasNoLocal === 1 ? ' dia' : ' dias') + (m.aindaNoLocal ? ' (até hoje)' : ''));
@@ -5545,6 +5641,8 @@ function movRenderizarTabelaHistorico(itensCompletos){
         '<td>' + m.localOrigem + '</td>' +
         '<td><b>' + m.localDestino + '</b></td>' +
         '<td>' + (m.status ? locBadgeStatus(m.status) : '—') + '</td>' +
+        '<td>' + (m.tipoManutencao ? tipoManutBadgeTexto(m.tipoManutencao) : '—') + '</td>' +
+        '<td>' + (m.responsavelTecnico || '—') + '</td>' +
         '<td>' + dias + '</td>' +
         '<td>' + m.usuario + '</td>' +
       '</tr>';
@@ -5761,6 +5859,43 @@ async function carregarDashboardMov(){
     .map(function(k){ return {label:k, valor:porEquipManutencao[k], valorFmt: porEquipManutencao[k] + (porEquipManutencao[k]===1?' dia':' dias')}; })
     .sort(function(a,b){ return b.valor - a.valor; }).slice(0, 8);
   pdRenderizarRanking('dash-mov-rank-manutencao', rankManutencao, 'var(--ru)', 'equipamento');
+  // ---- Reincidência: quantas vezes cada equipamento ENTROU em manutenção
+  // no período (cada evento com Status = "EM MANUTENÇÃO" é uma entrada) ----
+  const porEquipEntradasManut = {};
+  itens.forEach(function(i){
+    if (i.status === 'EM MANUTENÇÃO' && i.equipamento) {
+      porEquipEntradasManut[i.equipamento] = (porEquipEntradasManut[i.equipamento] || 0) + 1;
+    }
+  });
+  const rankReincidencia = Object.keys(porEquipEntradasManut)
+    .map(function(k){ return {label:k, valor:porEquipEntradasManut[k], valorFmt: porEquipEntradasManut[k] + (porEquipEntradasManut[k]===1?' entrada':' entradas')}; })
+    .sort(function(a,b){ return b.valor - a.valor; }).slice(0, 8);
+  pdRenderizarRanking('dash-mov-rank-reincidencia', rankReincidencia, '#7a4fb5', 'equipamento');
+  // ---- Em manutenção agora (não depende do filtro de período — é "agora") ----
+  const emManutAgora = frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'EM MANUTENÇÃO'; });
+  document.getElementById('kpi-mov-manut-agora').textContent = emManutAgora.length;
+  // ---- Duração média das manutenções CONCLUÍDAS dentro do período: pareia
+  // cada entrada (status vira "EM MANUTENÇÃO") com a saída seguinte do MESMO
+  // equipamento (primeiro evento depois dela que não seja mais manutenção),
+  // usando o histórico completo (não só o filtrado) pra achar a saída certa. ----
+  const duracoesConcluidas = [];
+  const porEquipTodos = {};
+  todos.forEach(function(m){ (porEquipTodos[m.equipamento] = porEquipTodos[m.equipamento] || []).push(m); });
+  Object.keys(porEquipTodos).forEach(function(eq){
+    const linha = porEquipTodos[eq].slice().sort(function(a,b){ return new Date(a.criado) - new Date(b.criado); });
+    for (let i = 0; i < linha.length; i++) {
+      if (linha[i].status !== 'EM MANUTENÇÃO') continue;
+      const saida = linha.slice(i+1).find(function(m){ return m.status && m.status !== 'EM MANUTENÇÃO'; });
+      if (!saida) continue; // ainda em manutenção — não entra na média
+      // só conta se a ENTRADA caiu dentro do período filtrado no dashboard
+      if (!itens.some(function(f){ return f === linha[i]; })) continue;
+      const dias = Math.max(0, Math.round((new Date(saida.criado) - new Date(linha[i].criado)) / 86400000));
+      duracoesConcluidas.push(dias);
+    }
+  });
+  document.getElementById('kpi-mov-manut-media').textContent = duracoesConcluidas.length
+    ? (Math.round(duracoesConcluidas.reduce(function(s,d){ return s+d; }, 0) / duracoesConcluidas.length) + ' dias')
+    : '—';
   // O bloco agrupado saiu do Dashboard (repetia "Status dos Equipamentos").
   if (document.getElementById('dash-mov-qtd-por-local')) {
     dashMovRenderizarQtdPorLocal();
@@ -6026,8 +6161,18 @@ function statusEqRenderizar(){
   function linhaEdicaoManut(eq){
     const obsAtual = frotaObservacaoManutencao[eq] || '';
     const prevAtual = frotaPrevisaoReparo[eq] || '';
+    const tipoAtual = frotaTipoManutencao[eq] || '';
+    const respAtual = frotaResponsavelTecnico[eq] || '';
     return '<div class="arv-folha-edit-manut" data-equip-edit="'+eq+'">' +
       '<div class="aem-titulo">Editar manutenção — '+eq+'</div>' +
+      '<div class="aem-campo" style="max-width:220px"><label>Tipo de manutenção</label>' +
+        '<select id="aem-tipo-'+eq+'">' +
+          '<option value="" '+(tipoAtual===''?'selected':'')+'>Selecione…</option>' +
+          '<option value="Preventiva" '+(tipoAtual==='Preventiva'?'selected':'')+'>Preventiva</option>' +
+          '<option value="Corretiva" '+(tipoAtual==='Corretiva'?'selected':'')+'>Corretiva</option>' +
+        '</select></div>' +
+      '<div class="aem-campo"><label>Responsável técnico</label>' +
+        '<input type="text" id="aem-resp-'+eq+'" value="'+frotaEsc(respAtual)+'" placeholder="Nome do técnico/mecânico responsável"></div>' +
       '<div class="aem-campo"><label>Observação (motivo da manutenção)</label>' +
         '<textarea id="aem-obs-'+eq+'" rows="2" placeholder="Ex: Troca de bomba hidráulica">'+frotaEsc(obsAtual)+'</textarea></div>' +
       '<div class="aem-campo" style="max-width:220px"><label>Previsão de reparo</label>' +
@@ -6055,8 +6200,9 @@ function statusEqRenderizar(){
     const dicaFolha = podeEditar ? 'Clique para mudar o status ou mover este equipamento' : 'Somente leitura — apenas administradores podem mover por aqui';
     const iconeFolha = frotaTipoItem[eq] === 'implemento' ? '🔧' : '🚜';
     if (statusEqEditandoManut === eq) return linhaEdicaoManut(eq);
+    const manutMeta = [tipoManutBadgeTexto(frotaTipoManutencao[eq]), frotaResponsavelTecnico[eq] ? ('👤 '+frotaEsc(frotaResponsavelTecnico[eq])) : ''].filter(Boolean).join(' · ');
     const colunasManut = modoManutencao ?
-      '<div class="arv-manut-obs">'+(frotaObservacaoManutencao[eq] ? frotaEsc(frotaObservacaoManutencao[eq]) : '<i style="opacity:.55">Sem observação</i>')+'</div>' +
+      '<div class="arv-manut-obs">'+(frotaObservacaoManutencao[eq] ? frotaEsc(frotaObservacaoManutencao[eq]) : '<i style="opacity:.55">Sem observação</i>')+(manutMeta ? '<br><span style="font-size:10.5px;color:var(--cinza)">'+manutMeta+'</span>' : '')+'</div>' +
       '<div class="arv-sub">'+(frotaPrevisaoReparo[eq] ? formatarDataBR(frotaPrevisaoReparo[eq]) : '—')+'</div>' +
       '<div>'+(isAdminArvore ? '<button type="button" class="arv-manut-editar-btn" data-editar-manut="'+eq+'" title="Editar observação / previsão de reparo">✏️</button>' : '')+'</div>'
       : '';
@@ -6166,10 +6312,14 @@ function statusEqRenderizar(){
       const feedback = document.getElementById('aem-feedback-'+eq);
       const novaObs = obsInput.value.trim();
       const novaPrev = prevInput.value;
+      const novoTipo = document.getElementById('aem-tipo-'+eq).value;
+      const novoResp = document.getElementById('aem-resp-'+eq).value.trim();
       const itemId = frotaIdsExtra[eq] || frotasIds[eq];
       const campos = {};
       if (novaObs !== (frotaObservacaoManutencao[eq] || '')) campos.ObservacaoManutencao = novaObs;
       if (novaPrev !== (frotaPrevisaoReparo[eq] || '')) campos.PrevisaoReparo = novaPrev || null;
+      if (novoTipo !== (frotaTipoManutencao[eq] || '')) campos.TipoManutencao = novoTipo;
+      if (novoResp !== (frotaResponsavelTecnico[eq] || '')) campos.ResponsavelTecnico = novoResp;
       if (!Object.keys(campos).length) { statusEqEditandoManut = null; statusEqRenderizar(); return; }
       btn.disabled = true;
       feedback.style.color = 'var(--cinza)';
@@ -6177,6 +6327,8 @@ function statusEqRenderizar(){
       atualizarCamposItem(LISTA_FROTA_ID, itemId, campos).then(function(){
         frotaObservacaoManutencao[eq] = novaObs;
         frotaPrevisaoReparo[eq] = novaPrev;
+        frotaTipoManutencao[eq] = novoTipo;
+        frotaResponsavelTecnico[eq] = novoResp;
         statusEqEditandoManut = null;
         statusEqRenderizar();
       }).catch(function(err){
@@ -6211,6 +6363,11 @@ function statusEqRenderizar(){
     btnFora.style.display = 'none';
   }
   if (statusEqVisualizacao === 'dashboard') statusEqRenderizarDashboard(equipsFiltrados);
+}
+/** "🛠 Preventiva" / "🛠 Corretiva" pra exibir junto da observação — vazio se
+ *  o equipamento não tem tipo de manutenção registrado (cadastros antigos). */
+function tipoManutBadgeTexto(tipo){
+  return tipo ? ('🛠 ' + tipo) : '';
 }
 let statusEqDashManutTodos = false; // controla se a tabela de manutenção mostra tudo ou só os primeiros
 const DEQ_CORES_LOCAL = ['var(--navy)', '#c79a3a', '#378ade', 'var(--ru)', '#7a4fb5', '#1b7a43', '#b25e17', '#5b6570'];
@@ -6260,27 +6417,31 @@ function statusEqRenderizarDashboard(equipsFiltrados){
       const chegada = statusEqDataChegada(eq);
       const chegadaTxt = chegada ? formatarDataHist(chegada).split(' ')[0] : '—';
       const obs = frotaObservacaoManutencao[eq] ? frotaEsc(frotaObservacaoManutencao[eq]) : '<i style="opacity:.55">Sem observação</i>';
+      const manutMeta = [tipoManutBadgeTexto(frotaTipoManutencao[eq]), frotaResponsavelTecnico[eq] ? ('👤 '+frotaEsc(frotaResponsavelTecnico[eq])) : ''].filter(Boolean).join(' · ');
       const prev = frotaPrevisaoReparo[eq] ? formatarDataBR(frotaPrevisaoReparo[eq]) : '—';
       const dias = frotaDiasNoLocal[eq];
       const critico = (typeof dias === 'number' && dias >= CONFIG.diasReincidencia);
-      return '<div class="deq-linha'+(critico?' deq-critico':'')+'" data-deq-equip="'+eq+'">' +
+      const isAdminLinha = usuarioEhAdmin(contaAtual);
+      return '<div class="deq-linha'+(critico?' deq-critico':'')+'" data-deq-equip="'+eq+'" style="'+(isAdminLinha?'cursor:pointer':'')+'" title="'+(isAdminLinha?'Clique para concluir a manutenção e mover o equipamento':'')+'">' +
         '<div>'+(ehImplemento?'🔧':'🚜')+' '+nome+'</div>' +
         '<div class="arv-sub">'+(frotaLocalAtual[eq] || 'Sem local registrado')+'</div>' +
         '<div class="arv-sub">'+chegadaTxt+'</div>' +
         '<div>'+statusEqBadge(frotaStatusAtual[eq])+'</div>' +
-        '<div class="deq-obs">'+obs+'</div>' +
+        '<div class="deq-obs">'+obs+(manutMeta ? '<br><span style="font-size:10.5px;color:var(--cinza)">'+manutMeta+'</span>' : '')+'</div>' +
         '<div class="arv-sub deq-prev">'+prev+'</div>' +
         '<div><button type="button" class="deq-abrir" data-deq-abrir="'+eq+'" title="Ver histórico detalhado">→</button></div>' +
       '</div>';
     }).join('');
     tabelaCont.querySelectorAll('[data-deq-abrir]').forEach(function(btn){
-      btn.onclick = function(){
+      btn.onclick = function(e){
+        e.stopPropagation();
         const eq = btn.dataset.deqAbrir;
         garantirOcorrenciasCarregadas().then(function(){ abrirHistoricoEquipamentoOcorrencias(eq); });
       };
     });
     tabelaCont.querySelectorAll('[data-deq-equip]').forEach(function(linha){
       ativarPreviaHover(linha, function(){ return montarPreviaDeqLinha(linha.dataset.deqEquip); });
+      linha.onclick = function(){ locAbrirModalMover(linha.dataset.deqEquip); };
     });
   }
   const btnVerTodos = document.getElementById('status-eq-dash-manut-ver-todos');
