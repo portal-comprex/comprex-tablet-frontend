@@ -609,6 +609,12 @@
   .mt-motivo-card{background:var(--card)}
   .mt-motivo-tit{font-size:11px;color:var(--cinza);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
   .mt-motivo-txt{font-size:15px;font-weight:700;margin:4px 0}
+
+  .mt-obs{margin-top:14px;border:1px solid var(--linha);border-radius:12px;padding:12px 16px;background:var(--card)}
+  .mt-obs-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .mt-obs-tit{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza)}
+  .mt-obs-txt{font-size:13px;line-height:1.5;white-space:pre-wrap;color:var(--tinta);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .mt-obs.aberta .mt-obs-txt{display:block;-webkit-line-clamp:unset;overflow:visible}
   .mt-ficha-acoes{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
   .mt-btn{border:1px solid var(--linha);background:var(--card);color:var(--tinta);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
   .mt-btn:hover{border-color:var(--navy);background:var(--cream)}
@@ -1711,9 +1717,6 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sn-sub">
         <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="todos">Visão Geral</div>
         <div class="sidebar-item" data-view="manut-nova" data-secao="manutencao">Nova Entrada</div>
-        <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="em">Em Manutenção</div>
-        <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="aguardando">Aguardando Peças</div>
-        <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="externo">Reparo Externo</div>
         <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="historico">Histórico</div>
       </div>
     </div>
@@ -3126,7 +3129,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   </div>
   <div class="mt-baixo">
     <div class="dash-card mt-card painel-card-inferior">
-      <div class="painel-card-head"><h3>⚠️ Atenção necessária <span style="font-weight:400;text-transform:none;color:var(--cinza)">(ação imediata)</span></h3><span class="painel-pendentes-num" id="mt-aten-num">0</span></div>
+      <div class="painel-card-head"><h3>⚠️ Atenção necessária <span style="font-weight:400;text-transform:none;color:var(--cinza);margin-left:6px">(ação imediata)</span></h3><span class="painel-pendentes-num" id="mt-aten-num">0</span></div>
       <div class="mt-lista-scroll" id="mt-aten"></div>
     </div>
     <div class="dash-card mt-card painel-card-inferior">
@@ -3134,7 +3137,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="mt-lista-scroll" id="mt-pend"></div>
     </div>
     <div class="dash-card mt-card painel-card-inferior">
-      <div class="painel-card-head"><h3>🔁 Problemas mais recorrentes <span style="font-weight:400;text-transform:none;color:var(--cinza)">(todo o histórico)</span></h3></div>
+      <div class="painel-card-head"><h3>🔁 Problemas mais recorrentes <span style="font-weight:400;text-transform:none;color:var(--cinza)">(histórico)</span></h3></div>
       <div class="mt-lista-scroll" id="mt-rec"></div>
     </div>
   </div>
@@ -3182,6 +3185,10 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="campo">
         <label>Onde o equipamento ficará</label>
         <select id="mtn-local"></select>
+      </div>
+      <div class="campo">
+        <label>Início da manutenção (se já começou)</label>
+        <input type="date" id="mtn-inicio">
       </div>
       <div class="campo">
         <label>Previsão de retorno (se já souber)</label>
@@ -7890,7 +7897,7 @@ async function manutMapearColunas(){
   for (const chave of Object.keys(MANUT_COLUNAS)) {
     let cols = [];
     try {
-      const d = await graphGet(GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/columns?$select=name,displayName,readOnly&$top=500');
+      const d = await graphGet(GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/columns?$select=name,displayName,readOnly,text&$top=500');
       cols = (d.value || []).filter(function(c){ return !c.readOnly || c.name === 'Title'; });
     } catch (e) { cols = null; }
     manutColMap[chave] = {};
@@ -7901,7 +7908,11 @@ async function manutMapearColunas(){
         || cols.find(function(x){ return mtNormNome(x.displayName) === n; })
         || cols.find(function(x){ return new RegExp('^' + n + '[0-9]+$').test(mtNormNome(x.name)); })
         || null;
-      if (c) manutColMap[chave][L] = c.name;
+      if (c) {
+        manutColMap[chave][L] = c.name;
+        if (L === 'Observacao' && c.text && c.text.allowMultipleLines === false)
+          manutColFaltando.push({ lista: MANUT_NOMES_LISTAS[chave], coluna: L, msg: 'A coluna <b>Observacao</b> da lista <b>' + MANUT_NOMES_LISTAS[chave] + '</b> está como "uma linha de texto" (limite de 255 letras). Troque para <b>Várias linhas de texto</b> (Configurações da coluna) para caber observações longas.' });
+      }
       else manutColFaltando.push({ lista: MANUT_NOMES_LISTAS[chave], coluna: L });
     });
   }
@@ -8079,9 +8090,9 @@ async function carregarManutencao(){
     await manutCarregarDados(true);
     const avc = document.getElementById('mt-aviso-col');
     if (manutColFaltando.length) {
-      avc.innerHTML = '<div class="mt-erro-listas"><b>⚠️ Faltam colunas nas listas da Manutenção — sem elas não dá para criar nem editar fichas</b><br>' +
-        manutColFaltando.map(function(c){ return 'Lista <b>' + mtEsc(c.lista) + '</b>: coluna <b>' + mtEsc(c.coluna) + '</b>'; }).join('<br>') +
-        '<br>Crie cada coluna com <b>exatamente</b> esse nome (sem espaços e sem acento; na criação use só esse nome, e só depois, se quiser, mude o nome de exibição). Depois recarregue com Ctrl+F5.</div>';
+      avc.innerHTML = '<div class="mt-erro-listas"><b>⚠️ Ajuste necessário nas listas da Manutenção</b><br>' +
+        manutColFaltando.map(function(c){ return c.msg ? c.msg : 'Lista <b>' + mtEsc(c.lista) + '</b>: coluna <b>' + mtEsc(c.coluna) + '</b>'; }).join('<br>') +
+        '<br>Colunas que faltam: crie com <b>exatamente</b> esse nome (sem espaço e sem acento). Depois recarregue com Ctrl+F5.</div>';
     } else avc.innerHTML = '';
     document.getElementById('mt-card-lista').style.display = '';
     manutRenderTudo();
@@ -8102,6 +8113,25 @@ function manutEquipsSemFicha(){
     return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'EM MANUTENÇÃO' && !mtOcAbertaDe(eq);
   });
 }
+
+/* Ficha do MHS0013 com os dados passados pelo Lucas (modelo para ver cards e gráficos). */
+async function manutCarregarFichaMHS0013(){
+  const eq = 'MHS0013';
+  if (mtOcAbertaDe(eq)) return;
+  const obs = 'Equipamento veio com o diagnóstico de estabilizador estourado, mas ao iniciar a manutenção, foi identificado que os parafusos do cubo da roda estavam quebrados, a revisão preventiva de 1000h estava atrasada, os cilindros das sapatas estavam estourados, vazamento no comando do equipamento, vazamento da linha do piloto, vedações do cubo da roda estavam estourados.';
+  const ano = new Date().getFullYear();
+  const d = function(m, dia){ return ano + '-' + mtP2(m) + '-' + mtP2(dia); };
+  await manutCriar('ocorrencias', { Title: eq, DataEntrada: d(10, 1), Etapa: 'Reparo externo', Motivo: 'ESTABILIZADORES ESTOURADOS', Tipo: 'Estabilizadores / cubo da roda',
+    Responsavel: '', PrevisaoRetorno: d(10, 6), Situacao: 'Aberta', Observacao: obs });
+  await manutRecarregar('ocorrencias');
+  const oc = mtOcAbertaDe(eq);
+  await manutCriar('eventos', { Title: 'Início da manutenção', OcorrenciaId: oc.id, Equipamento: eq, Data: d(10, 2), Responsavel: '', Realizado: true });
+  await manutCriar('pecas', { Title: 'Parafusos do cubo da roda (refazer)', OcorrenciaId: oc.id, Equipamento: eq, Situacao: 'Em reparo externo', Destino: 'Cromotec',
+    DataEnvio: d(10, 5), PrevisaoOriginal: d(10, 6), PrevisaoRetorno: d(10, 6) });
+  await Promise.all([manutRecarregar('eventos'), manutRecarregar('pecas')]);
+  manutSelId = oc.id; manutFiltro = 'todos'; manutAba = 'timeline';
+  try { await mtSyncFrota(oc); } catch (e) {}
+}
 async function manutCriarFichasLegadas(lista){
   for (const eq of lista) {
     const chegada = statusEqDataChegada(eq);
@@ -8119,7 +8149,15 @@ function manutRenderTudo(){
   const aviso = document.getElementById('mt-aviso');
   if (semFicha.length && manutPodeEditar()) {
     aviso.innerHTML = '<div class="mt-aviso">⚠️ <b>' + semFicha.length + ' equipamento(s) estão EM MANUTENÇÃO no cadastro mas sem ficha:</b> ' +
-      semFicha.map(mtEsc).join(', ') + '. <button type="button" class="mt-btn pri mini" id="mt-criar-fichas">Criar fichas agora</button></div>';
+      semFicha.map(mtEsc).join(', ') + '. <button type="button" class="mt-btn pri mini" id="mt-criar-fichas">Criar fichas agora</button>' +
+      (semFicha.indexOf('MHS0013') !== -1 ? ' <button type="button" class="mt-btn mini" id="mt-imp-mhs13">📥 Carregar a ficha completa do MHS0013</button>' : '') + '</div>';
+    const bImp = document.getElementById('mt-imp-mhs13');
+    if (bImp) bImp.onclick = async function(){
+      if (!confirm('Criar a ficha do MHS0013 com os dados informados (entrada 01/10, início 02/10, parafusos do cubo da roda na Cromotec, retorno 06/10)?')) return;
+      this.disabled = true; this.textContent = 'Carregando…';
+      try { await manutCarregarFichaMHS0013(); mtToast('✅ Ficha do MHS0013 carregada'); manutRenderTudo(); }
+      catch (err) { alert('Falha ao carregar a ficha: ' + err.message); manutRenderTudo(); }
+    };
     document.getElementById('mt-criar-fichas').onclick = async function(){
       this.disabled = true; this.textContent = 'Criando…';
       try { await manutCriarFichasLegadas(semFicha); mtToast('✅ Fichas criadas'); manutRenderTudo(); }
@@ -8348,7 +8386,7 @@ function mtSerieEvolucao(nDias){
 }
 function manutRenderEvolucao(){
   const serie = mtSerieEvolucao(manutEvoDias);
-  const W = 720, H = 210, pl = 32, pr = 14, pt = 18, pb = 28;
+  const W = 560, H = 320, pl = 32, pr = 14, pt = 18, pb = 28;
   const max = Math.max(1, Math.max.apply(null, serie.map(function(s){ return Math.max(s.parados, s.entradas, s.saidas); })));
   const px = serie.length > 1 ? (W - pl - pr) / (serie.length - 1) : 0;
   const X = function(i){ return pl + px * i; }, Y = function(v){ return pt + (H - pt - pb) * (1 - v / max); };
@@ -8516,6 +8554,7 @@ function manutRelatorioFicha(oc){
   document.getElementById('hist-print-area').innerHTML =
     mtCabecalhoRel('Ficha de Manutenção — ' + mtEsc(eq), 'Ocorrência iniciada em ' + mtBR(oc.dataEntrada)) +
     '<table class="hist-tabela" style="margin-bottom:12px"><tbody>' + dados.map(function(d){ return '<tr><td style="width:190px;font-weight:700">' + mtEsc(d[0]) + '</td><td>' + mtEsc(String(d[1])) + '</td></tr>'; }).join('') + '</tbody></table>' +
+    (oc.observacao ? '<h3 style="margin:14px 0 6px;font-size:13px">Observações</h3><div style="white-space:pre-wrap;font-size:12px;border:1px solid #ccc;padding:8px 10px;border-radius:6px">' + mtEsc(oc.observacao) + '</div>' : '') +
     '<h3 style="margin:14px 0 6px;font-size:13px">Linha do tempo</h3><table class="hist-tabela"><thead><tr><th>Data</th><th>Evento</th><th>Responsável / Documento</th><th>Situação</th></tr></thead><tbody>' + linhasTL + '</tbody></table>' +
     (pecas.length ? '<h3 style="margin:14px 0 6px;font-size:13px">Componentes / Peças</h3><table class="hist-tabela"><thead><tr><th>Peça</th><th>Situação</th><th>Destino</th><th>Envio</th><th>Prev. original</th><th>Prev. atual</th><th>Retorno real</th><th>NF/OS</th><th>Custo</th></tr></thead><tbody>' + linhasPe + '</tbody></table>' +
       '<div style="text-align:right;font-weight:800;margin-top:8px">Custo total de peças: ' + mtMoeda(total) + '</div>' : '');
@@ -8596,6 +8635,16 @@ function manutRenderTabela(){
 document.getElementById('mt-busca').addEventListener('input', manutRenderTabela);
 
 /* ---------- ficha do equipamento ---------- */
+let manutObsAberta = {};
+function mtBlocoObs(oc){
+  const t = (oc.observacao || '').trim();
+  if (!t) return '';
+  const longa = t.length > 190 || t.split('\n').length > 3;
+  const aberta = !!manutObsAberta[oc.id];
+  return '<div class="mt-obs' + (aberta ? ' aberta' : '') + '"><div class="mt-obs-cab"><span class="mt-obs-tit">📝 Observações</span>' +
+    (longa ? '<button type="button" class="mt-btn mini" data-mt-acao="obs-toggle">' + (aberta ? 'Ver menos ▴' : 'Ver tudo ▾') + '</button>' : '') +
+    '</div><div class="mt-obs-txt">' + mtEsc(t) + '</div></div>';
+}
 function manutRenderDetalhe(){
   const cont = document.getElementById('mt-detalhe');
   const oc = manutOcorrencias.find(function(o){ return o.id === manutSelId; });
@@ -8613,8 +8662,9 @@ function manutRenderDetalhe(){
     const d = mtDias(hoje, oc.previsao);
     const sub = d >= 0 ? ('Em ' + d + ' dia(s)') : ('Atrasada há ' + (-d) + ' dia(s)');
     const sug = mtSugestaoPrevisao(oc);
+    const ultPeca = mtPendentes(oc).map(function(p){ return p.previsao; }).filter(Boolean).sort().pop() || '';
     prevCard = '<div class="mt-prev-card' + (d < 0 ? ' atrasada' : '') + '"><div class="mt-prev-lbl">Previsão de disponibilidade</div><div class="mt-prev-data">' + mtBR(oc.previsao) + '</div><div class="mt-prev-sub">' + sub + '</div>' +
-      (sug && sug > oc.previsao ? '<button type="button" class="mt-link" data-mt-acao="sugerir">⚠ Peças só chegam para liberar em ' + mtBR(sug) + ' — atualizar?</button>' : '') + '</div>';
+      (ultPeca && oc.previsao < ultPeca ? '<button type="button" class="mt-link" data-mt-acao="ajustar-ult">⚠ A última peça só chega em ' + mtBR(ultPeca) + ', depois desta previsão — ajustar para essa data?</button>' : '') + '</div>';
   }
   const abas = [['timeline', 'Linha do Tempo'], ['pecas', 'Componentes / Peças (' + mtPecasDe(oc).length + ')'], ['custos', 'Custos'], ['mov', 'Histórico de Movimentações']];
   cont.innerHTML = '<div class="dash-card mt-card">' +
@@ -8635,6 +8685,7 @@ function manutRenderDetalhe(){
       '<div class="mt-motivo-card"><div class="mt-motivo-tit">Motivo da parada</div><div class="mt-motivo-txt">' + mtEsc(oc.motivo || '—') + '</div>' +
         '<div class="mt-prev-sub">Etapa: ' + (aberta ? mtEsc(oc.etapa) : 'Concluída') + '</div></div>' +
     '</div>' +
+    mtBlocoObs(oc) +
     '<div class="mt-ficha-acoes">' +
       (aberta ? '<button type="button" class="mt-btn ok" data-mt-acao="concluir">✅ Concluir manutenção</button>' : '') +
       '<button type="button" class="mt-btn" data-mt-acao="editar">✏️ Editar ficha</button>' +
@@ -8761,12 +8812,14 @@ function manutAcao(acao, id, oc){
     case 'loc': manutIrParaLocalizacao(oc.equipamento); return;
     case 'movhist': manutIrParaHistoricoMov(oc.equipamento); return;
     case 'relficha': manutRelatorioFicha(oc); return;
+    case 'obs-toggle': manutObsAberta[oc.id] = !manutObsAberta[oc.id]; manutRenderDetalhe(); return;
   }
   if (!mtExigirEdicao()) return;
   switch (acao) {
     case 'editar': manutModalEditar(oc); break;
     case 'concluir': manutModalConcluir(oc); break;
     case 'sugerir': manutAplicarSugestao(oc); break;
+    case 'ajustar-ult': manutAjustarParaUltimaPeca(oc); break;
     case 'peca-add': manutModalPeca(oc, null); break;
     case 'peca-edit': manutModalPeca(oc, manutPecas.find(function(p){ return p.id === id; })); break;
     case 'peca-receber': manutModalReceber(oc, manutPecas.find(function(p){ return p.id === id; })); break;
@@ -8776,6 +8829,14 @@ function manutAcao(acao, id, oc){
     case 'ev-feito': manutMarcarEvento(oc, manutEventos.find(function(e){ return e.id === id; })); break;
     case 'ev-del': manutExcluirEvento(oc, manutEventos.find(function(e){ return e.id === id; })); break;
   }
+}
+async function manutAjustarParaUltimaPeca(oc){
+  const ult = mtPendentes(oc).map(function(p){ return p.previsao; }).filter(Boolean).sort().pop();
+  if (!ult) return;
+  try {
+    await manutAtualizar('ocorrencias', oc.id, { PrevisaoRetorno: ult });
+    oc.previsao = ult; await mtSyncFrota(oc); manutRenderTudo(); mtToast('📅 Previsão ajustada para ' + mtBR(ult));
+  } catch (err) { alert('Falha ao atualizar: ' + err.message); }
 }
 async function manutAplicarSugestao(oc){
   const sug = mtSugestaoPrevisao(oc);
@@ -8988,7 +9049,7 @@ async function manutNovaIniciar(){
   const sugerido = locais.find(function(l){ return /manuten|oficina/i.test(l); });
   if (sugerido) selLocal.value = sugerido;
   if (!manutNovaPronta) {
-    configurarComboBusca('mtn-equip', function(){ return frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') !== 'EM MANUTENÇÃO'; }); });
+    configurarComboBusca('mtn-equip', function(){ return frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') !== 'EM MANUTENÇÃO' || !mtOcAbertaDe(eq); }); });
     configurarComboBusca('mtn-tipo', tiposManutencaoConhecidos);
     manutNovaPronta = true;
   }
@@ -9007,6 +9068,7 @@ document.getElementById('mtn-salvar').onclick = async function(){
   const etapa = document.getElementById('mtn-etapa').value;
   const local = document.getElementById('mtn-local').value;
   const previsao = document.getElementById('mtn-previsao').value;
+  const inicio = document.getElementById('mtn-inicio').value;
   const obs = document.getElementById('mtn-obs').value.trim();
   if (!eq) return falha('Escolha um equipamento da lista.');
   if (mtOcAbertaDe(eq)) return falha(eq + ' já tem uma ficha de manutenção aberta.');
@@ -9030,8 +9092,12 @@ document.getElementById('mtn-salvar').onclick = async function(){
     }
     await manutCriar('ocorrencias', { Title: eq, DataEntrada: data, Etapa: etapa, Motivo: motivo, Tipo: tipo, Responsavel: resp, PrevisaoRetorno: previsao || null, Situacao: 'Aberta', Observacao: obs });
     await manutRecarregar('ocorrencias');
+    if (inicio) {
+      const novaOc = mtOcAbertaDe(eq);
+      if (novaOc) { await manutCriar('eventos', { Title: 'Início da manutenção', OcorrenciaId: novaOc.id, Equipamento: eq, Data: inicio, Responsavel: resp, Realizado: true }); await manutRecarregar('eventos'); }
+    }
     await garantirDadosMovimentacoes(true);
-    ['mtn-equip', 'mtn-motivo', 'mtn-tipo', 'mtn-resp', 'mtn-previsao', 'mtn-obs'].forEach(function(i){ document.getElementById(i).value = ''; });
+    ['mtn-equip', 'mtn-motivo', 'mtn-tipo', 'mtn-resp', 'mtn-inicio', 'mtn-previsao', 'mtn-obs'].forEach(function(i){ document.getElementById(i).value = ''; });
     const nova = mtOcAbertaDe(eq);
     manutSelId = nova ? nova.id : null; manutFiltro = 'todos'; manutAba = 'timeline'; manutRolarParaFicha = true;
     mostrarView('manut');
