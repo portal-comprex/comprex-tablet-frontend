@@ -7949,6 +7949,7 @@ async function manutMapearColunas(){
       let c = cols.find(function(x){ return mtNormNome(x.name) === n; })
         || cols.find(function(x){ return mtNormNome(x.displayName) === n; })
         || cols.find(function(x){ return new RegExp('^' + n + '[0-9]+$').test(mtNormNome(x.name)); })
+        || (L === 'Tipo' ? cols.find(function(x){ const k = mtNormNome(x.name), d = mtNormNome(x.displayName); return ['tipomanutencao','tipomanut','tipodemanutencao'].indexOf(k) >= 0 || ['tipomanutencao','tipomanut','tipodemanutencao'].indexOf(d) >= 0; }) : null)
         || null;
       if (c) {
         manutColMap[chave][L] = c.name;
