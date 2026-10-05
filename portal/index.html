@@ -668,6 +668,57 @@
   .mt-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1a2430;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:900;box-shadow:0 8px 24px rgba(0,0,0,.3);display:none}
   .mt-mini-link{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--navy);cursor:pointer;border:1px solid var(--navy);border-radius:6px;padding:1px 7px;background:transparent}
   .mt-mini-link:hover{background:var(--navy);color:#fff}
+
+  /* ===== Manutenção v2: Visão Geral no estilo do Painel de Checklist ===== */
+  .painel-kpi.azul{background:linear-gradient(135deg,#1f5fa8,#12365f)}
+  .painel-kpis.mt-kpis-g{grid-template-columns:repeat(6,1fr);gap:14px}
+  .mt-kpis-g .painel-kpi{min-height:128px;padding:16px 18px;border-radius:14px;display:flex;flex-direction:column}
+  .mt-kpis-g .painel-kpi .icone{font-size:28px;right:14px;top:12px;opacity:.5}
+  .mt-kpis-g .painel-kpi .lbl{font-size:11px;letter-spacing:.4px;max-width:78%;line-height:1.25}
+  .mt-kpis-g .painel-kpi .num{font-size:38px;margin:8px 0 3px}
+  .mt-kpis-g .painel-kpi .sub{font-size:11.5px;line-height:1.3}
+  .mt-kpis-g .painel-kpi .barra{margin-top:auto;margin-bottom:0}
+  .mt-kpis-g .painel-kpi .sub + .barra{margin-top:9px}
+  .mt-kpis-g .painel-kpi .kpi-acao{color:#fff;margin-top:7px}
+  .mt-kpis-g .painel-kpi.sel{box-shadow:0 0 0 3px rgba(255,255,255,.55), 0 8px 22px rgba(19,36,54,.25)}
+  .mt-cab-al{background:none !important;border:none !important;padding:0 !important;box-shadow:none !important}
+  .mt-filtros .painel-filtro-campo input[type=date]{border:1.5px solid #d8dee3;border-radius:9px;padding:8px 10px;font-size:13px;color:var(--tinta);background:#fff}
+  body.tema-escuro .mt-filtros .painel-filtro-campo input[type=date]{background:#141c24;border-color:#2a3540;color:#dbe9eb}
+  .mt-filtros-acoes{display:flex;gap:8px;align-items:flex-end;margin-left:auto;flex-wrap:wrap}
+  .mt-filtros-acoes .mt-btn{white-space:nowrap}
+  .mt-graficos{display:grid;grid-template-columns:1fr 1.5fr;gap:16px;margin-bottom:16px}
+  .mt-graficos .dash-card{margin:0}
+  .mt-donut-box{display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center;padding:6px 0}
+  .mt-donut-box svg{width:170px;height:170px;flex:none}
+  .mt-donut-leg{display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+  .mt-donut-leg div{display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 6px;border-radius:7px}
+  .mt-donut-leg div:hover{background:rgba(120,130,140,.12)}
+  .mt-donut-leg i{width:11px;height:11px;border-radius:3px;flex:none}
+  .mt-donut-leg b{margin-left:auto;padding-left:14px}
+  .mt-leg-linhas{display:flex;gap:16px;font-size:11.5px;color:var(--cinza);margin-top:4px;flex-wrap:wrap}
+  .mt-leg-linhas i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .mt-baixo{display:grid;grid-template-columns:1.3fr 1.2fr 1fr;gap:16px;margin-bottom:16px}
+  .mt-baixo .painel-card-inferior{height:260px;margin:0}
+  .mt-lista-scroll{flex:1;overflow-y:auto;margin-top:6px}
+  .mt-it{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--linha);cursor:pointer;font-size:12.5px;border-radius:6px}
+  .mt-it:hover{background:rgba(120,130,140,.1)}
+  .mt-it:last-child{border-bottom:none}
+  .mt-it .eq{font-weight:800;color:var(--navy);min-width:68px}
+  .mt-it .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tinta)}
+  .mt-it .tx small{display:block;color:var(--cinza);font-size:11px;overflow:hidden;text-overflow:ellipsis}
+  .mt-it .dt{font-size:11.5px;font-weight:700;white-space:nowrap}
+  .mt-it .dt.ruim{color:var(--ru)} .mt-it .dt.med{color:#b25e17}
+  .mt-rec{display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;font-size:12.5px;border-radius:6px}
+  .mt-rec:hover{background:rgba(120,130,140,.1)}
+  .mt-rec .nm{flex:0 0 46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mt-rec .bar{flex:1;height:9px;background:rgba(120,130,140,.18);border-radius:6px;overflow:hidden}
+  .mt-rec .bar i{display:block;height:100%;background:linear-gradient(90deg,#1f5fa8,#3b86d6);border-radius:6px}
+  .mt-rec b{min-width:22px;text-align:right}
+  .mt-vazio-mini{color:var(--cinza);font-size:12.5px;padding:18px 6px;text-align:center}
+  .mt-ver-mais{display:block;margin:10px auto 0;font-size:12px}
+  @media(max-width:1500px){ .painel-kpis.mt-kpis-g{grid-template-columns:repeat(3,1fr)} }
+  @media(max-width:1100px){ .mt-graficos,.mt-baixo{grid-template-columns:1fr} .mt-baixo .painel-card-inferior{height:auto;max-height:340px} }
+  @media(max-width:760px){ .painel-kpis.mt-kpis-g{grid-template-columns:repeat(2,1fr)} .mt-kpis-g .painel-kpi .num{font-size:30px} }
   @media(max-width:1250px){ .mt-kpis{grid-template-columns:repeat(3,1fr)} .mt-ficha-topo{grid-template-columns:78px 1fr 1fr} .mt-motivo-card{grid-column:2 / -1} .mt-duas{grid-template-columns:1fr} }
   @media(max-width:760px){ .mt-kpis{grid-template-columns:repeat(2,1fr)} .mt-ficha-topo{grid-template-columns:1fr} .mt-form{grid-template-columns:1fr} .mt-busca input{min-width:0;width:100%} }
   .arv-btn-detalhe{background:var(--cream);border:1px solid var(--linha);border-radius:6px;
@@ -2948,7 +2999,52 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
 <div class="view" id="view-manut">
   <div class="mt-sub">Acompanhe o status, prazos e disponibilidade da frota em manutenção.</div>
   <div id="mt-aviso"></div>
-  <div class="mt-kpis" id="mt-kpis"></div>
+  <div id="mt-resumo" class="painel-resumo" style="display:none"><div class="ico">🧭</div><div class="txt" id="mt-resumo-txt"></div></div>
+  <div id="mt-alerta" class="painel-alerta-imp" style="display:none">
+    <div class="cab mt-cab-al"><span class="pisca"></span><span class="t">⏰ Manutenções atrasadas</span><span id="mt-alerta-num" style="font-size:12px;color:var(--cinza);font-weight:700"></span></div>
+    <div class="chips" id="mt-alerta-chips"></div>
+  </div>
+  <div class="painel-kpis mt-kpis-g" id="mt-kpis"></div>
+  <div class="painel-filtros mt-filtros" id="mt-filtros">
+    <div class="painel-filtro-campo"><label>Etapa</label><select id="mtf-etapa"></select></div>
+    <div class="painel-filtro-campo"><label>Status do prazo</label><select id="mtf-status"><option value="">Todos</option><option value="atrasado">Atrasado</option><option value="atencao">Atenção</option><option value="noprazo">No prazo</option></select></div>
+    <div class="painel-filtro-campo"><label>Tipo de manutenção</label><select id="mtf-tipo"></select></div>
+    <div class="painel-filtro-campo"><label>Responsável</label><select id="mtf-resp"></select></div>
+    <div class="painel-filtro-campo"><label>Local atual</label><select id="mtf-local"></select></div>
+    <div class="painel-filtro-campo"><label>Entrada de</label><input type="date" id="mtf-de"></div>
+    <div class="painel-filtro-campo"><label>Entrada até</label><input type="date" id="mtf-ate"></div>
+    <div class="mt-filtros-acoes">
+      <button type="button" class="mt-btn" id="mtf-limpar">✕ Limpar filtros</button>
+      <button type="button" class="mt-btn" id="mt-rel-imprimir" title="Imprimir ou salvar em PDF a lista filtrada, com os indicadores">🖨 Relatório (PDF)</button>
+      <button type="button" class="mt-btn" id="mt-rel-excel" title="Baixar Excel com equipamentos, peças e eventos da lista filtrada">📊 Excel</button>
+    </div>
+  </div>
+  <div class="mt-graficos">
+    <div class="dash-card mt-card">
+      <div class="painel-card-head"><h3>Por etapa</h3><span style="font-size:11.5px;color:var(--cinza)">clique para filtrar</span></div>
+      <div id="mt-donut" class="mt-donut-box"></div>
+    </div>
+    <div class="dash-card mt-card">
+      <div class="painel-card-head"><h3>Evolução — últimos 14 dias</h3>
+        <div class="chart-toggle" id="mt-evo-toggle"><button type="button" class="ativo" data-dias="14">14 dias</button><button type="button" data-dias="30">30 dias</button></div></div>
+      <div id="mt-evolucao"></div>
+      <div class="mt-leg-linhas"><span><i style="background:#1f5fa8"></i>Equipamentos parados no dia</span><span><i style="background:#c0392b"></i>Entradas no dia</span><span><i style="background:#1e8a4c"></i>Liberações no dia</span></div>
+    </div>
+  </div>
+  <div class="mt-baixo">
+    <div class="dash-card mt-card painel-card-inferior">
+      <div class="painel-card-head"><h3>⚠️ Atenção necessária</h3><span class="painel-pendentes-num" id="mt-aten-num">0</span></div>
+      <div class="mt-lista-scroll" id="mt-aten"></div>
+    </div>
+    <div class="dash-card mt-card painel-card-inferior">
+      <div class="painel-card-head"><h3>📦 Peças pendentes</h3><span class="painel-pendentes-num" id="mt-pend-num">0</span></div>
+      <div class="mt-lista-scroll" id="mt-pend"></div>
+    </div>
+    <div class="dash-card mt-card painel-card-inferior">
+      <div class="painel-card-head"><h3>🔁 Problemas mais recorrentes</h3></div>
+      <div class="mt-lista-scroll" id="mt-rec"></div>
+    </div>
+  </div>
   <div class="dash-card mt-card" id="mt-card-lista">
     <div class="mt-tab-cab">
       <h3 id="mt-titulo-lista">Equipamentos em Manutenção</h3>
@@ -7754,7 +7850,21 @@ function mtOnde(oc){
   if (g) return g.nome + (g.destino ? ' · ' + g.destino : '');
   return frotaLocalAtual[oc.equipamento] || '—';
 }
+let manutFx = { etapa: '', status: '', tipo: '', resp: '', local: '', de: '', ate: '' };
+function mtPassaFx(oc){
+  const f = manutFx;
+  if (f.etapa && (mtAberta(oc) ? oc.etapa : 'Concluída') !== f.etapa) return false;
+  if (f.status && mtStatusPrazo(oc).chave !== f.status) return false;
+  if (f.tipo && (oc.tipo || '') !== f.tipo) return false;
+  if (f.resp && (oc.responsavel || '') !== f.resp) return false;
+  if (f.local && (frotaLocalAtual[oc.equipamento] || '') !== f.local) return false;
+  if (f.de && (oc.dataEntrada || '') < f.de) return false;
+  if (f.ate && (oc.dataEntrada || '') > f.ate) return false;
+  return true;
+}
+function mtFxAtivos(){ return Object.keys(manutFx).filter(function(k){ return manutFx[k]; }).length; }
 function mtPassaFiltro(oc){
+  if (!mtPassaFx(oc)) return false;
   if (manutFiltro === 'historico') return !mtAberta(oc);
   if (!mtAberta(oc)) return false;
   const hoje = mtHoje();
@@ -7846,18 +7956,31 @@ function manutRenderTudo(){
   const nAt = abertas.filter(function(o){ return mtStatusPrazo(o).chave === 'atrasado'; }).length;
   const nRet = abertas.filter(function(o){ return o.previsao && o.previsao >= hoje && o.previsao <= mtSoma(hoje, 15); }).length;
   const nOp = frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL' && frotaTipoItem[eq] !== 'implemento'; }).length;
+  const nFrota = frotas.filter(function(eq){ return frotaTipoItem[eq] !== 'implemento'; }).length || 1;
+  const pendAll = [];
+  abertas.forEach(function(o){ mtPendentes(o).forEach(function(p){ pendAll.push({ p: p, oc: o }); }); });
+  const maiorAtraso = abertas.reduce(function(m, o){
+    const datas = [o.previsao].concat(mtPendentes(o).map(function(p){ return p.previsao; })).filter(function(d){ return d && d < hoje; });
+    return datas.length ? Math.max(m, mtDias(datas.sort()[0], hoje)) : m;
+  }, 0);
+  const proxRet = abertas.filter(function(o){ return o.previsao && o.previsao >= hoje; }).sort(function(a, b){ return a.previsao.localeCompare(b.previsao); })[0];
+  const destinos = {}; abertas.filter(function(o){ return o.etapa === 'Reparo externo'; }).forEach(function(o){ mtPendentes(o).forEach(function(p){ if (p.destino) destinos[p.destino] = 1; }); });
+  const nAgu = abertas.filter(function(o){ return o.etapa === 'Aguardando peça'; }).length;
+  const nExt = abertas.filter(function(o){ return o.etapa === 'Reparo externo'; }).length;
   const kpis = [
-    { k: 'todos', ico: '🔧', cor: 'azul', n: abertas.length, l: 'Equipamentos<br>em manutenção' },
-    { k: 'aguardando', ico: '⚙️', cor: 'laranja', n: abertas.filter(function(o){ return o.etapa === 'Aguardando peça'; }).length, l: 'Aguardando peças' },
-    { k: 'externo', ico: '🚚', cor: 'laranja', n: abertas.filter(function(o){ return o.etapa === 'Reparo externo'; }).length, l: 'Em reparo externo' },
-    { k: 'atrasados', ico: '⏰', cor: 'vermelho', n: nAt, l: 'Atrasados' },
-    { k: 'retorno15', ico: '📅', cor: 'verde', n: nRet, l: 'Previsão de retorno<br>nos próximos 15 dias' },
-    { k: 'operacao', ico: '✅', cor: 'verde', n: nOp, l: 'Equipamentos<br>em operação' }
+    { k: 'todos', ico: '🔧', cor: 'azul', n: abertas.length, l: 'Equipamentos em manutenção', sub: 'de ' + nFrota + ' equipamentos da frota', barra: abertas.length / nFrota * 100, acao: 'Ver lista →' },
+    { k: 'aguardando', ico: '⚙️', cor: 'laranja', n: nAgu, l: 'Aguardando peças', sub: pendAll.length + ' peça(s) pendente(s) no total', acao: 'Filtrar a lista →' },
+    { k: 'externo', ico: '🚚', cor: 'neutro', n: nExt, l: 'Em reparo externo', sub: Object.keys(destinos).length ? 'em ' + Object.keys(destinos).length + ' fornecedor(es)' : 'nenhum fornecedor ativo', acao: 'Filtrar a lista →' },
+    { k: 'atrasados', ico: '⏰', cor: 'vermelho', n: nAt, l: 'Atrasados', sub: nAt ? 'maior atraso: ' + maiorAtraso + ' dia(s)' : 'tudo dentro do prazo', acao: 'Ver atrasados →' },
+    { k: 'retorno15', ico: '📅', cor: 'amarelo', n: nRet, l: 'Retorno previsto em 15 dias', sub: proxRet ? 'próximo: ' + proxRet.equipamento + ' em ' + mtBRc(proxRet.previsao) : 'sem retornos previstos', acao: 'Ver quais →' },
+    { k: 'operacao', ico: '✅', cor: 'verde', n: nOp, l: 'Equipamentos em operação', sub: Math.round(nOp / nFrota * 100) + '% da frota', barra: nOp / nFrota * 100, acao: 'Abrir Localização Atual →' }
   ];
   const kc = document.getElementById('mt-kpis');
   kc.innerHTML = kpis.map(function(c){
-    return '<div class="mt-kpi' + (manutFiltro === c.k ? ' sel' : '') + '" data-mt-kpi="' + c.k + '" title="' + (c.k === 'operacao' ? 'Abrir a Localização Atual' : 'Filtrar a lista') + '">' +
-      '<div class="mt-kpi-ico ' + c.cor + '">' + c.ico + '</div><div><div class="mt-kpi-num">' + c.n + '</div><div class="mt-kpi-lbl">' + c.l + '</div></div></div>';
+    return '<div class="painel-kpi clicavel ' + c.cor + (manutFiltro === c.k ? ' sel' : '') + '" data-mt-kpi="' + c.k + '" title="' + (c.k === 'operacao' ? 'Abrir a Localização Atual' : 'Filtrar a lista') + '">' +
+      '<div class="icone">' + c.ico + '</div><div class="lbl">' + c.l + '</div><div class="num">' + c.n + '</div><div class="sub">' + c.sub + '</div>' +
+      (c.barra !== undefined ? '<div class="barra"><i style="width:' + Math.min(100, c.barra).toFixed(0) + '%"></i></div>' : '') +
+      '<div class="kpi-acao">' + c.acao + '</div></div>';
   }).join('');
   kc.querySelectorAll('[data-mt-kpi]').forEach(function(el){
     el.onclick = function(){
@@ -7865,6 +7988,7 @@ function manutRenderTudo(){
       manutDefinirFiltro(el.dataset.mtKpi);
     };
   });
+  manutRenderExtras(abertas, pendAll, proxRet, nAt);
   // chips
   const chips = [
     { k: 'todos', t: 'Todos', n: abertas.length },
@@ -7882,7 +8006,308 @@ function manutRenderTudo(){
   cc.querySelectorAll('[data-mt-chip]').forEach(function(b){ b.onclick = function(){ manutDefinirFiltro(b.dataset.mtChip); }; });
   document.getElementById('mt-titulo-lista').textContent = manutFiltro === 'historico' ? 'Histórico de Manutenções' : 'Equipamentos em Manutenção';
   document.getElementById('mt-th-prev').textContent = manutFiltro === 'historico' ? 'Saída' : 'Previsão retorno';
+  manutPopularFiltros();
   manutRenderTabela();
+}
+
+/* =====================================================================
+   Visão Geral v2 — resumo, alertas, gráficos, blocos e relatórios
+   ===================================================================== */
+const MT_COR_ETAPA = { 'Diagnóstico': '#8e44ad', 'Em manutenção': '#2f6fd0', 'Aguardando peça': '#e67e22', 'Reparo externo': '#13788c', 'Montagem/Testes': '#1e8a4c' };
+let manutEvoDias = 14;
+function mtPopular(sel, valores, primeiro){
+  const assin = valores.join('|');
+  if (sel.dataset.assin !== assin) {
+    const atual = sel.value;
+    sel.innerHTML = '<option value="">' + primeiro + '</option>' + valores.map(function(v){ return '<option value="' + mtEsc(v) + '">' + mtEsc(v) + '</option>'; }).join('');
+    sel.dataset.assin = assin;
+    sel.value = valores.indexOf(atual) !== -1 ? atual : '';
+  }
+}
+function mtUnicos(fn){
+  const m = {}; manutOcorrencias.forEach(function(o){ const v = fn(o); if (v) m[v] = 1; });
+  return Object.keys(m).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+}
+function manutPopularFiltros(){
+  mtPopular(document.getElementById('mtf-etapa'), MANUT_ETAPAS.concat(['Concluída']), 'Todas');
+  mtPopular(document.getElementById('mtf-tipo'), mtUnicos(function(o){ return o.tipo; }), 'Todos');
+  mtPopular(document.getElementById('mtf-resp'), mtUnicos(function(o){ return o.responsavel; }), 'Todos');
+  mtPopular(document.getElementById('mtf-local'), mtUnicos(function(o){ return frotaLocalAtual[o.equipamento]; }), 'Todos');
+  const mapa = { etapa: 'mtf-etapa', status: 'mtf-status', tipo: 'mtf-tipo', resp: 'mtf-resp', local: 'mtf-local', de: 'mtf-de', ate: 'mtf-ate' };
+  Object.keys(mapa).forEach(function(k){ const el = document.getElementById(mapa[k]); if (el.value !== manutFx[k]) el.value = manutFx[k]; });
+}
+(function(){
+  const mapa = { etapa: 'mtf-etapa', status: 'mtf-status', tipo: 'mtf-tipo', resp: 'mtf-resp', local: 'mtf-local', de: 'mtf-de', ate: 'mtf-ate' };
+  Object.keys(mapa).forEach(function(k){
+    document.getElementById(mapa[k]).addEventListener('change', function(){
+      manutFx[k] = this.value;
+      // o filtro "Etapa" do dropdown e o chip se complementam: histórico só mostra concluídas
+      if (k === 'etapa' && this.value === 'Concluída') manutFiltro = 'historico';
+      else if (k === 'etapa' && manutFiltro === 'historico') manutFiltro = 'todos';
+      manutRenderTudo();
+    });
+  });
+  document.getElementById('mtf-limpar').onclick = function(){
+    Object.keys(manutFx).forEach(function(k){ manutFx[k] = ''; });
+    manutFiltro = 'todos'; document.getElementById('mt-busca').value = '';
+    manutMarcarSidebar(); manutRenderTudo();
+  };
+  document.getElementById('mt-rel-imprimir').onclick = function(){ manutRelatorioLista(); };
+  document.getElementById('mt-rel-excel').onclick = function(){ manutRelatorioExcel(); };
+  document.getElementById('mt-evo-toggle').onclick = function(e){
+    const b = e.target.closest('button[data-dias]'); if (!b) return;
+    manutEvoDias = Number(b.dataset.dias);
+    this.querySelectorAll('button').forEach(function(x){ x.classList.toggle('ativo', x === b); });
+    manutRenderEvolucao();
+  };
+})();
+
+function mtAtrasoTexto(oc){
+  const hoje = mtHoje();
+  const datas = [oc.previsao].concat(mtPendentes(oc).map(function(p){ return p.previsao; })).filter(function(d){ return d && d < hoje; }).sort();
+  return datas.length ? 'atrasada há ' + mtDias(datas[0], hoje) + ' dia(s)' : '';
+}
+function manutRenderExtras(abertas, pendAll, proxRet, nAt){
+  const hoje = mtHoje();
+  // resumo
+  const resumo = document.getElementById('mt-resumo');
+  if (!manutOcorrencias.length) resumo.style.display = 'none';
+  else {
+    const partes = ['Hoje há <b>' + abertas.length + '</b> equipamento(s) em manutenção'];
+    partes.push(nAt ? '<span class="ruim clic" data-mt-ir="atrasados">' + nAt + ' atrasado(s)</span>' : '<span class="bom">nenhum atrasado</span>');
+    partes.push('<span class="clic" data-mt-ir="aguardando">' + pendAll.length + ' peça(s) pendente(s)</span>');
+    if (proxRet) partes.push('próximo retorno previsto: <b class="clic" data-mt-oc-eq="' + mtEsc(proxRet.equipamento) + '">' + mtEsc(proxRet.equipamento) + '</b> em <b>' + mtBR(proxRet.previsao) + '</b>');
+    const semPrev = abertas.filter(function(o){ return !o.previsao; }).length;
+    if (semPrev) partes.push('<span class="ruim">' + semPrev + ' sem previsão de retorno</span>');
+    document.getElementById('mt-resumo-txt').innerHTML = partes.join(' · ') + '.';
+    resumo.style.display = '';
+  }
+  // alerta de atrasados
+  const atrasadas = abertas.filter(function(o){ return mtStatusPrazo(o).chave === 'atrasado'; });
+  const alerta = document.getElementById('mt-alerta');
+  if (atrasadas.length) {
+    document.getElementById('mt-alerta-num').textContent = atrasadas.length + ' equipamento(s)';
+    document.getElementById('mt-alerta-chips').innerHTML = atrasadas.map(function(o){
+      const g = mtGargalo(o);
+      return '<span class="imp-chip" data-mt-oc-eq="' + mtEsc(o.equipamento) + '"><span class="eq">' + mtEsc(o.equipamento) + '</span><span class="it">' +
+        mtEsc((g ? g.nome : o.motivo) || o.etapa) + '</span><span class="reinc">' + mtEsc(mtAtrasoTexto(o)) + '</span></span>';
+    }).join('');
+    alerta.style.display = '';
+  } else alerta.style.display = 'none';
+  document.getElementById('mt-resumo').onclick = document.getElementById('mt-alerta').onclick = function(e){
+    const ir = e.target.closest('[data-mt-ir]'); if (ir) { manutDefinirFiltro(ir.dataset.mtIr); return; }
+    const eq = e.target.closest('[data-mt-oc-eq]'); if (eq) manutAbrirFicha(eq.dataset.mtOcEq);
+  };
+  manutRenderDonut(abertas);
+  manutRenderEvolucao();
+  manutRenderBlocos(abertas, pendAll);
+}
+function manutRenderDonut(abertas){
+  const dados = MANUT_ETAPAS.map(function(e){ return { e: e, n: abertas.filter(function(o){ return o.etapa === e; }).length }; });
+  const total = dados.reduce(function(s, d){ return s + d.n; }, 0);
+  const box = document.getElementById('mt-donut');
+  if (!total) { box.innerHTML = '<div class="mt-vazio-mini">Nenhum equipamento em manutenção. 🎉</div>'; return; }
+  const R = 60, C = 2 * Math.PI * R; let off = 0;
+  const arcos = dados.filter(function(d){ return d.n; }).map(function(d){
+    const len = d.n / total * C;
+    const s = '<circle cx="85" cy="85" r="' + R + '" fill="none" stroke="' + MT_COR_ETAPA[d.e] + '" stroke-width="26" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 85 85)" data-mt-etapa="' + d.e + '" style="cursor:pointer"><title>' + d.e + ': ' + d.n + '</title></circle>';
+    off += len; return s;
+  }).join('');
+  box.innerHTML = '<svg viewBox="0 0 170 170">' + arcos + '<text pointer-events="none" x="85" y="87" text-anchor="middle" font-size="30" font-weight="800" fill="currentColor">' + total + '</text><text pointer-events="none" x="85" y="106" text-anchor="middle" font-size="10.5" fill="#8a97a3">em manutenção</text></svg>' +
+    '<div class="mt-donut-leg">' + dados.map(function(d){ return '<div data-mt-etapa="' + d.e + '"><i style="background:' + MT_COR_ETAPA[d.e] + '"></i>' + d.e + '<b>' + d.n + '</b></div>'; }).join('') + '</div>';
+  box.onclick = function(e){
+    const el = e.target.closest('[data-mt-etapa]'); if (!el) return;
+    manutFx.etapa = manutFx.etapa === el.dataset.mtEtapa ? '' : el.dataset.mtEtapa;
+    if (manutFiltro === 'historico') manutFiltro = 'todos';
+    manutRenderTudo();
+    document.getElementById('mt-card-lista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+}
+function mtSerieEvolucao(nDias){
+  const hoje = mtHoje(), serie = [];
+  for (let i = nDias - 1; i >= 0; i--) {
+    const d = mtSoma(hoje, -i);
+    serie.push({ d: d,
+      parados: manutOcorrencias.filter(function(o){ return o.dataEntrada && o.dataEntrada <= d && (!o.dataSaida || o.dataSaida > d); }).length,
+      entradas: manutOcorrencias.filter(function(o){ return o.dataEntrada === d; }).length,
+      saidas: manutOcorrencias.filter(function(o){ return o.dataSaida === d; }).length });
+  }
+  return serie;
+}
+function manutRenderEvolucao(){
+  const serie = mtSerieEvolucao(manutEvoDias);
+  const W = 720, H = 210, pl = 32, pr = 14, pt = 18, pb = 28;
+  const max = Math.max(1, Math.max.apply(null, serie.map(function(s){ return Math.max(s.parados, s.entradas, s.saidas); })));
+  const px = serie.length > 1 ? (W - pl - pr) / (serie.length - 1) : 0;
+  const X = function(i){ return pl + px * i; }, Y = function(v){ return pt + (H - pt - pb) * (1 - v / max); };
+  const rotulos = Math.ceil(serie.length / 14);
+  const grade = [0, .25, .5, .75, 1].map(function(f){
+    const y = Y(max * f);
+    return '<line x1="' + pl + '" y1="' + y.toFixed(1) + '" x2="' + (W - pr) + '" y2="' + y.toFixed(1) + '" stroke="#e4e9ed" stroke-width="1"></line><text x="' + (pl - 6) + '" y="' + (y + 3).toFixed(1) + '" font-size="10" fill="#8a97a3" text-anchor="end">' + Math.round(max * f) + '</text>';
+  }).join('');
+  function linha(campo, cor, rotular){
+    const pts = serie.map(function(s, i){ return X(i).toFixed(1) + ',' + Y(s[campo]).toFixed(1); }).join(' ');
+    const bolas = serie.map(function(s, i){
+      return '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(s[campo]).toFixed(1) + '" r="3.4" fill="' + cor + '"><title>' + mtBRc(s.d) + ' — ' + s[campo] + '</title></circle>' +
+        (rotular && serie.length <= 14 ? '<text x="' + X(i).toFixed(1) + '" y="' + (Y(s[campo]) - 8).toFixed(1) + '" font-size="10.5" font-weight="700" fill="' + cor + '" text-anchor="middle">' + s[campo] + '</text>' : '');
+    }).join('');
+    return '<polyline points="' + pts + '" fill="none" stroke="' + cor + '" stroke-width="2.4"></polyline>' + bolas;
+  }
+  const eixo = serie.map(function(s, i){ return i % rotulos === 0 ? '<text x="' + X(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="10.5" fill="#8a97a3" text-anchor="middle">' + mtBRc(s.d) + '</text>' : ''; }).join('');
+  document.getElementById('mt-evolucao').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block">' + grade +
+    linha('parados', '#1f5fa8', true) + linha('entradas', '#c0392b', false) + linha('saidas', '#1e8a4c', false) + eixo + '</svg>';
+}
+function manutRenderBlocos(abertas, pendAll){
+  const hoje = mtHoje();
+  // atenção necessária: atrasados + atenção
+  const ordem = { atrasado: 0, atencao: 1 };
+  const aten = abertas.filter(function(o){ return mtStatusPrazo(o).chave in ordem; }).sort(function(a, b){
+    return ordem[mtStatusPrazo(a).chave] - ordem[mtStatusPrazo(b).chave] || mtDiasParados(b) - mtDiasParados(a);
+  });
+  document.getElementById('mt-aten-num').textContent = aten.length;
+  document.getElementById('mt-aten').innerHTML = aten.length ? aten.map(function(o){
+    const at = mtStatusPrazo(o).chave === 'atrasado';
+    const motivo = at ? mtAtrasoTexto(o) : (!o.previsao ? 'sem previsão de retorno' : 'prazo de peça adiado');
+    return '<div class="mt-it" data-mt-oc-eq="' + mtEsc(o.equipamento) + '"><span class="eq">' + mtEsc(o.equipamento) + '</span><span class="tx">' + mtEsc(o.motivo || o.tipo || o.etapa) +
+      '<small>' + mtEsc(o.etapa) + ' · ' + mtDiasParados(o) + ' dia(s) parado</small></span><span class="dt ' + (at ? 'ruim' : 'med') + '">' + mtEsc(motivo) + '</span></div>';
+  }).join('') : '<div class="mt-vazio-mini">Nada exigindo atenção agora. 🎉</div>';
+  // peças pendentes
+  const pend = pendAll.slice().sort(function(a, b){ return (a.p.previsao || '9999').localeCompare(b.p.previsao || '9999'); });
+  document.getElementById('mt-pend-num').textContent = pend.length;
+  document.getElementById('mt-pend').innerHTML = pend.length ? pend.map(function(x){
+    const atr = x.p.previsao && x.p.previsao < hoje;
+    return '<div class="mt-it" data-mt-oc-eq="' + mtEsc(x.oc.equipamento) + '" data-mt-aba="pecas"><span class="eq">' + mtEsc(x.oc.equipamento) + '</span><span class="tx">' + mtEsc(x.p.nome) +
+      '<small>' + mtEsc(x.p.situacao) + (x.p.destino ? ' · ' + mtEsc(x.p.destino) : '') + '</small></span><span class="dt ' + (atr ? 'ruim' : '') + '">' + (x.p.previsao ? (atr ? '⚠ ' : '') + mtBRc(x.p.previsao) : 'sem data') + '</span></div>';
+  }).join('') : '<div class="mt-vazio-mini">Nenhuma peça pendente.</div>';
+  // recorrentes (tipo) em todo o histórico
+  const cont = {};
+  manutOcorrencias.forEach(function(o){ const t = (o.tipo || '').trim(); if (t) cont[t] = (cont[t] || 0) + 1; });
+  const rec = Object.keys(cont).map(function(t){ return [t, cont[t]]; }).sort(function(a, b){ return b[1] - a[1]; }).slice(0, 8);
+  const mx = rec.length ? rec[0][1] : 1;
+  document.getElementById('mt-rec').innerHTML = rec.length ? rec.map(function(r){
+    return '<div class="mt-rec" data-mt-tipo="' + mtEsc(r[0]) + '" title="Filtrar a lista por este tipo"><span class="nm">' + mtEsc(r[0]) + '</span><span class="bar"><i style="width:' + (r[1] / mx * 100).toFixed(0) + '%"></i></span><b>' + r[1] + '</b></div>';
+  }).join('') : '<div class="mt-vazio-mini">Preencha o “Tipo de manutenção” nas fichas para ver os problemas que mais se repetem.</div>';
+  ['mt-aten', 'mt-pend'].forEach(function(id){
+    document.getElementById(id).onclick = function(e){
+      const el = e.target.closest('[data-mt-oc-eq]'); if (!el) return;
+      manutAbrirFichaAba(el.dataset.mtOcEq, el.dataset.mtAba);
+    };
+  });
+  document.getElementById('mt-rec').onclick = function(e){
+    const el = e.target.closest('[data-mt-tipo]'); if (!el) return;
+    manutFx.tipo = manutFx.tipo === el.dataset.mtTipo ? '' : el.dataset.mtTipo;
+    manutFiltro = 'todos'; if (manutFx.tipo) manutFx.etapa = '';
+    manutRenderTudo();
+    document.getElementById('mt-card-lista').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+}
+async function manutAbrirFichaAba(eq, aba){
+  await manutAbrirFicha(eq);
+  if (aba) { manutAba = aba; if (document.getElementById('mt-detalhe')) manutRenderDetalhe(); }
+}
+
+/* ---------- relatórios ---------- */
+function mtCabecalhoRel(titulo, sub){
+  return '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">' + titulo +
+    '<small>' + sub + ' — Comprex Máquinas e Serviços · gerado em ' + mtBR(mtHoje()) + '</small></div></div>';
+}
+function mtDescFiltros(){
+  const f = manutFx, p = [];
+  p.push(manutFiltro === 'historico' ? 'Histórico (concluídas)' : { todos: 'Em manutenção — todos', em: 'Em manutenção', aguardando: 'Aguardando peças', externo: 'Reparo externo', atrasados: 'Atrasados', retorno15: 'Retorno em 15 dias' }[manutFiltro] || 'Em manutenção');
+  if (f.etapa) p.push('Etapa: ' + f.etapa);
+  if (f.status) p.push('Prazo: ' + { atrasado: 'Atrasado', atencao: 'Atenção', noprazo: 'No prazo' }[f.status]);
+  if (f.tipo) p.push('Tipo: ' + f.tipo);
+  if (f.resp) p.push('Responsável: ' + f.resp);
+  if (f.local) p.push('Local: ' + f.local);
+  if (f.de) p.push('Entrada desde ' + mtBR(f.de));
+  if (f.ate) p.push('Entrada até ' + mtBR(f.ate));
+  const b = document.getElementById('mt-busca').value.trim(); if (b) p.push('Busca: “' + b + '”');
+  return p.join(' · ');
+}
+function mtResumoNumeros(){
+  const ab = manutOcorrencias.filter(mtAberta), h = mtHoje();
+  const atr = ab.filter(function(o){ return mtStatusPrazo(o).chave === 'atrasado'; }).length;
+  const ret = ab.filter(function(o){ return o.previsao && o.previsao >= h && o.previsao <= mtSoma(h, 15); }).length;
+  return [['Em manutenção', ab.length], ['Aguardando peças', ab.filter(function(o){ return o.etapa === 'Aguardando peça'; }).length],
+    ['Reparo externo', ab.filter(function(o){ return o.etapa === 'Reparo externo'; }).length], ['Atrasados', atr], ['Retorno em 15 dias', ret],
+    ['Peças pendentes', ab.reduce(function(s, o){ return s + mtPendentes(o).length; }, 0)]];
+}
+function manutRelatorioLista(){
+  const lista = manutListaFiltrada();
+  if (!lista.length) { alert('Nenhum equipamento na lista com esses filtros para gerar o relatório.'); return; }
+  const hist = manutFiltro === 'historico';
+  const corpo = lista.map(function(oc){
+    const st = mtStatusPrazo(oc);
+    return '<tr class="' + (st.chave === 'atrasado' ? 'linha-parar' : '') + '"><td><b>' + mtEsc(oc.equipamento) + '</b></td><td>' + mtEsc(frotaDescricao[oc.equipamento] || '—') + '</td><td>' + mtBR(oc.dataEntrada) + '</td><td>' +
+      mtEsc(oc.motivo || '—') + (oc.tipo ? '<br><small>' + mtEsc(oc.tipo) + '</small>' : '') + '</td><td>' + (mtAberta(oc) ? mtEsc(oc.etapa) : 'Concluída') + '</td><td>' + mtEsc(mtOnde(oc)) + '</td><td>' +
+      (mtAberta(oc) ? mtBR(oc.previsao) : mtBR(oc.dataSaida)) + '</td><td>' + mtDiasParados(oc) + '</td><td>' + st.texto + '</td></tr>';
+  }).join('');
+  const pecas = [];
+  lista.forEach(function(oc){ mtPecasDe(oc).filter(function(p){ return hist || p.situacao !== 'Recebida'; }).forEach(function(p){ pecas.push({ oc: oc, p: p }); }); });
+  const corpoPecas = pecas.map(function(x){
+    return '<tr><td><b>' + mtEsc(x.oc.equipamento) + '</b></td><td>' + mtEsc(x.p.nome) + '</td><td>' + mtEsc(x.p.situacao) + '</td><td>' + mtEsc(x.p.destino || '—') + '</td><td>' + mtBR(x.p.dataEnvio) + '</td><td>' +
+      mtBR(x.p.previsao) + '</td><td>' + mtBR(x.p.retornoReal) + '</td><td>' + mtEsc(x.p.documento || '—') + '</td></tr>';
+  }).join('');
+  const nums = mtResumoNumeros().map(function(n){ return '<td style="text-align:center"><div style="font-size:20px;font-weight:800">' + n[1] + '</div><div style="font-size:10px">' + n[0] + '</div></td>'; }).join('');
+  document.getElementById('hist-print-area').innerHTML =
+    mtCabecalhoRel('Relatório de Manutenção', lista.length + ' ocorrência(s)') +
+    '<div style="font-size:11px;margin:-4px 0 10px;color:#333"><b>Filtros:</b> ' + mtEsc(mtDescFiltros()) + '</div>' +
+    '<table class="hist-tabela" style="margin-bottom:12px"><tbody><tr>' + nums + '</tr></tbody></table>' +
+    '<table class="hist-tabela"><thead><tr><th>Equipamento</th><th>Modelo</th><th>Entrada</th><th>Motivo / Tipo</th><th>Etapa</th><th>Onde está / Pendência</th><th>' + (hist ? 'Saída' : 'Previsão') + '</th><th>Dias</th><th>Status</th></tr></thead><tbody>' + corpo + '</tbody></table>' +
+    (pecas.length ? '<h3 style="margin:16px 0 6px;font-size:13px">' + (hist ? 'Peças / componentes' : 'Peças / componentes pendentes') + '</h3><table class="hist-tabela"><thead><tr><th>Equipamento</th><th>Peça</th><th>Situação</th><th>Destino</th><th>Envio</th><th>Previsão</th><th>Retorno real</th><th>NF/OS</th></tr></thead><tbody>' + corpoPecas + '</tbody></table>' : '');
+  window.print();
+}
+function manutRelatorioExcel(){
+  const lista = manutListaFiltrada();
+  if (!lista.length) { alert('Nenhum equipamento na lista com esses filtros para exportar.'); return; }
+  if (typeof XLSX === 'undefined') { alert('A biblioteca de Excel não carregou. Verifique a internet e tente de novo.'); return; }
+  const ids = {}; lista.forEach(function(o){ ids[o.id] = o; });
+  const dEq = lista.map(function(oc){
+    return { 'Equipamento': oc.equipamento, 'Modelo': frotaDescricao[oc.equipamento] || '', 'Entrada': mtBR(oc.dataEntrada), 'Motivo da parada': oc.motivo, 'Tipo': oc.tipo,
+      'Responsável': oc.responsavel, 'Etapa': mtAberta(oc) ? oc.etapa : 'Concluída', 'Local atual': frotaLocalAtual[oc.equipamento] || '', 'Onde está / Pendência': mtOnde(oc),
+      'Previsão de retorno': mtBR(oc.previsao), 'Saída': mtBR(oc.dataSaida), 'Dias parados': mtDiasParados(oc), 'Status': mtStatusPrazo(oc).texto };
+  });
+  const dPe = manutPecas.filter(function(p){ return ids[p.ocId]; }).map(function(p){
+    return { 'Equipamento': ids[p.ocId].equipamento, 'Peça': p.nome, 'Situação': p.situacao, 'Destino': p.destino, 'Envio': mtBR(p.dataEnvio), 'Previsão original': mtBR(p.previsaoOriginal),
+      'Previsão atual': mtBR(p.previsao), 'Retorno real': mtBR(p.retornoReal), 'NF/OS': p.documento, 'Custo (R$)': p.custo };
+  });
+  const dEv = manutEventos.filter(function(e){ return ids[e.ocId]; }).map(function(e){
+    return { 'Equipamento': ids[e.ocId].equipamento, 'Data': mtBR(e.data), 'Evento': e.texto, 'Responsável': e.responsavel, 'Realizado': e.realizado ? 'Sim' : 'Não' };
+  });
+  const dRes = mtResumoNumeros().map(function(n){ return { 'Indicador': n[0], 'Valor': n[1] }; });
+  dRes.push({ 'Indicador': 'Filtros aplicados', 'Valor': mtDescFiltros() });
+  const wb = XLSX.utils.book_new();
+  function aba(nome, dados, cols){
+    const ws = XLSX.utils.json_to_sheet(dados.length ? dados : [{ 'Sem dados': '' }]);
+    ws['!cols'] = cols.map(function(w){ return { wch: w }; });
+    XLSX.utils.book_append_sheet(wb, ws, nome);
+  }
+  aba('Resumo', dRes, [26, 60]);
+  aba('Equipamentos', dEq, [14, 26, 12, 34, 28, 18, 16, 20, 30, 18, 12, 12, 12]);
+  aba('Peças', dPe, [14, 26, 18, 22, 12, 16, 14, 12, 12, 12]);
+  aba('Eventos', dEv, [14, 12, 44, 18, 10]);
+  XLSX.writeFile(wb, 'Manutencao_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+function manutRelatorioFicha(oc){
+  const eq = oc.equipamento, aberta = mtAberta(oc), st = mtStatusPrazo(oc);
+  const marcos = mtMarcos(oc), pecas = mtPecasDe(oc);
+  const total = pecas.reduce(function(s, p){ return s + (p.custo || 0); }, 0);
+  const linhasTL = marcos.map(function(m){
+    return '<tr><td>' + mtBR(m.data) + '</td><td>' + mtEsc(m.texto) + '</td><td>' + mtEsc(m.resp || '') + (m.doc ? ' · NF/OS ' + mtEsc(m.doc) : '') + '</td><td>' + (m.feito ? 'Realizado' : (m.atrasado ? 'Atrasado' : 'Previsto')) + '</td></tr>';
+  }).join('');
+  const linhasPe = pecas.map(function(p){
+    return '<tr><td>' + mtEsc(p.nome) + '</td><td>' + mtEsc(p.situacao) + '</td><td>' + mtEsc(p.destino || '—') + '</td><td>' + mtBR(p.dataEnvio) + '</td><td>' + mtBR(p.previsaoOriginal) + '</td><td>' + mtBR(p.previsao) + '</td><td>' + mtBR(p.retornoReal) + '</td><td>' + mtEsc(p.documento || '—') + '</td><td>' + mtMoeda(p.custo) + '</td></tr>';
+  }).join('');
+  const dados = [['Modelo', frotaDescricao[eq] || '—'], ['Entrada', mtBR(oc.dataEntrada)], [aberta ? 'Previsão de retorno' : 'Liberado em', aberta ? mtBR(oc.previsao) : mtBR(oc.dataSaida)],
+    ['Dias ' + (aberta ? 'indisponível' : 'parado'), mtDiasParados(oc)], ['Etapa', aberta ? oc.etapa : 'Concluída'], ['Status do prazo', st.texto], ['Responsável', oc.responsavel || '—'], ['Tipo', oc.tipo || '—'],
+    ['Local atual', frotaLocalAtual[eq] || '—'], ['Motivo da parada', oc.motivo || '—']];
+  document.getElementById('hist-print-area').innerHTML =
+    mtCabecalhoRel('Ficha de Manutenção — ' + mtEsc(eq), 'Ocorrência iniciada em ' + mtBR(oc.dataEntrada)) +
+    '<table class="hist-tabela" style="margin-bottom:12px"><tbody>' + dados.map(function(d){ return '<tr><td style="width:190px;font-weight:700">' + mtEsc(d[0]) + '</td><td>' + mtEsc(String(d[1])) + '</td></tr>'; }).join('') + '</tbody></table>' +
+    '<h3 style="margin:14px 0 6px;font-size:13px">Linha do tempo</h3><table class="hist-tabela"><thead><tr><th>Data</th><th>Evento</th><th>Responsável / Documento</th><th>Situação</th></tr></thead><tbody>' + linhasTL + '</tbody></table>' +
+    (pecas.length ? '<h3 style="margin:14px 0 6px;font-size:13px">Componentes / Peças</h3><table class="hist-tabela"><thead><tr><th>Peça</th><th>Situação</th><th>Destino</th><th>Envio</th><th>Prev. original</th><th>Prev. atual</th><th>Retorno real</th><th>NF/OS</th><th>Custo</th></tr></thead><tbody>' + linhasPe + '</tbody></table>' +
+      '<div style="text-align:right;font-weight:800;margin-top:8px">Custo total de peças: ' + mtMoeda(total) + '</div>' : '');
+  window.print();
 }
 function manutDefinirFiltro(k){
   manutFiltro = k;
@@ -7990,6 +8415,7 @@ function manutRenderDetalhe(){
       '<button type="button" class="mt-btn" data-mt-acao="editar">✏️ Editar ficha</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="loc">📍 Localização Atual</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="movhist">🕒 Histórico completo de movimentações</button>' +
+      '<button type="button" class="mt-btn" data-mt-acao="relficha">🖨 Relatório da ficha</button>' +
     '</div>' +
     '<div class="mt-abas">' + abas.map(function(a){ return '<button type="button" class="mt-aba' + (manutAba === a[0] ? ' ativo' : '') + '" data-mt-acao="aba" data-id="' + a[0] + '">' + a[1] + '</button>'; }).join('') + '</div>' +
     '<div id="mt-aba-corpo">' + (manutAba === 'pecas' ? mtAbaPecas(oc) : manutAba === 'custos' ? mtAbaCustos(oc) : manutAba === 'mov' ? mtAbaMov(oc) : mtAbaTimeline(oc)) + '</div>' +
@@ -8109,6 +8535,7 @@ function manutAcao(acao, id, oc){
     case 'aba-pecas': manutAba = 'pecas'; manutRenderDetalhe(); return;
     case 'loc': manutIrParaLocalizacao(oc.equipamento); return;
     case 'movhist': manutIrParaHistoricoMov(oc.equipamento); return;
+    case 'relficha': manutRelatorioFicha(oc); return;
   }
   if (!mtExigirEdicao()) return;
   switch (acao) {
