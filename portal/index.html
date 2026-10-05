@@ -8191,11 +8191,26 @@ async function manutReavaliarEtapa(oc){
   else if (oc.etapa === 'Aguardando peça' || oc.etapa === 'Reparo externo') nova = 'Montagem/Testes';
   if (nova !== oc.etapa) { await manutAtualizar('ocorrencias', oc.id, { Etapa: nova }); oc.etapa = nova; }
 }
+/* Grava na Frota ignorando colunas que não existem na lista (ex.: ObservacaoManutencao): tenta de novo sem elas. */
+var mtFrotaColsAusentes = [];
+async function mtAtualizarFrota(id, campos){
+  const c = Object.assign({}, campos);
+  mtFrotaColsAusentes.forEach(function(k){ delete c[k]; });
+  for (let i = 0; i < 8; i++) {
+    try { return await atualizarCamposItem(LISTA_FROTA_ID, id, c); }
+    catch (e) {
+      const m = /Field '([^']+)' is not recognized/i.exec(String(e && e.message || e));
+      if (!m || !(m[1] in c) || m[1] === 'LocalAtual' || m[1] === 'StatusAtual') throw e;
+      delete c[m[1]]; if (mtFrotaColsAusentes.indexOf(m[1]) < 0) mtFrotaColsAusentes.push(m[1]);
+      mtToast('Aviso: a lista Frota não tem a coluna ' + m[1] + ' (opcional).');
+    }
+  }
+}
 async function mtSyncFrota(oc){
   const eq = oc.equipamento;
   const id = frotaIdsExtra[eq] || frotasIds[eq];
   if (!id) return;
-  await atualizarCamposItem(LISTA_FROTA_ID, id, { TipoManutencao: oc.tipo, ResponsavelTecnico: oc.responsavel, ObservacaoManutencao: oc.motivo, PrevisaoReparo: oc.previsao || null });
+  await mtAtualizarFrota(id, { TipoManutencao: oc.tipo, ResponsavelTecnico: oc.responsavel, ObservacaoManutencao: oc.motivo, PrevisaoReparo: oc.previsao || null });
   frotaTipoManutencao[eq] = oc.tipo; frotaResponsavelTecnico[eq] = oc.responsavel;
   frotaObservacaoManutencao[eq] = oc.motivo; frotaPrevisaoReparo[eq] = oc.previsao || '';
 }
@@ -9340,7 +9355,7 @@ function manutModalConcluir(oc){
   ], '✅ Concluir e mover equipamento', async function(v){
     const idEquip = frotaIdsExtra[eq] || frotasIds[eq];
     const localAntes = frotaLocalAtual[eq] || '';
-    await atualizarCamposItem(LISTA_FROTA_ID, idEquip, { LocalAtual: v.local, StatusAtual: v.status, TipoManutencao: '', ResponsavelTecnico: '', ObservacaoManutencao: '', PrevisaoReparo: null });
+    await mtAtualizarFrota(idEquip, { LocalAtual: v.local, StatusAtual: v.status, TipoManutencao: '', ResponsavelTecnico: '', ObservacaoManutencao: '', PrevisaoReparo: null });
     frotaLocalAtual[eq] = v.local; frotaStatusAtual[eq] = v.status;
     frotaTipoManutencao[eq] = ''; frotaResponsavelTecnico[eq] = ''; frotaObservacaoManutencao[eq] = ''; frotaPrevisaoReparo[eq] = '';
     await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', { fields: {
@@ -9411,7 +9426,7 @@ document.getElementById('mtn-salvar').onclick = async function(){
     const idEquip = frotaIdsExtra[eq] || frotasIds[eq];
     const localAntes = frotaLocalAtual[eq] || '';
     const jaEstavaEmManut = (frotaStatusAtual[eq] || '') === 'EM MANUTENÇÃO';
-    await atualizarCamposItem(LISTA_FROTA_ID, idEquip, { LocalAtual: local, StatusAtual: 'EM MANUTENÇÃO', TipoManutencao: tipo, ResponsavelTecnico: resp, ObservacaoManutencao: motivo, PrevisaoReparo: previsao || null });
+    await mtAtualizarFrota(idEquip, { LocalAtual: local, StatusAtual: 'EM MANUTENÇÃO', TipoManutencao: tipo, ResponsavelTecnico: resp, ObservacaoManutencao: motivo, PrevisaoReparo: previsao || null });
     frotaLocalAtual[eq] = local; frotaStatusAtual[eq] = 'EM MANUTENÇÃO'; frotaTipoManutencao[eq] = tipo;
     frotaResponsavelTecnico[eq] = resp; frotaObservacaoManutencao[eq] = motivo; frotaPrevisaoReparo[eq] = previsao || '';
     if (!jaEstavaEmManut || localAntes !== local) {
