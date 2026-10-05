@@ -670,6 +670,59 @@
   .mt-mini-link:hover{background:var(--navy);color:#fff}
 
 
+
+  /* ===== Sino de notificações + Modo TV (passo 55) ===== */
+  .tv-btn{border:none;background:#f3f5f6;color:var(--tinta);border-radius:20px;height:38px;padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .tv-btn:hover{background:#e3ece5}
+  body.tema-escuro .tv-btn{background:#1f2937;color:#e5e7eb}
+  .sino-wrap{user-select:none}
+  .sino-wrap.ativo{background:#dcebe0}
+  #sino-painel{position:fixed;z-index:2500;width:min(460px,94vw);max-height:76vh;overflow:auto;display:none;background:var(--card);color:var(--tinta);
+    border:1px solid var(--linha);border-radius:14px;box-shadow:0 18px 44px rgba(10,25,40,.28);padding:6px 0 10px}
+  #sino-painel .sp-cab{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 8px;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+  #sino-painel .sp-cab small{font-weight:600;text-transform:none;color:var(--cinza);letter-spacing:0}
+  #sino-painel .sp-grupo-t{padding:10px 16px 4px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--cinza)}
+  #sino-painel .sp-grupo > *:not(.sp-grupo-t){margin:6px 12px !important}
+  #sino-painel .sp-vazio{padding:26px 16px;text-align:center;color:var(--cinza);font-size:13px}
+  #sino-painel .sp-rec{padding:6px 16px;font-size:12px;color:var(--cinza);display:flex;gap:8px}
+  #sino-painel .sp-rec b{color:var(--tinta);min-width:40px}
+  /* ---- Modo TV ---- */
+  #tv-header{display:none;position:sticky;top:0;z-index:900;align-items:center;gap:18px;padding:0 22px;height:56px;background:linear-gradient(90deg,#0f3d23,#1b6b34);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+  body.tv #tv-header{display:flex}
+  #tv-header .tv-marca{font-weight:900;letter-spacing:2px;font-size:18px}
+  #tv-header .tv-tela{font-weight:800;font-size:17px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+  #tv-header .tv-dots{display:flex;gap:6px}
+  #tv-header .tv-dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3)}
+  #tv-header .tv-dots i.on{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+  #tv-header .tv-ticker{flex:1;min-width:0;font-size:13px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+  #tv-header .tv-ticker b{background:#c0392b;border-radius:10px;padding:2px 8px;margin-right:8px;font-size:11.5px}
+  #tv-header .tv-rel{text-align:right;line-height:1.1}
+  #tv-header .tv-rel b{display:block;font-size:20px}
+  #tv-header .tv-rel small{font-size:10.5px;opacity:.75}
+  #tv-header .tv-ctrl{display:flex;gap:6px;opacity:0;transition:opacity .3s}
+  body.tv-mouse #tv-header .tv-ctrl{opacity:1}
+  #tv-header .tv-ctrl button{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;width:36px;height:34px;font-size:15px;cursor:pointer}
+  #tv-header .tv-ctrl button:hover{background:rgba(255,255,255,.28)}
+  #tv-header .tv-prog{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.18)}
+  #tv-header .tv-prog i{display:block;height:100%;width:0;background:#7be0a0}
+  body.tv:not(.tv-mouse){cursor:none}
+  body.tv .sidebar, body.tv .topbar, body.tv .rodape-app{display:none !important}
+  body.tv .main{width:100%}
+  body.tv .content{padding:14px 20px}
+  body.tv .painel-filtros, body.tv .mt-filtros, body.tv .mt-chips, body.tv #painel-ver-mais, body.tv #mt-ver-mais, body.tv #mt-detalhe,
+  body.tv .chart-toggle, body.tv .kpi-acao, body.tv .mt-seta, body.tv .painel-btn-tela, body.tv .painel-btn-ghost, body.tv .painel-link-rodape,
+  body.tv #status-eq-visao-toggle, body.tv .mt-sub{display:none !important}
+  body.tv .painel-card-inferior, body.tv .mt-lista-card, body.tv .painel-tabela-wrap{height:auto !important;max-height:none !important}
+  #tv-modal{position:fixed;inset:0;z-index:3000;background:rgba(10,25,40,.55);display:none;align-items:center;justify-content:center;padding:16px}
+  #tv-modal .tvm-box{background:var(--card);color:var(--tinta);border-radius:16px;width:min(560px,96vw);max-height:92vh;overflow:auto;padding:22px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  #tv-modal h3{margin:0 0 4px;font-size:18px}
+  #tv-modal .tvm-sub{color:var(--cinza);font-size:12.5px;margin-bottom:14px}
+  #tv-modal .tvm-tit{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza);margin:12px 0 6px}
+  #tv-modal label.tvm-chk{display:flex;align-items:center;gap:9px;padding:6px 4px;font-size:13.5px;cursor:pointer}
+  #tv-modal .tvm-linha{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  #tv-modal select{width:100%;border:1.5px solid #d8dee3;border-radius:9px;padding:8px 10px;font-size:13px;background:var(--card);color:var(--tinta)}
+  #tv-modal .tvm-acoes{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+  #tv-modal .tvm-dica{font-size:11.5px;color:var(--cinza);margin-top:12px;line-height:1.4}
   /* ===== Manutenção v3: layout espelhado do Painel ===== */
   .mt-meio{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;align-items:stretch;margin-bottom:16px}
   .mt-lista-card{display:flex;flex-direction:column;height:640px;box-sizing:border-box;margin:0}
@@ -1713,6 +1766,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <button type="button" class="topo-toggle-opt" data-ir="partediaria">TESTE</button>
       </div>
       <div class="topbar-right">
+        <button type="button" class="tv-btn" id="btn-tv" title="Tela cheia para TV: alterna os painéis sozinho">📺 Modo TV</button>
+        <div class="sino-wrap" id="sino" title="Notificações" role="button" tabindex="0">🔔<span class="sino-badge" id="sino-badge" style="display:none">0</span></div>
         <button class="tema-toggle" id="btn-tema" title="Alternar tema claro/escuro">🌙</button>
         <div class="user-chip">
           <div class="user-avatar" id="user-avatar">--</div>
@@ -3015,6 +3070,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
 </div>
 <div class="view" id="view-manut">
   <div class="mt-sub">Acompanhe o status, prazos e disponibilidade da frota em manutenção.</div>
+  <div id="mt-aviso-col"></div>
   <div id="mt-aviso"></div>
   <div id="mt-resumo" class="painel-resumo" style="display:none"><div class="ico">🧭</div><div class="txt" id="mt-resumo-txt"></div></div>
   <div id="mt-alerta" class="painel-alerta-imp" style="display:none">
@@ -3158,6 +3214,49 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
      tela inteira em vez do relatório, porque um filho não escapa do
      display:none do pai mesmo com !important. Ficando fora, funciona
      igual independente de qual .view estiver ativa no momento do print. -->
+<div id="sino-painel">
+  <div class="sp-cab"><span>🔔 Notificações</span><small id="sp-cont"></small></div>
+  <div id="sp-corpo">
+    <div class="sp-grupo" data-sp-grupo="Painel de Checklist"><div class="sp-grupo-t" style="display:none">Painel de Checklist</div></div>
+    <div class="sp-grupo" data-sp-grupo="Manutenção"><div class="sp-grupo-t" style="display:none">Manutenção</div></div>
+    <div class="sp-grupo" data-sp-grupo="Movimentações"><div class="sp-grupo-t" style="display:none">Movimentações</div></div>
+    <div class="sp-grupo" data-sp-grupo="Sistema"><div class="sp-grupo-t" style="display:none">Sistema</div></div>
+  </div>
+  <div class="sp-vazio" id="sp-vazio">Nenhuma notificação no momento. ✅</div>
+  <div id="sp-recentes" style="display:none"><div class="sp-grupo-t">Mensagens recentes</div><div id="sp-rec-lista"></div></div>
+</div>
+<div id="tv-modal">
+  <div class="tvm-box">
+    <h3>📺 Modo TV</h3>
+    <div class="tvm-sub">Coloca o portal em tela cheia, sem menus, alternando os painéis sozinho e atualizando os dados.</div>
+    <div class="tvm-tit">Painéis que vão passar na TV</div>
+    <div id="tvm-telas"></div>
+    <div class="tvm-linha">
+      <div><div class="tvm-tit">Tempo em cada painel</div>
+        <select id="tvm-seg"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option><option value="45">45 segundos</option><option value="60">1 minuto</option><option value="90">1 min 30 s</option></select></div>
+      <div><div class="tvm-tit">Atualizar os dados a cada</div>
+        <select id="tvm-atu"><option value="2">2 minutos</option><option value="5">5 minutos</option><option value="10">10 minutos</option></select></div>
+    </div>
+    <div class="tvm-linha">
+      <div><div class="tvm-tit">Tamanho</div>
+        <select id="tvm-fit"><option value="1">Ajustar cada painel à tela</option><option value="0">Tamanho normal (com rolagem automática)</option></select></div>
+      <div><div class="tvm-tit">Tela cheia</div>
+        <select id="tvm-full"><option value="1">Sim (F11 automático)</option><option value="0">Não, só esconder os menus</option></select></div>
+    </div>
+    <div class="tvm-dica">Para sair: tecla <b>Esc</b> ou o botão ✕ (aparece ao mexer o mouse). Setas ← → trocam de painel e a barra de espaço pausa.<br>
+      Dica: salve o endereço do portal com <b>#tv</b> no final nos favoritos da TV — ele entra no Modo TV sozinho depois do login (usa as últimas opções escolhidas).</div>
+    <div class="tvm-acoes"><button type="button" class="mt-btn" id="tvm-cancelar">Cancelar</button><button type="button" class="mt-btn pri" id="tvm-iniciar">▶ Iniciar</button></div>
+  </div>
+</div>
+<div id="tv-header">
+  <div class="tv-marca">COMPREX</div>
+  <div class="tv-tela" id="tv-tela-nome"></div>
+  <div class="tv-dots" id="tv-dots"></div>
+  <div class="tv-ticker" id="tv-ticker"></div>
+  <div class="tv-rel"><b id="tv-hora">--:--</b><small id="tv-atualizado"></small></div>
+  <div class="tv-ctrl"><button type="button" id="tv-prev" title="Painel anterior">⏮</button><button type="button" id="tv-pause" title="Pausar">⏸</button><button type="button" id="tv-next" title="Próximo painel">⏭</button><button type="button" id="tv-sair" title="Sair do Modo TV">✕</button></div>
+  <div class="tv-prog"><i id="tv-prog-bar"></i></div>
+</div>
 <div id="hist-print-area" style="display:none"></div>
 <div class="hist-detalhe-overlay" id="hist-detalhe-overlay">
   <div class="hist-detalhe-modal">
@@ -7774,7 +7873,54 @@ async function manutResolverListas(){
   });
   if (faltam.length) { const e = new Error('Listas não encontradas: ' + faltam.join(', ')); e.faltam = faltam; throw e; }
   manutListaIds = ids;
+  await manutMapearColunas();
   return ids;
+}
+/* Descobre o nome INTERNO real de cada coluna (o SharePoint às vezes cria "Tipo0",
+   ou o nome interno sai diferente do que foi digitado) e guarda o mapa. */
+const MANUT_COLUNAS = {
+  ocorrencias: ['Title', 'DataEntrada', 'Etapa', 'Motivo', 'Tipo', 'Responsavel', 'PrevisaoRetorno', 'DataSaida', 'Situacao', 'Observacao'],
+  pecas: ['Title', 'OcorrenciaId', 'Equipamento', 'Situacao', 'Destino', 'DataEnvio', 'PrevisaoOriginal', 'PrevisaoRetorno', 'RetornoReal', 'Documento', 'Custo'],
+  eventos: ['Title', 'OcorrenciaId', 'Equipamento', 'Data', 'Responsavel', 'Realizado']
+};
+let manutColMap = {}, manutColFaltando = [];
+function mtNormNome(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
+async function manutMapearColunas(){
+  manutColMap = {}; manutColFaltando = [];
+  for (const chave of Object.keys(MANUT_COLUNAS)) {
+    let cols = [];
+    try {
+      const d = await graphGet(GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/columns?$select=name,displayName,readOnly&$top=500');
+      cols = (d.value || []).filter(function(c){ return !c.readOnly || c.name === 'Title'; });
+    } catch (e) { cols = null; }
+    manutColMap[chave] = {};
+    MANUT_COLUNAS[chave].forEach(function(L){
+      if (cols === null) { manutColMap[chave][L] = L; return; }   // sem permissão para listar colunas: assume o nome padrão
+      const n = mtNormNome(L);
+      let c = cols.find(function(x){ return mtNormNome(x.name) === n; })
+        || cols.find(function(x){ return mtNormNome(x.displayName) === n; })
+        || cols.find(function(x){ return new RegExp('^' + n + '[0-9]+$').test(mtNormNome(x.name)); })
+        || null;
+      if (c) manutColMap[chave][L] = c.name;
+      else manutColFaltando.push({ lista: MANUT_NOMES_LISTAS[chave], coluna: L });
+    });
+  }
+}
+function mtLerCampos(chave, item){
+  const f = item.fields || {}, m = manutColMap[chave] || {}, out = {};
+  Object.keys(f).forEach(function(k){ out[k] = f[k]; });
+  Object.keys(m).forEach(function(L){ if (m[L] !== L && f[m[L]] !== undefined) out[L] = f[m[L]]; });
+  return { id: item.id, fields: out };
+}
+function mtGravarCampos(chave, campos){
+  const m = manutColMap[chave] || {}, out = {}, faltam = [];
+  Object.keys(campos).forEach(function(L){
+    if (m[L]) out[m[L]] = campos[L];
+    else if (MANUT_COLUNAS[chave].indexOf(L) !== -1) faltam.push(L);
+    else out[L] = campos[L];
+  });
+  if (faltam.length) throw new Error('Falta a coluna "' + faltam.join('", "') + '" na lista ' + MANUT_NOMES_LISTAS[chave] + '. Crie a coluna no SharePoint (veja o aviso no topo da tela Manutenção).');
+  return out;
 }
 async function manutLerLista(listaId){
   let url = GRAPH + '/sites/' + SITE_ID + '/lists/' + listaId + '/items?$expand=fields&$top=999';
@@ -7813,24 +7959,24 @@ function mtAtribuir(chave, lista){
 async function manutRecarregar(chave){
   const ids = await manutResolverListas();
   const itens = await manutLerLista(ids[chave]);
-  mtAtribuir(chave, itens.map(MT_MAPAS[chave]));
+  mtAtribuir(chave, itens.map(function(i){ return MT_MAPAS[chave](mtLerCampos(chave, i)); }));
 }
 async function manutCarregarDados(forcar){
   if (manutCarregado && !forcar) return;
   const ids = await manutResolverListas();
   const r = await Promise.all([manutLerLista(ids.ocorrencias), manutLerLista(ids.pecas), manutLerLista(ids.eventos)]);
-  manutOcorrencias = r[0].map(mtMapOcorrencia);
-  manutPecas = r[1].map(mtMapPeca);
-  manutEventos = r[2].map(mtMapEvento);
+  manutOcorrencias = r[0].map(function(i){ return mtMapOcorrencia(mtLerCampos('ocorrencias', i)); });
+  manutPecas = r[1].map(function(i){ return mtMapPeca(mtLerCampos('pecas', i)); });
+  manutEventos = r[2].map(function(i){ return mtMapEvento(mtLerCampos('eventos', i)); });
   manutCarregado = true;
 }
 async function manutCriar(chave, campos){
   await manutResolverListas();
-  return graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/items', { fields: campos });
+  return graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/items', { fields: mtGravarCampos(chave, campos) });
 }
 async function manutAtualizar(chave, id, campos){
   await manutResolverListas();
-  return atualizarCamposItem(manutListaIds[chave], id, campos);
+  return atualizarCamposItem(manutListaIds[chave], id, mtGravarCampos(chave, campos));
 }
 async function manutExcluir(chave, id){
   await manutResolverListas();
@@ -7931,6 +8077,12 @@ async function carregarManutencao(){
     await garantirDadosFrotaExtra();
     await garantirDadosMovimentacoes();
     await manutCarregarDados(true);
+    const avc = document.getElementById('mt-aviso-col');
+    if (manutColFaltando.length) {
+      avc.innerHTML = '<div class="mt-erro-listas"><b>⚠️ Faltam colunas nas listas da Manutenção — sem elas não dá para criar nem editar fichas</b><br>' +
+        manutColFaltando.map(function(c){ return 'Lista <b>' + mtEsc(c.lista) + '</b>: coluna <b>' + mtEsc(c.coluna) + '</b>'; }).join('<br>') +
+        '<br>Crie cada coluna com <b>exatamente</b> esse nome (sem espaços e sem acento; na criação use só esse nome, e só depois, se quiser, mude o nome de exibição). Depois recarregue com Ctrl+F5.</div>';
+    } else avc.innerHTML = '';
     document.getElementById('mt-card-lista').style.display = '';
     manutRenderTudo();
   } catch (err) {
@@ -8939,6 +9091,293 @@ document.querySelectorAll('.sidebar-item[data-manut-filtro]').forEach(function(i
   const num = document.getElementById('kpi-mov-manut-agora');
   const card = num && num.closest('.kpi-card');
   if (card) { card.style.cursor = 'pointer'; card.title = 'Abrir a Manutenção'; card.onclick = function(){ manutFiltro = 'todos'; mostrarView('manut'); }; }
+})();
+
+
+/* =====================================================================
+   SINO DE NOTIFICAÇÕES
+   Os avisos que ficavam empilhados no topo das telas (resumo do dia,
+   atrasados, impeditivos, colunas faltando, etc.) agora moram aqui.
+   Os elementos são MOVIDOS (não copiados), então continuam clicáveis e
+   continuam sendo atualizados pelas telas de sempre.
+   ===================================================================== */
+const SINO_FONTES = [
+  { g: 'Painel de Checklist', ids: ['painel-resumo-dia', 'painel-alerta-impeditivos'] },
+  { g: 'Manutenção', ids: ['mt-aviso-col', 'mt-aviso', 'mt-resumo', 'mt-alerta'], view: 'manut' },
+  { g: 'Movimentações', ids: ['status-eq-alerta-wrap'] },
+  { g: 'Sistema', ids: ['aviso-colunas-area'] }
+];
+let sinoRecentes = [];
+function sinoVisivel(el){ return !!el && el.style.display !== 'none' && el.textContent.trim().length > 0; }
+(function(){
+  const painel = document.getElementById('sino-painel');
+  SINO_FONTES.forEach(function(f){
+    const grupo = painel.querySelector('[data-sp-grupo="' + f.g + '"]');
+    f.ids.forEach(function(id){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.dataset.spView = f.view || '';
+      grupo.appendChild(el);
+    });
+    f.grupo = grupo;
+  });
+})();
+let sinoAgendado = false;
+function sinoAtualizar(){
+  if (sinoAgendado) return;
+  sinoAgendado = true;
+  requestAnimationFrame(function(){
+    sinoAgendado = false;
+    let total = 0;
+    SINO_FONTES.forEach(function(f){
+      const n = f.ids.filter(function(id){ return sinoVisivel(document.getElementById(id)); }).length;
+      total += n;
+      const t = f.grupo.querySelector('.sp-grupo-t');
+      const novo = n ? '' : 'none';
+      if (t.style.display !== novo) t.style.display = novo;
+    });
+    const b = document.getElementById('sino-badge');
+    const txt = String(total);
+    if (b.textContent !== txt) b.textContent = txt;
+    const bd = total ? '' : 'none';
+    if (b.style.display !== bd) b.style.display = bd;
+    const vz = document.getElementById('sp-vazio'), vd = total ? 'none' : '';
+    if (vz.style.display !== vd) vz.style.display = vd;
+    document.getElementById('sp-cont').textContent = total ? total + ' ativa' + (total > 1 ? 's' : '') : '';
+  });
+}
+function sinoTextos(){
+  const out = [];
+  SINO_FONTES.forEach(function(f){ f.ids.forEach(function(id){
+    const el = document.getElementById(id);
+    if (sinoVisivel(el)) out.push(el.innerText.replace(/\s+/g, ' ').trim());
+  }); });
+  return out;
+}
+new MutationObserver(sinoAtualizar).observe(document.getElementById('sp-corpo'), { subtree: true, childList: true, attributes: true, attributeFilter: ['style'], characterData: true });
+sinoAtualizar();
+function sinoRegistrar(msg){
+  const d = new Date();
+  sinoRecentes.unshift({ h: mtP2(d.getHours()) + ':' + mtP2(d.getMinutes()), m: msg });
+  sinoRecentes = sinoRecentes.slice(0, 8);
+  document.getElementById('sp-recentes').style.display = '';
+  document.getElementById('sp-rec-lista').innerHTML = sinoRecentes.map(function(r){ return '<div class="sp-rec"><b>' + r.h + '</b><span>' + mtEsc(r.m) + '</span></div>'; }).join('');
+}
+(function(){
+  const orig = mtToast;
+  mtToast = function(msg){ try { sinoRegistrar(msg); } catch (e) {} return orig(msg); };
+})();
+function sinoAbrir(abrir){
+  const p = document.getElementById('sino-painel'), s = document.getElementById('sino');
+  if (abrir === undefined) abrir = p.style.display !== 'block';
+  if (abrir) {
+    const r = s.getBoundingClientRect();
+    p.style.top = (r.bottom + 10) + 'px';
+    p.style.right = Math.max(8, window.innerWidth - r.right - 4) + 'px';
+    p.style.display = 'block';
+  } else p.style.display = 'none';
+  s.classList.toggle('ativo', abrir);
+}
+document.getElementById('sino').onclick = function(e){ e.stopPropagation(); sinoAbrir(); };
+document.getElementById('sino').onkeydown = function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sinoAbrir(); } };
+document.addEventListener('click', function(e){
+  const p = document.getElementById('sino-painel');
+  if (p.style.display !== 'block') return;
+  if (!p.contains(e.target)) sinoAbrir(false);
+});
+document.getElementById('sino-painel').addEventListener('click', function(e){
+  // alertas de uma tela só fazem sentido nela: se clicou num alerta da Manutenção estando em outra tela, leva para lá
+  const el = e.target.closest('[data-sp-view]');
+  if (!el || !el.dataset.spView || e.target.closest('a')) return;
+  const ativa = document.querySelector('.view.ativo');
+  if (!ativa || ativa.id !== 'view-' + el.dataset.spView) { sinoAbrir(false); mostrarView(el.dataset.spView); }
+  else sinoAbrir(false);
+});
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') sinoAbrir(false); });
+
+/* =====================================================================
+   MODO TV — tela cheia, painéis alternando sozinhos, dados atualizando
+   ===================================================================== */
+const TV_TELAS = [
+  { id: 'painel', nome: 'Painel de Checklist', view: 'painel' },
+  { id: 'manut', nome: 'Manutenção — Visão Geral', view: 'manut' },
+  { id: 'dashboard-mov', nome: 'Dashboard de Movimentações', view: 'dashboard-mov' },
+  { id: 'status-equipamentos', nome: 'Status dos Equipamentos', view: 'status-equipamentos', depois: function(){
+      const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=dashboard]'); if (b) b.click(); } },
+  { id: 'localizacao-atual', nome: 'Localização Atual', view: 'localizacao-atual' },
+  { id: 'dashboard', nome: 'Dashboard de Checklists', view: 'dashboard' },
+  { id: 'indicadores', nome: 'Indicadores de Checklist', view: 'indicadores' }
+];
+const TV_PADRAO = { telas: ['painel', 'manut', 'dashboard-mov', 'status-equipamentos'], seg: 30, atu: 5, fit: 1, full: 1 };
+const tv = { ativo: false, telas: [], idx: 0, pausado: false, inicio: 0, cfg: null, ultimaCarga: {}, timer: null, viewAntes: 'painel', usouFull: false, wake: null, tickerI: 0, tickerT: 0, mouseT: 0, scrollRaf: 0 };
+function tvLerCfg(){
+  let c = {};
+  try { c = JSON.parse(localStorage.getItem('comprexTvCfg') || '{}') || {}; } catch (e) {}
+  return Object.assign({}, TV_PADRAO, c);
+}
+function tvGravarCfg(c){ try { localStorage.setItem('comprexTvCfg', JSON.stringify(c)); } catch (e) {} }
+function tvTelaPermitida(t){
+  const el = document.querySelector('.sidebar-item[data-view="' + t.view + '"]');
+  if (!el) return t.view === 'painel' || t.view === 'manut';
+  const secao = el.dataset.secao;
+  return tokensAcessoAtual === null || tokensAcessoAtual.indexOf(secao) !== -1 || tokensAcessoAtual.indexOf(secao + '/' + t.view) !== -1;
+}
+function tvAbrirModal(){
+  const c = tvLerCfg();
+  document.getElementById('tvm-telas').innerHTML = TV_TELAS.filter(tvTelaPermitida).map(function(t){
+    return '<label class="tvm-chk"><input type="checkbox" value="' + t.id + '"' + (c.telas.indexOf(t.id) !== -1 ? ' checked' : '') + '> ' + t.nome + '</label>';
+  }).join('');
+  document.getElementById('tvm-seg').value = String(c.seg);
+  document.getElementById('tvm-atu').value = String(c.atu);
+  document.getElementById('tvm-fit').value = String(c.fit);
+  document.getElementById('tvm-full').value = String(c.full);
+  document.getElementById('tv-modal').style.display = 'flex';
+}
+document.getElementById('btn-tv').onclick = tvAbrirModal;
+document.getElementById('tvm-cancelar').onclick = function(){ document.getElementById('tv-modal').style.display = 'none'; };
+document.getElementById('tvm-iniciar').onclick = function(){
+  const telas = Array.prototype.map.call(document.querySelectorAll('#tvm-telas input:checked'), function(i){ return i.value; });
+  if (!telas.length) { alert('Marque pelo menos um painel.'); return; }
+  const c = { telas: telas, seg: Number(document.getElementById('tvm-seg').value), atu: Number(document.getElementById('tvm-atu').value),
+    fit: Number(document.getElementById('tvm-fit').value), full: Number(document.getElementById('tvm-full').value) };
+  tvGravarCfg(c);
+  document.getElementById('tv-modal').style.display = 'none';
+  tvIniciar(c);
+};
+function tvIniciar(c){
+  tv.cfg = c;
+  tv.telas = TV_TELAS.filter(function(t){ return c.telas.indexOf(t.id) !== -1 && tvTelaPermitida(t); });
+  if (!tv.telas.length) tv.telas = [TV_TELAS[0]];
+  const ativa = document.querySelector('.view.ativo');
+  tv.viewAntes = ativa ? ativa.id.replace('view-', '') : 'painel';
+  tv.ativo = true; tv.pausado = false; tv.ultimaCarga = {}; tv.idx = 0;
+  document.body.classList.add('tv', 'tv-mouse');
+  // o cabeçalho da TV fica no topo da área principal
+  const main = document.querySelector('.main'), h = document.getElementById('tv-header');
+  if (h.parentNode !== main) main.insertBefore(h, main.firstChild);
+  document.getElementById('tv-dots').innerHTML = tv.telas.map(function(){ return '<i></i>'; }).join('');
+  if (c.full && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().then(function(){ tv.usouFull = true; }).catch(function(){ tv.usouFull = false; });
+  }
+  tvWake();
+  sinoAbrir(false);
+  tvMostrar(0);
+  clearInterval(tv.timer);
+  tv.timer = setInterval(tvTick, 250);
+}
+async function tvWake(){
+  try { if (navigator.wakeLock) tv.wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+}
+document.addEventListener('visibilitychange', function(){ if (tv.ativo && document.visibilityState === 'visible') tvWake(); });
+function tvZerarZoom(){
+  document.querySelectorAll('.view').forEach(function(v){ v.style.zoom = ''; });
+  cancelAnimationFrame(tv.scrollRaf);
+  window.scrollTo(0, 0);
+}
+function tvMostrar(i){
+  tv.idx = ((i % tv.telas.length) + tv.telas.length) % tv.telas.length;
+  const t = tv.telas[tv.idx], agora = Date.now();
+  tvZerarZoom();
+  const velho = !tv.ultimaCarga[t.id] || agora - tv.ultimaCarga[t.id] > tv.cfg.atu * 60000;
+  if (velho) { mostrarView(t.view); tv.ultimaCarga[t.id] = agora; }
+  else {
+    document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('ativo'); });
+    document.getElementById('view-' + t.view).classList.add('ativo');
+  }
+  if (t.depois) setTimeout(t.depois, 300);
+  tv.inicio = agora;
+  document.getElementById('tv-tela-nome').textContent = t.nome;
+  document.querySelectorAll('#tv-dots i').forEach(function(d, k){ d.classList.toggle('on', k === tv.idx); });
+  if (velho) {
+    const d = new Date();
+    document.getElementById('tv-atualizado').textContent = 'dados de ' + mtP2(d.getHours()) + ':' + mtP2(d.getMinutes());
+  }
+  // espera os dados chegarem e ajusta o tamanho ao da tela
+  setTimeout(function(){ if (tv.ativo && tv.telas[tv.idx] === t) tvAjustar(t); }, velho ? 3500 : 400);
+  setTimeout(function(){ if (tv.ativo && tv.telas[tv.idx] === t) tvAjustar(t); }, velho ? 9000 : 2500);
+}
+function tvAjustar(t){
+  const v = document.getElementById('view-' + t.view);
+  if (!v) return;
+  cancelAnimationFrame(tv.scrollRaf);
+  v.style.zoom = '1';
+  const h = document.getElementById('tv-header');
+  const dispH = window.innerHeight - h.offsetHeight - 30, dispW = window.innerWidth - 44;
+  const natH = v.scrollHeight, natW = Math.max(v.scrollWidth, 1);
+  let z = 1, rolar = false;
+  if (tv.cfg.fit) {
+    z = Math.min(dispH / natH, dispW / natW, 1.6);
+    if (z < 0.62) { z = Math.min(1, dispW / natW); rolar = true; }   // muito comprido: não encolhe demais, rola devagar
+  } else { z = Math.min(1.25, dispW / natW); rolar = natH * z > dispH; }
+  v.style.zoom = String(Math.max(0.5, z));
+  if (rolar) tvRolar();
+}
+function tvRolar(){
+  const ini = tv.inicio, dur = tv.cfg.seg * 1000;
+  function passo(){
+    if (!tv.ativo || tv.inicio !== ini) return;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    if (max > 0) {
+      const f = Math.min(1, Math.max(0, (Date.now() - ini - 2500) / Math.max(1000, dur - 6000)));
+      window.scrollTo(0, max * f);
+    }
+    tv.scrollRaf = requestAnimationFrame(passo);
+  }
+  tv.scrollRaf = requestAnimationFrame(passo);
+}
+function tvTick(){
+  if (!tv.ativo) return;
+  const agora = Date.now(), d = new Date();
+  document.getElementById('tv-hora').textContent = mtP2(d.getHours()) + ':' + mtP2(d.getMinutes());
+  const dur = tv.cfg.seg * 1000, dec = agora - tv.inicio;
+  document.getElementById('tv-prog-bar').style.width = (tv.pausado ? 100 : Math.min(100, dec / dur * 100)) + '%';
+  if (!tv.pausado && dec >= dur) tvMostrar(tv.idx + 1);
+  // faixa de alertas: gira entre os avisos que estão no sino
+  if (agora - tv.tickerT > 7000) {
+    tv.tickerT = agora;
+    const tx = sinoTextos(), tk = document.getElementById('tv-ticker');
+    if (!tx.length) tk.innerHTML = '';
+    else { tv.tickerI = (tv.tickerI + 1) % tx.length; tk.innerHTML = '<b>🔔 ' + tx.length + '</b>' + mtEsc(tx[tv.tickerI].slice(0, 170)); }
+  }
+  if (tv.mouseT && agora - tv.mouseT > 3500) { tv.mouseT = 0; document.body.classList.remove('tv-mouse'); }
+}
+function tvSair(){
+  if (!tv.ativo) return;
+  tv.ativo = false;
+  clearInterval(tv.timer);
+  tvZerarZoom();
+  document.body.classList.remove('tv', 'tv-mouse');
+  try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch (e) {}
+  try { if (tv.wake) tv.wake.release(); } catch (e) {}
+  tv.wake = null;
+  mostrarView(tv.viewAntes);
+}
+document.getElementById('tv-sair').onclick = tvSair;
+document.getElementById('tv-prev').onclick = function(){ tvMostrar(tv.idx - 1); };
+document.getElementById('tv-next').onclick = function(){ tvMostrar(tv.idx + 1); };
+document.getElementById('tv-pause').onclick = function(){
+  tv.pausado = !tv.pausado;
+  this.textContent = tv.pausado ? '▶' : '⏸';
+  if (!tv.pausado) tv.inicio = Date.now();
+};
+document.addEventListener('mousemove', function(){ if (tv.ativo) { tv.mouseT = Date.now(); document.body.classList.add('tv-mouse'); } });
+document.addEventListener('keydown', function(e){
+  if (!tv.ativo) return;
+  if (e.key === 'Escape') tvSair();
+  else if (e.key === 'ArrowRight') tvMostrar(tv.idx + 1);
+  else if (e.key === 'ArrowLeft') tvMostrar(tv.idx - 1);
+  else if (e.key === ' ') { e.preventDefault(); document.getElementById('tv-pause').click(); }
+});
+document.addEventListener('fullscreenchange', function(){ if (tv.ativo && tv.usouFull && !document.fullscreenElement) tvSair(); });
+// endereço com #tv entra no Modo TV sozinho depois do login (sem tela cheia: o navegador exige um clique para isso)
+(function(){
+  if (!/(^#|[?&])tv\b/.test(location.hash + location.search)) return;
+  let tent = 0;
+  const poll = setInterval(function(){
+    tent++;
+    if (contaAtual) { clearInterval(poll); setTimeout(function(){ const c = tvLerCfg(); c.full = 0; tvIniciar(c); }, 2500); }
+    else if (tent > 120) clearInterval(poll);
+  }, 1000);
 })();
 
 document.querySelectorAll('.topo-toggle-opt').forEach(function(btn){
