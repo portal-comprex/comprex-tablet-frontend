@@ -542,7 +542,7 @@
   .hover-prev-tooltip .hpt-linha b{text-align:right;font-weight:600;margin-left:auto}
   .hover-prev-tooltip .hpt-dica{margin-top:8px;font-size:10.5px;color:#9fd3ae;text-align:center}
   /* ---- Manutenção de Equipamentos (substitui a antiga aba Controladoria) ---- */
-  #view-manut, #view-manut-nova{max-width:1500px}
+  #view-manut-nova{max-width:1500px}
   .mt-sub{font-size:12.5px;color:var(--cinza);margin:-4px 0 14px}
   .mt-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:14px}
   .mt-kpi{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:12px 14px;display:flex;
@@ -669,6 +669,23 @@
   .mt-mini-link{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--navy);cursor:pointer;border:1px solid var(--navy);border-radius:6px;padding:1px 7px;background:transparent}
   .mt-mini-link:hover{background:var(--navy);color:#fff}
 
+
+  /* ===== Manutenção v3: layout espelhado do Painel ===== */
+  .mt-meio{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;align-items:stretch;margin-bottom:16px}
+  .mt-lista-card{display:flex;flex-direction:column;height:640px;box-sizing:border-box;margin:0}
+  .mt-lista-card .mt-scroll{flex:1;min-height:0;overflow:auto}
+  .mt-lista-card .mt-tabela th{position:sticky;top:0;background:var(--card);z-index:1}
+  .mt-col-dir{display:flex;flex-direction:column;gap:16px;height:640px}
+  .mt-col-dir .dash-card{margin:0;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column}
+  .mt-col-dir .mt-card-donut{flex:0 0 250px}
+  .mt-col-dir .mt-card-evo{flex:1;min-height:0}
+  .mt-col-dir .mt-donut-box{flex:1;padding:0;flex-wrap:nowrap}
+  .mt-col-dir .mt-donut-box svg{width:150px;height:150px}
+  .mt-leg-pct{font-weight:400;color:var(--cinza);font-size:11px;margin-left:4px}
+  .mt-filtros .painel-filtro-campo input[type=text]{border:1.5px solid #d8dee3;border-radius:9px;padding:8px 10px;font-size:13px;color:var(--tinta);background:#fff;min-width:0}
+  body.tema-escuro .mt-filtros .painel-filtro-campo input[type=text]{background:#141c24;border-color:#2a3540;color:#dbe9eb}
+  .mt-filtros .painel-filtro-campo.larga{flex:2 1 220px}
+  @media(max-width:1300px){ .mt-meio{grid-template-columns:1fr} .mt-col-dir{height:auto} .mt-col-dir .mt-card-donut,.mt-col-dir .mt-card-evo{flex:none} .mt-lista-card{height:auto;max-height:640px} }
   /* ===== Manutenção v2: Visão Geral no estilo do Painel de Checklist ===== */
   .painel-kpi.azul{background:linear-gradient(135deg,#1f5fa8,#12365f)}
   .painel-kpis.mt-kpis-g{grid-template-columns:repeat(6,1fr);gap:14px}
@@ -3004,36 +3021,56 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <div class="cab mt-cab-al"><span class="pisca"></span><span class="t">⏰ Manutenções atrasadas</span><span id="mt-alerta-num" style="font-size:12px;color:var(--cinza);font-weight:700"></span></div>
     <div class="chips" id="mt-alerta-chips"></div>
   </div>
+  <div id="mt-metas" class="painel-metas"></div>
   <div class="painel-kpis mt-kpis-g" id="mt-kpis"></div>
-  <div class="painel-filtros mt-filtros" id="mt-filtros">
-    <div class="painel-filtro-campo"><label>Etapa</label><select id="mtf-etapa"></select></div>
-    <div class="painel-filtro-campo"><label>Status do prazo</label><select id="mtf-status"><option value="">Todos</option><option value="atrasado">Atrasado</option><option value="atencao">Atenção</option><option value="noprazo">No prazo</option></select></div>
-    <div class="painel-filtro-campo"><label>Tipo de manutenção</label><select id="mtf-tipo"></select></div>
-    <div class="painel-filtro-campo"><label>Responsável</label><select id="mtf-resp"></select></div>
-    <div class="painel-filtro-campo"><label>Local atual</label><select id="mtf-local"></select></div>
-    <div class="painel-filtro-campo"><label>Entrada de</label><input type="date" id="mtf-de"></div>
-    <div class="painel-filtro-campo"><label>Entrada até</label><input type="date" id="mtf-ate"></div>
-    <div class="mt-filtros-acoes">
-      <button type="button" class="mt-btn" id="mtf-limpar">✕ Limpar filtros</button>
-      <button type="button" class="mt-btn" id="mt-rel-imprimir" title="Imprimir ou salvar em PDF a lista filtrada, com os indicadores">🖨 Relatório (PDF)</button>
-      <button type="button" class="mt-btn" id="mt-rel-excel" title="Baixar Excel com equipamentos, peças e eventos da lista filtrada">📊 Excel</button>
+  <div class="mt-meio">
+    <div class="dash-card mt-card mt-lista-card" id="mt-card-lista">
+      <div class="mt-tab-cab">
+        <h3 id="mt-titulo-lista" style="text-transform:uppercase;font-size:12px;letter-spacing:.5px">Equipamentos em Manutenção</h3>
+        <div class="mt-chips" id="mt-chips"></div>
+      </div>
+      <div class="painel-filtros mt-filtros" id="mt-filtros">
+        <div class="painel-filtro-campo larga"><label>Pesquisar</label><input type="text" id="mt-busca" placeholder="Equipamento, motivo, peça…" autocomplete="off"></div>
+        <div class="painel-filtro-campo"><label>Etapa</label><select id="mtf-etapa"></select></div>
+        <div class="painel-filtro-campo"><label>Status do prazo</label><select id="mtf-status"><option value="">Todos</option><option value="atrasado">Atrasado</option><option value="atencao">Atenção</option><option value="noprazo">No prazo</option></select></div>
+        <div class="painel-filtro-campo"><label>Tipo de manutenção</label><select id="mtf-tipo"></select></div>
+        <div class="painel-filtro-campo"><label>Responsável</label><select id="mtf-resp"></select></div>
+        <div class="painel-filtro-campo"><label>Local atual</label><select id="mtf-local"></select></div>
+        <div class="painel-filtro-campo"><label>Entrada de</label><input type="date" id="mtf-de"></div>
+        <div class="painel-filtro-campo"><label>Entrada até</label><input type="date" id="mtf-ate"></div>
+        <div class="painel-filtro-campo" style="min-width:0;flex:0 0 auto;justify-content:flex-end">
+          <label>&nbsp;</label>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="mt-btn" id="mtf-limpar">Limpar filtros</button>
+            <button type="button" class="mt-btn" id="mt-rel-imprimir" title="Imprimir ou salvar em PDF a lista filtrada, com os indicadores">🖨️ PDF</button>
+            <button type="button" class="mt-btn" id="mt-rel-excel" title="Baixar Excel com equipamentos, peças e eventos da lista filtrada">📊 Excel</button>
+          </div>
+        </div>
+      </div>
+      <div class="mt-tabela-wrap mt-scroll">
+        <table class="mt-tabela">
+          <thead><tr><th>Equipamento</th><th>Modelo</th><th>Entrada</th><th>Motivo da parada</th><th>Etapa atual</th><th>Onde está / Pendência</th><th id="mt-th-prev">Previsão retorno</th><th>Dias parados</th><th>Status</th><th></th></tr></thead>
+          <tbody id="mt-tbody"><tr><td colspan="10" class="mt-vazio">Carregando…</td></tr></tbody>
+        </table>
+      </div>
+      <div style="text-align:center;margin-top:10px"><button type="button" class="mt-btn" id="mt-ver-mais" style="display:none"></button></div>
     </div>
-  </div>
-  <div class="mt-graficos">
-    <div class="dash-card mt-card">
-      <div class="painel-card-head"><h3>Por etapa</h3><span style="font-size:11.5px;color:var(--cinza)">clique para filtrar</span></div>
-      <div id="mt-donut" class="mt-donut-box"></div>
-    </div>
-    <div class="dash-card mt-card">
-      <div class="painel-card-head"><h3>Evolução — últimos 14 dias</h3>
-        <div class="chart-toggle" id="mt-evo-toggle"><button type="button" class="ativo" data-dias="14">14 dias</button><button type="button" data-dias="30">30 dias</button></div></div>
-      <div id="mt-evolucao"></div>
-      <div class="mt-leg-linhas"><span><i style="background:#1f5fa8"></i>Equipamentos parados no dia</span><span><i style="background:#c0392b"></i>Entradas no dia</span><span><i style="background:#1e8a4c"></i>Liberações no dia</span></div>
+    <div class="mt-col-dir">
+      <div class="dash-card mt-card mt-card-donut">
+        <div class="painel-card-head"><h3>Distribuição por etapa</h3><span style="font-size:11.5px;color:var(--cinza)">clique para filtrar</span></div>
+        <div id="mt-donut" class="mt-donut-box"></div>
+      </div>
+      <div class="dash-card mt-card mt-card-evo">
+        <div class="painel-card-head"><h3>Evolução dos últimos 14 dias</h3>
+          <div class="chart-toggle" id="mt-evo-toggle"><button type="button" class="ativo" data-dias="14">14 dias</button><button type="button" data-dias="30">30 dias</button></div></div>
+        <div id="mt-evolucao" style="flex:1;min-height:0"></div>
+        <div class="mt-leg-linhas"><span><i style="background:#1f5fa8"></i>Parados no dia</span><span><i style="background:#c0392b"></i>Entradas</span><span><i style="background:#1e8a4c"></i>Liberações</span></div>
+      </div>
     </div>
   </div>
   <div class="mt-baixo">
     <div class="dash-card mt-card painel-card-inferior">
-      <div class="painel-card-head"><h3>⚠️ Atenção necessária</h3><span class="painel-pendentes-num" id="mt-aten-num">0</span></div>
+      <div class="painel-card-head"><h3>⚠️ Atenção necessária <span style="font-weight:400;text-transform:none;color:var(--cinza)">(ação imediata)</span></h3><span class="painel-pendentes-num" id="mt-aten-num">0</span></div>
       <div class="mt-lista-scroll" id="mt-aten"></div>
     </div>
     <div class="dash-card mt-card painel-card-inferior">
@@ -3041,21 +3078,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="mt-lista-scroll" id="mt-pend"></div>
     </div>
     <div class="dash-card mt-card painel-card-inferior">
-      <div class="painel-card-head"><h3>🔁 Problemas mais recorrentes</h3></div>
+      <div class="painel-card-head"><h3>🔁 Problemas mais recorrentes <span style="font-weight:400;text-transform:none;color:var(--cinza)">(todo o histórico)</span></h3></div>
       <div class="mt-lista-scroll" id="mt-rec"></div>
-    </div>
-  </div>
-  <div class="dash-card mt-card" id="mt-card-lista">
-    <div class="mt-tab-cab">
-      <h3 id="mt-titulo-lista">Equipamentos em Manutenção</h3>
-      <div class="mt-chips" id="mt-chips"></div>
-      <div class="mt-busca"><input type="text" id="mt-busca" placeholder="Pesquisar equipamento, motivo, peça…" autocomplete="off"></div>
-    </div>
-    <div class="mt-tabela-wrap">
-      <table class="mt-tabela">
-        <thead><tr><th>Equipamento</th><th>Modelo</th><th>Entrada</th><th>Motivo da parada</th><th>Etapa atual</th><th>Onde está / Pendência</th><th id="mt-th-prev">Previsão retorno</th><th>Dias parados</th><th>Status</th><th></th></tr></thead>
-        <tbody id="mt-tbody"><tr><td colspan="10" class="mt-vazio">Carregando…</td></tr></tbody>
-      </table>
     </div>
   </div>
   <div id="mt-detalhe"></div>
@@ -8098,9 +8122,45 @@ function manutRenderExtras(abertas, pendAll, proxRet, nAt){
     const ir = e.target.closest('[data-mt-ir]'); if (ir) { manutDefinirFiltro(ir.dataset.mtIr); return; }
     const eq = e.target.closest('[data-mt-oc-eq]'); if (eq) manutAbrirFicha(eq.dataset.mtOcEq);
   };
+  manutRenderMetas(abertas, nAt);
   manutRenderDonut(abertas);
   manutRenderEvolucao();
   manutRenderBlocos(abertas, pendAll);
+}
+
+function manutRenderMetas(abertas, nAt){
+  const hoje = mtHoje();
+  const nFrota = frotas.filter(function(eq){ return frotaTipoItem[eq] !== 'implemento'; }).length || 1;
+  const s = mtSerieEvolucao(15);          // 0..14 ; último = hoje
+  const parHoje = abertas.length, par7 = s[s.length - 8].parados;
+  const disp = Math.round((1 - parHoje / nFrota) * 100), disp7 = Math.round((1 - par7 / nFrota) * 100);
+  const ent7 = manutOcorrencias.filter(function(o){ return o.dataEntrada && o.dataEntrada > mtSoma(hoje, -7) && o.dataEntrada <= hoje; }).length;
+  const entAnt = manutOcorrencias.filter(function(o){ return o.dataEntrada && o.dataEntrada > mtSoma(hoje, -14) && o.dataEntrada <= mtSoma(hoje, -7); }).length;
+  const semPrev = abertas.filter(function(o){ return !o.previsao; }).length;
+  function tend(delta, menorMelhor, suf){
+    if (!delta) return '<span class="meta-tend igual">→ estável vs. semana passada</span>';
+    const bom = menorMelhor ? delta < 0 : delta > 0;
+    return '<span class="meta-tend ' + (bom ? 'sobe' : 'desce') + '">' + (delta > 0 ? '▲' : '▼') + ' ' + Math.abs(delta) + (suf || '') + ' vs. semana passada</span>';
+  }
+  const tiles = [
+    { cl: 'neutro', lbl: 'Disponibilidade da frota', sinal: '🚜', val: disp + '%', meta: (nFrota - parHoje) + ' de ' + nFrota + ' em operação', tend: tend(disp - disp7, false, 'pp'), acao: 'operacao' },
+    { cl: 'neutro', lbl: 'Entradas nos últimos 7 dias', sinal: '📥', val: String(ent7), meta: 'equipamentos que entraram na manutenção', tend: tend(ent7 - entAnt, true, ''), acao: 'todos' },
+    { cl: nAt ? 'ruim' : 'ok', lbl: 'Manutenções atrasadas', sinal: nAt ? '⚠️' : '✅', val: String(nAt), meta: 'Meta = 0', tend: '', acao: 'atrasados' },
+    { cl: semPrev ? 'ruim' : 'ok', lbl: 'Sem previsão de retorno', sinal: semPrev ? '⚠️' : '✅', val: String(semPrev), meta: 'Meta = 0', tend: '', acao: 'semprev' }
+  ];
+  const cont = document.getElementById('mt-metas');
+  cont.innerHTML = tiles.map(function(t){
+    return '<div class="meta-tile ' + t.cl + '" data-mt-meta="' + t.acao + '" style="cursor:pointer"><div class="meta-top"><span class="meta-lbl">' + t.lbl + '</span><span class="meta-sinal">' + t.sinal + '</span></div>' +
+      '<div class="meta-val">' + t.val + '</div><div class="meta-meta">' + t.meta + '</div>' + t.tend + '</div>';
+  }).join('');
+  cont.querySelectorAll('[data-mt-meta]').forEach(function(el){
+    el.onclick = function(){
+      const a = el.dataset.mtMeta;
+      if (a === 'operacao') { mostrarView('localizacao-atual'); return; }
+      if (a === 'semprev') { Object.keys(manutFx).forEach(function(k){ manutFx[k] = ''; }); manutFx.status = 'atencao'; manutFiltro = 'todos'; manutRenderTudo(); return; }
+      manutDefinirFiltro(a);
+    };
+  });
 }
 function manutRenderDonut(abertas){
   const dados = MANUT_ETAPAS.map(function(e){ return { e: e, n: abertas.filter(function(o){ return o.etapa === e; }).length }; });
@@ -8114,7 +8174,7 @@ function manutRenderDonut(abertas){
     off += len; return s;
   }).join('');
   box.innerHTML = '<svg viewBox="0 0 170 170">' + arcos + '<text pointer-events="none" x="85" y="87" text-anchor="middle" font-size="30" font-weight="800" fill="currentColor">' + total + '</text><text pointer-events="none" x="85" y="106" text-anchor="middle" font-size="10.5" fill="#8a97a3">em manutenção</text></svg>' +
-    '<div class="mt-donut-leg">' + dados.map(function(d){ return '<div data-mt-etapa="' + d.e + '"><i style="background:' + MT_COR_ETAPA[d.e] + '"></i>' + d.e + '<b>' + d.n + '</b></div>'; }).join('') + '</div>';
+    '<div class="mt-donut-leg">' + dados.map(function(d){ return '<div data-mt-etapa="' + d.e + '"><i style="background:' + MT_COR_ETAPA[d.e] + '"></i>' + d.e + '<b>' + d.n + '<span class="mt-leg-pct">(' + Math.round(d.n / total * 100) + '%)</span></b></div>'; }).join('') + '</div>';
   box.onclick = function(e){
     const el = e.target.closest('[data-mt-etapa]'); if (!el) return;
     manutFx.etapa = manutFx.etapa === el.dataset.mtEtapa ? '' : el.dataset.mtEtapa;
@@ -8329,16 +8389,29 @@ function manutListaFiltrada(){
     return d || (mtDiasParados(b) - mtDiasParados(a));
   });
 }
+let manutLimite = 12, manutSigLista = '';
 function manutRenderTabela(){
   const lista = manutListaFiltrada();
+  const sig = JSON.stringify([manutFx, manutFiltro, document.getElementById('mt-busca').value]);
+  if (sig !== manutSigLista) { manutSigLista = sig; manutLimite = 12; }
   const tb = document.getElementById('mt-tbody');
   if (!lista.length) {
+    document.getElementById('mt-ver-mais').style.display = 'none';
     tb.innerHTML = '<tr><td colspan="10" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
     document.getElementById('mt-detalhe').innerHTML = '';
     return;
   }
   if (!lista.some(function(o){ return o.id === manutSelId; })) manutSelId = lista[0].id;
-  tb.innerHTML = lista.map(function(oc){
+  const idxSel = lista.findIndex(function(o){ return o.id === manutSelId; });
+  if (idxSel >= manutLimite) manutLimite = idxSel + 1;
+  const visiveis = lista.slice(0, manutLimite);
+  const bv = document.getElementById('mt-ver-mais');
+  if (lista.length > visiveis.length) {
+    bv.style.display = ''; const r = lista.length - visiveis.length;
+    bv.textContent = 'Ver mais equipamentos (' + r + ' restante' + (r > 1 ? 's' : '') + ')';
+    bv.onclick = function(){ manutLimite += 12; manutRenderTabela(); };
+  } else bv.style.display = 'none';
+  tb.innerHTML = visiveis.map(function(oc){
     const st = mtStatusPrazo(oc);
     const dias = mtDiasParados(oc);
     const prev = mtAberta(oc) ? mtBR(oc.previsao) : mtBR(oc.dataSaida);
