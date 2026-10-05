@@ -573,6 +573,20 @@
   .mt-linha.sel td{background:var(--cream);box-shadow:inset 0 0 0 0 transparent}
   .mt-linha.sel td:first-child{box-shadow:inset 3px 0 0 var(--navy)}
   .mt-eq{font-weight:800}
+  .mt-eq-cel{display:flex;align-items:center;gap:10px}
+  .mt-eq-foto{width:46px;height:46px;border-radius:9px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0}
+  .mt-eq-foto img{width:100%;height:100%;object-fit:cover;display:block}
+  .mt-eq-tipo{font-size:10.5px;color:var(--cinza);font-weight:400;line-height:1.3}
+  .oc-painel-modal.mt-painel-modal{max-width:1020px !important}
+  .mt-painel-modal .hist-detalhe-corpo{padding:16px 18px;overflow-y:auto}
+  .mt-painel-modal .mt-card{box-shadow:none;border:0;padding:0;margin:0}
+  .mt-painel-modal .mt-ficha-topo{grid-template-columns:150px 1fr;gap:14px}
+  .mt-painel-modal .mt-ficha-topo > .mt-prev-card, .mt-painel-modal .mt-ficha-topo > .mt-motivo-card{grid-column:1 / -1}
+  .mt-ficha-foto{width:150px;height:116px;border-radius:12px;background:var(--cream);border:1px solid var(--linha);display:flex;align-items:center;justify-content:center;font-size:42px;overflow:hidden}
+  .mt-ficha-foto img{width:100%;height:100%;object-fit:cover;display:block}
+  body.tema-escuro .mt-painel-modal{background:var(--card)}
+  body.tema-escuro .mt-eq-foto, body.tema-escuro .mt-ficha-foto{background:#0f1720}
+  @media(max-width:760px){ .mt-painel-modal .mt-ficha-topo{grid-template-columns:1fr} }
   .mt-etapa,.mt-st{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:7px;white-space:nowrap}
   .mt-etapa.e-diag{background:rgba(142,68,173,.16);color:#8e44ad}
   .mt-etapa.e-manut{background:rgba(52,120,220,.16);color:#2f6fd0}
@@ -3167,7 +3181,6 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="mt-box"><h4>💰 Custo de peças por equipamento</h4><div id="mt-ind-custo"></div></div>
     </div>
   </div>
-  <div id="mt-detalhe"></div>
 </div>
 <div class="view" id="view-manut-nova">
   <div class="mt-sub">Registre a entrada de um equipamento na manutenção. Isso abre a ficha, muda o status dele para EM MANUTENÇÃO e registra a movimentação.</div>
@@ -3318,6 +3331,15 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       </div>
     </div>
     <div class="hist-detalhe-corpo" id="pd-detalhe-corpo"></div>
+  </div>
+</div>
+<div class="hist-detalhe-overlay oc-painel-lateral" id="mt-ficha-overlay">
+  <div class="hist-detalhe-modal oc-painel-modal mt-painel-modal">
+    <div class="hist-detalhe-header">
+      <h3>🔧 Ficha de manutenção — <span id="mt-ficha-titulo"></span></h3>
+      <button class="modal-fechar" id="mt-ficha-fechar" style="color:#1a2430">✕</button>
+    </div>
+    <div class="hist-detalhe-corpo" id="mt-detalhe"></div>
   </div>
 </div>
 <div class="hist-detalhe-overlay oc-painel-lateral" id="oc-equip-overlay">
@@ -8755,6 +8777,7 @@ function manutRenderTabela(){
     document.getElementById('mt-ver-mais').style.display = 'none';
     tb.innerHTML = '<tr><td colspan="10" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
     document.getElementById('mt-detalhe').innerHTML = '';
+    mtFecharPainelFicha();
     return;
   }
   if (!lista.some(function(o){ return o.id === manutSelId; })) manutSelId = lista[0].id;
@@ -8772,7 +8795,7 @@ function manutRenderTabela(){
     const dias = mtDiasParados(oc);
     const prev = mtAberta(oc) ? mtBR(oc.previsao) : mtBR(oc.dataSaida);
     return '<tr class="mt-linha' + (oc.id === manutSelId ? ' sel' : '') + '" data-mt-oc="' + oc.id + '">' +
-      '<td class="mt-eq">' + mtEsc(oc.equipamento) + mtBadgePri(oc.prioridade) + '</td>' +
+      '<td class="mt-eq"><div class="mt-eq-cel"><div class="mt-eq-foto" data-mt-foto="' + mtEsc(oc.equipamento) + '">' + (frotaTipoItem[oc.equipamento] === 'implemento' ? '🔧' : '🚜') + '</div><div>' + mtEsc(oc.equipamento) + mtBadgePri(oc.prioridade) + '</div></div></td>' +
       '<td title="' + mtEsc(frotaDescricao[oc.equipamento] || '') + '">' + mtEsc((frotaDescricao[oc.equipamento] || '—').slice(0, 26)) + '</td>' +
       '<td>' + mtBR(oc.dataEntrada) + '</td>' +
       '<td>' + mtEsc(oc.motivo || '—') + '</td>' +
@@ -8788,15 +8811,31 @@ function manutRenderTabela(){
       manutSelId = tr.dataset.mtOc;
       tb.querySelectorAll('.mt-linha').forEach(function(x){ x.classList.toggle('sel', x === tr); });
       manutRenderDetalhe();
-      document.getElementById('mt-detalhe').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      mtAbrirPainelFicha();
     };
+  });
+  tb.querySelectorAll('[data-mt-foto]').forEach(function(box){
+    buscarUrlFotoEquipamento(box.dataset.mtFoto).then(function(url){
+      if (url) box.innerHTML = '<img src="' + url + '" alt="">';
+    }).catch(function(){});
   });
   manutRenderDetalhe();
   if (manutRolarParaFicha) {
     manutRolarParaFicha = false;
-    setTimeout(function(){ document.getElementById('mt-detalhe').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    mtAbrirPainelFicha();
   }
 }
+function mtAbrirPainelFicha(){ document.getElementById('mt-ficha-overlay').classList.add('aberto'); }
+function mtFecharPainelFicha(){ document.getElementById('mt-ficha-overlay').classList.remove('aberto'); }
+document.getElementById('mt-ficha-fechar').onclick = mtFecharPainelFicha;
+document.getElementById('mt-ficha-overlay').onclick = function(e){ if (e.target === this) mtFecharPainelFicha(); };
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && document.getElementById('mt-ficha-overlay').classList.contains('aberto') && !document.getElementById('mt-modal-overlay').classList.contains('aberto')) mtFecharPainelFicha();
+});
+(function(){
+  const orig = mostrarView;
+  mostrarView = function(){ mtFecharPainelFicha(); return orig.apply(this, arguments); };
+})();
 document.getElementById('mt-busca').addEventListener('input', manutRenderTabela);
 
 /* ---------- ficha do equipamento ---------- */
@@ -8854,7 +8893,7 @@ function manutRenderDetalhe(){
   const abas = [['timeline', 'Linha do Tempo'], ['itens', 'Itens de serviço (' + mtProgresso(oc).feitos + '/' + mtProgresso(oc).total + ')'], ['pecas', 'Componentes / Peças (' + mtPecasDe(oc).length + ')'], ['custos', 'Custos'], ['mov', 'Histórico de Movimentações']];
   cont.innerHTML = '<div class="dash-card mt-card">' +
     '<div class="mt-ficha-topo">' +
-      '<div class="mt-ficha-icone">' + (frotaTipoItem[eq] === 'implemento' ? '🔧' : '🚜') + '</div>' +
+      '<div class="mt-ficha-foto" id="mt-ficha-foto">' + (frotaTipoItem[eq] === 'implemento' ? '🔧' : '🚜') + '</div>' +
       '<div><div class="mt-ficha-nome"><a data-mt-acao="loc" title="Ver na Localização Atual">' + mtEsc(eq) + '</a>' +
         (aberta ? '<span class="mt-etapa ' + mtClasseEtapa(oc.etapa) + '">' + mtEsc(oc.etapa) + '</span>' : '') +
         '<span class="mt-st s-' + st.chave + '">' + st.texto + '</span>' + mtBadgePri(oc.prioridade) + '</div>' +
@@ -8884,6 +8923,11 @@ function manutRenderDetalhe(){
     '<div class="mt-abas">' + abas.map(function(a){ return '<button type="button" class="mt-aba' + (manutAba === a[0] ? ' ativo' : '') + '" data-mt-acao="aba" data-id="' + a[0] + '">' + a[1] + '</button>'; }).join('') + '</div>' +
     '<div id="mt-aba-corpo">' + (manutAba === 'itens' ? mtAbaItens(oc) : manutAba === 'pecas' ? mtAbaPecas(oc) : manutAba === 'custos' ? mtAbaCustos(oc) : manutAba === 'mov' ? mtAbaMov(oc) : mtAbaTimeline(oc)) + '</div>' +
   '</div>';
+  const tit = document.getElementById('mt-ficha-titulo'); if (tit) tit.textContent = eq;
+  buscarUrlFotoEquipamento(eq).then(function(url){
+    const f = document.getElementById('mt-ficha-foto');
+    if (url && f && manutSelId === oc.id) f.innerHTML = '<img src="' + url + '" alt="">';
+  }).catch(function(){});
   cont.onclick = function(e){
     const el = e.target.closest('[data-mt-acao]');
     if (!el) return;
