@@ -615,6 +615,21 @@
   .mt-obs-tit{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza)}
   .mt-obs-txt{font-size:13px;line-height:1.5;white-space:pre-wrap;color:var(--tinta);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .mt-obs.aberta .mt-obs-txt{display:block;-webkit-line-clamp:unset;overflow:visible}
+
+  .mt-pri{display:inline-block;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:6px;vertical-align:middle;margin-left:4px;white-space:nowrap}
+  .mt-pri.crit{background:rgba(192,57,43,.14);color:#a8281c}
+  .mt-pri.alta{background:rgba(230,126,34,.16);color:#b25e17}
+  .mt-mini-prog{height:4px;border-radius:4px;background:rgba(120,130,140,.22);margin-top:5px;overflow:hidden;min-width:70px}
+  .mt-mini-prog i{display:block;height:100%;background:#1e8a4c}
+  .mt-mini-txt{font-size:10px;color:var(--cinza);margin-top:2px}
+  .mt-prog-geral{display:flex;align-items:center;gap:12px;margin:4px 0 12px;font-size:12.5px}
+  .mt-prog-barra{flex:1;height:10px;border-radius:8px;background:rgba(120,130,140,.22);overflow:hidden}
+  .mt-prog-barra i{display:block;height:100%;background:linear-gradient(90deg,#1e8a4c,#4fc27c)}
+  .mt-it-st{border:none;border-radius:999px;padding:4px 12px;font-size:11.5px;font-weight:800;cursor:pointer}
+  .mt-it-st.pend{background:rgba(120,130,140,.2);color:var(--cinza)}
+  .mt-it-st.faz{background:rgba(230,126,34,.2);color:#b25e17}
+  .mt-it-st.ok{background:rgba(39,174,96,.2);color:#1e8a4c}
+  #mt-ind .painel-metas{margin-bottom:14px}
   .mt-ficha-acoes{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
   .mt-btn{border:1px solid var(--linha);background:var(--card);color:var(--tinta);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
   .mt-btn:hover{border-color:var(--navy);background:var(--cream)}
@@ -3077,7 +3092,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   <div id="mt-aviso"></div>
   <div id="mt-resumo" class="painel-resumo" style="display:none"><div class="ico">🧭</div><div class="txt" id="mt-resumo-txt"></div></div>
   <div id="mt-alerta" class="painel-alerta-imp" style="display:none">
-    <div class="cab mt-cab-al"><span class="pisca"></span><span class="t">⏰ Manutenções atrasadas</span><span id="mt-alerta-num" style="font-size:12px;color:var(--cinza);font-weight:700"></span></div>
+    <div class="cab mt-cab-al"><span class="pisca"></span><span class="t">⏰ Manutenções atrasadas</span><span id="mt-alerta-num" style="font-size:12px;color:var(--cinza);font-weight:700"></span>
+      <span style="margin-left:auto;display:flex;gap:6px"><button type="button" class="mt-btn mini" data-mt-avisar="email">✉️ Resumo por e-mail</button><button type="button" class="mt-btn mini" data-mt-avisar="teams">💬 Teams</button></span></div>
     <div class="chips" id="mt-alerta-chips"></div>
   </div>
   <div id="mt-metas" class="painel-metas"></div>
@@ -3094,6 +3110,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <div class="painel-filtro-campo"><label>Status do prazo</label><select id="mtf-status"><option value="">Todos</option><option value="atrasado">Atrasado</option><option value="atencao">Atenção</option><option value="noprazo">No prazo</option></select></div>
         <div class="painel-filtro-campo"><label>Tipo de manutenção</label><select id="mtf-tipo"></select></div>
         <div class="painel-filtro-campo"><label>Responsável</label><select id="mtf-resp"></select></div>
+        <div class="painel-filtro-campo" id="mtf-prior-campo"><label>Prioridade</label><select id="mtf-prior"><option value="">Todas</option><option>Crítica</option><option>Alta</option><option>Normal</option></select></div>
         <div class="painel-filtro-campo"><label>Local atual</label><select id="mtf-local"></select></div>
         <div class="painel-filtro-campo"><label>Entrada de</label><input type="date" id="mtf-de"></div>
         <div class="painel-filtro-campo"><label>Entrada até</label><input type="date" id="mtf-ate"></div>
@@ -3141,6 +3158,15 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="mt-lista-scroll" id="mt-rec"></div>
     </div>
   </div>
+  <div class="dash-card mt-card" id="mt-ind">
+    <div class="painel-card-head"><h3>📊 Indicadores de manutenção</h3>
+      <div class="chart-toggle" id="mt-ind-toggle"><button type="button" data-dias="30">30 dias</button><button type="button" class="ativo" data-dias="90">90 dias</button><button type="button" data-dias="365">12 meses</button><button type="button" data-dias="0">Tudo</button></div></div>
+    <div class="painel-metas" id="mt-ind-tiles"></div>
+    <div class="mt-duas">
+      <div class="mt-box"><h4>🔁 Equipamentos que mais voltam para a manutenção</h4><div id="mt-ind-reinc"></div></div>
+      <div class="mt-box"><h4>💰 Custo de peças por equipamento</h4><div id="mt-ind-custo"></div></div>
+    </div>
+  </div>
   <div id="mt-detalhe"></div>
 </div>
 <div class="view" id="view-manut-nova">
@@ -3181,6 +3207,10 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="campo">
         <label>Etapa inicial</label>
         <select id="mtn-etapa"></select>
+      </div>
+      <div class="campo" id="mtn-prior-campo">
+        <label>Prioridade</label>
+        <select id="mtn-prior"><option>Normal</option><option>Alta</option><option>Crítica</option></select>
       </div>
       <div class="campo">
         <label>Onde o equipamento ficará</label>
@@ -7827,12 +7857,14 @@ document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
    Tudo se liga ao que já existe: Frota (status/previsão), Movimentações
    (entrada e saída) e as telas Localização Atual / Status dos Equipamentos.
    ===================================================================== */
-const MANUT_NOMES_LISTAS = { ocorrencias: 'ManutOcorrencias', pecas: 'ManutPecas', eventos: 'ManutEventos' };
+const MANUT_NOMES_LISTAS = { ocorrencias: 'ManutOcorrencias', pecas: 'ManutPecas', eventos: 'ManutEventos', itens: 'ManutItens' };
+const MANUT_PRIORIDADES = ['Normal', 'Alta', 'Crítica'];
+const MANUT_STATUS_ITEM = ['Pendente', 'Fazendo', 'Feito'];
 const MANUT_ETAPAS = ['Diagnóstico', 'Em manutenção', 'Aguardando peça', 'Reparo externo', 'Montagem/Testes'];
 const MANUT_SITUACOES_PECA = ['Aguardando', 'Em trânsito', 'Em reparo externo', 'Recebida'];
 const MANUT_DIAS_MONTAGEM = 7; // prazo padrão (montagem + testes) somado à chegada da última peça
 let manutListaIds = null;
-let manutOcorrencias = [], manutPecas = [], manutEventos = [];
+let manutOcorrencias = [], manutPecas = [], manutEventos = [], manutItens = [];
 let manutCarregado = false;
 let manutFiltro = 'todos';   // todos | em | aguardando | externo | atrasados | retorno15 | historico
 let manutSelId = null;       // id da ocorrência aberta no painel de detalhe
@@ -7876,7 +7908,7 @@ async function manutResolverListas(){
   const ids = {}, faltam = [];
   Object.keys(MANUT_NOMES_LISTAS).forEach(function(k){
     const id = porNome[MANUT_NOMES_LISTAS[k].toLowerCase()];
-    if (id) ids[k] = id; else faltam.push(MANUT_NOMES_LISTAS[k]);
+    if (id) ids[k] = id; else if (k !== 'itens') faltam.push(MANUT_NOMES_LISTAS[k]);
   });
   if (faltam.length) { const e = new Error('Listas não encontradas: ' + faltam.join(', ')); e.faltam = faltam; throw e; }
   manutListaIds = ids;
@@ -7888,19 +7920,29 @@ async function manutResolverListas(){
 const MANUT_COLUNAS = {
   ocorrencias: ['Title', 'DataEntrada', 'Etapa', 'Motivo', 'Tipo', 'Responsavel', 'PrevisaoRetorno', 'DataSaida', 'Situacao', 'Observacao'],
   pecas: ['Title', 'OcorrenciaId', 'Equipamento', 'Situacao', 'Destino', 'DataEnvio', 'PrevisaoOriginal', 'PrevisaoRetorno', 'RetornoReal', 'Documento', 'Custo'],
-  eventos: ['Title', 'OcorrenciaId', 'Equipamento', 'Data', 'Responsavel', 'Realizado']
+  eventos: ['Title', 'OcorrenciaId', 'Equipamento', 'Data', 'Responsavel', 'Realizado'],
+  itens: ['Title', 'OcorrenciaId', 'Equipamento', 'Status', 'DataConclusao']
 };
-let manutColMap = {}, manutColFaltando = [];
+/* colunas OPCIONAIS: recursos novos; se não existirem, o portal continua funcionando sem eles */
+const MANUT_COLUNAS_OPC = { ocorrencias: ['DataInicio', 'Prioridade'] };
+let manutColMap = {}, manutColFaltando = [], manutColOpcFaltando = [];
 function mtNormNome(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
 async function manutMapearColunas(){
-  manutColMap = {}; manutColFaltando = [];
+  manutColMap = {}; manutColFaltando = []; manutColOpcFaltando = [];
   for (const chave of Object.keys(MANUT_COLUNAS)) {
+    if (!manutListaIds[chave]) continue;
     let cols = [];
     try {
       const d = await graphGet(GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/columns?$select=name,displayName,readOnly,text&$top=500');
       cols = (d.value || []).filter(function(c){ return !c.readOnly || c.name === 'Title'; });
     } catch (e) { cols = null; }
     manutColMap[chave] = {};
+    (MANUT_COLUNAS_OPC[chave] || []).forEach(function(L){
+      if (cols === null) { manutColMap[chave][L] = L; return; }
+      const n = mtNormNome(L);
+      const c = cols.find(function(x){ return mtNormNome(x.name) === n; }) || cols.find(function(x){ return mtNormNome(x.displayName) === n; });
+      if (c) manutColMap[chave][L] = c.name; else manutColOpcFaltando.push({ lista: MANUT_NOMES_LISTAS[chave], coluna: L });
+    });
     MANUT_COLUNAS[chave].forEach(function(L){
       if (cols === null) { manutColMap[chave][L] = L; return; }   // sem permissão para listar colunas: assume o nome padrão
       const n = mtNormNome(L);
@@ -7927,6 +7969,7 @@ function mtGravarCampos(chave, campos){
   const m = manutColMap[chave] || {}, out = {}, faltam = [];
   Object.keys(campos).forEach(function(L){
     if (m[L]) out[m[L]] = campos[L];
+    else if ((MANUT_COLUNAS_OPC[chave] || []).indexOf(L) !== -1) { /* coluna opcional ausente: ignora */ }
     else if (MANUT_COLUNAS[chave].indexOf(L) !== -1) faltam.push(L);
     else out[L] = campos[L];
   });
@@ -7947,7 +7990,8 @@ function mtMapOcorrencia(i){
   const f = i.fields || {};
   return { id: String(i.id), equipamento: (f.Title || '').trim(), dataEntrada: mtData(f.DataEntrada), etapa: f.Etapa || 'Diagnóstico',
     motivo: f.Motivo || '', tipo: f.Tipo || '', responsavel: f.Responsavel || '', previsao: mtData(f.PrevisaoRetorno),
-    dataSaida: mtData(f.DataSaida), situacao: f.Situacao || 'Aberta', observacao: f.Observacao || '' };
+    dataSaida: mtData(f.DataSaida), situacao: f.Situacao || 'Aberta', observacao: f.Observacao || '',
+    inicio: mtData(f.DataInicio), prioridade: MANUT_PRIORIDADES.indexOf(f.Prioridade) !== -1 ? f.Prioridade : 'Normal' };
 }
 function mtMapPeca(i){
   const f = i.fields || {};
@@ -7961,10 +8005,16 @@ function mtMapEvento(i){
   return { id: String(i.id), texto: f.Title || '', ocId: String(f.OcorrenciaId || ''), equipamento: f.Equipamento || '',
     data: mtData(f.Data), responsavel: f.Responsavel || '', realizado: !!f.Realizado };
 }
-const MT_MAPAS = { ocorrencias: mtMapOcorrencia, pecas: mtMapPeca, eventos: mtMapEvento };
+function mtMapItem(i){
+  const f = i.fields || {};
+  return { id: String(i.id), texto: f.Title || '', ocId: String(f.OcorrenciaId || ''), equipamento: f.Equipamento || '',
+    status: MANUT_STATUS_ITEM.indexOf(f.Status) !== -1 ? f.Status : 'Pendente', dataConclusao: mtData(f.DataConclusao) };
+}
+const MT_MAPAS = { ocorrencias: mtMapOcorrencia, pecas: mtMapPeca, eventos: mtMapEvento, itens: mtMapItem };
 function mtAtribuir(chave, lista){
   if (chave === 'ocorrencias') manutOcorrencias = lista;
   else if (chave === 'pecas') manutPecas = lista;
+  else if (chave === 'itens') manutItens = lista;
   else manutEventos = lista;
 }
 async function manutRecarregar(chave){
@@ -7975,7 +8025,8 @@ async function manutRecarregar(chave){
 async function manutCarregarDados(forcar){
   if (manutCarregado && !forcar) return;
   const ids = await manutResolverListas();
-  const r = await Promise.all([manutLerLista(ids.ocorrencias), manutLerLista(ids.pecas), manutLerLista(ids.eventos)]);
+  const r = await Promise.all([manutLerLista(ids.ocorrencias), manutLerLista(ids.pecas), manutLerLista(ids.eventos), ids.itens ? manutLerLista(ids.itens) : Promise.resolve([])]);
+  manutItens = r[3].map(function(i){ return mtMapItem(mtLerCampos('itens', i)); });
   manutOcorrencias = r[0].map(function(i){ return mtMapOcorrencia(mtLerCampos('ocorrencias', i)); });
   manutPecas = r[1].map(function(i){ return mtMapPeca(mtLerCampos('pecas', i)); });
   manutEventos = r[2].map(function(i){ return mtMapEvento(mtLerCampos('eventos', i)); });
@@ -8001,6 +8052,50 @@ function mtPecasDe(oc){ return manutPecas.filter(function(p){ return p.ocId === 
 function mtPendentes(oc){ return mtPecasDe(oc).filter(function(p){ return p.situacao !== 'Recebida'; }); }
 function mtEventosDe(oc){ return manutEventos.filter(function(e){ return e.ocId === oc.id; }); }
 function mtDiasParados(oc){ return Math.max(0, mtDias(oc.dataEntrada || mtHoje(), oc.dataSaida || mtHoje())); }
+
+/* ---------- novas regras: início, prioridade, itens de serviço, prazo de montagem aprendido ---------- */
+function mtTemColuna(chave, L){ return !!(manutColMap[chave] && manutColMap[chave][L]); }
+function mtItensDe(oc){ return manutItens.filter(function(i){ return i.ocId === oc.id; }); }
+function mtProgresso(oc){
+  const it = mtItensDe(oc), f = it.filter(function(i){ return i.status === 'Feito'; }).length;
+  return { total: it.length, feitos: f, pct: it.length ? Math.round(f / it.length * 100) : 0 };
+}
+function mtInicio(oc){
+  if (oc.inicio) return oc.inicio;
+  const ev = mtEventosDe(oc).filter(function(e){ return /^in[ií]cio/i.test(e.texto) && e.data; }).sort(function(a, b){ return a.data.localeCompare(b.data); })[0];
+  return ev ? ev.data : '';
+}
+function mtEsperaInicio(oc){
+  const i = mtInicio(oc);
+  return i && oc.dataEntrada ? Math.max(0, mtDias(oc.dataEntrada, i)) : null;
+}
+function mtRankPri(p){ return { 'Crítica': 0, 'Alta': 1 }[p] !== undefined ? { 'Crítica': 0, 'Alta': 1 }[p] : 2; }
+function mtBadgePri(p){
+  if (p === 'Crítica') return ' <span class="mt-pri crit" title="Prioridade crítica">🔴 Crítica</span>';
+  if (p === 'Alta') return ' <span class="mt-pri alta" title="Prioridade alta">🟠 Alta</span>';
+  return '';
+}
+function mtMediana(v){
+  if (!v.length) return null;
+  const s = v.slice().sort(function(a, b){ return a - b; }), m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+}
+/* dias entre a chegada da última peça e a liberação, aprendidos das manutenções já concluídas (por tipo; senão geral; senão padrão) */
+function mtDiasMontagemInfo(tipo){
+  const amostras = [];
+  manutOcorrencias.forEach(function(o){
+    if (mtAberta(o) || !o.dataSaida) return;
+    const rec = mtPecasDe(o).map(function(p){ return p.retornoReal; }).filter(Boolean).sort().pop();
+    if (!rec || rec > o.dataSaida) return;
+    amostras.push({ tipo: o.tipo || '', dias: mtDias(rec, o.dataSaida) });
+  });
+  const dtipo = tipo ? amostras.filter(function(a){ return a.tipo === tipo; }).map(function(a){ return a.dias; }) : [];
+  if (dtipo.length >= 2) return { dias: mtMediana(dtipo), n: dtipo.length, origem: 'mediana de ' + dtipo.length + ' manutenções do tipo “' + tipo + '”' };
+  const todos = amostras.map(function(a){ return a.dias; });
+  if (todos.length >= 3) return { dias: mtMediana(todos), n: todos.length, origem: 'mediana de ' + todos.length + ' manutenções concluídas' };
+  return { dias: MANUT_DIAS_MONTAGEM, n: 0, origem: 'prazo padrão — ainda sem histórico suficiente' };
+}
+function mtUltimaPeca(oc){ return mtPendentes(oc).map(function(p){ return p.previsao; }).filter(Boolean).sort().pop() || ''; }
 function mtGargalo(oc){
   const pend = mtPendentes(oc);
   if (!pend.length) return null;
@@ -8010,7 +8105,7 @@ function mtSugestaoPrevisao(oc){
   const pend = mtPendentes(oc).filter(function(p){ return p.previsao; });
   if (!pend.length) return '';
   const ultima = pend.map(function(p){ return p.previsao; }).sort().pop();
-  return mtSoma(ultima, MANUT_DIAS_MONTAGEM);
+  return mtSoma(ultima, mtDiasMontagemInfo(oc.tipo).dias);
 }
 function mtStatusPrazo(oc){
   if (!mtAberta(oc)) return { chave: 'concluida', texto: 'Concluída' };
@@ -8031,13 +8126,14 @@ function mtOnde(oc){
   if (g) return g.nome + (g.destino ? ' · ' + g.destino : '');
   return frotaLocalAtual[oc.equipamento] || '—';
 }
-let manutFx = { etapa: '', status: '', tipo: '', resp: '', local: '', de: '', ate: '' };
+let manutFx = { etapa: '', status: '', tipo: '', resp: '', prior: '', local: '', de: '', ate: '' };
 function mtPassaFx(oc){
   const f = manutFx;
   if (f.etapa && (mtAberta(oc) ? oc.etapa : 'Concluída') !== f.etapa) return false;
   if (f.status && mtStatusPrazo(oc).chave !== f.status) return false;
   if (f.tipo && (oc.tipo || '') !== f.tipo) return false;
   if (f.resp && (oc.responsavel || '') !== f.resp) return false;
+  if (f.prior && oc.prioridade !== f.prior) return false;
   if (f.local && (frotaLocalAtual[oc.equipamento] || '') !== f.local) return false;
   if (f.de && (oc.dataEntrada || '') < f.de) return false;
   if (f.ate && (oc.dataEntrada || '') > f.ate) return false;
@@ -8094,6 +8190,10 @@ async function carregarManutencao(){
         manutColFaltando.map(function(c){ return c.msg ? c.msg : 'Lista <b>' + mtEsc(c.lista) + '</b>: coluna <b>' + mtEsc(c.coluna) + '</b>'; }).join('<br>') +
         '<br>Colunas que faltam: crie com <b>exatamente</b> esse nome (sem espaço e sem acento). Depois recarregue com Ctrl+F5.</div>';
     } else avc.innerHTML = '';
+    const sugest = [];
+    if (!manutListaIds.itens) sugest.push('Lista <b>ManutItens</b> (itens de serviço da ficha): colunas <b>OcorrenciaId</b>, <b>Equipamento</b>, <b>Status</b> (texto) e <b>DataConclusao</b> (data).');
+    manutColOpcFaltando.forEach(function(c){ sugest.push('Lista <b>' + mtEsc(c.lista) + '</b>: coluna <b>' + mtEsc(c.coluna) + '</b> (' + (c.coluna === 'DataInicio' ? 'data' : 'uma linha de texto') + ').'); });
+    if (sugest.length) avc.innerHTML += '<div class="mt-aviso">💡 <b>Recursos novos disponíveis — crie no SharePoint para ativar (opcional):</b><br>' + sugest.join('<br>') + '<br>Depois recarregue com Ctrl+F5.</div>';
     document.getElementById('mt-card-lista').style.display = '';
     manutRenderTudo();
   } catch (err) {
@@ -8122,12 +8222,18 @@ async function manutCarregarFichaMHS0013(){
   const ano = new Date().getFullYear();
   const d = function(m, dia){ return ano + '-' + mtP2(m) + '-' + mtP2(dia); };
   await manutCriar('ocorrencias', { Title: eq, DataEntrada: d(10, 1), Etapa: 'Reparo externo', Motivo: 'ESTABILIZADORES ESTOURADOS', Tipo: 'Estabilizadores / cubo da roda',
-    Responsavel: '', PrevisaoRetorno: d(10, 6), Situacao: 'Aberta', Observacao: obs });
+    Responsavel: '', PrevisaoRetorno: d(10, 6), Situacao: 'Aberta', Observacao: obs, DataInicio: d(10, 2) });
   await manutRecarregar('ocorrencias');
   const oc = mtOcAbertaDe(eq);
   await manutCriar('eventos', { Title: 'Início da manutenção', OcorrenciaId: oc.id, Equipamento: eq, Data: d(10, 2), Responsavel: '', Realizado: true });
   await manutCriar('pecas', { Title: 'Parafusos do cubo da roda (refazer)', OcorrenciaId: oc.id, Equipamento: eq, Situacao: 'Em reparo externo', Destino: 'Cromotec',
     DataEnvio: d(10, 5), PrevisaoOriginal: d(10, 6), PrevisaoRetorno: d(10, 6) });
+  if (manutListaIds.itens) {
+    const itens = [['Parafusos do cubo da roda quebrados — refazer na Cromotec', 'Fazendo'], ['Revisão preventiva de 1000h (estava atrasada)', 'Pendente'], ['Cilindros das sapatas estourados', 'Pendente'],
+      ['Vazamento no comando do equipamento', 'Pendente'], ['Vazamento da linha do piloto', 'Pendente'], ['Vedações do cubo da roda estouradas', 'Pendente']];
+    for (const x of itens) await manutCriar('itens', { Title: x[0], OcorrenciaId: oc.id, Equipamento: eq, Status: x[1], DataConclusao: null });
+    await manutRecarregar('itens');
+  }
   await Promise.all([manutRecarregar('eventos'), manutRecarregar('pecas')]);
   manutSelId = oc.id; manutFiltro = 'todos'; manutAba = 'timeline';
   try { await mtSyncFrota(oc); } catch (e) {}
@@ -8247,11 +8353,12 @@ function manutPopularFiltros(){
   mtPopular(document.getElementById('mtf-tipo'), mtUnicos(function(o){ return o.tipo; }), 'Todos');
   mtPopular(document.getElementById('mtf-resp'), mtUnicos(function(o){ return o.responsavel; }), 'Todos');
   mtPopular(document.getElementById('mtf-local'), mtUnicos(function(o){ return frotaLocalAtual[o.equipamento]; }), 'Todos');
-  const mapa = { etapa: 'mtf-etapa', status: 'mtf-status', tipo: 'mtf-tipo', resp: 'mtf-resp', local: 'mtf-local', de: 'mtf-de', ate: 'mtf-ate' };
+  const mapa = { etapa: 'mtf-etapa', status: 'mtf-status', tipo: 'mtf-tipo', resp: 'mtf-resp', prior: 'mtf-prior', local: 'mtf-local', de: 'mtf-de', ate: 'mtf-ate' };
   Object.keys(mapa).forEach(function(k){ const el = document.getElementById(mapa[k]); if (el.value !== manutFx[k]) el.value = manutFx[k]; });
+  document.getElementById('mtf-prior-campo').style.display = mtTemColuna('ocorrencias', 'Prioridade') ? '' : 'none';
 }
 (function(){
-  const mapa = { etapa: 'mtf-etapa', status: 'mtf-status', tipo: 'mtf-tipo', resp: 'mtf-resp', local: 'mtf-local', de: 'mtf-de', ate: 'mtf-ate' };
+  const mapa = { etapa: 'mtf-etapa', status: 'mtf-status', tipo: 'mtf-tipo', resp: 'mtf-resp', prior: 'mtf-prior', local: 'mtf-local', de: 'mtf-de', ate: 'mtf-ate' };
   Object.keys(mapa).forEach(function(k){
     document.getElementById(mapa[k]).addEventListener('change', function(){
       manutFx[k] = this.value;
@@ -8309,15 +8416,65 @@ function manutRenderExtras(abertas, pendAll, proxRet, nAt){
     alerta.style.display = '';
   } else alerta.style.display = 'none';
   document.getElementById('mt-resumo').onclick = document.getElementById('mt-alerta').onclick = function(e){
+    const av = e.target.closest('[data-mt-avisar]'); if (av) { e.stopPropagation(); mtEnviar(av.dataset.mtAvisar, '[Manutenção] Equipamentos atrasados', mtTextoAtrasados()); return; }
     const ir = e.target.closest('[data-mt-ir]'); if (ir) { manutDefinirFiltro(ir.dataset.mtIr); return; }
     const eq = e.target.closest('[data-mt-oc-eq]'); if (eq) manutAbrirFicha(eq.dataset.mtOcEq);
   };
   manutRenderMetas(abertas, nAt);
+  manutRenderIndicadores();
   manutRenderDonut(abertas);
   manutRenderEvolucao();
   manutRenderBlocos(abertas, pendAll);
 }
 
+
+let manutIndDias = 90;
+function mtMedia(v){ return v.length ? v.reduce(function(s, x){ return s + x; }, 0) / v.length : null; }
+function mtFmtDias(x){ return x === null ? '—' : (x >= 10 ? Math.round(x) : x.toFixed(1).replace('.', ',')) + ' d'; }
+function manutRenderIndicadores(){
+  const corte = manutIndDias ? mtSoma(mtHoje(), -manutIndDias) : '';
+  const ocs = manutOcorrencias.filter(function(o){ return !corte || (o.dataEntrada || '') >= corte; });
+  const ids = {}; ocs.forEach(function(o){ ids[o.id] = o; });
+  const conc = ocs.filter(function(o){ return !mtAberta(o) && o.dataSaida; });
+  const tempoParada = mtMedia(conc.map(mtDiasParados));
+  const esperas = ocs.map(mtEsperaInicio).filter(function(x){ return x !== null; });
+  const ciclos = manutPecas.filter(function(p){ return ids[p.ocId] && p.dataEnvio && p.retornoReal; }).map(function(p){ return Math.max(0, mtDias(p.dataEnvio, p.retornoReal)); });
+  const custoTot = manutPecas.filter(function(p){ return ids[p.ocId]; }).reduce(function(s, p){ return s + (p.custo || 0); }, 0);
+  const tiles = [
+    { l: 'Tempo médio de parada', v: mtFmtDias(tempoParada), m: conc.length + ' manutenção(ões) concluída(s)' },
+    { l: 'Espera até iniciar', v: mtFmtDias(mtMedia(esperas)), m: esperas.length ? 'média em ' + esperas.length + ' ficha(s) com início informado' : 'informe o “Início da manutenção” nas fichas' },
+    { l: 'Ciclo médio de peça no terceiro', v: mtFmtDias(mtMedia(ciclos)), m: ciclos.length + ' peça(s) recebida(s)' },
+    { l: 'Custo de peças', v: mtMoeda(custoTot), m: ocs.length ? 'média de ' + mtMoeda(custoTot / ocs.length) + ' por ficha' : 'sem fichas no período' }
+  ];
+  document.getElementById('mt-ind-tiles').innerHTML = tiles.map(function(t){
+    return '<div class="meta-tile neutro"><div class="meta-top"><span class="meta-lbl">' + t.l + '</span></div><div class="meta-val">' + t.v + '</div><div class="meta-meta">' + t.m + '</div></div>';
+  }).join('');
+  const porEq = {};
+  ocs.forEach(function(o){ (porEq[o.equipamento] = porEq[o.equipamento] || []).push(o); });
+  const reinc = Object.keys(porEq).filter(function(e){ return porEq[e].length >= 2; }).map(function(e){
+    const l = porEq[e].slice().sort(function(a, b){ return (b.dataEntrada || '').localeCompare(a.dataEntrada || ''); });
+    return { eq: e, n: l.length, ult: l[0] };
+  }).sort(function(a, b){ return b.n - a.n; }).slice(0, 6);
+  document.getElementById('mt-ind-reinc').innerHTML = reinc.length ? reinc.map(function(r){
+    return '<div class="mt-it" data-mt-oc-eq="' + mtEsc(r.eq) + '"><span class="eq">' + mtEsc(r.eq) + '</span><span class="tx">' + mtEsc(r.ult.motivo || r.ult.tipo || '—') + '<small>última entrada em ' + mtBR(r.ult.dataEntrada) + '</small></span><span class="dt ruim">' + r.n + ' entradas</span></div>';
+  }).join('') : '<div class="mt-vazio-mini">Nenhum equipamento voltou mais de uma vez no período. 👍</div>';
+  const custos = {};
+  manutPecas.forEach(function(p){ const o = ids[p.ocId]; if (o && p.custo) custos[o.equipamento] = (custos[o.equipamento] || 0) + p.custo; });
+  const topC = Object.keys(custos).map(function(e){ return [e, custos[e]]; }).sort(function(a, b){ return b[1] - a[1]; }).slice(0, 6);
+  const mx = topC.length ? topC[0][1] : 1;
+  document.getElementById('mt-ind-custo').innerHTML = topC.length ? topC.map(function(c){
+    return '<div class="mt-rec" data-mt-oc-eq="' + mtEsc(c[0]) + '"><span class="nm" style="flex:0 0 22%">' + mtEsc(c[0]) + '</span><span class="bar"><i style="width:' + (c[1] / mx * 100).toFixed(0) + '%"></i></span><b style="min-width:92px">' + mtMoeda(c[1]) + '</b></div>';
+  }).join('') : '<div class="mt-vazio-mini">Informe o custo das peças (aba Componentes / Peças) para ver este ranking.</div>';
+  ['mt-ind-reinc', 'mt-ind-custo'].forEach(function(id){
+    document.getElementById(id).onclick = function(e){ const el = e.target.closest('[data-mt-oc-eq]'); if (el) manutAbrirFicha(el.dataset.mtOcEq); };
+  });
+}
+document.getElementById('mt-ind-toggle').onclick = function(e){
+  const b = e.target.closest('button[data-dias]'); if (!b) return;
+  manutIndDias = Number(b.dataset.dias);
+  this.querySelectorAll('button').forEach(function(x){ x.classList.toggle('ativo', x === b); });
+  manutRenderIndicadores();
+};
 function manutRenderMetas(abertas, nAt){
   const hoje = mtHoje();
   const nFrota = frotas.filter(function(eq){ return frotaTipoItem[eq] !== 'implemento'; }).length || 1;
@@ -8411,13 +8568,13 @@ function manutRenderBlocos(abertas, pendAll){
   const hoje = mtHoje();
   // atenção necessária: atrasados + atenção
   const ordem = { atrasado: 0, atencao: 1 };
-  const aten = abertas.filter(function(o){ return mtStatusPrazo(o).chave in ordem; }).sort(function(a, b){
-    return ordem[mtStatusPrazo(a).chave] - ordem[mtStatusPrazo(b).chave] || mtDiasParados(b) - mtDiasParados(a);
+  const aten = abertas.filter(function(o){ return (mtStatusPrazo(o).chave in ordem) || o.prioridade === 'Crítica'; }).sort(function(a, b){
+    return mtRankPri(a.prioridade) - mtRankPri(b.prioridade) || (ordem[mtStatusPrazo(a).chave] === undefined ? 2 : ordem[mtStatusPrazo(a).chave]) - (ordem[mtStatusPrazo(b).chave] === undefined ? 2 : ordem[mtStatusPrazo(b).chave]) || mtDiasParados(b) - mtDiasParados(a);
   });
   document.getElementById('mt-aten-num').textContent = aten.length;
   document.getElementById('mt-aten').innerHTML = aten.length ? aten.map(function(o){
     const at = mtStatusPrazo(o).chave === 'atrasado';
-    const motivo = at ? mtAtrasoTexto(o) : (!o.previsao ? 'sem previsão de retorno' : 'prazo de peça adiado');
+    const motivo = at ? mtAtrasoTexto(o) : (!o.previsao ? 'sem previsão de retorno' : (o.prioridade === 'Crítica' ? 'prioridade crítica' : 'prazo de peça adiado'));
     return '<div class="mt-it" data-mt-oc-eq="' + mtEsc(o.equipamento) + '"><span class="eq">' + mtEsc(o.equipamento) + '</span><span class="tx">' + mtEsc(o.motivo || o.tipo || o.etapa) +
       '<small>' + mtEsc(o.etapa) + ' · ' + mtDiasParados(o) + ' dia(s) parado</small></span><span class="dt ' + (at ? 'ruim' : 'med') + '">' + mtEsc(motivo) + '</span></div>';
   }).join('') : '<div class="mt-vazio-mini">Nada exigindo atenção agora. 🎉</div>';
@@ -8468,6 +8625,7 @@ function mtDescFiltros(){
   if (f.status) p.push('Prazo: ' + { atrasado: 'Atrasado', atencao: 'Atenção', noprazo: 'No prazo' }[f.status]);
   if (f.tipo) p.push('Tipo: ' + f.tipo);
   if (f.resp) p.push('Responsável: ' + f.resp);
+  if (f.prior) p.push('Prioridade: ' + f.prior);
   if (f.local) p.push('Local: ' + f.local);
   if (f.de) p.push('Entrada desde ' + mtBR(f.de));
   if (f.ate) p.push('Entrada até ' + mtBR(f.ate));
@@ -8515,7 +8673,8 @@ function manutRelatorioExcel(){
   const dEq = lista.map(function(oc){
     return { 'Equipamento': oc.equipamento, 'Modelo': frotaDescricao[oc.equipamento] || '', 'Entrada': mtBR(oc.dataEntrada), 'Motivo da parada': oc.motivo, 'Tipo': oc.tipo,
       'Responsável': oc.responsavel, 'Etapa': mtAberta(oc) ? oc.etapa : 'Concluída', 'Local atual': frotaLocalAtual[oc.equipamento] || '', 'Onde está / Pendência': mtOnde(oc),
-      'Previsão de retorno': mtBR(oc.previsao), 'Saída': mtBR(oc.dataSaida), 'Dias parados': mtDiasParados(oc), 'Status': mtStatusPrazo(oc).texto };
+      'Previsão de retorno': mtBR(oc.previsao), 'Saída': mtBR(oc.dataSaida), 'Dias parados': mtDiasParados(oc), 'Status': mtStatusPrazo(oc).texto,
+      'Prioridade': oc.prioridade, 'Início da manutenção': mtBR(mtInicio(oc)), 'Espera até iniciar (dias)': mtEsperaInicio(oc) === null ? '' : mtEsperaInicio(oc), 'Itens feitos': mtProgresso(oc).feitos + '/' + mtProgresso(oc).total };
   });
   const dPe = manutPecas.filter(function(p){ return ids[p.ocId]; }).map(function(p){
     return { 'Equipamento': ids[p.ocId].equipamento, 'Peça': p.nome, 'Situação': p.situacao, 'Destino': p.destino, 'Envio': mtBR(p.dataEnvio), 'Previsão original': mtBR(p.previsaoOriginal),
@@ -8524,6 +8683,7 @@ function manutRelatorioExcel(){
   const dEv = manutEventos.filter(function(e){ return ids[e.ocId]; }).map(function(e){
     return { 'Equipamento': ids[e.ocId].equipamento, 'Data': mtBR(e.data), 'Evento': e.texto, 'Responsável': e.responsavel, 'Realizado': e.realizado ? 'Sim' : 'Não' };
   });
+  const dIt = manutItens.filter(function(i){ return ids[i.ocId]; }).map(function(i){ return { 'Equipamento': ids[i.ocId].equipamento, 'Serviço': i.texto, 'Situação': i.status, 'Concluído em': mtBR(i.dataConclusao) }; });
   const dRes = mtResumoNumeros().map(function(n){ return { 'Indicador': n[0], 'Valor': n[1] }; });
   dRes.push({ 'Indicador': 'Filtros aplicados', 'Valor': mtDescFiltros() });
   const wb = XLSX.utils.book_new();
@@ -8535,6 +8695,7 @@ function manutRelatorioExcel(){
   aba('Resumo', dRes, [26, 60]);
   aba('Equipamentos', dEq, [14, 26, 12, 34, 28, 18, 16, 20, 30, 18, 12, 12, 12]);
   aba('Peças', dPe, [14, 26, 18, 22, 12, 16, 14, 12, 12, 12]);
+  aba('Itens de serviço', dIt, [14, 50, 12, 14]);
   aba('Eventos', dEv, [14, 12, 44, 18, 10]);
   XLSX.writeFile(wb, 'Manutencao_' + new Date().toISOString().slice(0, 10) + '.xlsx');
 }
@@ -8555,6 +8716,7 @@ function manutRelatorioFicha(oc){
     mtCabecalhoRel('Ficha de Manutenção — ' + mtEsc(eq), 'Ocorrência iniciada em ' + mtBR(oc.dataEntrada)) +
     '<table class="hist-tabela" style="margin-bottom:12px"><tbody>' + dados.map(function(d){ return '<tr><td style="width:190px;font-weight:700">' + mtEsc(d[0]) + '</td><td>' + mtEsc(String(d[1])) + '</td></tr>'; }).join('') + '</tbody></table>' +
     (oc.observacao ? '<h3 style="margin:14px 0 6px;font-size:13px">Observações</h3><div style="white-space:pre-wrap;font-size:12px;border:1px solid #ccc;padding:8px 10px;border-radius:6px">' + mtEsc(oc.observacao) + '</div>' : '') +
+    (mtItensDe(oc).length ? '<h3 style="margin:14px 0 6px;font-size:13px">Itens de serviço (' + mtProgresso(oc).feitos + '/' + mtProgresso(oc).total + ')</h3><table class="hist-tabela"><thead><tr><th>Serviço</th><th>Situação</th><th>Concluído em</th></tr></thead><tbody>' + mtItensDe(oc).map(function(i){ return '<tr><td>' + mtEsc(i.texto) + '</td><td>' + i.status + '</td><td>' + mtBR(i.dataConclusao) + '</td></tr>'; }).join('') + '</tbody></table>' : '') +
     '<h3 style="margin:14px 0 6px;font-size:13px">Linha do tempo</h3><table class="hist-tabela"><thead><tr><th>Data</th><th>Evento</th><th>Responsável / Documento</th><th>Situação</th></tr></thead><tbody>' + linhasTL + '</tbody></table>' +
     (pecas.length ? '<h3 style="margin:14px 0 6px;font-size:13px">Componentes / Peças</h3><table class="hist-tabela"><thead><tr><th>Peça</th><th>Situação</th><th>Destino</th><th>Envio</th><th>Prev. original</th><th>Prev. atual</th><th>Retorno real</th><th>NF/OS</th><th>Custo</th></tr></thead><tbody>' + linhasPe + '</tbody></table>' +
       '<div style="text-align:right;font-weight:800;margin-top:8px">Custo total de peças: ' + mtMoeda(total) + '</div>' : '');
@@ -8576,6 +8738,8 @@ function manutListaFiltrada(){
   const ordem = { atrasado: 0, atencao: 1, noprazo: 2, concluida: 3 };
   return manutOcorrencias.filter(function(o){ return mtPassaFiltro(o) && mtPassaBusca(o, termo); }).sort(function(a, b){
     if (manutFiltro === 'historico') return (b.dataSaida || '').localeCompare(a.dataSaida || '');
+    const pr = mtRankPri(a.prioridade) - mtRankPri(b.prioridade);
+    if (pr) return pr;
     const d = ordem[mtStatusPrazo(a).chave] - ordem[mtStatusPrazo(b).chave];
     return d || (mtDiasParados(b) - mtDiasParados(a));
   });
@@ -8607,11 +8771,11 @@ function manutRenderTabela(){
     const dias = mtDiasParados(oc);
     const prev = mtAberta(oc) ? mtBR(oc.previsao) : mtBR(oc.dataSaida);
     return '<tr class="mt-linha' + (oc.id === manutSelId ? ' sel' : '') + '" data-mt-oc="' + oc.id + '">' +
-      '<td class="mt-eq">' + mtEsc(oc.equipamento) + '</td>' +
+      '<td class="mt-eq">' + mtEsc(oc.equipamento) + mtBadgePri(oc.prioridade) + '</td>' +
       '<td title="' + mtEsc(frotaDescricao[oc.equipamento] || '') + '">' + mtEsc((frotaDescricao[oc.equipamento] || '—').slice(0, 26)) + '</td>' +
       '<td>' + mtBR(oc.dataEntrada) + '</td>' +
       '<td>' + mtEsc(oc.motivo || '—') + '</td>' +
-      '<td><span class="mt-etapa ' + (mtAberta(oc) ? mtClasseEtapa(oc.etapa) : 'e-ok') + '">' + (mtAberta(oc) ? mtEsc(oc.etapa) : 'Concluída') + '</span></td>' +
+      '<td><span class="mt-etapa ' + (mtAberta(oc) ? mtClasseEtapa(oc.etapa) : 'e-ok') + '">' + (mtAberta(oc) ? mtEsc(oc.etapa) : 'Concluída') + '</span>' + mtMiniProg(oc) + '</td>' +
       '<td>' + mtEsc(mtOnde(oc)) + '</td>' +
       '<td style="font-weight:700">' + prev + '</td>' +
       '<td class="' + (st.chave === 'atrasado' ? 'mt-dias-ruim' : '') + '">' + dias + '</td>' +
@@ -8635,6 +8799,25 @@ function manutRenderTabela(){
 document.getElementById('mt-busca').addEventListener('input', manutRenderTabela);
 
 /* ---------- ficha do equipamento ---------- */
+function mtMiniProg(oc){
+  const p = mtProgresso(oc);
+  return p.total ? '<div class="mt-mini-prog" title="Itens de serviço: ' + p.feitos + ' de ' + p.total + '"><i style="width:' + p.pct + '%"></i></div><div class="mt-mini-txt">' + p.feitos + '/' + p.total + ' itens</div>' : '';
+}
+function mtMetaInicio(oc){
+  const i = mtInicio(oc);
+  if (i) { const e = mtEsperaInicio(oc); return '<span>🔧 Início da manutenção: <b>' + mtBR(i) + '</b>' + (e ? ' (esperou ' + e + ' dia(s))' : '') + '</span>'; }
+  return mtAberta(oc) ? '<span>🔧 Início da manutenção: <b style="color:#b25e17">ainda não iniciada</b></span>' : '';
+}
+function mtMetaItens(oc){
+  const p = mtProgresso(oc);
+  return p.total ? '<span>✔ Itens de serviço: <b>' + p.feitos + '/' + p.total + '</b> (' + p.pct + '%)</span>' : '';
+}
+function mtLinhaPeca(oc){
+  const u = mtUltimaPeca(oc);
+  if (!u) return '';
+  const info = mtDiasMontagemInfo(oc.tipo);
+  return '<div class="mt-prev-sub" style="margin-top:6px" title="' + mtEsc(info.origem) + '">📦 Última peça chega em <b>' + mtBR(u) + '</b> · montagem/testes estimados em +' + info.dias + ' d' + (info.n ? '' : ' <i>(prazo padrão)</i>') + '</div>';
+}
 let manutObsAberta = {};
 function mtBlocoObs(oc){
   const t = (oc.observacao || '').trim();
@@ -8657,22 +8840,23 @@ function manutRenderDetalhe(){
   } else if (!oc.previsao) {
     const sug = mtSugestaoPrevisao(oc);
     prevCard = '<div class="mt-prev-card indef"><div class="mt-prev-lbl">Previsão de disponibilidade</div><div class="mt-prev-data">A definir</div><div class="mt-prev-sub">Ainda sem data de retorno</div>' +
-      (sug ? '<button type="button" class="mt-link" data-mt-acao="sugerir">Usar ' + mtBR(sug) + ' (última peça + ' + MANUT_DIAS_MONTAGEM + ' dias)</button>' : '') + '</div>';
+      mtLinhaPeca(oc) + (sug ? '<button type="button" class="mt-link" data-mt-acao="sugerir">Usar ' + mtBR(sug) + ' (última peça + ' + mtDiasMontagemInfo(oc.tipo).dias + ' dias)</button>' : '') + '</div>';
   } else {
     const d = mtDias(hoje, oc.previsao);
     const sub = d >= 0 ? ('Em ' + d + ' dia(s)') : ('Atrasada há ' + (-d) + ' dia(s)');
     const sug = mtSugestaoPrevisao(oc);
     const ultPeca = mtPendentes(oc).map(function(p){ return p.previsao; }).filter(Boolean).sort().pop() || '';
     prevCard = '<div class="mt-prev-card' + (d < 0 ? ' atrasada' : '') + '"><div class="mt-prev-lbl">Previsão de disponibilidade</div><div class="mt-prev-data">' + mtBR(oc.previsao) + '</div><div class="mt-prev-sub">' + sub + '</div>' +
+      mtLinhaPeca(oc) +
       (ultPeca && oc.previsao < ultPeca ? '<button type="button" class="mt-link" data-mt-acao="ajustar-ult">⚠ A última peça só chega em ' + mtBR(ultPeca) + ', depois desta previsão — ajustar para essa data?</button>' : '') + '</div>';
   }
-  const abas = [['timeline', 'Linha do Tempo'], ['pecas', 'Componentes / Peças (' + mtPecasDe(oc).length + ')'], ['custos', 'Custos'], ['mov', 'Histórico de Movimentações']];
+  const abas = [['timeline', 'Linha do Tempo'], ['itens', 'Itens de serviço (' + mtProgresso(oc).feitos + '/' + mtProgresso(oc).total + ')'], ['pecas', 'Componentes / Peças (' + mtPecasDe(oc).length + ')'], ['custos', 'Custos'], ['mov', 'Histórico de Movimentações']];
   cont.innerHTML = '<div class="dash-card mt-card">' +
     '<div class="mt-ficha-topo">' +
       '<div class="mt-ficha-icone">' + (frotaTipoItem[eq] === 'implemento' ? '🔧' : '🚜') + '</div>' +
       '<div><div class="mt-ficha-nome"><a data-mt-acao="loc" title="Ver na Localização Atual">' + mtEsc(eq) + '</a>' +
         (aberta ? '<span class="mt-etapa ' + mtClasseEtapa(oc.etapa) + '">' + mtEsc(oc.etapa) + '</span>' : '') +
-        '<span class="mt-st s-' + st.chave + '">' + st.texto + '</span></div>' +
+        '<span class="mt-st s-' + st.chave + '">' + st.texto + '</span>' + mtBadgePri(oc.prioridade) + '</div>' +
         '<div class="mt-ficha-desc">' + mtEsc(frotaDescricao[eq] || '') + '</div>' +
         '<div class="mt-ficha-meta">' +
           '<span>📅 Entrada na manutenção: <b>' + mtBR(oc.dataEntrada) + '</b></span>' +
@@ -8680,6 +8864,7 @@ function manutRenderDetalhe(){
           '<span>📍 Localização atual: <a data-mt-acao="loc">' + mtEsc(frotaLocalAtual[eq] || 'sem registro') + '</a></span>' +
           '<span>👤 Responsável: <b>' + mtEsc(oc.responsavel || '—') + '</b></span>' +
           (oc.tipo ? '<span>🛠 Tipo: <b>' + mtEsc(oc.tipo) + '</b></span>' : '') +
+          mtMetaInicio(oc) + mtMetaItens(oc) +
         '</div></div>' +
       prevCard +
       '<div class="mt-motivo-card"><div class="mt-motivo-tit">Motivo da parada</div><div class="mt-motivo-txt">' + mtEsc(oc.motivo || '—') + '</div>' +
@@ -8692,9 +8877,11 @@ function manutRenderDetalhe(){
       '<button type="button" class="mt-btn" data-mt-acao="loc">📍 Localização Atual</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="movhist">🕒 Histórico completo de movimentações</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="relficha">🖨 Relatório da ficha</button>' +
+      (aberta ? '<button type="button" class="mt-btn" data-mt-acao="avisar-email" title="Abre um e-mail pronto com a situação deste equipamento">✉️ Avisar por e-mail</button>' +
+        '<button type="button" class="mt-btn" data-mt-acao="avisar-teams" title="Abre o Teams com a mensagem pronta">💬 Avisar no Teams</button>' : '') +
     '</div>' +
     '<div class="mt-abas">' + abas.map(function(a){ return '<button type="button" class="mt-aba' + (manutAba === a[0] ? ' ativo' : '') + '" data-mt-acao="aba" data-id="' + a[0] + '">' + a[1] + '</button>'; }).join('') + '</div>' +
-    '<div id="mt-aba-corpo">' + (manutAba === 'pecas' ? mtAbaPecas(oc) : manutAba === 'custos' ? mtAbaCustos(oc) : manutAba === 'mov' ? mtAbaMov(oc) : mtAbaTimeline(oc)) + '</div>' +
+    '<div id="mt-aba-corpo">' + (manutAba === 'itens' ? mtAbaItens(oc) : manutAba === 'pecas' ? mtAbaPecas(oc) : manutAba === 'custos' ? mtAbaCustos(oc) : manutAba === 'mov' ? mtAbaMov(oc) : mtAbaTimeline(oc)) + '</div>' +
   '</div>';
   cont.onclick = function(e){
     const el = e.target.closest('[data-mt-acao]');
@@ -8705,6 +8892,7 @@ function manutRenderDetalhe(){
 function mtMarcos(oc){
   const hoje = mtHoje(), it = [];
   it.push({ data: oc.dataEntrada, ord: 0, curto: 'Entrada na manutenção', texto: 'Equipamento deu entrada na manutenção' + (oc.motivo ? ' — ' + oc.motivo : ''), resp: oc.responsavel, feito: true });
+  if (oc.inicio && !mtEventosDe(oc).some(function(e){ return /^in[ií]cio/i.test(e.texto); })) it.push({ data: oc.inicio, ord: 1, curto: 'Início da manutenção', texto: 'Início da manutenção', resp: oc.responsavel, feito: oc.inicio <= hoje });
   mtEventosDe(oc).forEach(function(e){ it.push({ data: e.data, ord: 1, curto: e.texto, texto: e.texto, resp: e.responsavel, feito: e.realizado, ev: e, atrasado: !e.realizado && e.data < hoje }); });
   mtPecasDe(oc).forEach(function(p){
     if (p.dataEnvio) it.push({ data: p.dataEnvio, ord: 2, curto: p.nome + ' enviada', texto: p.nome + (p.destino ? ' enviada para ' + p.destino : ' enviada'), doc: p.documento, feito: true, peca: p });
@@ -8772,7 +8960,88 @@ function mtAbaPecas(oc){
     garg + '</div>' +
     '<div class="mt-duas" style="margin-top:14px"><div class="mt-box"><h4>Previsão x Realizado' + (ref ? ' (' + mtEsc(ref.nome) + ')' : '') + '</h4>' + pxr + '</div>' +
     '<div class="mt-box"><h4>💬 Observações</h4><div style="font-size:12.5px;line-height:1.5">' + (oc.observacao ? mtEsc(oc.observacao) : '<i style="color:var(--cinza)">Sem observações. Use “Editar ficha” para registrar.</i>') +
-    '</div><div class="mt-prev-sub" style="margin-top:8px">A previsão de liberação considera a chegada das peças + ' + MANUT_DIAS_MONTAGEM + ' dias de montagem e testes.</div></div></div>';
+    '</div><div class="mt-prev-sub" style="margin-top:8px">A previsão de liberação considera a chegada da última peça + ' + mtDiasMontagemInfo(oc.tipo).dias + ' dias de montagem e testes (' + mtDiasMontagemInfo(oc.tipo).origem + ').</div></div></div>';
+}
+
+function mtAbaItens(oc){
+  if (!manutListaIds || !manutListaIds.itens) {
+    return '<div class="mt-box"><h4>Itens de serviço</h4><div class="mt-aviso">💡 Para usar os itens de serviço, crie no SharePoint a lista <b>ManutItens</b> com as colunas (nome exato, sem acento/espaço): ' +
+      '<b>OcorrenciaId</b> (uma linha de texto), <b>Equipamento</b> (uma linha de texto), <b>Status</b> (uma linha de texto) e <b>DataConclusao</b> (data). A coluna Title já vem pronta. Depois, Ctrl+F5.</div></div>';
+  }
+  const it = mtItensDe(oc), p = mtProgresso(oc), aberta = mtAberta(oc);
+  const cor = { Pendente: 'pend', Fazendo: 'faz', Feito: 'ok' };
+  const linhas = it.length ? it.map(function(i){
+    return '<tr><td>' + (i.status === 'Feito' ? '<span style="text-decoration:line-through;color:var(--cinza)">' + mtEsc(i.texto) + '</span>' : mtEsc(i.texto)) + '</td>' +
+      '<td><button type="button" class="mt-it-st ' + cor[i.status] + '" data-mt-acao="it-ciclo" data-id="' + i.id + '" title="Clique para mudar: Pendente → Fazendo → Feito">' + i.status + '</button></td>' +
+      '<td>' + (i.dataConclusao ? mtBR(i.dataConclusao) : '—') + '</td>' +
+      '<td style="white-space:nowrap">' + (aberta ? '<button type="button" class="mt-btn mini" data-mt-acao="it-edit" data-id="' + i.id + '">✏️</button> <button type="button" class="mt-btn mini" data-mt-acao="it-del" data-id="' + i.id + '">🗑</button>' : '') + '</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="mt-vazio">Nenhum item cadastrado. Liste aqui cada serviço a fazer (ex.: “Trocar vedações do cubo da roda”).</td></tr>';
+  return '<div class="mt-box"><div class="mt-box-cab"><h4>Itens de serviço</h4>' +
+    (aberta ? '<span><button type="button" class="mt-btn mini" data-mt-acao="it-bulk">📋 Adicionar vários</button> <button type="button" class="mt-btn pri mini" data-mt-acao="it-add">+ Adicionar item</button></span>' : '') + '</div>' +
+    '<div class="mt-prog-geral"><div class="mt-prog-barra"><i style="width:' + p.pct + '%"></i></div><b>' + p.feitos + ' de ' + p.total + ' feitos (' + p.pct + '%)</b></div>' +
+    '<div class="mt-tabela-wrap"><table class="mt-pecas"><thead><tr><th>Serviço</th><th>Situação</th><th>Concluído em</th><th></th></tr></thead><tbody>' + linhas + '</tbody></table></div></div>';
+}
+function manutModalItem(oc, i){
+  mtAbrirModal(i ? '✏️ Editar item' : '➕ Novo item de serviço', [
+    { id: 'texto', label: 'Serviço', valor: i ? i.texto : '', obrig: true, larga: true },
+    { id: 'status', label: 'Situação', tipo: 'select', opcoes: MANUT_STATUS_ITEM, valor: i ? i.status : 'Pendente' }
+  ], '💾 Salvar item', async function(v){
+    const campos = { Title: v.texto, Status: v.status, DataConclusao: v.status === 'Feito' ? ((i && i.dataConclusao) || mtHoje()) : null };
+    if (i) await manutAtualizar('itens', i.id, campos);
+    else await manutCriar('itens', Object.assign({ OcorrenciaId: oc.id, Equipamento: oc.equipamento }, campos));
+    await manutRecarregar('itens'); manutRenderTudo(); mtToast('✅ Item salvo');
+  });
+}
+function manutModalItensVarios(oc){
+  mtAbrirModal('📋 Adicionar vários itens — ' + oc.equipamento, [
+    { id: 'lista', label: 'Um serviço por linha', tipo: 'textarea', linhas: 9, larga: true, obrig: true, dica: 'Cole a lista aqui. Cada linha vira um item “Pendente”. Linhas começando com “-” ou “•” são limpas automaticamente.' }
+  ], '💾 Criar itens', async function(v){
+    const linhas = v.lista.split(/\n+/).map(function(l){ return l.replace(/^[\s\-•*·\d.)]+/, '').trim(); }).filter(Boolean);
+    if (!linhas.length) throw new Error('Nenhuma linha para criar.');
+    for (const t of linhas) await manutCriar('itens', { Title: t, OcorrenciaId: oc.id, Equipamento: oc.equipamento, Status: 'Pendente', DataConclusao: null });
+    await manutRecarregar('itens'); manutRenderTudo(); mtToast('✅ ' + linhas.length + ' item(ns) criado(s)');
+  });
+}
+async function manutCicloItem(oc, i){
+  if (!i) return;
+  const prox = MANUT_STATUS_ITEM[(MANUT_STATUS_ITEM.indexOf(i.status) + 1) % MANUT_STATUS_ITEM.length];
+  try {
+    await manutAtualizar('itens', i.id, { Status: prox, DataConclusao: prox === 'Feito' ? mtHoje() : null });
+    i.status = prox; i.dataConclusao = prox === 'Feito' ? mtHoje() : '';
+    manutRenderTudo();
+  } catch (err) { alert('Falha ao atualizar o item: ' + err.message); }
+}
+async function manutExcluirItem(oc, i){
+  if (!i || !confirm('Excluir o item “' + i.texto + '”?')) return;
+  try { await manutExcluir('itens', i.id); await manutRecarregar('itens'); manutRenderTudo(); }
+  catch (err) { alert('Falha ao excluir: ' + err.message); }
+}
+/* ---------- avisos por e-mail / Teams (abrem o programa do usuário com a mensagem pronta) ---------- */
+function mtTextoFicha(oc){
+  const st = mtStatusPrazo(oc), g = mtGargalo(oc), p = mtProgresso(oc);
+  return [
+    'Manutenção ' + oc.equipamento + (frotaDescricao[oc.equipamento] ? ' (' + frotaDescricao[oc.equipamento] + ')' : ''),
+    'Motivo: ' + (oc.motivo || '—'),
+    'Entrada: ' + mtBR(oc.dataEntrada) + ' · ' + mtDiasParados(oc) + ' dia(s) parado',
+    'Etapa: ' + oc.etapa + ' · Status do prazo: ' + st.texto + (oc.prioridade !== 'Normal' ? ' · Prioridade: ' + oc.prioridade : ''),
+    'Previsão de liberação: ' + (oc.previsao ? mtBR(oc.previsao) : 'a definir'),
+    g ? 'Gargalo: ' + g.nome + (g.destino ? ' (' + g.destino + ')' : '') + ' — retorno previsto ' + mtBR(g.previsao) : '',
+    p.total ? 'Itens de serviço: ' + p.feitos + ' de ' + p.total + ' feitos' : '',
+    oc.responsavel ? 'Responsável: ' + oc.responsavel : ''
+  ].filter(Boolean).join('\n');
+}
+function mtTextoAtrasados(){
+  const at = manutOcorrencias.filter(function(o){ return mtAberta(o) && mtStatusPrazo(o).chave === 'atrasado'; });
+  if (!at.length) return '';
+  return 'Manutenções atrasadas em ' + mtBR(mtHoje()) + ' (' + at.length + '):\n\n' + at.map(function(o){
+    const g = mtGargalo(o);
+    return '• ' + o.equipamento + ' — ' + (o.motivo || o.tipo || o.etapa) + ' · ' + mtAtrasoTexto(o) + (g ? ' · aguardando ' + g.nome + (g.destino ? ' (' + g.destino + ')' : '') : '') + (o.responsavel ? ' · resp.: ' + o.responsavel : '');
+  }).join('\n');
+}
+function mtEnviar(canal, assunto, corpo){
+  if (!corpo) { alert('Não há nada para avisar no momento.'); return; }
+  if (canal === 'email') window.location.href = 'mailto:?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo.slice(0, 1700));
+  else window.open('https://teams.microsoft.com/l/chat/0/0?message=' + encodeURIComponent(assunto + '\n' + corpo.slice(0, 1500)), '_blank', 'noopener');
 }
 function mtAbaCustos(oc){
   const pecas = mtPecasDe(oc);
@@ -8812,6 +9081,8 @@ function manutAcao(acao, id, oc){
     case 'loc': manutIrParaLocalizacao(oc.equipamento); return;
     case 'movhist': manutIrParaHistoricoMov(oc.equipamento); return;
     case 'relficha': manutRelatorioFicha(oc); return;
+    case 'avisar-email': mtEnviar('email', '[Manutenção] ' + oc.equipamento + ' — ' + oc.etapa, mtTextoFicha(oc)); return;
+    case 'avisar-teams': mtEnviar('teams', '[Manutenção] ' + oc.equipamento, mtTextoFicha(oc)); return;
     case 'obs-toggle': manutObsAberta[oc.id] = !manutObsAberta[oc.id]; manutRenderDetalhe(); return;
   }
   if (!mtExigirEdicao()) return;
@@ -8824,6 +9095,11 @@ function manutAcao(acao, id, oc){
     case 'peca-edit': manutModalPeca(oc, manutPecas.find(function(p){ return p.id === id; })); break;
     case 'peca-receber': manutModalReceber(oc, manutPecas.find(function(p){ return p.id === id; })); break;
     case 'peca-del': manutExcluirPeca(oc, manutPecas.find(function(p){ return p.id === id; })); break;
+    case 'it-add': manutModalItem(oc, null); break;
+    case 'it-bulk': manutModalItensVarios(oc); break;
+    case 'it-edit': manutModalItem(oc, manutItens.find(function(i){ return i.id === id; })); break;
+    case 'it-ciclo': manutCicloItem(oc, manutItens.find(function(i){ return i.id === id; })); break;
+    case 'it-del': manutExcluirItem(oc, manutItens.find(function(i){ return i.id === id; })); break;
     case 'ev-add': manutModalEvento(oc, null); break;
     case 'ev-edit': manutModalEvento(oc, manutEventos.find(function(e){ return e.id === id; })); break;
     case 'ev-feito': manutMarcarEvento(oc, manutEventos.find(function(e){ return e.id === id; })); break;
@@ -8853,8 +9129,8 @@ async function mtPerguntarPrevisao(oc){
   const sug = mtSugestaoPrevisao(oc);
   if (!sug || (oc.previsao && oc.previsao >= sug)) return;
   const msg = oc.previsao
-    ? 'A previsão de retorno do equipamento (' + mtBR(oc.previsao) + ') ficou antes da chegada da última peça + ' + MANUT_DIAS_MONTAGEM + ' dias de montagem (' + mtBR(sug) + ').\n\nAtualizar a previsão para ' + mtBR(sug) + '?'
-    : 'Definir a previsão de retorno do equipamento para ' + mtBR(sug) + ' (última peça + ' + MANUT_DIAS_MONTAGEM + ' dias de montagem)?';
+    ? 'A previsão de retorno do equipamento (' + mtBR(oc.previsao) + ') ficou antes da chegada da última peça + ' + mtDiasMontagemInfo(oc.tipo).dias + ' dias de montagem (' + mtBR(sug) + ').\n\nAtualizar a previsão para ' + mtBR(sug) + '?'
+    : 'Definir a previsão de retorno do equipamento para ' + mtBR(sug) + ' (última peça + ' + mtDiasMontagemInfo(oc.tipo).dias + ' dias de montagem)?';
   if (confirm(msg)) {
     await manutAtualizar('ocorrencias', oc.id, { PrevisaoRetorno: sug });
     oc.previsao = sug;
@@ -8872,7 +9148,7 @@ function mtAbrirModal(titulo, campos, textoSalvar, aoSalvar, avisoHtml){
     const v = c.valor == null ? '' : c.valor;
     let ctl;
     if (c.tipo === 'select') ctl = '<select id="mtm-' + c.id + '">' + c.opcoes.map(function(o){ return '<option value="' + mtEsc(o) + '"' + (o === v ? ' selected' : '') + '>' + mtEsc(o) + '</option>'; }).join('') + '</select>';
-    else if (c.tipo === 'textarea') ctl = '<textarea id="mtm-' + c.id + '" rows="2">' + mtEsc(v) + '</textarea>';
+    else if (c.tipo === 'textarea') ctl = '<textarea id="mtm-' + c.id + '" rows="' + (c.linhas || 2) + '">' + mtEsc(v) + '</textarea>';
     else ctl = '<input id="mtm-' + c.id + '" type="' + (c.tipo || 'text') + '" value="' + mtEsc(v) + '"' + (c.lista ? ' list="mtm-dl-' + c.id + '"' : '') + (c.tipo === 'number' ? ' step="0.01" min="0"' : '') + ' autocomplete="off">' +
       (c.lista ? '<datalist id="mtm-dl-' + c.id + '">' + c.lista.map(function(o){ return '<option value="' + mtEsc(o) + '">'; }).join('') + '</datalist>' : '');
     return '<div class="campo' + (c.larga ? ' larga' : '') + '"><label>' + mtEsc(c.label) + (c.obrig ? ' <span class="obrig">*</span>' : '') + '</label>' + ctl + (c.dica ? '<div class="modal-dica">' + c.dica + '</div>' : '') + '</div>';
@@ -8905,14 +9181,21 @@ function manutModalEditar(oc){
   const sug = mtSugestaoPrevisao(oc);
   mtAbrirModal('✏️ Editar ficha — ' + oc.equipamento, [
     { id: 'etapa', label: 'Etapa atual', tipo: 'select', opcoes: MANUT_ETAPAS, valor: oc.etapa },
-    { id: 'previsao', label: 'Previsão de retorno', tipo: 'date', valor: oc.previsao, dica: sug ? 'Sugestão: ' + mtBR(sug) + ' (última peça + ' + MANUT_DIAS_MONTAGEM + ' dias)' : '' },
+    { id: 'previsao', label: 'Previsão de retorno', tipo: 'date', valor: oc.previsao, dica: sug ? 'Sugestão: ' + mtBR(sug) + ' (última peça + ' + mtDiasMontagemInfo(oc.tipo).dias + ' dias)' : '' },
     { id: 'motivo', label: 'Motivo da parada', valor: oc.motivo, obrig: true, larga: true },
     { id: 'tipo', label: 'Tipo de manutenção', valor: oc.tipo, lista: tiposManutencaoConhecidos() },
     { id: 'responsavel', label: 'Responsável técnico', valor: oc.responsavel },
     { id: 'dataEntrada', label: 'Data de entrada', tipo: 'date', valor: oc.dataEntrada, obrig: true },
-    { id: 'observacao', label: 'Observação', tipo: 'textarea', valor: oc.observacao, larga: true }
-  ], '💾 Salvar ficha', async function(v){
-    await manutAtualizar('ocorrencias', oc.id, { Etapa: v.etapa, PrevisaoRetorno: v.previsao || null, Motivo: v.motivo, Tipo: v.tipo, Responsavel: v.responsavel, DataEntrada: v.dataEntrada, Observacao: v.observacao });
+    { id: 'inicio', label: 'Início da manutenção', tipo: 'date', valor: mtInicio(oc), dica: 'Quando a oficina realmente começou a mexer no equipamento.' }
+  ].concat(mtTemColuna('ocorrencias', 'Prioridade') ? [{ id: 'prioridade', label: 'Prioridade', tipo: 'select', opcoes: MANUT_PRIORIDADES, valor: oc.prioridade }] : []).concat([
+    { id: 'observacao', label: 'Observação', tipo: 'textarea', linhas: 5, valor: oc.observacao, larga: true }
+  ]), '💾 Salvar ficha', async function(v){
+    await manutAtualizar('ocorrencias', oc.id, { Etapa: v.etapa, PrevisaoRetorno: v.previsao || null, Motivo: v.motivo, Tipo: v.tipo, Responsavel: v.responsavel, DataEntrada: v.dataEntrada, Observacao: v.observacao, DataInicio: v.inicio || null, Prioridade: v.prioridade || oc.prioridade });
+    if (v.inicio && !mtTemColuna('ocorrencias', 'DataInicio') && !mtEventosDe(oc).some(function(e){ return /^in[ií]cio/i.test(e.texto); })) {
+      await manutCriar('eventos', { Title: 'Início da manutenção', OcorrenciaId: oc.id, Equipamento: oc.equipamento, Data: v.inicio, Responsavel: v.responsavel, Realizado: true });
+      await manutRecarregar('eventos');
+    }
+    oc.inicio = v.inicio || ''; oc.prioridade = v.prioridade || oc.prioridade;
     oc.etapa = v.etapa; oc.previsao = v.previsao; oc.motivo = v.motivo; oc.tipo = v.tipo; oc.responsavel = v.responsavel; oc.dataEntrada = v.dataEntrada; oc.observacao = v.observacao;
     if (mtAberta(oc)) await mtSyncFrota(oc);
     manutRenderTudo();
@@ -9042,6 +9325,8 @@ async function manutNovaIniciar(){
   }
   document.getElementById('mtn-erro').style.display = 'none';
   document.getElementById('mtn-data').value = mtHoje();
+  document.getElementById('mtn-prior-campo').style.display = mtTemColuna('ocorrencias', 'Prioridade') ? '' : 'none';
+  document.getElementById('mtn-prior').value = 'Normal';
   const selEtapa = document.getElementById('mtn-etapa');
   selEtapa.innerHTML = MANUT_ETAPAS.map(function(e){ return '<option>' + e + '</option>'; }).join('');
   const selLocal = document.getElementById('mtn-local');
@@ -9090,9 +9375,9 @@ document.getElementById('mtn-salvar').onclick = async function(){
         Data: data + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Entrada na manutenção — ficha de manutenção', TipoManutencao: tipo, ResponsavelTecnico: resp } });
       movimentacoesCarregadas = false;
     }
-    await manutCriar('ocorrencias', { Title: eq, DataEntrada: data, Etapa: etapa, Motivo: motivo, Tipo: tipo, Responsavel: resp, PrevisaoRetorno: previsao || null, Situacao: 'Aberta', Observacao: obs });
+    await manutCriar('ocorrencias', { Title: eq, DataEntrada: data, Etapa: etapa, Motivo: motivo, Tipo: tipo, Responsavel: resp, PrevisaoRetorno: previsao || null, Situacao: 'Aberta', Observacao: obs, DataInicio: inicio || null, Prioridade: document.getElementById('mtn-prior').value });
     await manutRecarregar('ocorrencias');
-    if (inicio) {
+    if (inicio && !mtTemColuna('ocorrencias', 'DataInicio')) {
       const novaOc = mtOcAbertaDe(eq);
       if (novaOc) { await manutCriar('eventos', { Title: 'Início da manutenção', OcorrenciaId: novaOc.id, Equipamento: eq, Data: inicio, Responsavel: resp, Realizado: true }); await manutRecarregar('eventos'); }
     }
