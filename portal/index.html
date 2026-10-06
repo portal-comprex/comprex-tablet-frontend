@@ -780,16 +780,17 @@
   #tv-modal .tvm-acoes{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
   #tv-modal .tvm-dica{font-size:11.5px;color:var(--cinza);margin-top:12px;line-height:1.4}
   /* ===== Manutenção v3: layout espelhado do Painel ===== */
-  .mt-meio{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;align-items:stretch;margin-bottom:16px}
+  .mt-meio{display:grid;grid-template-columns:3.1fr 1fr;gap:16px;align-items:stretch;margin-bottom:16px}
   .mt-lista-card{display:flex;flex-direction:column;height:640px;box-sizing:border-box;margin:0}
   .mt-lista-card .mt-scroll{flex:1;min-height:0;overflow:auto}
   .mt-lista-card .mt-tabela th{position:sticky;top:0;background:var(--card);z-index:1}
   .mt-col-dir{display:flex;flex-direction:column;gap:16px;height:640px}
   .mt-col-dir .dash-card{margin:0;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column}
-  .mt-col-dir .mt-card-donut{flex:0 0 250px}
+  .mt-col-dir .mt-card-donut{flex:0 0 215px}
   .mt-col-dir .mt-card-evo{flex:1;min-height:0}
   .mt-col-dir .mt-donut-box{flex:1;padding:0;flex-wrap:nowrap}
-  .mt-col-dir .mt-donut-box svg{width:150px;height:150px}
+  .mt-col-dir .mt-donut-box svg{width:118px;height:118px}
+  .mt-col-dir .mt-donut-box{gap:10px}
   .mt-leg-pct{font-weight:400;color:var(--cinza);font-size:11px;margin-left:4px}
   .mt-filtros .painel-filtro-campo input[type=text]{border:1.5px solid #d8dee3;border-radius:9px;padding:8px 10px;font-size:13px;color:var(--tinta);background:#fff;min-width:0}
   body.tema-escuro .mt-filtros .painel-filtro-campo input[type=text]{background:#141c24;border-color:#2a3540;color:#dbe9eb}
@@ -3160,8 +3161,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       </div>
       <div class="mt-tabela-wrap mt-scroll">
         <table class="mt-tabela">
-          <thead><tr><th>Equipamento</th><th>Modelo</th><th>Entrada</th><th>Motivo da parada</th><th>Etapa atual</th><th>Onde está / Pendência</th><th id="mt-th-prev">Previsão retorno</th><th>Dias parados</th><th>Status</th><th></th></tr></thead>
-          <tbody id="mt-tbody"><tr><td colspan="10" class="mt-vazio">Carregando…</td></tr></tbody>
+          <thead><tr><th>Equipamento</th><th>Entrada</th><th>Motivo da parada</th><th>Etapa atual</th><th>Onde está / Pendência</th><th id="mt-th-prev">Previsão retorno</th><th>Dias parados</th><th>Status</th><th></th></tr></thead>
+          <tbody id="mt-tbody"><tr><td colspan="9" class="mt-vazio">Carregando…</td></tr></tbody>
         </table>
       </div>
       <div style="text-align:center;margin-top:10px"><button type="button" class="mt-btn" id="mt-ver-mais" style="display:none"></button></div>
@@ -8990,7 +8991,7 @@ function manutRenderTabela(){
   const tb = document.getElementById('mt-tbody');
   if (!lista.length) {
     document.getElementById('mt-ver-mais').style.display = 'none';
-    tb.innerHTML = '<tr><td colspan="10" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
+    tb.innerHTML = '<tr><td colspan="9" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
     document.getElementById('mt-detalhe').innerHTML = '';
     mtFecharPainelFicha();
     return;
@@ -9010,8 +9011,7 @@ function manutRenderTabela(){
     const dias = mtDiasParados(oc);
     const prev = mtAberta(oc) ? mtBR(oc.previsao) : mtBR(oc.dataSaida);
     return '<tr class="mt-linha' + (oc.id === manutSelId ? ' sel' : '') + '" data-mt-oc="' + oc.id + '">' +
-      '<td class="mt-eq"><div class="mt-eq-cel"><div class="mt-eq-foto" data-mt-foto="' + mtEsc(oc.equipamento) + '">' + (frotaTipoItem[oc.equipamento] === 'implemento' ? '🔧' : '🚜') + '</div><div>' + mtEsc(oc.equipamento) + mtBadgePri(oc.prioridade) + '</div></div></td>' +
-      '<td title="' + mtEsc(frotaDescricao[oc.equipamento] || '') + '">' + mtEsc((frotaDescricao[oc.equipamento] || '—').slice(0, 26)) + '</td>' +
+      '<td class="mt-eq"><div class="mt-eq-cel"><div class="mt-eq-foto" data-mt-foto="' + mtEsc(oc.equipamento) + '">' + (frotaTipoItem[oc.equipamento] === 'implemento' ? '🔧' : '🚜') + '</div><div>' + mtEsc(oc.equipamento) + mtBadgePri(oc.prioridade) + '<div class="mt-eq-tipo" title="' + mtEsc(frotaDescricao[oc.equipamento] || '') + '">' + mtEsc((frotaDescricao[oc.equipamento] || '').slice(0, 26)) + '</div></div></div></td>' +
       '<td>' + mtBR(oc.dataEntrada) + '</td>' +
       '<td>' + mtEsc(oc.motivo || '—') + '</td>' +
       '<td><span class="mt-etapa ' + (mtAberta(oc) ? mtClasseEtapa(oc.etapa) : 'e-ok') + '">' + (mtAberta(oc) ? mtEsc(oc.etapa) : 'Concluída') + '</span>' + mtMiniProg(oc) + '</td>' +
