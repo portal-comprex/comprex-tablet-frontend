@@ -573,6 +573,27 @@
   .mt-linha.sel td{background:var(--cream);box-shadow:inset 0 0 0 0 transparent}
   .mt-linha.sel td:first-child{box-shadow:inset 3px 0 0 var(--navy)}
   .mt-eq{font-weight:800}
+  .mt-tipos{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .mt-tipo-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--linha);border-radius:999px;padding:5px 11px;font-size:12px;cursor:pointer;background:var(--card);color:var(--tinta);user-select:none;text-transform:none;letter-spacing:0;font-weight:500}
+  .mt-tipo-chip input{margin:0;width:auto !important;padding:0 !important;accent-color:var(--navy);cursor:pointer}
+  .mt-tipo-chip.on{background:rgba(27,107,52,.12);border-color:var(--navy);font-weight:700}
+  .mt-tipos .mt-tipo-outros{flex:1 1 100%;margin-top:2px}
+  .mt-cond-box{background:var(--cream);border:1px solid var(--linha);border-radius:10px;padding:10px 12px}
+  .mt-cond-box .mt-form{margin-top:10px}
+  .mt-mets{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+  .mt-met{border:1px solid var(--linha);border-radius:10px;padding:10px 12px;background:var(--card)}
+  .mt-met b{display:block;font-size:20px;color:var(--tinta);line-height:1.15}
+  .mt-met span{display:block;font-size:10.5px;color:var(--cinza);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
+  .mt-met small{display:block;font-size:10.5px;color:var(--cinza);margin-top:2px}
+  .mt-met.bom b{color:#1e8a4c} .mt-met.ruim b{color:#c0392b}
+  .mt-pend-banner{margin:12px 0 0;border:1px solid #e9c46a;background:rgba(233,196,106,.16);border-radius:10px;padding:10px 12px;font-size:12.5px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .mt-pend-banner.ok{border-color:#9ccfae;background:rgba(30,138,76,.10)}
+  #mt-ind .painel-metas{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:820px){ .mt-mets{grid-template-columns:repeat(2,1fr)} #mt-ind .painel-metas{grid-template-columns:repeat(2,1fr)} }
+  .mt-resumo-eq{width:100%;border-collapse:collapse;font-size:12px}
+  .mt-resumo-eq th{text-align:left;font-size:10.5px;color:var(--cinza);padding:6px 8px;border-bottom:1px solid var(--linha);white-space:nowrap}
+  .mt-resumo-eq td{padding:7px 8px;border-bottom:1px solid var(--linha)}
+  .mt-resumo-eq tr[data-mt-oc-eq]{cursor:pointer} .mt-resumo-eq tr[data-mt-oc-eq]:hover td{background:var(--cream)}
   .mt-eq-cel{display:flex;align-items:center;gap:10px}
   .mt-eq-foto{width:46px;height:46px;border-radius:9px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0}
   .mt-eq-foto img{width:100%;height:100%;object-fit:cover;display:block}
@@ -3180,6 +3201,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="mt-box"><h4>🔁 Equipamentos que mais voltam para a manutenção</h4><div id="mt-ind-reinc"></div></div>
       <div class="mt-box"><h4>💰 Custo de peças por equipamento</h4><div id="mt-ind-custo"></div></div>
     </div>
+    <div class="mt-box" style="margin-top:12px"><h4>📋 Resumo por equipamento no período <span style="font-weight:400;text-transform:none;color:var(--cinza)">(tempo em manutenção, espera de peça, custo e disponibilidade mecânica)</span></h4><div id="mt-ind-resumo" class="mt-scroll"></div></div>
   </div>
 </div>
 <div class="view" id="view-manut-nova">
@@ -3204,18 +3226,37 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <label>Motivo da parada <span class="obrig">*</span></label>
         <input type="text" id="mtn-motivo" placeholder="Ex.: Bomba hidráulica travada, vazamento no comando…" autocomplete="off">
       </div>
-      <div class="campo">
-        <label>Tipo de manutenção <span class="obrig">*</span></label>
-        <div class="busca-wrap">
-          <input type="text" id="mtn-tipo" placeholder="Ex.: Problema no comando hidráulico…" autocomplete="off">
-          <button type="button" class="busca-limpar" style="display:none">✕</button>
-          <span class="busca-seta">⌄</span>
-          <div class="busca-lista"></div>
-        </div>
+      <div class="campo larga">
+        <label>Tipo de manutenção <span class="obrig">*</span> <span style="text-transform:none;letter-spacing:0;font-weight:400">(pode marcar mais de um)</span></label>
+        <div id="mtn-tipo-box"></div>
       </div>
       <div class="campo">
         <label>Responsável técnico <span class="obrig">*</span></label>
         <input type="text" id="mtn-resp" placeholder="Quem está cuidando" autocomplete="off">
+      </div>
+      <div class="campo larga mt-cond-box">
+        <label>Situação da demanda <span style="text-transform:none;letter-spacing:0;font-weight:400">(opcional — preencha se o equipamento já está aguardando algo)</span></label>
+        <select id="mtn-cond">
+          <option value="">Nenhuma — manutenção normal na oficina</option>
+          <option value="terceiro">Aguardando peça de terceiros (conserto externo)</option>
+          <option value="tecnico">Aguardando técnico</option>
+          <option value="comprada">Aguardando peça comprada</option>
+        </select>
+        <div class="mt-form" id="mtn-cond-terceiro" style="display:none">
+          <div class="campo larga"><label>Peça / serviço no terceiro <span class="obrig">*</span></label><input type="text" id="mtc-t-peca" placeholder="Ex.: Parafusos do cubo da roda para refazer" autocomplete="off"></div>
+          <div class="campo larga"><label>Fornecedor / terceiro <span class="obrig">*</span></label><input type="text" id="mtc-t-forn" placeholder="Ex.: Cromotec" autocomplete="off"></div>
+          <div class="campo"><label>Data de ida <span class="obrig">*</span></label><input type="date" id="mtc-t-ida"></div>
+          <div class="campo"><label>Data de volta (prevista) <span class="obrig">*</span></label><input type="date" id="mtc-t-volta"></div>
+        </div>
+        <div class="mt-form" id="mtn-cond-tecnico" style="display:none">
+          <div class="campo"><label>Técnico <span class="obrig">*</span></label><input type="text" id="mtc-k-tec" placeholder="Nome do técnico / empresa" autocomplete="off"></div>
+          <div class="campo"><label>Data prevista do atendimento <span class="obrig">*</span></label><input type="date" id="mtc-k-data"></div>
+        </div>
+        <div class="mt-form" id="mtn-cond-comprada" style="display:none">
+          <div class="campo larga"><label>Peça comprada <span class="obrig">*</span></label><input type="text" id="mtc-c-peca" placeholder="Ex.: Cilindro da sapata" autocomplete="off"></div>
+          <div class="campo"><label>Fornecedor possível</label><input type="text" id="mtc-c-forn" placeholder="Onde será comprada" autocomplete="off"></div>
+          <div class="campo"><label>Data de chegada (prevista) <span class="obrig">*</span></label><input type="date" id="mtc-c-chegada"></div>
+        </div>
       </div>
       <div class="campo">
         <label>Etapa inicial</label>
@@ -3337,7 +3378,10 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   <div class="hist-detalhe-modal oc-painel-modal mt-painel-modal">
     <div class="hist-detalhe-header">
       <h3>🔧 Ficha de manutenção — <span id="mt-ficha-titulo"></span></h3>
-      <button class="modal-fechar" id="mt-ficha-fechar" style="color:#1a2430">✕</button>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button class="painel-lateral-imprimir" id="mt-ficha-imprimir" title="Imprimir / Salvar em PDF a ficha de manutenção">🖨️</button>
+        <button class="modal-fechar" id="mt-ficha-fechar" style="color:#1a2430">✕</button>
+      </div>
     </div>
     <div class="hist-detalhe-corpo" id="mt-detalhe"></div>
   </div>
@@ -3475,14 +3519,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="campo" id="loc-mover-manut-wrap" style="margin-top:12px;display:none;background:#fdf6ec;border:1px solid #e9d8ad;border-radius:8px;padding:10px 12px">
         <div class="campo">
           <label>Tipo de manutenção <span class="obrig">*</span></label>
-          <div class="busca-wrap">
-            <span class="busca-icone">🔍</span>
-            <input type="text" id="loc-mover-manut-tipo" placeholder="Ex.: Problema no cilindro de elevação…" autocomplete="off">
-            <button type="button" class="busca-limpar" style="display:none">✕</button>
-            <span class="busca-seta">⌄</span>
-            <div class="busca-lista"></div>
-          </div>
-          <div class="modal-dica" style="margin-top:4px">Digite o problema/tipo — sugere o que já foi usado antes, mas pode digitar um novo.</div>
+          <div id="loc-mover-manut-tipo-box"></div>
+          <div class="modal-dica" style="margin-top:4px">Pode marcar mais de um. Em "Outros", descreva.</div>
         </div>
         <div class="campo" style="margin-top:10px">
           <label>Responsável técnico <span class="obrig">*</span></label>
@@ -5726,7 +5764,22 @@ function movMostrarErro(msg){
   el.style.display = 'block';
   setTimeout(function(){ el.style.display = 'none'; }, 6000);
 }
+/* Destino "COMPREX - Manutenção" na tela Mover Equipamento: vai direto para a Nova Entrada na Manutenção. */
+function movPrecisaEntradaManut(){
+  const cod = (document.getElementById('mov-equipamento').value || '').trim().toUpperCase();
+  const eq = frotas.find(function(x){ return x.toUpperCase() === cod; });
+  const loc = document.getElementById('mov-novo-local').value.trim();
+  return eq && locPrecisaEntrada(eq, loc) ? { eq: eq, loc: loc } : null;
+}
+function movIrParaEntradaManut(r){
+  document.getElementById('mov-novo-local').value = '';
+  locIrParaNovaEntrada(r.eq, r.loc);
+}
+document.getElementById('mov-novo-local').addEventListener('change', function(){
+  const r = movPrecisaEntradaManut(); if (r) movIrParaEntradaManut(r);
+});
 document.getElementById('mov-salvar').onclick = async function(){
+  { const r0 = movPrecisaEntradaManut(); if (r0) { movIrParaEntradaManut(r0); return; } }
   const eq = document.getElementById('mov-equipamento').value.trim().toUpperCase();
   const impl = document.getElementById('mov-implemento').value.trim().toUpperCase();
   const novoLocalInformado = document.getElementById('mov-novo-local').value.trim();
@@ -5921,12 +5974,11 @@ function locAbrirModalMover(eq){
   // Tipo de manutenção / responsável técnico: só fazem sentido quando o
   // equipamento está (ou vai ficar) EM MANUTENÇÃO — prefiech com o que já
   // estiver em andamento, se for o caso de só editar sem trocar o status.
-  document.getElementById('loc-mover-manut-tipo').value = frotaTipoManutencao[eq] || '';
+  document.getElementById('loc-mover-manut-tipo-box').innerHTML = mtTiposHtml('loc-mover-manut-tipo', frotaTipoManutencao[eq] || '');
   document.getElementById('loc-mover-manut-responsavel').value = frotaResponsavelTecnico[eq] || '';
   document.getElementById('loc-mover-manut-obs').value = frotaObservacaoManutencao[eq] || '';
   document.getElementById('loc-mover-manut-previsao').value = frotaPrevisaoReparo[eq] || '';
   locAtualizarVisibilidadeCamposManut();
-  if (!locComboTipoManutLigado) { configurarComboBusca('loc-mover-manut-tipo', tiposManutencaoConhecidos); locComboTipoManutLigado = true; }
   document.getElementById('loc-mover-overlay').classList.add('aberto');
 }
 let locComboTipoManutLigado = false;
@@ -5943,15 +5995,31 @@ document.getElementById('loc-mover-fechar').onclick = function(){
 document.getElementById('loc-mover-overlay').onclick = function(e){
   if (e.target === document.getElementById('loc-mover-overlay')) document.getElementById('loc-mover-overlay').classList.remove('aberto');
 };
+/* Destino "COMPREX - Manutenção": em vez de só mover, abre a Nova Entrada na Manutenção já com o equipamento. */
+function locDestinoEhManutencao(l){ return /comprex/i.test(l || '') && /manuten/i.test(l || ''); }
+var manutNovaPreset = null;
+function locIrParaNovaEntrada(eq, local){
+  document.getElementById('loc-mover-overlay').classList.remove('aberto');
+  manutNovaPreset = { eq: eq, local: local };
+  mostrarView('manut-nova');
+}
+function locPrecisaEntrada(eq, local){
+  if (!eq || !locDestinoEhManutencao(local)) return false;
+  return !((frotaStatusAtual[eq] || '') === 'EM MANUTENÇÃO' && (typeof mtOcAbertaDe === 'function') && mtOcAbertaDe(eq));
+}
+document.getElementById('loc-mover-novo-local').addEventListener('change', function(){
+  if (locPrecisaEntrada(locMoverEquipAlvo, this.value)) locIrParaNovaEntrada(locMoverEquipAlvo, this.value);
+});
 document.getElementById('loc-mover-confirmar').onclick = async function(){
   const eq = locMoverEquipAlvo;
+  if (locPrecisaEntrada(eq, document.getElementById('loc-mover-novo-local').value)) { locIrParaNovaEntrada(eq, document.getElementById('loc-mover-novo-local').value); return; }
   const localAtual = frotaLocalAtual[eq] || '';
   const novoLocal = document.getElementById('loc-mover-novo-local').value;
   const novoStatus = document.getElementById('loc-mover-status').value;
   const dataInformada = document.getElementById('loc-mover-data').value;
   const statusAtual = frotaStatusAtual[eq] || 'OPERACIONAL';
   const erroEl = document.getElementById('loc-mover-erro');
-  const novoTipoManut = document.getElementById('loc-mover-manut-tipo').value;
+  const novoTipoManut = mtTiposLer('loc-mover-manut-tipo') || '';
   const novoResponsavelManut = document.getElementById('loc-mover-manut-responsavel').value.trim();
   if (!dataInformada) { erroEl.textContent = '⚠️ Informe a data.'; erroEl.style.display = 'block'; return; }
   if (novoLocal === localAtual && novoStatus === statusAtual) {
@@ -5960,7 +6028,7 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
     return;
   }
   if (novoStatus === 'EM MANUTENÇÃO' && !novoTipoManut) {
-    erroEl.textContent = '⚠️ Selecione o tipo de manutenção (Preventiva ou Corretiva).';
+    erroEl.textContent = '⚠️ Selecione o tipo de manutenção (e descreva, se marcar "Outros").';
     erroEl.style.display = 'block';
     return;
   }
@@ -6888,6 +6956,55 @@ const TIPOS_MANUTENCAO_SEED = [
   'Troca de mangueira hidráulica',
   'Revisão preventiva programada'
 ];
+const MANUT_TIPOS = ['Linha Hidráulica', 'Parte elétrica', 'Material Rodante', 'Adequação/Correção em implemento', 'FPS06', 'Comando Hidráulico', 'Bomba Hidráulica', 'Cilindros hidráulicos', 'Estabilizadores', 'Sistema de Direção', 'Outros'];
+/** Lê o texto salvo ("A; B; Outros: xxx") e separa o que é opção da lista, o texto livre de "Outros" e valores antigos. */
+function mtTiposParse(str){
+  const sel = [], outros = [], legado = [];
+  let temOutros = false;
+  String(str || '').split(';').forEach(function(t){
+    t = t.trim(); if (!t) return;
+    const i = MANUT_TIPOS.findIndex(function(x){ return x.toLowerCase() === t.toLowerCase(); });
+    if (i >= 0 && MANUT_TIPOS[i] !== 'Outros') { if (sel.indexOf(MANUT_TIPOS[i]) < 0) sel.push(MANUT_TIPOS[i]); return; }
+    const m = /^outros\s*:?\s*(.*)$/i.exec(t);
+    if (m) { temOutros = true; if (m[1]) outros.push(m[1]); return; }
+    temOutros = true; outros.push(t); legado.push(t);
+  });
+  return { sel: sel, temOutros: temOutros, outros: outros.join(', '), legado: legado };
+}
+/** Lista de "etiquetas" de um tipo salvo (para filtros e ranking). */
+function mtTiposLista(str){
+  const p = mtTiposParse(str);
+  const out = p.sel.slice();
+  p.legado.forEach(function(l){ out.push(l); });
+  if (p.temOutros && p.legado.length === 0) out.push('Outros');
+  return out;
+}
+function mtTiposHtml(id, valor){
+  const p = mtTiposParse(valor);
+  return '<div class="mt-tipos" id="' + id + '">' + MANUT_TIPOS.map(function(t){
+    const on = t === 'Outros' ? p.temOutros : p.sel.indexOf(t) >= 0;
+    return '<div class="mt-tipo-chip' + (on ? ' on' : '') + '"><input type="checkbox" value="' + mtEsc(t) + '"' + (on ? ' checked' : '') + '><span>' + mtEsc(t) + '</span></div>';
+  }).join('') + '<input type="text" class="mt-tipo-outros" placeholder="Descreva o outro tipo de manutenção…" value="' + mtEsc(p.outros) + '" style="' + (p.temOutros ? '' : 'display:none') + '" autocomplete="off"></div>';
+}
+/** Devolve o texto a gravar (ex.: "Linha Hidráulica; Outros: vazamento no bloco"), '' se nada marcado, ou null se marcou "Outros" sem descrever. */
+function mtTiposLer(id){
+  const box = document.getElementById(id); if (!box) return '';
+  const out = []; let nulo = false;
+  box.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+    if (!cb.checked) return;
+    if (cb.value === 'Outros') {
+      const txt = (box.querySelector('.mt-tipo-outros').value || '').trim();
+      if (!txt) nulo = true; else out.push('Outros: ' + txt);
+    } else out.push(cb.value);
+  });
+  return nulo ? null : out.join('; ');
+}
+document.addEventListener('click', function(e){
+  const chip = e.target.closest && e.target.closest('.mt-tipo-chip'); if (!chip) return;
+  const cb = chip.querySelector('input'); if (e.target !== cb) cb.checked = !cb.checked;
+  chip.classList.toggle('on', cb.checked);
+  if (cb.value === 'Outros') { const o = chip.parentNode.querySelector('.mt-tipo-outros'); o.style.display = cb.checked ? '' : 'none'; if (cb.checked) o.focus(); }
+});
 function tiposManutencaoConhecidos(){
   const usados = new Set(TIPOS_MANUTENCAO_SEED);
   (movimentacoesItens || []).forEach(function(m){ if (m.tipoManutencao) usados.add(m.tipoManutencao); });
@@ -8075,6 +8192,45 @@ function mtPecasDe(oc){ return manutPecas.filter(function(p){ return p.ocId === 
 function mtPendentes(oc){ return mtPecasDe(oc).filter(function(p){ return p.situacao !== 'Recebida'; }); }
 function mtEventosDe(oc){ return manutEventos.filter(function(e){ return e.ocId === oc.id; }); }
 function mtDiasParados(oc){ return Math.max(0, mtDias(oc.dataEntrada || mtHoje(), oc.dataSaida || mtHoje())); }
+/* ---- indicadores por manutenção / equipamento ---- */
+function mtFimOc(oc){ return oc.dataSaida || mtHoje(); }
+/** Dias em que o equipamento ficou esperando peça (terceiro ou compra), sem contar o mesmo dia duas vezes. */
+function mtDiasAguardandoPeca(oc){
+  const ini = oc.dataEntrada || mtHoje(), fim = mtFimOc(oc), iv = [];
+  mtPecasDe(oc).forEach(function(p){
+    let a = p.dataEnvio || ini, b = p.retornoReal || (p.situacao === 'Recebida' ? a : fim);
+    if (a < ini) a = ini;
+    if (b > fim) b = fim;
+    if (b > a) iv.push([a, b]);
+  });
+  iv.sort(function(x, y){ return x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0; });
+  let tot = 0, cur = null;
+  iv.forEach(function(x){
+    if (!cur) cur = x.slice();
+    else if (x[0] <= cur[1]) { if (x[1] > cur[1]) cur[1] = x[1]; }
+    else { tot += mtDias(cur[0], cur[1]); cur = x.slice(); }
+  });
+  if (cur) tot += mtDias(cur[0], cur[1]);
+  return tot;
+}
+function mtCustoOc(oc){ return mtPecasDe(oc).reduce(function(s, p){ return s + (p.custo || 0); }, 0); }
+function mtSobreposicao(oc, de, ate){
+  const a = (oc.dataEntrada || '') > de ? oc.dataEntrada : de, fim = mtFimOc(oc), b = fim < ate ? fim : ate;
+  return b > a ? mtDias(a, b) : 0;
+}
+/** Disponibilidade mecânica (%) do equipamento entre duas datas = 1 − dias parados / dias do período. */
+function mtDispMecEq(eq, de, ate){
+  const dias = Math.max(1, mtDias(de, ate));
+  const par = manutOcorrencias.filter(function(o){ return o.equipamento === eq; }).reduce(function(s, o){ return s + mtSobreposicao(o, de, ate); }, 0);
+  return Math.max(0, Math.min(100, (1 - par / dias) * 100));
+}
+function mtPct(x){ return (Math.round(x * 10) / 10).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
+/** Liberação com pendência: fica guardada na Observação como "[PENDÊNCIA] texto" (e "[PENDÊNCIA RESOLVIDA dd/mm/aaaa] texto" depois). */
+function mtPendenciaDe(oc){
+  const m = /^\[PENDÊNCIA( RESOLVIDA[^\]]*)?\]\s*(.*)$/m.exec(oc.observacao || '');
+  return m ? { texto: m[2], resolvida: !!m[1], info: (m[1] || '').replace('RESOLVIDA', '').trim() } : null;
+}
+function mtPendenciaAbertaOc(oc){ const p = mtPendenciaDe(oc); return !mtAberta(oc) && !!p && !p.resolvida; }
 
 /* ---------- novas regras: início, prioridade, itens de serviço, prazo de montagem aprendido ---------- */
 function mtTemColuna(chave, L){ return !!(manutColMap[chave] && manutColMap[chave][L]); }
@@ -8131,7 +8287,7 @@ function mtSugestaoPrevisao(oc){
   return mtSoma(ultima, mtDiasMontagemInfo(oc.tipo).dias);
 }
 function mtStatusPrazo(oc){
-  if (!mtAberta(oc)) return { chave: 'concluida', texto: 'Concluída' };
+  if (!mtAberta(oc)) return { chave: 'concluida', texto: mtPendenciaAbertaOc(oc) ? 'Concl. c/ pendência' : 'Concluída' };
   const hoje = mtHoje();
   const atrasoGeral = oc.previsao && oc.previsao < hoje;
   const atrasoPeca = mtPendentes(oc).some(function(p){ return p.previsao && p.previsao < hoje; });
@@ -8154,7 +8310,7 @@ function mtPassaFx(oc){
   const f = manutFx;
   if (f.etapa && (mtAberta(oc) ? oc.etapa : 'Concluída') !== f.etapa) return false;
   if (f.status && mtStatusPrazo(oc).chave !== f.status) return false;
-  if (f.tipo && (oc.tipo || '') !== f.tipo) return false;
+  if (f.tipo && mtTiposLista(oc.tipo).indexOf(f.tipo) < 0 && (oc.tipo || '') !== f.tipo) return false;
   if (f.resp && (oc.responsavel || '') !== f.resp) return false;
   if (f.prior && oc.prioridade !== f.prior) return false;
   if (f.local && (frotaLocalAtual[oc.equipamento] || '') !== f.local) return false;
@@ -8388,7 +8544,8 @@ function mtUnicos(fn){
 }
 function manutPopularFiltros(){
   mtPopular(document.getElementById('mtf-etapa'), MANUT_ETAPAS.concat(['Concluída']), 'Todas');
-  mtPopular(document.getElementById('mtf-tipo'), mtUnicos(function(o){ return o.tipo; }), 'Todos');
+  (function(){ const m = {}; manutOcorrencias.forEach(function(o){ mtTiposLista(o.tipo).forEach(function(t){ m[t] = 1; }); });
+    mtPopular(document.getElementById('mtf-tipo'), Object.keys(m).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); }), 'Todos'); })();
   mtPopular(document.getElementById('mtf-resp'), mtUnicos(function(o){ return o.responsavel; }), 'Todos');
   mtPopular(document.getElementById('mtf-local'), mtUnicos(function(o){ return frotaLocalAtual[o.equipamento]; }), 'Todos');
   const mapa = { etapa: 'mtf-etapa', status: 'mtf-status', tipo: 'mtf-tipo', resp: 'mtf-resp', prior: 'mtf-prior', local: 'mtf-local', de: 'mtf-de', ate: 'mtf-ate' };
@@ -8469,6 +8626,16 @@ function manutRenderExtras(abertas, pendAll, proxRet, nAt){
 let manutIndDias = 90;
 function mtMedia(v){ return v.length ? v.reduce(function(s, x){ return s + x; }, 0) / v.length : null; }
 function mtFmtDias(x){ return x === null ? '—' : (x >= 10 ? Math.round(x) : x.toFixed(1).replace('.', ',')) + ' d'; }
+/** Uma linha por equipamento: nº de manutenções, dias em manutenção, dias aguardando peça, custo e disponibilidade mecânica no período. */
+function mtResumoPorEq(ocs, de, ate){
+  const m = {};
+  ocs.forEach(function(o){ (m[o.equipamento] = m[o.equipamento] || []).push(o); });
+  return Object.keys(m).map(function(eq){
+    const l = m[eq];
+    return { eq: eq, n: l.length, dias: l.reduce(function(s, o){ return s + mtDiasParados(o); }, 0), aguard: l.reduce(function(s, o){ return s + mtDiasAguardandoPeca(o); }, 0),
+      custo: l.reduce(function(s, o){ return s + mtCustoOc(o); }, 0), dm: mtDispMecEq(eq, de, ate) };
+  }).sort(function(a, b){ return b.dias - a.dias; });
+}
 function manutRenderIndicadores(){
   const corte = manutIndDias ? mtSoma(mtHoje(), -manutIndDias) : '';
   const ocs = manutOcorrencias.filter(function(o){ return !corte || (o.dataEntrada || '') >= corte; });
@@ -8478,8 +8645,18 @@ function manutRenderIndicadores(){
   const esperas = ocs.map(mtEsperaInicio).filter(function(x){ return x !== null; });
   const ciclos = manutPecas.filter(function(p){ return ids[p.ocId] && p.dataEnvio && p.retornoReal; }).map(function(p){ return Math.max(0, mtDias(p.dataEnvio, p.retornoReal)); });
   const custoTot = manutPecas.filter(function(p){ return ids[p.ocId]; }).reduce(function(s, p){ return s + (p.custo || 0); }, 0);
+  const hojeI = mtHoje();
+  const datasEnt = manutOcorrencias.map(function(o){ return o.dataEntrada; }).filter(Boolean).sort();
+  const deI = corte || (datasEnt.length && datasEnt[0] < mtSoma(hojeI, -1) ? datasEnt[0] : mtSoma(hojeI, -90));
+  const nFrotaI = frotas.filter(function(eq){ return frotaTipoItem[eq] !== 'implemento'; }).length || 1;
+  const diasI = Math.max(1, mtDias(deI, hojeI));
+  const parI = manutOcorrencias.filter(function(o){ return frotaTipoItem[o.equipamento] !== 'implemento'; }).reduce(function(s, o){ return s + mtSobreposicao(o, deI, hojeI); }, 0);
+  const dmFrota = Math.max(0, Math.min(100, (1 - parI / (nFrotaI * diasI)) * 100));
+  const aguardos = ocs.map(mtDiasAguardandoPeca);
   const tiles = [
-    { l: 'Tempo médio de parada', v: mtFmtDias(tempoParada), m: conc.length + ' manutenção(ões) concluída(s)' },
+    { l: 'Tempo médio de manutenção', v: mtFmtDias(tempoParada), m: conc.length + ' manutenção(ões) concluída(s)' },
+    { l: 'Disponibilidade mecânica da frota', v: mtPct(dmFrota), m: parI + ' dia(s)-máquina parados em ' + diasI + ' dia(s) · ' + nFrotaI + ' equipamentos' },
+    { l: 'Tempo aguardando peça', v: mtFmtDias(mtMedia(aguardos)), m: ocs.length ? 'média por manutenção · total ' + aguardos.reduce(function(a, b){ return a + b; }, 0) + ' dia(s)' : 'sem fichas no período' },
     { l: 'Espera até iniciar', v: mtFmtDias(mtMedia(esperas)), m: esperas.length ? 'média em ' + esperas.length + ' ficha(s) com início informado' : 'informe o “Início da manutenção” nas fichas' },
     { l: 'Ciclo médio de peça no terceiro', v: mtFmtDias(mtMedia(ciclos)), m: ciclos.length + ' peça(s) recebida(s)' },
     { l: 'Custo de peças', v: mtMoeda(custoTot), m: ocs.length ? 'média de ' + mtMoeda(custoTot / ocs.length) + ' por ficha' : 'sem fichas no período' }
@@ -8503,7 +8680,12 @@ function manutRenderIndicadores(){
   document.getElementById('mt-ind-custo').innerHTML = topC.length ? topC.map(function(c){
     return '<div class="mt-rec" data-mt-oc-eq="' + mtEsc(c[0]) + '"><span class="nm" style="flex:0 0 22%">' + mtEsc(c[0]) + '</span><span class="bar"><i style="width:' + (c[1] / mx * 100).toFixed(0) + '%"></i></span><b style="min-width:92px">' + mtMoeda(c[1]) + '</b></div>';
   }).join('') : '<div class="mt-vazio-mini">Informe o custo das peças (aba Componentes / Peças) para ver este ranking.</div>';
-  ['mt-ind-reinc', 'mt-ind-custo'].forEach(function(id){
+  const linhasR = mtResumoPorEq(ocs, deI, hojeI);
+  document.getElementById('mt-ind-resumo').innerHTML = linhasR.length ? '<table class="mt-resumo-eq"><thead><tr><th>Equipamento</th><th>Manutenções</th><th>Tempo em manutenção</th><th>Aguardando peça</th><th>Custo (peças)</th><th>Disponibilidade mecânica</th></tr></thead><tbody>' +
+    linhasR.slice(0, 15).map(function(r){
+      return '<tr data-mt-oc-eq="' + mtEsc(r.eq) + '"><td><b>' + mtEsc(r.eq) + '</b></td><td>' + r.n + '</td><td>' + r.dias + ' d</td><td>' + r.aguard + ' d</td><td>' + mtMoeda(r.custo) + '</td><td>' + mtPct(r.dm) + '</td></tr>';
+    }).join('') + '</tbody></table>' + (linhasR.length > 15 ? '<div class="mt-vazio-mini">+ ' + (linhasR.length - 15) + ' equipamento(s) — veja todos no Excel.</div>' : '') : '<div class="mt-vazio-mini">Nenhuma manutenção no período.</div>';
+  ['mt-ind-reinc', 'mt-ind-custo', 'mt-ind-resumo'].forEach(function(id){
     document.getElementById(id).onclick = function(e){ const el = e.target.closest('[data-mt-oc-eq]'); if (el) manutAbrirFicha(el.dataset.mtOcEq); };
   });
 }
@@ -8609,13 +8791,17 @@ function manutRenderBlocos(abertas, pendAll){
   const aten = abertas.filter(function(o){ return (mtStatusPrazo(o).chave in ordem) || o.prioridade === 'Crítica'; }).sort(function(a, b){
     return mtRankPri(a.prioridade) - mtRankPri(b.prioridade) || (ordem[mtStatusPrazo(a).chave] === undefined ? 2 : ordem[mtStatusPrazo(a).chave]) - (ordem[mtStatusPrazo(b).chave] === undefined ? 2 : ordem[mtStatusPrazo(b).chave]) || mtDiasParados(b) - mtDiasParados(a);
   });
-  document.getElementById('mt-aten-num').textContent = aten.length;
-  document.getElementById('mt-aten').innerHTML = aten.length ? aten.map(function(o){
+  const pendConc = manutOcorrencias.filter(mtPendenciaAbertaOc);
+  document.getElementById('mt-aten-num').textContent = aten.length + pendConc.length;
+  document.getElementById('mt-aten').innerHTML = (aten.length ? aten.map(function(o){
     const at = mtStatusPrazo(o).chave === 'atrasado';
     const motivo = at ? mtAtrasoTexto(o) : (!o.previsao ? 'sem previsão de retorno' : (o.prioridade === 'Crítica' ? 'prioridade crítica' : 'prazo de peça adiado'));
     return '<div class="mt-it" data-mt-oc-eq="' + mtEsc(o.equipamento) + '"><span class="eq">' + mtEsc(o.equipamento) + '</span><span class="tx">' + mtEsc(o.motivo || o.tipo || o.etapa) +
       '<small>' + mtEsc(o.etapa) + ' · ' + mtDiasParados(o) + ' dia(s) parado</small></span><span class="dt ' + (at ? 'ruim' : 'med') + '">' + mtEsc(motivo) + '</span></div>';
-  }).join('') : '<div class="mt-vazio-mini">Nada exigindo atenção agora. 🎉</div>';
+  }).join('') : (pendConc.length ? '' : '<div class="mt-vazio-mini">Nada exigindo atenção agora. 🎉</div>')) + pendConc.map(function(o){
+    return '<div class="mt-it" data-mt-oc-eq="' + mtEsc(o.equipamento) + '" data-mt-oc-id="' + o.id + '"><span class="eq">' + mtEsc(o.equipamento) + '</span><span class="tx">' + mtEsc(mtPendenciaDe(o).texto) +
+      '<small>liberado em ' + mtBR(o.dataSaida) + ' com pendência</small></span><span class="dt med">pendência</span></div>';
+  }).join('');
   // peças pendentes
   const pend = pendAll.slice().sort(function(a, b){ return (a.p.previsao || '9999').localeCompare(b.p.previsao || '9999'); });
   document.getElementById('mt-pend-num').textContent = pend.length;
@@ -8626,7 +8812,7 @@ function manutRenderBlocos(abertas, pendAll){
   }).join('') : '<div class="mt-vazio-mini">Nenhuma peça pendente.</div>';
   // recorrentes (tipo) em todo o histórico
   const cont = {};
-  manutOcorrencias.forEach(function(o){ const t = (o.tipo || '').trim(); if (t) cont[t] = (cont[t] || 0) + 1; });
+  manutOcorrencias.forEach(function(o){ mtTiposLista(o.tipo).forEach(function(t){ cont[t] = (cont[t] || 0) + 1; }); });
   const rec = Object.keys(cont).map(function(t){ return [t, cont[t]]; }).sort(function(a, b){ return b[1] - a[1]; }).slice(0, 8);
   const mx = rec.length ? rec[0][1] : 1;
   document.getElementById('mt-rec').innerHTML = rec.length ? rec.map(function(r){
@@ -8635,6 +8821,7 @@ function manutRenderBlocos(abertas, pendAll){
   ['mt-aten', 'mt-pend'].forEach(function(id){
     document.getElementById(id).onclick = function(e){
       const el = e.target.closest('[data-mt-oc-eq]'); if (!el) return;
+      if (el.dataset.mtOcId) { manutSelId = el.dataset.mtOcId; manutFiltro = 'historico'; manutAba = 'timeline'; manutMarcarSidebar(); manutRenderTudo(); mtAbrirPainelFicha(); return; }
       manutAbrirFichaAba(el.dataset.mtOcEq, el.dataset.mtAba);
     };
   });
@@ -8712,7 +8899,9 @@ function manutRelatorioExcel(){
     return { 'Equipamento': oc.equipamento, 'Modelo': frotaDescricao[oc.equipamento] || '', 'Entrada': mtBR(oc.dataEntrada), 'Motivo da parada': oc.motivo, 'Tipo': oc.tipo,
       'Responsável': oc.responsavel, 'Etapa': mtAberta(oc) ? oc.etapa : 'Concluída', 'Local atual': frotaLocalAtual[oc.equipamento] || '', 'Onde está / Pendência': mtOnde(oc),
       'Previsão de retorno': mtBR(oc.previsao), 'Saída': mtBR(oc.dataSaida), 'Dias parados': mtDiasParados(oc), 'Status': mtStatusPrazo(oc).texto,
-      'Prioridade': oc.prioridade, 'Início da manutenção': mtBR(mtInicio(oc)), 'Espera até iniciar (dias)': mtEsperaInicio(oc) === null ? '' : mtEsperaInicio(oc), 'Itens feitos': mtProgresso(oc).feitos + '/' + mtProgresso(oc).total };
+      'Prioridade': oc.prioridade, 'Início da manutenção': mtBR(mtInicio(oc)), 'Espera até iniciar (dias)': mtEsperaInicio(oc) === null ? '' : mtEsperaInicio(oc), 'Itens feitos': mtProgresso(oc).feitos + '/' + mtProgresso(oc).total,
+      'Aguardando peça (dias)': mtDiasAguardandoPeca(oc), 'Custo das peças (R$)': mtCustoOc(oc), 'Disponibilidade mecânica 90d (%)': Math.round(mtDispMecEq(oc.equipamento, mtSoma(mtHoje(), -90), mtHoje()) * 10) / 10,
+      'Liberação': mtAberta(oc) ? '' : (mtPendenciaDe(oc) ? (mtPendenciaDe(oc).resolvida ? 'Com pendência (resolvida)' : 'Com pendência: ' + mtPendenciaDe(oc).texto) : 'Sem pendência') };
   });
   const dPe = manutPecas.filter(function(p){ return ids[p.ocId]; }).map(function(p){
     return { 'Equipamento': ids[p.ocId].equipamento, 'Peça': p.nome, 'Situação': p.situacao, 'Destino': p.destino, 'Envio': mtBR(p.dataEnvio), 'Previsão original': mtBR(p.previsaoOriginal),
@@ -8732,6 +8921,10 @@ function manutRelatorioExcel(){
   }
   aba('Resumo', dRes, [26, 60]);
   aba('Equipamentos', dEq, [14, 26, 12, 34, 28, 18, 16, 20, 30, 18, 12, 12, 12]);
+  const dPorEq = mtResumoPorEq(lista, mtSoma(mtHoje(), -90), mtHoje()).map(function(r){
+    return { 'Equipamento': r.eq, 'Manutenções': r.n, 'Tempo em manutenção (dias)': r.dias, 'Aguardando peça (dias)': r.aguard, 'Custo das peças (R$)': r.custo, 'Disponibilidade mecânica 90d (%)': Math.round(r.dm * 10) / 10 };
+  });
+  aba('Por equipamento', dPorEq, [14, 12, 22, 20, 18, 28]);
   aba('Peças', dPe, [14, 26, 18, 22, 12, 16, 14, 12, 12, 12]);
   aba('Itens de serviço', dIt, [14, 50, 12, 14]);
   aba('Eventos', dEv, [14, 12, 44, 18, 10]);
@@ -8749,16 +8942,23 @@ function manutRelatorioFicha(oc){
   }).join('');
   const dados = [['Modelo', frotaDescricao[eq] || '—'], ['Entrada', mtBR(oc.dataEntrada)], [aberta ? 'Previsão de retorno' : 'Liberado em', aberta ? mtBR(oc.previsao) : mtBR(oc.dataSaida)],
     ['Dias ' + (aberta ? 'indisponível' : 'parado'), mtDiasParados(oc)], ['Etapa', aberta ? oc.etapa : 'Concluída'], ['Status do prazo', st.texto], ['Responsável', oc.responsavel || '—'], ['Tipo', oc.tipo || '—'],
-    ['Local atual', frotaLocalAtual[eq] || '—'], ['Motivo da parada', oc.motivo || '—']];
+    ['Local atual', frotaLocalAtual[eq] || '—'], ['Motivo da parada', oc.motivo || '—'],
+    ['Tempo de manutenção', mtDiasParados(oc) + ' dia(s)'], ['Aguardando peça', mtDiasAguardandoPeca(oc) + ' dia(s)'], ['Custo da manutenção (peças)', mtMoeda(total)],
+    ['Disponibilidade mecânica (90 dias)', mtPct(mtDispMecEq(eq, mtSoma(mtHoje(), -90), mtHoje()))]];
+  if (!aberta) dados.push(['Liberação', mtPendenciaDe(oc) ? (mtPendenciaDe(oc).resolvida ? 'Com pendência (resolvida em ' + (mtPendenciaDe(oc).info || '—') + '): ' : 'COM PENDÊNCIA: ') + mtPendenciaDe(oc).texto : 'Sem pendência']);
+  const fotoUrl = cacheFotoEquip[eq.toUpperCase()];
+  const fotoHtml = fotoUrl ? '<img src="' + fotoUrl + '" alt="" style="float:right;width:210px;height:155px;object-fit:cover;border-radius:8px;margin:0 0 10px 14px;border:1px solid #ccc">' : '';
   document.getElementById('hist-print-area').innerHTML =
-    mtCabecalhoRel('Ficha de Manutenção — ' + mtEsc(eq), 'Ocorrência iniciada em ' + mtBR(oc.dataEntrada)) +
+    mtCabecalhoRel('Ficha de Manutenção — ' + mtEsc(eq), 'Ocorrência iniciada em ' + mtBR(oc.dataEntrada)) + fotoHtml +
     '<table class="hist-tabela" style="margin-bottom:12px"><tbody>' + dados.map(function(d){ return '<tr><td style="width:190px;font-weight:700">' + mtEsc(d[0]) + '</td><td>' + mtEsc(String(d[1])) + '</td></tr>'; }).join('') + '</tbody></table>' +
     (oc.observacao ? '<h3 style="margin:14px 0 6px;font-size:13px">Observações</h3><div style="white-space:pre-wrap;font-size:12px;border:1px solid #ccc;padding:8px 10px;border-radius:6px">' + mtEsc(oc.observacao) + '</div>' : '') +
     (mtItensDe(oc).length ? '<h3 style="margin:14px 0 6px;font-size:13px">Itens de serviço (' + mtProgresso(oc).feitos + '/' + mtProgresso(oc).total + ')</h3><table class="hist-tabela"><thead><tr><th>Serviço</th><th>Situação</th><th>Concluído em</th></tr></thead><tbody>' + mtItensDe(oc).map(function(i){ return '<tr><td>' + mtEsc(i.texto) + '</td><td>' + i.status + '</td><td>' + mtBR(i.dataConclusao) + '</td></tr>'; }).join('') + '</tbody></table>' : '') +
     '<h3 style="margin:14px 0 6px;font-size:13px">Linha do tempo</h3><table class="hist-tabela"><thead><tr><th>Data</th><th>Evento</th><th>Responsável / Documento</th><th>Situação</th></tr></thead><tbody>' + linhasTL + '</tbody></table>' +
     (pecas.length ? '<h3 style="margin:14px 0 6px;font-size:13px">Componentes / Peças</h3><table class="hist-tabela"><thead><tr><th>Peça</th><th>Situação</th><th>Destino</th><th>Envio</th><th>Prev. original</th><th>Prev. atual</th><th>Retorno real</th><th>NF/OS</th><th>Custo</th></tr></thead><tbody>' + linhasPe + '</tbody></table>' +
       '<div style="text-align:right;font-weight:800;margin-top:8px">Custo total de peças: ' + mtMoeda(total) + '</div>' : '');
-  window.print();
+  const imgs = Array.prototype.filter.call(document.querySelectorAll('#hist-print-area img'), function(i){ return !i.complete; });
+  if (!imgs.length) window.print();
+  else Promise.race([Promise.all(imgs.map(function(i){ return new Promise(function(r){ i.onload = i.onerror = r; }); })), new Promise(function(r){ setTimeout(r, 2500); })]).then(function(){ window.print(); });
 }
 function manutDefinirFiltro(k){
   manutFiltro = k;
@@ -8843,6 +9043,10 @@ function manutRenderTabela(){
 function mtAbrirPainelFicha(){ document.getElementById('mt-ficha-overlay').classList.add('aberto'); }
 function mtFecharPainelFicha(){ document.getElementById('mt-ficha-overlay').classList.remove('aberto'); }
 document.getElementById('mt-ficha-fechar').onclick = mtFecharPainelFicha;
+document.getElementById('mt-ficha-imprimir').onclick = function(){
+  const oc = manutOcorrencias.find(function(o){ return o.id === manutSelId; });
+  if (oc) manutRelatorioFicha(oc);
+};
 document.getElementById('mt-ficha-overlay').onclick = function(e){ if (e.target === this) mtFecharPainelFicha(); };
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && document.getElementById('mt-ficha-overlay').classList.contains('aberto') && !document.getElementById('mt-modal-overlay').classList.contains('aberto')) mtFecharPainelFicha();
@@ -8874,8 +9078,24 @@ function mtLinhaPeca(oc){
   return '<div class="mt-prev-sub" style="margin-top:6px" title="' + mtEsc(info.origem) + '">📦 Última peça chega em <b>' + mtBR(u) + '</b> · montagem/testes estimados em +' + info.dias + ' d' + (info.n ? '' : ' <i>(prazo padrão)</i>') + '</div>';
 }
 let manutObsAberta = {};
+function mtBlocoMetricas(oc){
+  const hoje = mtHoje(), tempo = mtDiasParados(oc), aguard = mtDiasAguardandoPeca(oc), custo = mtCustoOc(oc), nPe = mtPecasDe(oc).length;
+  const dm = mtDispMecEq(oc.equipamento, mtSoma(hoje, -90), hoje);
+  return '<div class="mt-mets">' +
+    '<div class="mt-met"><b>' + tempo + ' d</b><span>Tempo de manutenção</span><small>' + (mtAberta(oc) ? 'em andamento desde ' + mtBR(oc.dataEntrada) : 'concluída em ' + mtBR(oc.dataSaida)) + '</small></div>' +
+    '<div class="mt-met"><b>' + aguard + ' d</b><span>Aguardando peça</span><small>' + (tempo ? Math.round(aguard / tempo * 100) : 0) + '% do tempo parado</small></div>' +
+    '<div class="mt-met"><b>' + mtMoeda(custo) + '</b><span>Custo da manutenção</span><small>' + (nPe ? nPe + ' peça(s) lançada(s)' : 'sem peças lançadas') + '</small></div>' +
+    '<div class="mt-met ' + (dm >= 95 ? 'bom' : dm < 85 ? 'ruim' : '') + '"><b>' + mtPct(dm) + '</b><span>Disponibilidade mecânica</span><small>deste equipamento, últimos 90 dias</small></div>' +
+  '</div>';
+}
+function mtBlocoPendencia(oc){
+  const p = mtPendenciaDe(oc);
+  if (!p || mtAberta(oc)) return '';
+  if (p.resolvida) return '<div class="mt-pend-banner ok"><span>✔ <b>Pendência resolvida' + (p.info ? ' em ' + mtEsc(p.info) : '') + ':</b> ' + mtEsc(p.texto) + '</span></div>';
+  return '<div class="mt-pend-banner"><span>⚠️ <b>Liberado com pendência:</b> ' + mtEsc(p.texto) + '</span><button type="button" class="mt-btn mini ok" data-mt-acao="pend-resolver">✔ Marcar como resolvida</button></div>';
+}
 function mtBlocoObs(oc){
-  const t = (oc.observacao || '').trim();
+  const t = (oc.observacao || '').replace(/^\[PENDÊNCIA[^\n]*\n?/gm, '').trim();
   if (!t) return '';
   const longa = t.length > 190 || t.split('\n').length > 3;
   const aberta = !!manutObsAberta[oc.id];
@@ -8925,6 +9145,7 @@ function manutRenderDetalhe(){
       '<div class="mt-motivo-card"><div class="mt-motivo-tit">Motivo da parada</div><div class="mt-motivo-txt">' + mtEsc(oc.motivo || '—') + '</div>' +
         '<div class="mt-prev-sub">Etapa: ' + (aberta ? mtEsc(oc.etapa) : 'Concluída') + '</div></div>' +
     '</div>' +
+    mtBlocoMetricas(oc) + mtBlocoPendencia(oc) +
     mtBlocoObs(oc) +
     '<div class="mt-ficha-acoes">' +
       (aberta ? '<button type="button" class="mt-btn ok" data-mt-acao="concluir">✅ Concluir manutenção</button>' : '') +
@@ -9149,6 +9370,7 @@ function manutAcao(acao, id, oc){
   switch (acao) {
     case 'editar': manutModalEditar(oc); break;
     case 'concluir': manutModalConcluir(oc); break;
+    case 'pend-resolver': manutResolverPendencia(oc); break;
     case 'sugerir': manutAplicarSugestao(oc); break;
     case 'ajustar-ult': manutAjustarParaUltimaPeca(oc); break;
     case 'peca-add': manutModalPeca(oc, null); break;
@@ -9165,6 +9387,15 @@ function manutAcao(acao, id, oc){
     case 'ev-feito': manutMarcarEvento(oc, manutEventos.find(function(e){ return e.id === id; })); break;
     case 'ev-del': manutExcluirEvento(oc, manutEventos.find(function(e){ return e.id === id; })); break;
   }
+}
+async function manutResolverPendencia(oc){
+  const p = mtPendenciaDe(oc);
+  if (!p || !confirm('Marcar a pendência como resolvida?\n\n' + p.texto)) return;
+  try {
+    const nova = (oc.observacao || '').replace(/^\[PENDÊNCIA\]/m, '[PENDÊNCIA RESOLVIDA ' + mtBR(mtHoje()) + ']');
+    await manutAtualizar('ocorrencias', oc.id, { Observacao: nova });
+    oc.observacao = nova; manutRenderTudo(); mtToast('✔ Pendência resolvida');
+  } catch (err) { alert('Falha ao atualizar: ' + err.message); }
 }
 async function manutAjustarParaUltimaPeca(oc){
   const ult = mtPendentes(oc).map(function(p){ return p.previsao; }).filter(Boolean).sort().pop();
@@ -9208,6 +9439,7 @@ function mtAbrirModal(titulo, campos, textoSalvar, aoSalvar, avisoHtml){
     const v = c.valor == null ? '' : c.valor;
     let ctl;
     if (c.tipo === 'select') ctl = '<select id="mtm-' + c.id + '">' + c.opcoes.map(function(o){ return '<option value="' + mtEsc(o) + '"' + (o === v ? ' selected' : '') + '>' + mtEsc(o) + '</option>'; }).join('') + '</select>';
+    else if (c.tipo === 'tipos') ctl = mtTiposHtml('mtm-' + c.id, v);
     else if (c.tipo === 'textarea') ctl = '<textarea id="mtm-' + c.id + '" rows="' + (c.linhas || 2) + '">' + mtEsc(v) + '</textarea>';
     else ctl = '<input id="mtm-' + c.id + '" type="' + (c.tipo || 'text') + '" value="' + mtEsc(v) + '"' + (c.lista ? ' list="mtm-dl-' + c.id + '"' : '') + (c.tipo === 'number' ? ' step="0.01" min="0"' : '') + ' autocomplete="off">' +
       (c.lista ? '<datalist id="mtm-dl-' + c.id + '">' + c.lista.map(function(o){ return '<option value="' + mtEsc(o) + '">'; }).join('') + '</datalist>' : '');
@@ -9219,7 +9451,12 @@ function mtAbrirModal(titulo, campos, textoSalvar, aoSalvar, avisoHtml){
   const erro = document.getElementById('mt-modal-erro');
   btn.onclick = async function(){
     const v = {};
-    campos.forEach(function(c){ v[c.id] = document.getElementById('mtm-' + c.id).value.trim(); });
+    let semOutros = false;
+    campos.forEach(function(c){
+      if (c.tipo === 'tipos') { const t = mtTiposLer('mtm-' + c.id); if (t === null) semOutros = true; v[c.id] = t || ''; }
+      else v[c.id] = document.getElementById('mtm-' + c.id).value.trim();
+    });
+    if (semOutros) { erro.textContent = '⚠️ Descreva o tipo no campo "Outros".'; erro.style.display = 'block'; return; }
     for (const c of campos) {
       if (c.obrig && !v[c.id]) { erro.textContent = '⚠️ Preencha: ' + c.label + '.'; erro.style.display = 'block'; return; }
     }
@@ -9243,7 +9480,7 @@ function manutModalEditar(oc){
     { id: 'etapa', label: 'Etapa atual', tipo: 'select', opcoes: MANUT_ETAPAS, valor: oc.etapa },
     { id: 'previsao', label: 'Previsão de retorno', tipo: 'date', valor: oc.previsao, dica: sug ? 'Sugestão: ' + mtBR(sug) + ' (última peça + ' + mtDiasMontagemInfo(oc.tipo).dias + ' dias)' : '' },
     { id: 'motivo', label: 'Motivo da parada', valor: oc.motivo, obrig: true, larga: true },
-    { id: 'tipo', label: 'Tipo de manutenção', valor: oc.tipo, lista: tiposManutencaoConhecidos() },
+    { id: 'tipo', label: 'Tipo de manutenção (pode marcar mais de um)', tipo: 'tipos', valor: oc.tipo, larga: true },
     { id: 'responsavel', label: 'Responsável técnico', valor: oc.responsavel },
     { id: 'dataEntrada', label: 'Data de entrada', tipo: 'date', valor: oc.dataEntrada, obrig: true },
     { id: 'inicio', label: 'Início da manutenção', tipo: 'date', valor: mtInicio(oc), dica: 'Quando a oficina realmente começou a mexer no equipamento.' }
@@ -9351,8 +9588,12 @@ function manutModalConcluir(oc){
     { id: 'data', label: 'Data de saída da manutenção', tipo: 'date', valor: mtHoje(), obrig: true },
     { id: 'status', label: 'Novo status', tipo: 'select', opcoes: ['OPERACIONAL', 'EM DISPONIBILIDADE'], valor: 'OPERACIONAL' },
     { id: 'local', label: 'Mover para o local', tipo: 'select', opcoes: locais.slice(), valor: frotaLocalAtual[eq] || locais[0], larga: true },
+    { id: 'lib', label: 'Liberação do equipamento', tipo: 'select', opcoes: ['Sem pendência', 'Com pendência'], valor: 'Sem pendência', larga: true },
+    { id: 'pend', label: 'Qual é a pendência? (fica em "Atenção necessária" até você marcar como resolvida)', tipo: 'textarea', valor: '', larga: true },
     { id: 'obs', label: 'Observação final', tipo: 'textarea', valor: '', larga: true }
-  ], '✅ Concluir e mover equipamento', async function(v){
+  ], '✅ Concluir e liberar equipamento', async function(v){
+    const comPend = v.lib === 'Com pendência';
+    if (comPend && !v.pend) throw new Error('Descreva a pendência para liberar o equipamento com pendência.');
     const idEquip = frotaIdsExtra[eq] || frotasIds[eq];
     const localAntes = frotaLocalAtual[eq] || '';
     await mtAtualizarFrota(idEquip, { LocalAtual: v.local, StatusAtual: v.status, TipoManutencao: '', ResponsavelTecnico: '', ObservacaoManutencao: '', PrevisaoReparo: null });
@@ -9360,17 +9601,20 @@ function manutModalConcluir(oc){
     frotaTipoManutencao[eq] = ''; frotaResponsavelTecnico[eq] = ''; frotaObservacaoManutencao[eq] = ''; frotaPrevisaoReparo[eq] = '';
     await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', { fields: {
       Equipamento: eq, ItemVinculado: frotaItemVinculado[eq] || '', LocalOrigem: localAntes || '—', LocalDestino: v.local, Status: v.status,
-      Data: v.data + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Manutenção concluída — ficha de manutenção' + (v.obs ? ' · ' + v.obs : ''),
+      Data: v.data + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Manutenção concluída — ficha de manutenção' + (comPend ? ' · liberado COM pendência: ' + v.pend : ' · liberado sem pendência') + (v.obs ? ' · ' + v.obs : ''),
       TipoManutencao: oc.tipo, ResponsavelTecnico: oc.responsavel } });
     movimentacoesCarregadas = false;
-    await manutAtualizar('ocorrencias', oc.id, { Situacao: 'Concluída', DataSaida: v.data, Observacao: (oc.observacao ? oc.observacao + '\n' : '') + (v.obs ? 'Conclusão: ' + v.obs : '') });
+    await manutAtualizar('ocorrencias', oc.id, { Situacao: 'Concluída', DataSaida: v.data, Observacao: [oc.observacao || '', v.obs ? 'Conclusão: ' + v.obs : '', comPend ? '[PENDÊNCIA] ' + v.pend.replace(/\n+/g, ' ') : ''].filter(Boolean).join('\n') });
     await manutRecarregar('ocorrencias');
     await garantirDadosMovimentacoes(true);
     manutFiltro = 'historico';
     manutMarcarSidebar();
     manutRenderTudo();
-    mtToast('✅ ' + eq + ' liberado e movido para ' + v.local);
+    mtToast('✅ ' + eq + ' liberado' + (comPend ? ' com pendência' : '') + ' e movido para ' + v.local);
   }, aviso);
+  const selLib = document.getElementById('mtm-lib');
+  const alterna = function(){ document.getElementById('mtm-pend').closest('.campo').style.display = selLib.value === 'Com pendência' ? '' : 'none'; };
+  selLib.onchange = alterna; alterna();
 }
 
 /* ---------- nova entrada ---------- */
@@ -9395,8 +9639,23 @@ async function manutNovaIniciar(){
   if (sugerido) selLocal.value = sugerido;
   if (!manutNovaPronta) {
     configurarComboBusca('mtn-equip', function(){ return frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') !== 'EM MANUTENÇÃO' || !mtOcAbertaDe(eq); }); });
-    configurarComboBusca('mtn-tipo', tiposManutencaoConhecidos);
+    document.getElementById('mtn-cond').onchange = function(){
+      const c = this.value;
+      ['terceiro', 'tecnico', 'comprada'].forEach(function(k){ document.getElementById('mtn-cond-' + k).style.display = c === k ? '' : 'none'; });
+      const alvo = { terceiro: 'Reparo externo', tecnico: 'Diagnóstico', comprada: 'Aguardando peça' }[c];
+      if (alvo) document.getElementById('mtn-etapa').value = alvo;
+    };
     manutNovaPronta = true;
+  }
+  document.getElementById('mtn-tipo-box').innerHTML = mtTiposHtml('mtn-tipo', '');
+  document.getElementById('mtn-cond').value = ''; document.getElementById('mtn-cond').onchange();
+  ['mtc-t-peca', 'mtc-t-forn', 'mtc-t-ida', 'mtc-t-volta', 'mtc-k-tec', 'mtc-k-data', 'mtc-c-peca', 'mtc-c-forn', 'mtc-c-chegada'].forEach(function(i){ document.getElementById(i).value = ''; });
+  if (manutNovaPreset) {
+    const pr = manutNovaPreset; manutNovaPreset = null;
+    document.getElementById('mtn-equip').value = pr.eq;
+    if (Array.prototype.some.call(selLocal.options, function(o){ return o.value === pr.local; })) selLocal.value = pr.local;
+    setTimeout(function(){ const m = document.getElementById('mtn-motivo'); if (m) m.focus(); }, 150);
+    mtToast('🔧 Preencha a entrada de ' + pr.eq + ' na manutenção');
   }
 }
 document.getElementById('mtn-salvar').onclick = async function(){
@@ -9408,7 +9667,9 @@ document.getElementById('mtn-salvar').onclick = async function(){
   const eq = frotas.find(function(x){ return x.toUpperCase() === digitado; });
   const data = document.getElementById('mtn-data').value;
   const motivo = document.getElementById('mtn-motivo').value.trim();
-  const tipo = document.getElementById('mtn-tipo').value.trim();
+  const tipoLido = mtTiposLer('mtn-tipo'), tipo = tipoLido || '';
+  const cond = document.getElementById('mtn-cond').value;
+  const gv = function(i){ return document.getElementById(i).value.trim(); };
   const resp = document.getElementById('mtn-resp').value.trim();
   const etapa = document.getElementById('mtn-etapa').value;
   const local = document.getElementById('mtn-local').value;
@@ -9419,8 +9680,15 @@ document.getElementById('mtn-salvar').onclick = async function(){
   if (mtOcAbertaDe(eq)) return falha(eq + ' já tem uma ficha de manutenção aberta.');
   if (!data) return falha('Informe a data de entrada.');
   if (!motivo) return falha('Informe o motivo da parada.');
-  if (!tipo) return falha('Informe o tipo de manutenção.');
+  if (tipoLido === null) return falha('Descreva o tipo no campo "Outros".');
+  if (!tipo) return falha('Marque pelo menos um tipo de manutenção.');
   if (!resp) return falha('Informe o responsável técnico.');
+  if (cond === 'terceiro') {
+    if (!gv('mtc-t-peca') || !gv('mtc-t-forn') || !gv('mtc-t-ida') || !gv('mtc-t-volta')) return falha('Aguardando peça de terceiros: informe a peça, o fornecedor, a data de ida e a data de volta.');
+    if (gv('mtc-t-volta') < gv('mtc-t-ida')) return falha('A data de volta não pode ser antes da data de ida.');
+  }
+  if (cond === 'tecnico' && (!gv('mtc-k-tec') || !gv('mtc-k-data'))) return falha('Aguardando técnico: informe o técnico e a data prevista do atendimento.');
+  if (cond === 'comprada' && (!gv('mtc-c-peca') || !gv('mtc-c-chegada'))) return falha('Aguardando peça comprada: informe a peça e a data de chegada prevista.');
   const btn = this; btn.disabled = true; btn.textContent = 'Registrando…';
   try {
     const idEquip = frotaIdsExtra[eq] || frotasIds[eq];
@@ -9441,8 +9709,20 @@ document.getElementById('mtn-salvar').onclick = async function(){
       const novaOc = mtOcAbertaDe(eq);
       if (novaOc) { await manutCriar('eventos', { Title: 'Início da manutenção', OcorrenciaId: novaOc.id, Equipamento: eq, Data: inicio, Responsavel: resp, Realizado: true }); await manutRecarregar('eventos'); }
     }
+    if (cond) {
+      const oc2 = mtOcAbertaDe(eq);
+      if (oc2) {
+        if (cond === 'terceiro') await manutCriar('pecas', { Title: gv('mtc-t-peca'), OcorrenciaId: oc2.id, Equipamento: eq, Situacao: 'Em reparo externo', Destino: gv('mtc-t-forn'), DataEnvio: gv('mtc-t-ida'), PrevisaoOriginal: gv('mtc-t-volta'), PrevisaoRetorno: gv('mtc-t-volta'), Custo: 0 });
+        else if (cond === 'comprada') await manutCriar('pecas', { Title: gv('mtc-c-peca'), OcorrenciaId: oc2.id, Equipamento: eq, Situacao: 'Aguardando', Destino: gv('mtc-c-forn'), PrevisaoOriginal: gv('mtc-c-chegada'), PrevisaoRetorno: gv('mtc-c-chegada'), Custo: 0 });
+        else if (cond === 'tecnico') await manutCriar('eventos', { Title: 'Atendimento técnico — ' + gv('mtc-k-tec'), OcorrenciaId: oc2.id, Equipamento: eq, Data: gv('mtc-k-data'), Responsavel: gv('mtc-k-tec'), Realizado: false });
+        await manutRecarregar(cond === 'tecnico' ? 'eventos' : 'pecas');
+        if (cond !== 'tecnico') { try { await mtPerguntarPrevisao(oc2); } catch (e) {} }
+      }
+    }
     await garantirDadosMovimentacoes(true);
-    ['mtn-equip', 'mtn-motivo', 'mtn-tipo', 'mtn-resp', 'mtn-inicio', 'mtn-previsao', 'mtn-obs'].forEach(function(i){ document.getElementById(i).value = ''; });
+    ['mtn-equip', 'mtn-motivo', 'mtn-resp', 'mtn-inicio', 'mtn-previsao', 'mtn-obs'].forEach(function(i){ document.getElementById(i).value = ''; });
+    document.getElementById('mtn-tipo-box').innerHTML = mtTiposHtml('mtn-tipo', '');
+    document.getElementById('mtn-cond').value = ''; document.getElementById('mtn-cond').onchange();
     const nova = mtOcAbertaDe(eq);
     manutSelId = nova ? nova.id : null; manutFiltro = 'todos'; manutAba = 'timeline'; manutRolarParaFicha = true;
     mostrarView('manut');
@@ -13455,4 +13735,4 @@ async function carregarRaioXObra(){
 })();
 </script>
 </body>
-</html> 
+</html>
