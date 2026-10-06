@@ -8194,7 +8194,26 @@ async function manutCriar(chave, campos){
 }
 async function manutAtualizar(chave, id, campos){
   await manutResolverListas();
-  return atualizarCamposItem(manutListaIds[chave], id, mtGravarCampos(chave, campos));
+  const gravar = mtGravarCampos(chave, campos);
+  try { return await atualizarCamposItem(manutListaIds[chave], id, gravar); }
+  catch (e1) {
+    if (!/Erro 5\d\d|generalException/.test(String(e1.message))) throw e1;
+    /* o SharePoint recusou algum campo (coluna de tipo diferente do esperado): descobre qual, campo a campo */
+    const ruins = [];
+    for (const col of Object.keys(gravar)) {
+      try { await atualizarCamposItem(manutListaIds[chave], id, { [col]: gravar[col] }); }
+      catch (e2) { ruins.push(col); }
+    }
+    if (ruins.length) {
+      const m = manutColMap[chave] || {};
+      const nomes = ruins.map(function(c){ return Object.keys(m).find(function(L){ return m[L] === c; }) || c; });
+      const opc = MANUT_COLUNAS_OPC[chave] || [];
+      const obrig = nomes.filter(function(n){ return opc.indexOf(n) === -1; });
+      if (obrig.length) throw new Error('O SharePoint recusou o campo "' + obrig.join('", "') + '" — confira se o tipo da coluna é o esperado (texto, número ou data). Os demais campos foram salvos.');
+      if (typeof mtToast === 'function') mtToast('⚠️ Salvo, exceto: ' + nomes.join(', ') + ' (confira o tipo dessas colunas no SharePoint)');
+    }
+    return null;
+  }
 }
 async function manutExcluir(chave, id){
   await manutResolverListas();
