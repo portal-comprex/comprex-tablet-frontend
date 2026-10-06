@@ -9538,6 +9538,10 @@ function manutModalEditar(oc){
     { id: 'etapa', label: 'Etapa atual', tipo: 'select', opcoes: MANUT_ETAPAS, valor: oc.etapa },
     { id: 'previsao', label: 'Previsão de retorno', tipo: 'date', valor: oc.previsao, dica: sug ? 'Sugestão: ' + mtBR(sug) + ' (última peça + ' + mtDiasMontagemInfo(oc.tipo).dias + ' dias)' : '' },
     { id: 'motivo', label: 'Motivo da parada', valor: oc.motivo, obrig: true, larga: true },
+    { id: 'pecaNome', label: 'Peça / serviço aguardado', valor: '', larga: true, dica: mtPendentes(oc).length ? 'Já lançadas e pendentes: ' + mtPendentes(oc).map(function(p){ return mtEsc(p.nome); }).join(', ') + '. Preencha só para acrescentar mais uma.' : 'Preencha para lançar a peça na aba Componentes / Peças.' },
+    { id: 'pecaForn', label: 'Fornecedor / terceiro', valor: '', lista: mtDestinosConhecidos() },
+    { id: 'pecaEnvio', label: 'Data da solicitação e/ou envio', tipo: 'date', valor: '' },
+    { id: 'pecaRetorno', label: 'Data de retorno e/ou chegada (prevista)', tipo: 'date', valor: '' },
     { id: 'tipo', label: 'Tipo de manutenção (pode marcar mais de um)', tipo: 'tipos', valor: oc.tipo, larga: true },
     { id: 'responsavel', label: 'Responsável técnico', valor: oc.responsavel },
     { id: 'parou', label: 'Parou em (data e hora)', tipo: 'datetime-local', valor: mtDT(oc.dataParada, oc.horaParada) },
@@ -9547,6 +9551,12 @@ function manutModalEditar(oc){
   ].concat(!mtAberta(oc) ? [{ id: 'saida', label: 'Liberado em (data e hora)', tipo: 'datetime-local', valor: mtDT(oc.dataSaida, oc.horaSaida) }, { id: 'horimSaida', label: 'Horímetro na liberação (h)', tipo: 'number', valor: oc.horimetroSaida === null ? '' : oc.horimetroSaida }] : []).concat(mtTemColuna('ocorrencias', 'Prioridade') ? [{ id: 'prioridade', label: 'Prioridade', tipo: 'select', opcoes: MANUT_PRIORIDADES, valor: oc.prioridade }] : []).concat([
     { id: 'observacao', label: 'Observação', tipo: 'textarea', linhas: 5, valor: oc.observacao, larga: true }
   ]), '💾 Salvar ficha', async function(v){
+    const temPeca = !!(v.pecaNome || v.pecaForn || v.pecaEnvio || v.pecaRetorno);
+    const etapaPeca = v.etapa === 'Aguardando peça' || v.etapa === 'Reparo externo';
+    if (temPeca && etapaPeca) {
+      if (!v.pecaNome) throw new Error('Informe qual é a peça (ou serviço) aguardada.');
+      if (v.pecaEnvio && v.pecaRetorno && v.pecaRetorno < v.pecaEnvio) throw new Error('A data de retorno não pode ser antes da solicitação/envio.');
+    }
     const qP = mtDTsplit(v.parou), qC = mtDTsplit(v.chegada), qI = mtDTsplit(v.inicio), qS = mtDTsplit(v.saida);
     /* sem hora cadastrada o campo mostra 00:00 só para preencher — não grava essa hora falsa */
     const keep = function(orig, h){ return (!orig && h === '00:00') ? '' : h; };
@@ -9567,10 +9577,27 @@ function manutModalEditar(oc){
     if (!mtAberta(oc)) { oc.horaSaida = v.horaSaida || ''; oc.horimetroSaida = v.horimSaida === '' ? null : Number(v.horimSaida); }
     oc.inicio = v.inicio || ''; oc.prioridade = v.prioridade || oc.prioridade;
     oc.etapa = v.etapa; oc.previsao = v.previsao; oc.motivo = v.motivo; oc.tipo = v.tipo; oc.responsavel = v.responsavel; oc.dataEntrada = v.dataEntrada; oc.observacao = v.observacao;
+    if (temPeca && etapaPeca) {
+      await manutCriar('pecas', { Title: v.pecaNome, OcorrenciaId: oc.id, Equipamento: oc.equipamento, Situacao: v.etapa === 'Reparo externo' ? 'Em reparo externo' : 'Aguardando', Destino: v.pecaForn,
+        DataEnvio: v.pecaEnvio || null, PrevisaoOriginal: v.pecaRetorno || null, PrevisaoRetorno: v.pecaRetorno || null, Custo: 0 });
+      await manutRecarregar('pecas');
+      await manutReavaliarEtapa(oc);
+      try { await mtPerguntarPrevisao(oc); } catch (e) {}
+      manutAba = 'pecas';
+    }
     if (mtAberta(oc)) await mtSyncFrota(oc);
     manutRenderTudo();
-    mtToast('✅ Ficha atualizada');
+    mtToast(temPeca && etapaPeca ? '✅ Ficha atualizada e peça lançada' : '✅ Ficha atualizada');
   });
+  /* os campos da peça só aparecem quando a etapa é "Aguardando peça" ou "Reparo externo" */
+  const selEt = document.getElementById('mtm-etapa');
+  const alternaPeca = function(){
+    const ver = selEt.value === 'Aguardando peça' || selEt.value === 'Reparo externo';
+    ['pecaNome', 'pecaForn', 'pecaEnvio', 'pecaRetorno'].forEach(function(k){ document.getElementById('mtm-' + k).closest('.campo').style.display = ver ? '' : 'none'; });
+    const lbl = document.querySelector('#mtm-pecaNome').closest('.campo').querySelector('label');
+    if (lbl) lbl.textContent = selEt.value === 'Reparo externo' ? 'Peça / serviço no terceiro' : 'Peça aguardada';
+  };
+  selEt.onchange = alternaPeca; alternaPeca();
 }
 
 /* ---------- peças ---------- */
