@@ -665,6 +665,7 @@
   .mt-it-st.faz{background:rgba(230,126,34,.2);color:#b25e17}
   .mt-it-st.ok{background:rgba(39,174,96,.2);color:#1e8a4c}
   #mt-ind .painel-metas{margin-bottom:14px}
+  #mt-metas.painel-metas{grid-template-columns:repeat(3,1fr)}
   .mt-ficha-acoes{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
   .mt-btn{border:1px solid var(--linha);background:var(--card);color:var(--tinta);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
   .mt-btn:hover{border-color:var(--navy);background:var(--cream)}
@@ -798,7 +799,7 @@
   @media(max-width:1300px){ .mt-meio{grid-template-columns:1fr} .mt-col-dir{height:auto} .mt-col-dir .mt-card-donut,.mt-col-dir .mt-card-evo{flex:none} .mt-lista-card{height:auto;max-height:640px} }
   /* ===== Manutenção v2: Visão Geral no estilo do Painel de Checklist ===== */
   .painel-kpi.azul{background:linear-gradient(135deg,#1f5fa8,#12365f)}
-  .painel-kpis.mt-kpis-g{grid-template-columns:repeat(6,1fr);gap:14px}
+  .painel-kpis.mt-kpis-g{grid-template-columns:repeat(5,1fr);gap:14px}
   .mt-kpis-g .painel-kpi{min-height:128px;padding:16px 18px;border-radius:14px;display:flex;flex-direction:column}
   .mt-kpis-g .painel-kpi .icone{font-size:28px;right:14px;top:12px;opacity:.5}
   .mt-kpis-g .painel-kpi .lbl{font-size:11px;letter-spacing:.4px;max-width:78%;line-height:1.25}
@@ -3161,8 +3162,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       </div>
       <div class="mt-tabela-wrap mt-scroll">
         <table class="mt-tabela">
-          <thead><tr><th>Equipamento</th><th>Entrada</th><th>Motivo da parada</th><th>Etapa atual</th><th>Onde está / Pendência</th><th id="mt-th-prev">Previsão retorno</th><th>Dias parados</th><th>Status</th><th></th></tr></thead>
-          <tbody id="mt-tbody"><tr><td colspan="9" class="mt-vazio">Carregando…</td></tr></tbody>
+          <thead><tr><th>Equipamento</th><th>Parou em</th><th>Entrada</th><th>Motivo da parada</th><th>Etapa atual</th><th>Onde está / Pendência</th><th id="mt-th-prev">Previsão retorno</th><th>Dias parados</th><th>Status</th><th></th></tr></thead>
+          <tbody id="mt-tbody"><tr><td colspan="10" class="mt-vazio">Carregando…</td></tr></tbody>
         </table>
       </div>
       <div style="text-align:center;margin-top:10px"><button type="button" class="mt-btn" id="mt-ver-mais" style="display:none"></button></div>
@@ -8554,8 +8555,7 @@ function manutRenderTudo(){
     { k: 'aguardando', ico: '⚙️', cor: 'laranja', n: nAgu, l: 'Aguardando peças', sub: pendAll.length + ' peça(s) pendente(s) no total', acao: 'Filtrar a lista →' },
     { k: 'externo', ico: '🚚', cor: 'neutro', n: nExt, l: 'Em reparo externo', sub: Object.keys(destinos).length ? 'em ' + Object.keys(destinos).length + ' fornecedor(es)' : 'nenhum fornecedor ativo', acao: 'Filtrar a lista →' },
     { k: 'atrasados', ico: '⏰', cor: 'vermelho', n: nAt, l: 'Atrasados', sub: nAt ? 'maior atraso: ' + maiorAtraso + ' dia(s)' : 'tudo dentro do prazo', acao: 'Ver atrasados →' },
-    { k: 'retorno15', ico: '📅', cor: 'amarelo', n: nRet, l: 'Retorno previsto em 15 dias', sub: proxRet ? 'próximo: ' + proxRet.equipamento + ' em ' + mtBRc(proxRet.previsao) : 'sem retornos previstos', acao: 'Ver quais →' },
-    { k: 'operacao', ico: '✅', cor: 'verde', n: nOp, l: 'Equipamentos em operação', sub: Math.round(nOp / nFrota * 100) + '% da frota', barra: nOp / nFrota * 100, acao: 'Abrir Localização Atual →' }
+    { k: 'retorno15', ico: '📅', cor: 'amarelo', n: nRet, l: 'Retorno previsto em 15 dias', sub: proxRet ? 'próximo: ' + proxRet.equipamento + ' em ' + mtBRc(proxRet.previsao) : 'sem retornos previstos', acao: 'Ver quais →' }
   ];
   const kc = document.getElementById('mt-kpis');
   kc.innerHTML = kpis.map(function(c){
@@ -8780,8 +8780,7 @@ function manutRenderMetas(abertas, nAt){
   const tiles = [
     { cl: 'neutro', lbl: 'Disponibilidade da frota', sinal: '🚜', val: disp + '%', meta: (nFrota - parHoje) + ' de ' + nFrota + ' em operação', tend: tend(disp - disp7, false, 'pp'), acao: 'operacao' },
     { cl: 'neutro', lbl: 'Entradas nos últimos 7 dias', sinal: '📥', val: String(ent7), meta: 'equipamentos que entraram na manutenção', tend: tend(ent7 - entAnt, true, ''), acao: 'todos' },
-    { cl: nAt ? 'ruim' : 'ok', lbl: 'Manutenções atrasadas', sinal: nAt ? '⚠️' : '✅', val: String(nAt), meta: 'Meta = 0', tend: '', acao: 'atrasados' },
-    { cl: semPrev ? 'ruim' : 'ok', lbl: 'Sem previsão de retorno', sinal: semPrev ? '⚠️' : '✅', val: String(semPrev), meta: 'Meta = 0', tend: '', acao: 'semprev' }
+    { cl: nAt ? 'ruim' : 'ok', lbl: 'Manutenções atrasadas', sinal: nAt ? '⚠️' : '✅', val: String(nAt), meta: 'Meta = 0', tend: '', acao: 'atrasados' }
   ];
   const cont = document.getElementById('mt-metas');
   cont.innerHTML = tiles.map(function(t){
@@ -8964,7 +8963,7 @@ function manutRelatorioExcel(){
   if (typeof XLSX === 'undefined') { alert('A biblioteca de Excel não carregou. Verifique a internet e tente de novo.'); return; }
   const ids = {}; lista.forEach(function(o){ ids[o.id] = o; });
   const dEq = lista.map(function(oc){
-    return { 'Equipamento': oc.equipamento, 'Modelo': frotaDescricao[oc.equipamento] || '', 'Entrada': mtBR(oc.dataEntrada), 'Motivo da parada': oc.motivo, 'Tipo': oc.tipo,
+    return { 'Equipamento': oc.equipamento, 'Modelo': frotaDescricao[oc.equipamento] || '', 'Parou em': mtFmtDT(oc.dataParada, oc.horaParada), 'Entrada': mtBR(oc.dataEntrada), 'Motivo da parada': oc.motivo, 'Tipo': oc.tipo,
       'Responsável': oc.responsavel, 'Etapa': mtAberta(oc) ? oc.etapa : 'Concluída', 'Local atual': frotaLocalAtual[oc.equipamento] || '', 'Onde está / Pendência': mtOnde(oc),
       'Previsão de retorno': mtBR(oc.previsao), 'Saída': mtBR(oc.dataSaida), 'Dias parados': mtDiasParados(oc), 'Status': mtStatusPrazo(oc).texto,
       'Prioridade': oc.prioridade, 'Início da manutenção': mtBR(mtInicio(oc)), 'Espera até iniciar (dias)': mtEsperaInicio(oc) === null ? '' : mtEsperaInicio(oc), 'Itens feitos': mtProgresso(oc).feitos + '/' + mtProgresso(oc).total,
@@ -9061,7 +9060,7 @@ function manutRenderTabela(){
   const tb = document.getElementById('mt-tbody');
   if (!lista.length) {
     document.getElementById('mt-ver-mais').style.display = 'none';
-    tb.innerHTML = '<tr><td colspan="9" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
+    tb.innerHTML = '<tr><td colspan="10" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
     document.getElementById('mt-detalhe').innerHTML = '';
     mtFecharPainelFicha();
     return;
@@ -9082,6 +9081,7 @@ function manutRenderTabela(){
     const prev = mtAberta(oc) ? mtBR(oc.previsao) : mtBR(oc.dataSaida);
     return '<tr class="mt-linha' + (oc.id === manutSelId ? ' sel' : '') + '" data-mt-oc="' + oc.id + '">' +
       '<td class="mt-eq"><div class="mt-eq-cel"><div class="mt-eq-foto" data-mt-foto="' + mtEsc(oc.equipamento) + '">' + (frotaTipoItem[oc.equipamento] === 'implemento' ? '🔧' : '🚜') + '</div><div>' + mtEsc(oc.equipamento) + mtBadgePri(oc.prioridade) + '<div class="mt-eq-tipo" title="' + mtEsc(frotaDescricao[oc.equipamento] || '') + '">' + mtEsc((frotaDescricao[oc.equipamento] || '').slice(0, 26)) + '</div></div></div></td>' +
+      '<td>' + (oc.dataParada ? mtBR(oc.dataParada) + (oc.horaParada ? ' <small style="color:#888">' + oc.horaParada + '</small>' : '') : '<span style="color:#aaa">—</span>') + '</td>' +
       '<td>' + mtBR(oc.dataEntrada) + '</td>' +
       '<td>' + mtEsc(oc.motivo || '—') + '</td>' +
       '<td><span class="mt-etapa ' + (mtAberta(oc) ? mtClasseEtapa(oc.etapa) : 'e-ok') + '">' + (mtAberta(oc) ? mtEsc(oc.etapa) : 'Concluída') + '</span>' + mtMiniProg(oc) + '</td>' +
