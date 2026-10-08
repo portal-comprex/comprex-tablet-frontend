@@ -1818,7 +1818,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 08/10/2026 · 74</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 08/10/2026 · 75</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -8251,7 +8251,36 @@ async function manutCarregarDados(forcar){
 }
 async function manutCriar(chave, campos){
   await manutResolverListas();
-  return graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/items', { fields: mtGravarCampos(chave, campos) });
+  const gravar = mtGravarCampos(chave, campos);
+  const url = GRAPH + '/sites/' + SITE_ID + '/lists/' + manutListaIds[chave] + '/items';
+  try { return await graphPost(url, { fields: gravar }); }
+  catch (e1) {
+    if (!/Erro 5\d\d|generalException/.test(String(e1.message))) throw e1;
+    /* o SharePoint recusou algum campo: cria só com o título e acrescenta campo a campo, para descobrir qual coluna é o problema */
+    const m = manutColMap[chave] || {};
+    const tit = m.Title || 'Title';
+    let novo;
+    try { novo = await graphPost(url, { fields: { [tit]: gravar[tit] || campos.Title || '—' } }); }
+    catch (e2) { throw e1; }
+    const id = novo && novo.id;
+    const ruins = [];
+    for (const col of Object.keys(gravar)) {
+      if (col === tit) continue;
+      try { await atualizarCamposItem(manutListaIds[chave], id, { [col]: gravar[col] }); }
+      catch (e3) { ruins.push(col); }
+    }
+    if (ruins.length) {
+      const nomes = ruins.map(function(c){ return Object.keys(m).find(function(L){ return m[L] === c; }) || c; });
+      const opc = MANUT_COLUNAS_OPC[chave] || [];
+      const obrig = nomes.filter(function(n){ return opc.indexOf(n) === -1; });
+      if (obrig.length) {
+        try { await manutRecarregar(chave); } catch (e4) {}
+        throw new Error('O SharePoint recusou a coluna "' + obrig.join('", "') + '" (confira o tipo dela na lista ' + MANUT_NOMES_LISTAS[chave] + '). Os demais campos foram salvos e o item já foi criado — feche esta janela e use ✏️ Editar nele.');
+      }
+      if (typeof mtToast === 'function') mtToast('⚠️ Salvo, exceto: ' + nomes.join(', ') + ' (confira o tipo dessas colunas no SharePoint)');
+    }
+    return novo;
+  }
 }
 async function manutAtualizar(chave, id, campos){
   await manutResolverListas();
@@ -9688,7 +9717,7 @@ function mtAbrirModal(titulo, campos, textoSalvar, aoSalvar, avisoHtml){
     if (c.tipo === 'select') ctl = '<select id="mtm-' + c.id + '">' + c.opcoes.map(function(o){ return '<option value="' + mtEsc(o) + '"' + (o === v ? ' selected' : '') + '>' + mtEsc(o) + '</option>'; }).join('') + '</select>';
     else if (c.tipo === 'tipos') ctl = mtTiposHtml('mtm-' + c.id, v);
     else if (c.tipo === 'textarea') ctl = '<textarea id="mtm-' + c.id + '" rows="' + (c.linhas || 2) + '">' + mtEsc(v) + '</textarea>';
-    else ctl = '<input id="mtm-' + c.id + '" type="' + (c.tipo || 'text') + '" value="' + mtEsc(v) + '"' + (c.lista ? ' list="mtm-dl-' + c.id + '"' : '') + (c.tipo === 'number' ? ' step="0.01" min="0"' : '') + ' autocomplete="off">' +
+    else ctl = '<input id="mtm-' + c.id + '" type="' + (c.tipo === 'number' ? 'text' : (c.tipo || 'text')) + '" value="' + mtEsc(c.tipo === 'number' ? String(v).replace('.', ',') : v) + '"' + (c.lista ? ' list="mtm-dl-' + c.id + '"' : '') + (c.tipo === 'number' ? ' inputmode="decimal" data-num="1"' : '') + ' autocomplete="off">' +
       (c.lista ? '<datalist id="mtm-dl-' + c.id + '">' + c.lista.map(function(o){ return '<option value="' + mtEsc(o) + '">'; }).join('') + '</datalist>' : '');
     return '<div class="campo' + (c.larga ? ' larga' : '') + '"><label>' + mtEsc(c.label) + (c.obrig ? ' <span class="obrig">*</span>' : '') + '</label>' + ctl + (c.dica ? '<div class="modal-dica">' + c.dica + '</div>' : '') + '</div>';
   }).join('');
@@ -9698,11 +9727,17 @@ function mtAbrirModal(titulo, campos, textoSalvar, aoSalvar, avisoHtml){
   const erro = document.getElementById('mt-modal-erro');
   btn.onclick = async function(){
     const v = {};
-    let semOutros = false;
+    let semOutros = false, numRuim = '';
     campos.forEach(function(c){
       if (c.tipo === 'tipos') { const t = mtTiposLer('mtm-' + c.id); if (t === null) semOutros = true; v[c.id] = t || ''; }
       else v[c.id] = document.getElementById('mtm-' + c.id).value.trim();
+      if (c.tipo === 'number' && v[c.id] !== '') {
+        const bruto = v[c.id].replace(/\s|R\$/g, '');
+        const norm = bruto.indexOf(',') >= 0 ? bruto.replace(/\./g, '').replace(',', '.') : bruto;
+        if (!/^-?\d+(\.\d+)?$/.test(norm)) numRuim = c.label; else v[c.id] = norm;
+      }
     });
+    if (numRuim) { erro.textContent = '⚠️ Número inválido em "' + numRuim + '". Use só dígitos e vírgula (ex.: 1250,50).'; erro.style.display = 'block'; return; }
     if (semOutros) { erro.textContent = '⚠️ Descreva o tipo no campo "Outros".'; erro.style.display = 'block'; return; }
     for (const c of campos) {
       if (c.obrig && !v[c.id]) { erro.textContent = '⚠️ Preencha: ' + c.label + '.'; erro.style.display = 'block'; return; }
@@ -9807,7 +9842,7 @@ function manutModalPeca(oc, p){
     let situacao = v.situacao;
     if (v.retornoReal) situacao = 'Recebida';
     const campos = { Title: v.nome, OcorrenciaId: oc.id, Equipamento: oc.equipamento, TipoPeca: v.tipoPeca, Situacao: situacao, Destino: v.destino,
-      DataEnvio: v.dataEnvio || null, PrevisaoRetorno: v.previsao || null, RetornoReal: v.retornoReal || null, Documento: v.documento, Custo: v.custo ? Number(v.custo) : 0 };
+      DataEnvio: v.dataEnvio || null, PrevisaoRetorno: v.previsao || null, RetornoReal: v.retornoReal || null, Documento: v.documento, Custo: v.custo ? Math.round(Number(v.custo) * 100) / 100 : 0 };
     if (p) {
       if (!p.previsaoOriginal && v.previsao) campos.PrevisaoOriginal = v.previsao;
       await manutAtualizar('pecas', p.id, campos);
