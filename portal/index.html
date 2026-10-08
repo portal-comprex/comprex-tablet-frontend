@@ -1818,7 +1818,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 08/10/2026 · 75</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 08/10/2026 · 76</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -2527,14 +2527,21 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
-      <button type="button" class="rel-btn-primario" id="loc-atual-pesquisar" style="margin-right:8px">🔍 Pesquisar</button>
-      <button type="button" class="rel-btn-primario" id="loc-atual-imprimir">🖨️ Imprimir / Exportar PDF</button>
+      <div style="display:flex;gap:8px;flex-wrap:nowrap">
+        <button type="button" class="rel-btn-primario" id="loc-atual-pesquisar" style="white-space:nowrap">🔍 Pesquisar</button>
+        <button type="button" class="rel-btn-primario" id="loc-atual-limpar" style="white-space:nowrap;background:#c62828;border-color:#c62828;color:#fff">✖ Limpar filtros</button>
+      </div>
     </div>
     <div class="hist-filtro-campo" style="justify-content:flex-end">
       <label>&nbsp;</label>
-      <button type="button" class="rel-btn-secundario" id="loc-atual-exportar-excel">📊 Exportar Excel</button>
+      <button type="button" class="rel-btn-primario" id="loc-atual-imprimir" style="white-space:nowrap">🖨️ Imprimir / Exportar PDF</button>
+    </div>
+    <div class="hist-filtro-campo" style="justify-content:flex-end">
+      <label>&nbsp;</label>
+      <button type="button" class="rel-btn-secundario" id="loc-atual-exportar-excel" style="white-space:nowrap">📊 Exportar Excel</button>
     </div>
   </div>
+  <div class="mt-met" id="loc-atual-card" style="display:inline-block;min-width:240px;margin:2px 0 12px"></div>
   <div class="hist-wrap">
     <table class="hist-tabela" id="loc-atual-tabela">
       <thead><tr><th>Equipamento</th><th>Implemento</th><th>Local atual</th><th>Status</th><th>Há quantos dias</th></tr></thead>
@@ -5927,6 +5934,17 @@ function locBadgeStatus(status){
   const classe = s === 'OPERACIONAL' ? 'ok' : (s === 'EM MANUTENÇÃO' ? 'parar' : 'at');
   return '<span class="hist-st ' + classe + '">' + s + '</span>';
 }
+function locAtualizarCard(n, busca, local, status){
+  const card = document.getElementById('loc-atual-card');
+  if (!card) return;
+  const partes = [];
+  if (busca) partes.push('busca "' + busca + '"');
+  if (local) partes.push('local: ' + local);
+  if (status) partes.push('status: ' + status);
+  const total = frotas.length;
+  card.innerHTML = '<b>' + n + '</b><span>' + (n === 1 ? 'equipamento' : 'equipamentos') + (partes.length ? ' no filtro' : ' no total') + '</span>' +
+    '<small style="display:block;color:var(--cinza);margin-top:3px;font-size:11px">' + (partes.length ? mtEsc(partes.join(' · ')) + ' — de ' + total + ' cadastrados' : 'Todos os equipamentos cadastrados') + '</small>';
+}
 function locRenderizarTabela(){
   const busca = document.getElementById('loc-atual-busca').value.trim().toUpperCase();
   const filtroLocal = document.getElementById('loc-atual-filtro-local').value;
@@ -5937,6 +5955,7 @@ function locRenderizarTabela(){
     if (filtroStatusLoc && (frotaStatusAtual[eq] || 'OPERACIONAL') !== filtroStatusLoc) return false;
     return true;
   });
+  locAtualizarCard(linhas.length, busca, filtroLocal, filtroStatusLoc);
   const tbody = document.getElementById('loc-atual-tbody');
   if (!linhas.length) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cinza);padding:24px">Nenhum equipamento encontrado.</td></tr>';
@@ -5967,6 +5986,12 @@ function locRenderizarTabela(){
 // "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
 document.getElementById('loc-atual-pesquisar').onclick = locRenderizarTabela;
 document.getElementById('loc-atual-filtro-status').onchange = locRenderizarTabela;
+document.getElementById('loc-atual-limpar').onclick = function(){
+  document.getElementById('loc-atual-busca').value = '';
+  document.getElementById('loc-atual-filtro-local').value = '';
+  document.getElementById('loc-atual-filtro-status').value = '';
+  locRenderizarTabela();
+};
 function locObterLinhasAtuais(){
   const busca = document.getElementById('loc-atual-busca').value.trim().toUpperCase();
   const filtroLocal = document.getElementById('loc-atual-filtro-local').value;
