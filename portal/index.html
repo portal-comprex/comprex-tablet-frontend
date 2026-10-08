@@ -1818,7 +1818,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 08/10/2026 · 73</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 08/10/2026 · 74</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -9318,9 +9318,12 @@ function mtBlocoMetricas(oc){
 function mtBlocoPecasPendentes(oc){
   if (!mtAberta(oc) || !manutPodeEditar()) return '';
   const pend = mtPendentes(oc);
-  if (!pend.length) return '';
+  const esperando = oc.etapa === 'Aguardando peça' || oc.etapa === 'Reparo externo';
+  if (!pend.length && !esperando) return '';
   const hoje = mtHoje();
-  return '<div class="mt-pecas-pend"><div class="mt-pecas-pend-tit">📦 Aguardando chegada (' + pend.length + ')</div>' + pend.map(function(p){
+  const cab = '<div class="mt-pecas-pend-tit" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>📦 Aguardando chegada (' + pend.length + ')</span><button type="button" class="mt-btn mini" data-mt-acao="peca-add">+ Lançar peça</button></div>';
+  if (!pend.length) return '<div class="mt-pecas-pend">' + cab + '<div style="font-size:12.5px;color:#7a5a12;padding-top:4px">A etapa é "' + mtEsc(oc.etapa) + '", mas nenhuma peça foi lançada. Clique em <b>+ Lançar peça</b> para informar a peça, o fornecedor e as datas. Depois, o botão de chegada aparece aqui.</div></div>';
+  return '<div class="mt-pecas-pend">' + cab + pend.map(function(p){
     const atras = p.previsao && p.previsao < hoje;
     const dias = p.dataEnvio ? mtDias(p.dataEnvio, hoje) : null;
     return '<div class="mt-pecas-pend-lin"><div><b>' + mtEsc(p.nome) + '</b>' + (p.tipo ? ' <span class="mt-sit ' + (p.tipo === 'Compra' ? 'trans' : 'ext') + '" style="font-size:10px">' + mtEsc(p.tipo) + '</span>' : '') +
