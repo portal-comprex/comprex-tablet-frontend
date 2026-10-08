@@ -8235,9 +8235,34 @@ function mtAgoraLocal(){ const d = new Date(); return mtHoje() + 'T' + mtP2(d.ge
 function mtDT(d, h){ return d ? d + 'T' + (h || '00:00') : ''; }
 function mtDTsplit(v){ v = String(v || ''); return { d: v.slice(0, 10), h: v.length >= 16 ? v.slice(11, 16) : '' }; }
 function mtFmtDT(d, h){ return d ? mtBR(d) + (h ? ' ' + h : '') : '—'; }
+/* ---- expediente: horas úteis (líquidas) = só o horário de trabalho, sem noite, almoço e (opcionalmente) sábado ---- */
+var MT_EXP = { ini: '07:00', fim: '17:00', almIni: '12:00', almFim: '13:00', sab: false, sabIni: '07:00', sabFim: '12:00' };
+try { const sv = JSON.parse(localStorage.getItem('mtExpediente') || 'null'); if (sv) Object.keys(MT_EXP).forEach(function(k){ if (sv[k] !== undefined) MT_EXP[k] = sv[k]; }); } catch (e) {}
+function mtMin(h){ const m = /^(\d{1,2}):(\d{2})/.exec(h || ''); return m ? (+m[1]) * 60 + (+m[2]) : 0; }
+/** Horas úteis entre dois instantes (ms). Segunda a sexta: ini–fim menos almoço; sábado só se configurado. */
+function mtHU(a, b){
+  if (!(b > a)) return 0;
+  const E = MT_EXP, d = new Date(a); d.setHours(0, 0, 0, 0);
+  let tot = 0;
+  for (let guard = 0; d.getTime() < b && guard < 4000; guard++) {
+    const dow = d.getDay(), t0 = d.getTime();
+    let segs = [];
+    if (dow >= 1 && dow <= 5) segs = [[mtMin(E.ini), mtMin(E.almIni)], [mtMin(E.almFim), mtMin(E.fim)]];
+    else if (dow === 6 && E.sab) segs = [[mtMin(E.sabIni), mtMin(E.sabFim)]];
+    segs.forEach(function(sg){
+      if (sg[1] <= sg[0]) return;
+      const s0 = t0 + sg[0] * 60000, s1 = t0 + sg[1] * 60000;
+      const o = Math.min(b, s1) - Math.max(a, s0);
+      if (o > 0) tot += o;
+    });
+    d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0);
+  }
+  return tot / 3600000;
+}
+function mtExpedienteTxt(){ const E = MT_EXP; return E.ini + '–' + E.fim + ' (almoço ' + E.almIni + '–' + E.almFim + ')' + (E.sab ? ' + sáb ' + E.sabIni + '–' + E.sabFim : ''); }
 /** Fases do equipamento: parou → chegou na manutenção → começou a mexer → liberado (em horas). */
-function mtFases(oc){
-  const hh = function(a, b){ return Math.max(0, (b - a) / 3600000); };
+function mtFases(oc, corr){
+  const hh = function(a, b){ return corr ? Math.max(0, (b - a) / 3600000) : mtHU(a, b); };
   const dP = oc.dataParada || oc.dataEntrada, hP = oc.dataParada ? oc.horaParada : oc.horaEntrada;
   const ini = mtInicio(oc);
   const tP = mtMs(dP, hP), tC = mtMs(oc.dataEntrada, oc.horaEntrada), tI = ini ? mtMs(ini, oc.horaInicio) : null;
@@ -8247,22 +8272,32 @@ function mtFases(oc){
 /* ---- horas de manutenção e horímetro ---- */
 function mtMs(d, h){ return Date.parse(d + 'T' + (h || '00:00') + ':00'); }
 /** Horas entre a entrada e a liberação (ou até agora, se ainda aberta). Sem a hora informada, conta a partir de 00:00. */
-function mtHorasManut(oc){
+function mtHorasManut(oc, corr){
   if (!oc.dataEntrada) return 0;
   const ini = mtMs(oc.dataEntrada, oc.horaEntrada), fim = oc.dataSaida ? mtMs(oc.dataSaida, oc.horaSaida) : Date.now();
-  return Math.max(0, (fim - ini) / 3600000);
+  return corr ? Math.max(0, (fim - ini) / 3600000) : mtHU(ini, fim);
+}
+/** Destino efetivo após a liberação. Fichas antigas (sem destino gravado) que estão no pátio de manutenção contam como "Disponível na manutenção". */
+function mtDest(oc){
+  if (mtAberta(oc)) return '';
+  if (oc.destino) return oc.destino;
+  const eq = oc.equipamento;
+  if (!oc.dataSaida || oc.dataEnvio || !locDestinoEhManutencao(frotaLocalAtual[eq] || '') || (frotaStatusAtual[eq] || '') === 'EM MANUTENÇÃO') return '';
+  if (mtOcAbertaDe(eq)) return '';
+  if (manutOcorrencias.some(function(o){ return o.equipamento === eq && o.id !== oc.id && !mtAberta(o) && (o.dataSaida || '') > (oc.dataSaida || ''); })) return '';
+  return 'Disponível na manutenção';
 }
 /** Depois de liberado: 'Disponível na manutenção' (parado no pátio) ou 'Enviado para contrato'. */
 function mtDestinoTxt(oc){
-  if (mtAberta(oc) || !oc.destino) return '';
-  return oc.destino === 'Enviado para contrato' ? 'Contrato: ' + (oc.contrato || '—') : 'Disponível na manutenção';
+  if (!mtDest(oc)) return '';
+  return mtDest(oc) === 'Enviado para contrato' ? 'Contrato: ' + (oc.contrato || '—') : 'Disponível na manutenção';
 }
 /** Horas entre a liberação e o envio ao contrato (ou até agora, se ainda está disponível no pátio). */
-function mtHorasDisponivel(oc){
-  if (mtAberta(oc) || !oc.dataSaida || !oc.destino) return null;
+function mtHorasDisponivel(oc, corr){
+  if (!oc.dataSaida || !mtDest(oc)) return null;
   const ini = mtMs(oc.dataSaida, oc.horaSaida);
-  const fim = oc.dataEnvio ? mtMs(oc.dataEnvio, oc.horaEnvio) : (oc.destino === 'Enviado para contrato' ? ini : Date.now());
-  return Math.max(0, (fim - ini) / 3600000);
+  const fim = oc.dataEnvio ? mtMs(oc.dataEnvio, oc.horaEnvio) : (mtDest(oc) === 'Enviado para contrato' ? ini : Date.now());
+  return corr ? Math.max(0, (fim - ini) / 3600000) : mtHU(ini, fim);
 }
 function mtHorasPreciso(oc){ return !!oc.horaEntrada && (!oc.dataSaida || !!oc.horaSaida); }
 function mtFmtHoras(h){ return h === null || h === undefined ? '—' : Math.round(h).toLocaleString('pt-BR') + ' h'; }
@@ -8404,7 +8439,7 @@ function mtPassaFx(oc){
 function mtFxAtivos(){ return Object.keys(manutFx).filter(function(k){ return manutFx[k]; }).length; }
 /** Liberados que continuam no pátio, prontos para sair (a última manutenção do equipamento, sem envio ao contrato). */
 function mtDisponivelNaManut(oc){
-  if (mtAberta(oc) || oc.destino !== 'Disponível na manutenção' || oc.dataEnvio) return false;
+  if (mtDest(oc) !== 'Disponível na manutenção' || oc.dataEnvio) return false;
   if (mtOcAbertaDe(oc.equipamento)) return false;
   return !manutOcorrencias.some(function(o){ return o.equipamento === oc.equipamento && o.id !== oc.id && !mtAberta(o) && (o.dataSaida || '') > (oc.dataSaida || ''); });
 }
@@ -8607,6 +8642,8 @@ function manutRenderTudo(){
   cc.innerHTML = chips.map(function(c){
     return '<button type="button" class="mt-chip ' + (c.cls || '') + (manutFiltro === c.k ? ' ativo' : '') + '" data-mt-chip="' + c.k + '">' + c.t + ' (' + c.n + ')</button>';
   }).join('');
+  cc.insertAdjacentHTML('beforeend', '<button type="button" class="mt-chip" id="mt-btn-exp" title="Horário de trabalho usado para calcular as horas úteis">⚙ Expediente: ' + mtEsc(mtExpedienteTxt()) + '</button>');
+  document.getElementById('mt-btn-exp').onclick = manutModalExpediente;
   cc.querySelectorAll('[data-mt-chip]').forEach(function(b){ b.onclick = function(){ manutDefinirFiltro(b.dataset.mtChip); }; });
   document.getElementById('mt-titulo-lista').textContent = manutFiltro === 'historico' ? 'Histórico de Manutenções' : manutFiltro === 'disponiveis' ? 'Equipamentos disponíveis na manutenção' : 'Equipamentos em Manutenção';
   document.getElementById('mt-th-prev').textContent = (manutFiltro === 'historico' || manutFiltro === 'disponiveis') ? 'Saída' : 'Previsão retorno';
@@ -8744,7 +8781,7 @@ function manutRenderIndicadores(){
   const dmFrota = Math.max(0, Math.min(100, (1 - parI / (nFrotaI * diasI)) * 100));
   const aguardos = ocs.map(mtDiasAguardandoPeca);
   const tiles = [
-    { l: 'Tempo médio de manutenção', v: mtFmtHoras(mtMedia(conc.map(mtHorasManut))), m: (tempoParada === null ? '' : mtFmtDias(tempoParada) + ' · ') + conc.length + ' manutenção(ões) concluída(s)' },
+    { l: 'Tempo médio de manutenção (h úteis)', v: mtFmtHoras(mtMedia(conc.map(mtHorasManut))), m: (tempoParada === null ? '' : mtFmtDias(tempoParada) + ' · ') + conc.length + ' manutenção(ões) concluída(s)' },
     { l: 'Disponibilidade mecânica da frota', v: mtPct(dmFrota), m: parI + ' dia(s)-máquina parados em ' + diasI + ' dia(s) · ' + nFrotaI + ' equipamentos' },
     { l: 'Tempo aguardando peça', v: mtFmtDias(mtMedia(aguardos)), m: ocs.length ? 'média por manutenção · total ' + aguardos.reduce(function(a, b){ return a + b; }, 0) + ' dia(s)' : 'sem fichas no período' },
     { l: 'Espera até iniciar', v: mtFmtDias(mtMedia(esperas)), m: esperas.length ? 'média em ' + esperas.length + ' ficha(s) com início informado' : 'informe o “Início da manutenção” nas fichas' },
@@ -8989,8 +9026,8 @@ function manutRelatorioExcel(){
       'Responsável': oc.responsavel, 'Etapa': mtAberta(oc) ? oc.etapa : 'Concluída', 'Local atual': frotaLocalAtual[oc.equipamento] || '', 'Onde está / Pendência': mtOnde(oc),
       'Previsão de retorno': mtBR(oc.previsao), 'Saída': mtBR(oc.dataSaida), 'Dias parados': mtDiasParados(oc), 'Status': mtStatusPrazo(oc).texto,
       'Prioridade': oc.prioridade, 'Início da manutenção': mtBR(mtInicio(oc)), 'Espera até iniciar (dias)': mtEsperaInicio(oc) === null ? '' : mtEsperaInicio(oc), 'Itens feitos': mtProgresso(oc).feitos + '/' + mtProgresso(oc).total,
-      'Parou em': mtFmtDT(oc.dataParada, oc.horaParada), 'Horas parado → chegou': mtFases(oc).transporte === null ? '' : Math.round(mtFases(oc).transporte), 'Horas chegou → começou': mtFases(oc).espera === null ? '' : Math.round(mtFases(oc).espera), 'Horas de manutenção': Math.round(mtHorasManut(oc)), 'Hora de entrada': oc.horaEntrada, 'Hora de liberação': oc.horaSaida, 'Horímetro entrada (h)': oc.horimetroEntrada === null ? '' : oc.horimetroEntrada, 'Horímetro liberação (h)': oc.horimetroSaida === null ? '' : oc.horimetroSaida, 'Aguardando peça (dias)': mtDiasAguardandoPeca(oc), 'Custo das peças (R$)': mtCustoOc(oc), 'Disponibilidade mecânica 90d (%)': Math.round(mtDispMecEq(oc.equipamento, mtSoma(mtHoje(), -90), mtHoje()) * 10) / 10,
-      'Destino após liberação': mtDestinoTxt(oc), 'Enviado ao contrato em': oc.destino === 'Enviado para contrato' ? mtFmtDT(oc.dataEnvio, oc.horaEnvio) : '', 'Horas disponível (liberado → envio)': mtHorasDisponivel(oc) === null ? '' : Math.round(mtHorasDisponivel(oc)),
+      'Parou em': mtFmtDT(oc.dataParada, oc.horaParada), 'Horas úteis parado → chegou': mtFases(oc).transporte === null ? '' : Math.round(mtFases(oc).transporte), 'Horas úteis chegou → começou': mtFases(oc).espera === null ? '' : Math.round(mtFases(oc).espera), 'Horas úteis de manutenção': Math.round(mtHorasManut(oc)), 'Horas corridas de manutenção': Math.round(mtHorasManut(oc, true)), 'Horas úteis parado (total)': Math.round(mtFases(oc).total), 'Horas corridas parado (total)': Math.round(mtFases(oc, true).total), 'Hora de entrada': oc.horaEntrada, 'Hora de liberação': oc.horaSaida, 'Horímetro entrada (h)': oc.horimetroEntrada === null ? '' : oc.horimetroEntrada, 'Horímetro liberação (h)': oc.horimetroSaida === null ? '' : oc.horimetroSaida, 'Aguardando peça (dias)': mtDiasAguardandoPeca(oc), 'Custo das peças (R$)': mtCustoOc(oc), 'Disponibilidade mecânica 90d (%)': Math.round(mtDispMecEq(oc.equipamento, mtSoma(mtHoje(), -90), mtHoje()) * 10) / 10,
+      'Destino após liberação': mtDestinoTxt(oc), 'Enviado ao contrato em': mtDest(oc) === 'Enviado para contrato' ? mtFmtDT(oc.dataEnvio, oc.horaEnvio) : '', 'Horas úteis disponível (liberado → envio)': mtHorasDisponivel(oc) === null ? '' : Math.round(mtHorasDisponivel(oc)), 'Horas corridas disponível': mtHorasDisponivel(oc, true) === null ? '' : Math.round(mtHorasDisponivel(oc, true)),
       'Liberação': mtAberta(oc) ? '' : (mtPendenciaDe(oc) ? (mtPendenciaDe(oc).resolvida ? 'Com pendência (resolvida)' : 'Com pendência: ' + mtPendenciaDe(oc).texto) : 'Sem pendência') };
   });
   const dPe = manutPecas.filter(function(p){ return ids[p.ocId]; }).map(function(p){
@@ -9033,9 +9070,9 @@ function manutRelatorioFicha(oc){
   const dados = [['Modelo', frotaDescricao[eq] || '—'], ['Parou em', mtFmtDT(oc.dataParada, oc.horaParada)], ['Chegou na manutenção', mtFmtDT(oc.dataEntrada, oc.horaEntrada)], ['Começou a mexer', mtFmtDT(mtInicio(oc), oc.horaInicio)], [aberta ? 'Previsão de retorno' : 'Liberado em', aberta ? mtBR(oc.previsao) : mtBR(oc.dataSaida)],
     ['Dias ' + (aberta ? 'indisponível' : 'parado'), mtDiasParados(oc)], ['Etapa', aberta ? oc.etapa : 'Concluída'], ['Status do prazo', st.texto], ['Responsável', oc.responsavel || '—'], ['Tipo', oc.tipo || '—'],
     ['Local atual', frotaLocalAtual[eq] || '—'], ['Motivo da parada', oc.motivo || '—'],
-    ['Tempo de manutenção', mtFmtHoras(mtHorasManut(oc)) + ' (' + mtDiasParados(oc) + ' dia(s))' + (mtHorasPreciso(oc) ? '' : ' — horas não informadas')],
+    ['Tempo de manutenção', mtFmtHoras(mtHorasManut(oc)) + ' úteis · ' + mtFmtHoras(mtHorasManut(oc, true)) + ' corridas (' + mtDiasParados(oc) + ' dia(s))' + (mtHorasPreciso(oc) ? '' : ' — horas não informadas')],
     ['Horímetro', (oc.horimetroEntrada !== null ? 'entrada ' + mtFmtHorim(oc.horimetroEntrada) : 'entrada —') + (oc.horimetroSaida !== null ? ' · liberação ' + mtFmtHorim(oc.horimetroSaida) : '') + (mtHorasDesdeUltima(oc) !== null ? ' · trabalhou ' + mtFmtHorim(mtHorasDesdeUltima(oc)) + ' desde a manutenção anterior' : '')],
-    ['Fases (horas)', 'parou → chegou ' + (mtFases(oc).transporte === null ? '—' : mtFmtHoras(mtFases(oc).transporte)) + ' · chegou → começou ' + (mtFases(oc).espera === null ? '—' : mtFmtHoras(mtFases(oc).espera)) + ' · começou → liberação ' + (mtFases(oc).execucao === null ? '—' : mtFmtHoras(mtFases(oc).execucao)) + ' · total indisponível ' + mtFmtHoras(mtFases(oc).total)],
+    ['Fases (horas úteis)', 'parou → chegou ' + (mtFases(oc).transporte === null ? '—' : mtFmtHoras(mtFases(oc).transporte)) + ' · chegou → começou ' + (mtFases(oc).espera === null ? '—' : mtFmtHoras(mtFases(oc).espera)) + ' · começou → liberação ' + (mtFases(oc).execucao === null ? '—' : mtFmtHoras(mtFases(oc).execucao)) + ' · total indisponível ' + mtFmtHoras(mtFases(oc).total)],
     ['Aguardando peça', mtDiasAguardandoPeca(oc) + ' dia(s)'], ['Custo da manutenção (peças)', mtMoeda(total)],
     ['Disponibilidade mecânica (90 dias)', mtPct(mtDispMecEq(eq, mtSoma(mtHoje(), -90), mtHoje()))]];
   if (!aberta) dados.push(['Liberação', mtPendenciaDe(oc) ? (mtPendenciaDe(oc).resolvida ? 'Com pendência (resolvida em ' + (mtPendenciaDe(oc).info || '—') + '): ' : 'COM PENDÊNCIA: ') + mtPendenciaDe(oc).texto : 'Sem pendência']);
@@ -9178,9 +9215,9 @@ function mtBlocoMetricas(oc){
   const fa = mtFases(oc);
   const fFase = function(x){ return x === null ? '—' : mtFmtHoras(x); };
   return '<div class="mt-mets">' +
-    '<div class="mt-met" style="grid-column:span 2"><b>' + mtFmtHoras(fa.total) + '</b><span>Tempo total indisponível (parou → ' + (mtAberta(oc) ? 'agora' : 'liberado') + ')</span><small>parou → chegou: ' + fFase(fa.transporte) + ' · chegou → começou: ' + fFase(fa.espera) + ' · começou → ' + (mtAberta(oc) ? 'agora' : 'liberado') + ': ' + fFase(fa.execucao) + '</small></div>' +
-    '<div class="mt-met"><b>' + mtFmtHoras(mtHorasManut(oc)) + '</b><span>Tempo de manutenção</span><small>' + tempo + ' dia(s) · ' + (mtAberta(oc) ? 'em andamento desde ' + mtBR(oc.dataEntrada) + (oc.horaEntrada ? ' ' + oc.horaEntrada : '') : 'concluída em ' + mtBR(oc.dataSaida) + (oc.horaSaida ? ' ' + oc.horaSaida : '')) + (mtHorasPreciso(oc) ? '' : ' · <i>informe as horas para contar exato</i>') + '</small></div>' +
-    (mtDestinoTxt(oc) ? '<div class="mt-met"><b>' + (mtHorasDisponivel(oc) === null ? '—' : mtFmtHoras(mtHorasDisponivel(oc))) + '</b><span>' + mtEsc(mtDestinoTxt(oc)) + '</span><small>' + (oc.destino === 'Enviado para contrato' ? 'liberado → enviado em ' + mtFmtDT(oc.dataEnvio, oc.horaEnvio) : 'disponível no pátio desde ' + mtFmtDT(oc.dataSaida, oc.horaSaida) + ' (até agora)') + '</small></div>' : '') +
+    '<div class="mt-met" style="grid-column:span 2"><b>' + mtFmtHoras(fa.total) + '</b><span>Tempo total indisponível — horas úteis (parou → ' + (mtAberta(oc) ? 'agora' : 'liberado') + ')</span><small>(úteis) parou → chegou: ' + fFase(fa.transporte) + ' · chegou → começou: ' + fFase(fa.espera) + ' · começou → ' + (mtAberta(oc) ? 'agora' : 'liberado') + ': ' + fFase(fa.execucao) + '<br><i>' + mtFmtHoras(mtFases(oc, true).total) + ' corridas no total</i></small></div>' +
+    '<div class="mt-met"><b>' + mtFmtHoras(mtHorasManut(oc)) + '</b><span>Tempo de manutenção — horas úteis</span><small>' + mtFmtHoras(mtHorasManut(oc, true)) + ' corridas · ' + tempo + ' dia(s) · ' + (mtAberta(oc) ? 'em andamento desde ' + mtBR(oc.dataEntrada) + (oc.horaEntrada ? ' ' + oc.horaEntrada : '') : 'concluída em ' + mtBR(oc.dataSaida) + (oc.horaSaida ? ' ' + oc.horaSaida : '')) + (mtHorasPreciso(oc) ? '' : ' · <i>informe as horas para contar exato</i>') + '</small></div>' +
+    (mtDestinoTxt(oc) ? '<div class="mt-met"><b>' + (mtHorasDisponivel(oc) === null ? '—' : mtFmtHoras(mtHorasDisponivel(oc))) + '</b><span>' + mtEsc(mtDestinoTxt(oc)) + '</span><small>' + (mtDest(oc) === 'Enviado para contrato' ? 'liberado → enviado em ' + mtFmtDT(oc.dataEnvio, oc.horaEnvio) + ' · ' + mtFmtHoras(mtHorasDisponivel(oc, true)) + ' corridas' : 'disponível no pátio desde ' + mtFmtDT(oc.dataSaida, oc.horaSaida) + ' (até agora) · ' + mtFmtHoras(mtHorasDisponivel(oc, true)) + ' corridas') + '</small></div>' : '') +
     '<div class="mt-met"><b>' + aguard + ' d</b><span>Aguardando peça</span><small>' + (tempo ? Math.round(aguard / tempo * 100) : 0) + '% do tempo parado</small></div>' +
     '<div class="mt-met"><b>' + mtMoeda(custo) + '</b><span>Custo da manutenção</span><small>' + (nPe ? nPe + ' peça(s) lançada(s)' : 'sem peças lançadas') + '</small></div>' +
     '<div class="mt-met"><b>' + (oc.horimetroEntrada !== null ? mtFmtHorim(oc.horimetroEntrada) : '—') + (oc.horimetroSaida !== null ? ' → ' + mtFmtHorim(oc.horimetroSaida) : '') + '</b><span>Horímetro (entrada → liberação)</span><small>' +
@@ -9250,7 +9287,7 @@ function manutRenderDetalhe(){
     mtBlocoObs(oc) +
     '<div class="mt-ficha-acoes">' +
       (aberta ? '<button type="button" class="mt-btn ok" data-mt-acao="concluir">✅ Concluir manutenção</button>' : '') +
-      (!aberta && oc.destino === 'Disponível na manutenção' ? '<button type="button" class="mt-btn ok" data-mt-acao="enviar-contrato">🚚 Enviar para contrato</button>' : '') +
+      (!aberta && mtDest(oc) === 'Disponível na manutenção' ? '<button type="button" class="mt-btn ok" data-mt-acao="enviar-contrato">🚚 Enviar para contrato</button>' : '') +
       '<button type="button" class="mt-btn" data-mt-acao="editar">✏️ Editar ficha</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="loc">📍 Localização Atual</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="movhist">🕒 Histórico completo de movimentações</button>' +
@@ -9726,6 +9763,29 @@ async function manutExcluirEvento(oc, e){
   catch (err) { alert('Falha ao excluir: ' + err.message); }
 }
 
+/* ---------- expediente (horas úteis) ---------- */
+function manutModalExpediente(){
+  mtAbrirModal('⚙ Expediente — horas úteis', [
+    { id: 'ini', label: 'Início do expediente', tipo: 'time', valor: MT_EXP.ini },
+    { id: 'fim', label: 'Fim do expediente', tipo: 'time', valor: MT_EXP.fim },
+    { id: 'almIni', label: 'Início do almoço', tipo: 'time', valor: MT_EXP.almIni },
+    { id: 'almFim', label: 'Fim do almoço', tipo: 'time', valor: MT_EXP.almFim },
+    { id: 'sab', label: 'Sábado conta como expediente?', tipo: 'select', opcoes: ['Não', 'Sim'], valor: MT_EXP.sab ? 'Sim' : 'Não', larga: true, dica: 'Segunda a sexta contam sempre. Domingo nunca conta.' },
+    { id: 'sabIni', label: 'Sábado: início', tipo: 'time', valor: MT_EXP.sabIni },
+    { id: 'sabFim', label: 'Sábado: fim', tipo: 'time', valor: MT_EXP.sabFim }
+  ], '💾 Salvar expediente', async function(v){
+    if (mtMin(v.fim) <= mtMin(v.ini)) throw new Error('O fim do expediente deve ser depois do início.');
+    if (mtMin(v.almFim) < mtMin(v.almIni)) throw new Error('O fim do almoço deve ser depois do início.');
+    MT_EXP = { ini: v.ini, fim: v.fim, almIni: v.almIni, almFim: v.almFim, sab: v.sab === 'Sim', sabIni: v.sabIni, sabFim: v.sabFim };
+    try { localStorage.setItem('mtExpediente', JSON.stringify(MT_EXP)); } catch (e) {}
+    manutRenderTudo();
+    mtToast('✅ Expediente atualizado');
+  }, '<div class="mt-aviso" style="background:#eef6ff;border-color:#bcd7f5;color:#1b3a5c">As horas úteis descontam noites, almoço, domingos e (se marcado) sábados. Fica salvo neste navegador.</div>');
+  const sel = document.getElementById('mtm-sab');
+  const alt = function(){ ['sabIni', 'sabFim'].forEach(function(k){ document.getElementById('mtm-' + k).closest('.campo').style.display = sel.value === 'Sim' ? '' : 'none'; }); };
+  sel.onchange = alt; alt();
+}
+
 /* ---------- concluir manutenção (libera o equipamento e já move para um local) ---------- */
 function manutModalConcluir(oc){
   const eq = oc.equipamento, pend = mtPendentes(oc);
@@ -9808,7 +9868,7 @@ function manutModalEnviarContrato(oc){
     await garantirDadosMovimentacoes(true);
     manutRenderTudo();
     mtToast('✅ ' + eq + ' enviado para ' + v.local);
-  });
+  }, mtTemColuna('ocorrencias', 'DestinoLiberacao') ? '' : '<div class="mt-aviso">⚠️ Faltam as colunas DestinoLiberacao, ContratoDestino, DataEnvioContrato e HoraEnvioContrato na lista ManutOcorrencias. O equipamento será movido, mas o envio não ficará registrado na ficha até você criá-las.</div>');
 }
 
 /* ---------- nova entrada ---------- */
