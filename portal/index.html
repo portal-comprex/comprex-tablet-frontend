@@ -1769,6 +1769,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sn-sub">
         <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="todos">Visão Geral</div>
         <div class="sidebar-item" data-view="manut-nova" data-secao="manutencao">Nova Entrada</div>
+        <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="disponiveis">Disponíveis na manutenção</div>
         <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="historico">Histórico</div>
       </div>
     </div>
@@ -8074,7 +8075,7 @@ const MANUT_COLUNAS = {
   itens: ['Title', 'OcorrenciaId', 'Equipamento', 'Status', 'DataConclusao']
 };
 /* colunas OPCIONAIS: recursos novos; se não existirem, o portal continua funcionando sem eles */
-const MANUT_COLUNAS_OPC = { ocorrencias: ['DataInicio', 'Prioridade', 'HoraEntrada', 'HoraSaida', 'HorimetroEntrada', 'HorimetroSaida', 'DataParada', 'HoraParada', 'HoraInicio'] };
+const MANUT_COLUNAS_OPC = { ocorrencias: ['DataInicio', 'Prioridade', 'HoraEntrada', 'HoraSaida', 'HorimetroEntrada', 'HorimetroSaida', 'DataParada', 'HoraParada', 'HoraInicio', 'DestinoLiberacao', 'ContratoDestino', 'DataEnvioContrato', 'HoraEnvioContrato'] };
 var manutColTexto = {};
 let manutColMap = {}, manutColFaltando = [], manutColOpcFaltando = [];
 function mtNormNome(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); }
@@ -8148,6 +8149,7 @@ function mtMapOcorrencia(i){
     dataParada: mtData(f.DataParada), horaParada: mtHora(f.HoraParada), horaInicio: mtHora(f.HoraInicio),
     horaEntrada: mtHora(f.HoraEntrada), horaSaida: mtHora(f.HoraSaida),
     horimetroEntrada: mtNum(f.HorimetroEntrada), horimetroSaida: mtNum(f.HorimetroSaida),
+    destino: f.DestinoLiberacao || '', contrato: f.ContratoDestino || '', dataEnvio: mtData(f.DataEnvioContrato), horaEnvio: mtHora(f.HoraEnvioContrato),
     inicio: mtData(f.DataInicio), prioridade: MANUT_PRIORIDADES.indexOf(f.Prioridade) !== -1 ? f.Prioridade : 'Normal' };
 }
 function mtMapPeca(i){
@@ -8248,6 +8250,18 @@ function mtMs(d, h){ return Date.parse(d + 'T' + (h || '00:00') + ':00'); }
 function mtHorasManut(oc){
   if (!oc.dataEntrada) return 0;
   const ini = mtMs(oc.dataEntrada, oc.horaEntrada), fim = oc.dataSaida ? mtMs(oc.dataSaida, oc.horaSaida) : Date.now();
+  return Math.max(0, (fim - ini) / 3600000);
+}
+/** Depois de liberado: 'Disponível na manutenção' (parado no pátio) ou 'Enviado para contrato'. */
+function mtDestinoTxt(oc){
+  if (mtAberta(oc) || !oc.destino) return '';
+  return oc.destino === 'Enviado para contrato' ? 'Contrato: ' + (oc.contrato || '—') : 'Disponível na manutenção';
+}
+/** Horas entre a liberação e o envio ao contrato (ou até agora, se ainda está disponível no pátio). */
+function mtHorasDisponivel(oc){
+  if (mtAberta(oc) || !oc.dataSaida || !oc.destino) return null;
+  const ini = mtMs(oc.dataSaida, oc.horaSaida);
+  const fim = oc.dataEnvio ? mtMs(oc.dataEnvio, oc.horaEnvio) : (oc.destino === 'Enviado para contrato' ? ini : Date.now());
   return Math.max(0, (fim - ini) / 3600000);
 }
 function mtHorasPreciso(oc){ return !!oc.horaEntrada && (!oc.dataSaida || !!oc.horaSaida); }
@@ -8369,7 +8383,7 @@ function mtClasseEtapa(etapa){
   return { 'Diagnóstico': 'e-diag', 'Em manutenção': 'e-manut', 'Aguardando peça': 'e-peca', 'Reparo externo': 'e-ext', 'Montagem/Testes': 'e-test' }[etapa] || 'e-ok';
 }
 function mtOnde(oc){
-  if (!mtAberta(oc)) return frotaLocalAtual[oc.equipamento] || '—';
+  if (!mtAberta(oc)) return mtDestinoTxt(oc) || frotaLocalAtual[oc.equipamento] || '—';
   const g = mtGargalo(oc);
   if (g) return g.nome + (g.destino ? ' · ' + g.destino : '');
   return frotaLocalAtual[oc.equipamento] || '—';
@@ -8388,8 +8402,15 @@ function mtPassaFx(oc){
   return true;
 }
 function mtFxAtivos(){ return Object.keys(manutFx).filter(function(k){ return manutFx[k]; }).length; }
+/** Liberados que continuam no pátio, prontos para sair (a última manutenção do equipamento, sem envio ao contrato). */
+function mtDisponivelNaManut(oc){
+  if (mtAberta(oc) || oc.destino !== 'Disponível na manutenção' || oc.dataEnvio) return false;
+  if (mtOcAbertaDe(oc.equipamento)) return false;
+  return !manutOcorrencias.some(function(o){ return o.equipamento === oc.equipamento && o.id !== oc.id && !mtAberta(o) && (o.dataSaida || '') > (oc.dataSaida || ''); });
+}
 function mtPassaFiltro(oc){
   if (!mtPassaFx(oc)) return false;
+  if (manutFiltro === 'disponiveis') return mtDisponivelNaManut(oc);
   if (manutFiltro === 'historico') return !mtAberta(oc);
   if (!mtAberta(oc)) return false;
   const hoje = mtHoje();
@@ -8580,14 +8601,15 @@ function manutRenderTudo(){
     { k: 'atrasados', t: 'Atrasados', n: nAt, cls: 'vermelho' }
   ];
   if (manutFiltro === 'retorno15') chips.push({ k: 'retorno15', t: 'Retorno em 15 dias', n: nRet });
+  chips.push({ k: 'disponiveis', t: 'Disponíveis na manutenção', n: manutOcorrencias.filter(mtDisponivelNaManut).length, cls: 'verde' });
   chips.push({ k: 'historico', t: 'Histórico', n: manutOcorrencias.length - abertas.length });
   const cc = document.getElementById('mt-chips');
   cc.innerHTML = chips.map(function(c){
     return '<button type="button" class="mt-chip ' + (c.cls || '') + (manutFiltro === c.k ? ' ativo' : '') + '" data-mt-chip="' + c.k + '">' + c.t + ' (' + c.n + ')</button>';
   }).join('');
   cc.querySelectorAll('[data-mt-chip]').forEach(function(b){ b.onclick = function(){ manutDefinirFiltro(b.dataset.mtChip); }; });
-  document.getElementById('mt-titulo-lista').textContent = manutFiltro === 'historico' ? 'Histórico de Manutenções' : 'Equipamentos em Manutenção';
-  document.getElementById('mt-th-prev').textContent = manutFiltro === 'historico' ? 'Saída' : 'Previsão retorno';
+  document.getElementById('mt-titulo-lista').textContent = manutFiltro === 'historico' ? 'Histórico de Manutenções' : manutFiltro === 'disponiveis' ? 'Equipamentos disponíveis na manutenção' : 'Equipamentos em Manutenção';
+  document.getElementById('mt-th-prev').textContent = (manutFiltro === 'historico' || manutFiltro === 'disponiveis') ? 'Saída' : 'Previsão retorno';
   manutPopularFiltros();
   manutRenderTabela();
 }
@@ -8912,7 +8934,7 @@ function mtCabecalhoRel(titulo, sub){
 }
 function mtDescFiltros(){
   const f = manutFx, p = [];
-  p.push(manutFiltro === 'historico' ? 'Histórico (concluídas)' : { todos: 'Em manutenção — todos', em: 'Em manutenção', aguardando: 'Aguardando peças', externo: 'Reparo externo', atrasados: 'Atrasados', retorno15: 'Retorno em 15 dias' }[manutFiltro] || 'Em manutenção');
+  p.push(manutFiltro === 'historico' ? 'Histórico (concluídas)' : manutFiltro === 'disponiveis' ? 'Disponíveis na manutenção' : { todos: 'Em manutenção — todos', em: 'Em manutenção', aguardando: 'Aguardando peças', externo: 'Reparo externo', atrasados: 'Atrasados', retorno15: 'Retorno em 15 dias' }[manutFiltro] || 'Em manutenção');
   if (f.etapa) p.push('Etapa: ' + f.etapa);
   if (f.status) p.push('Prazo: ' + { atrasado: 'Atrasado', atencao: 'Atenção', noprazo: 'No prazo' }[f.status]);
   if (f.tipo) p.push('Tipo: ' + f.tipo);
@@ -8935,7 +8957,7 @@ function mtResumoNumeros(){
 function manutRelatorioLista(){
   const lista = manutListaFiltrada();
   if (!lista.length) { alert('Nenhum equipamento na lista com esses filtros para gerar o relatório.'); return; }
-  const hist = manutFiltro === 'historico';
+  const hist = manutFiltro === 'historico' || manutFiltro === 'disponiveis';
   const corpo = lista.map(function(oc){
     const st = mtStatusPrazo(oc);
     return '<tr class="' + (st.chave === 'atrasado' ? 'linha-parar' : '') + '"><td><b>' + mtEsc(oc.equipamento) + '</b></td><td>' + mtEsc(frotaDescricao[oc.equipamento] || '—') + '</td><td>' + mtBR(oc.dataEntrada) + '</td><td>' +
@@ -8968,6 +8990,7 @@ function manutRelatorioExcel(){
       'Previsão de retorno': mtBR(oc.previsao), 'Saída': mtBR(oc.dataSaida), 'Dias parados': mtDiasParados(oc), 'Status': mtStatusPrazo(oc).texto,
       'Prioridade': oc.prioridade, 'Início da manutenção': mtBR(mtInicio(oc)), 'Espera até iniciar (dias)': mtEsperaInicio(oc) === null ? '' : mtEsperaInicio(oc), 'Itens feitos': mtProgresso(oc).feitos + '/' + mtProgresso(oc).total,
       'Parou em': mtFmtDT(oc.dataParada, oc.horaParada), 'Horas parado → chegou': mtFases(oc).transporte === null ? '' : Math.round(mtFases(oc).transporte), 'Horas chegou → começou': mtFases(oc).espera === null ? '' : Math.round(mtFases(oc).espera), 'Horas de manutenção': Math.round(mtHorasManut(oc)), 'Hora de entrada': oc.horaEntrada, 'Hora de liberação': oc.horaSaida, 'Horímetro entrada (h)': oc.horimetroEntrada === null ? '' : oc.horimetroEntrada, 'Horímetro liberação (h)': oc.horimetroSaida === null ? '' : oc.horimetroSaida, 'Aguardando peça (dias)': mtDiasAguardandoPeca(oc), 'Custo das peças (R$)': mtCustoOc(oc), 'Disponibilidade mecânica 90d (%)': Math.round(mtDispMecEq(oc.equipamento, mtSoma(mtHoje(), -90), mtHoje()) * 10) / 10,
+      'Destino após liberação': mtDestinoTxt(oc), 'Enviado ao contrato em': oc.destino === 'Enviado para contrato' ? mtFmtDT(oc.dataEnvio, oc.horaEnvio) : '', 'Horas disponível (liberado → envio)': mtHorasDisponivel(oc) === null ? '' : Math.round(mtHorasDisponivel(oc)),
       'Liberação': mtAberta(oc) ? '' : (mtPendenciaDe(oc) ? (mtPendenciaDe(oc).resolvida ? 'Com pendência (resolvida)' : 'Com pendência: ' + mtPendenciaDe(oc).texto) : 'Sem pendência') };
   });
   const dPe = manutPecas.filter(function(p){ return ids[p.ocId]; }).map(function(p){
@@ -9045,6 +9068,7 @@ function manutListaFiltrada(){
   const termo = document.getElementById('mt-busca').value.trim().toUpperCase();
   const ordem = { atrasado: 0, atencao: 1, noprazo: 2, concluida: 3 };
   return manutOcorrencias.filter(function(o){ return mtPassaFiltro(o) && mtPassaBusca(o, termo); }).sort(function(a, b){
+    if (manutFiltro === 'disponiveis') return (a.dataSaida || '').localeCompare(b.dataSaida || '');
     if (manutFiltro === 'historico') return (b.dataSaida || '').localeCompare(a.dataSaida || '');
     const pr = mtRankPri(a.prioridade) - mtRankPri(b.prioridade);
     if (pr) return pr;
@@ -9060,7 +9084,7 @@ function manutRenderTabela(){
   const tb = document.getElementById('mt-tbody');
   if (!lista.length) {
     document.getElementById('mt-ver-mais').style.display = 'none';
-    tb.innerHTML = '<tr><td colspan="10" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
+    tb.innerHTML = '<tr><td colspan="10" class="mt-vazio">' + (manutFiltro === 'historico' ? 'Nenhuma manutenção concluída ainda.' : manutFiltro === 'disponiveis' ? 'Nenhum equipamento disponível na manutenção no momento.' : 'Nenhum equipamento nesta visão. 🎉') + '</td></tr>';
     document.getElementById('mt-detalhe').innerHTML = '';
     mtFecharPainelFicha();
     return;
@@ -9156,6 +9180,7 @@ function mtBlocoMetricas(oc){
   return '<div class="mt-mets">' +
     '<div class="mt-met" style="grid-column:span 2"><b>' + mtFmtHoras(fa.total) + '</b><span>Tempo total indisponível (parou → ' + (mtAberta(oc) ? 'agora' : 'liberado') + ')</span><small>parou → chegou: ' + fFase(fa.transporte) + ' · chegou → começou: ' + fFase(fa.espera) + ' · começou → ' + (mtAberta(oc) ? 'agora' : 'liberado') + ': ' + fFase(fa.execucao) + '</small></div>' +
     '<div class="mt-met"><b>' + mtFmtHoras(mtHorasManut(oc)) + '</b><span>Tempo de manutenção</span><small>' + tempo + ' dia(s) · ' + (mtAberta(oc) ? 'em andamento desde ' + mtBR(oc.dataEntrada) + (oc.horaEntrada ? ' ' + oc.horaEntrada : '') : 'concluída em ' + mtBR(oc.dataSaida) + (oc.horaSaida ? ' ' + oc.horaSaida : '')) + (mtHorasPreciso(oc) ? '' : ' · <i>informe as horas para contar exato</i>') + '</small></div>' +
+    (mtDestinoTxt(oc) ? '<div class="mt-met"><b>' + (mtHorasDisponivel(oc) === null ? '—' : mtFmtHoras(mtHorasDisponivel(oc))) + '</b><span>' + mtEsc(mtDestinoTxt(oc)) + '</span><small>' + (oc.destino === 'Enviado para contrato' ? 'liberado → enviado em ' + mtFmtDT(oc.dataEnvio, oc.horaEnvio) : 'disponível no pátio desde ' + mtFmtDT(oc.dataSaida, oc.horaSaida) + ' (até agora)') + '</small></div>' : '') +
     '<div class="mt-met"><b>' + aguard + ' d</b><span>Aguardando peça</span><small>' + (tempo ? Math.round(aguard / tempo * 100) : 0) + '% do tempo parado</small></div>' +
     '<div class="mt-met"><b>' + mtMoeda(custo) + '</b><span>Custo da manutenção</span><small>' + (nPe ? nPe + ' peça(s) lançada(s)' : 'sem peças lançadas') + '</small></div>' +
     '<div class="mt-met"><b>' + (oc.horimetroEntrada !== null ? mtFmtHorim(oc.horimetroEntrada) : '—') + (oc.horimetroSaida !== null ? ' → ' + mtFmtHorim(oc.horimetroSaida) : '') + '</b><span>Horímetro (entrada → liberação)</span><small>' +
@@ -9225,6 +9250,7 @@ function manutRenderDetalhe(){
     mtBlocoObs(oc) +
     '<div class="mt-ficha-acoes">' +
       (aberta ? '<button type="button" class="mt-btn ok" data-mt-acao="concluir">✅ Concluir manutenção</button>' : '') +
+      (!aberta && oc.destino === 'Disponível na manutenção' ? '<button type="button" class="mt-btn ok" data-mt-acao="enviar-contrato">🚚 Enviar para contrato</button>' : '') +
       '<button type="button" class="mt-btn" data-mt-acao="editar">✏️ Editar ficha</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="loc">📍 Localização Atual</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="movhist">🕒 Histórico completo de movimentações</button>' +
@@ -9447,6 +9473,7 @@ function manutAcao(acao, id, oc){
   switch (acao) {
     case 'editar': manutModalEditar(oc); break;
     case 'concluir': manutModalConcluir(oc); break;
+    case 'enviar-contrato': manutModalEnviarContrato(oc); break;
     case 'pend-resolver': manutResolverPendencia(oc); break;
     case 'sugerir': manutAplicarSugestao(oc); break;
     case 'ajustar-ult': manutAjustarParaUltimaPeca(oc); break;
@@ -9705,8 +9732,10 @@ function manutModalConcluir(oc){
   const aviso = pend.length ? '<div class="mt-aviso">⚠️ Ainda há ' + pend.length + ' peça(s) sem recebimento registrado: ' + pend.map(function(p){ return mtEsc(p.nome); }).join(', ') + '.</div>' : '';
   mtAbrirModal('✅ Concluir manutenção — ' + eq, [
     { id: 'quando', label: 'Liberação (data e hora)', tipo: 'datetime-local', valor: mtAgoraLocal(), obrig: true },
-    { id: 'status', label: 'Novo status', tipo: 'select', opcoes: ['OPERACIONAL', 'EM DISPONIBILIDADE'], valor: 'OPERACIONAL' },
-    { id: 'local', label: 'Mover para o local', tipo: 'select', opcoes: locais.slice(), valor: frotaLocalAtual[eq] || locais[0], larga: true },
+    { id: 'destino', label: 'Para onde vai depois de liberado?', tipo: 'select', opcoes: ['Disponível na manutenção', 'Enviado para contrato'], valor: 'Disponível na manutenção', larga: true },
+    { id: 'envio', label: 'Enviado ao contrato em (data e hora)', tipo: 'datetime-local', valor: mtAgoraLocal() },
+    { id: 'status', label: 'Novo status', tipo: 'select', opcoes: ['OPERACIONAL', 'EM DISPONIBILIDADE'], valor: 'EM DISPONIBILIDADE' },
+    { id: 'local', label: 'Fica no local', tipo: 'select', opcoes: locais.slice(), valor: frotaLocalAtual[eq] || locais[0], larga: true },
     { id: 'horim', label: 'Horímetro na liberação (h)', tipo: 'number', valor: '', dica: oc.horimetroEntrada !== null ? 'Horímetro na entrada: ' + mtFmtHorim(oc.horimetroEntrada) : '' },
     { id: 'lib', label: 'Liberação do equipamento', tipo: 'select', opcoes: ['Sem pendência', 'Com pendência'], valor: 'Sem pendência', larga: true },
     { id: 'pend', label: 'Qual é a pendência? (fica em "Atenção necessária" até você marcar como resolvida)', tipo: 'textarea', valor: '', larga: true },
@@ -9715,6 +9744,13 @@ function manutModalConcluir(oc){
     const qSai = mtDTsplit(v.quando); v.data = qSai.d; v.hora = qSai.h;
     if (mtDT(v.data, v.hora) < mtDT(oc.dataEntrada, oc.horaEntrada)) throw new Error('A liberação não pode ser antes da chegada na manutenção (' + mtFmtDT(oc.dataEntrada, oc.horaEntrada) + ').');
     const comPend = v.lib === 'Com pendência';
+    const paraContrato = v.destino === 'Enviado para contrato';
+    const qEnv = mtDTsplit(v.envio);
+    if (paraContrato) {
+      if (!qEnv.d) throw new Error('Informe quando o equipamento foi enviado ao contrato.');
+      if (mtDT(qEnv.d, qEnv.h) < mtDT(v.data, v.hora)) throw new Error('O envio ao contrato não pode ser antes da liberação.');
+      if (v.local === (frotaLocalAtual[eq] || '') && locDestinoEhManutencao(v.local)) throw new Error('Escolha o contrato (local) para onde o equipamento foi enviado.');
+    }
     if (comPend && !v.pend) throw new Error('Descreva a pendência para liberar o equipamento com pendência.');
     const horimS = v.horim === '' ? null : Number(v.horim);
     if (horimS !== null && oc.horimetroEntrada !== null && horimS < oc.horimetroEntrada) throw new Error('O horímetro na liberação não pode ser menor que o da entrada (' + mtFmtHorim(oc.horimetroEntrada) + ').');
@@ -9725,20 +9761,54 @@ function manutModalConcluir(oc){
     frotaTipoManutencao[eq] = ''; frotaResponsavelTecnico[eq] = ''; frotaObservacaoManutencao[eq] = ''; frotaPrevisaoReparo[eq] = '';
     await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', { fields: {
       Equipamento: eq, ItemVinculado: frotaItemVinculado[eq] || '', LocalOrigem: localAntes || '—', LocalDestino: v.local, Status: v.status,
-      Data: v.data + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Manutenção concluída — ficha de manutenção' + (comPend ? ' · liberado COM pendência: ' + v.pend : ' · liberado sem pendência') + (v.obs ? ' · ' + v.obs : ''),
+      Data: (paraContrato ? qEnv.d : v.data) + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Manutenção concluída — ficha de manutenção' + (paraContrato ? ' · enviado ao contrato' : ' · disponível na manutenção') + (comPend ? ' · liberado COM pendência: ' + v.pend : ' · liberado sem pendência') + (v.obs ? ' · ' + v.obs : ''),
       TipoManutencao: oc.tipo, ResponsavelTecnico: oc.responsavel } });
     movimentacoesCarregadas = false;
-    await manutAtualizar('ocorrencias', oc.id, { Situacao: 'Concluída', DataSaida: v.data, HoraSaida: v.hora || '', HorimetroSaida: horimS, Observacao: [oc.observacao || '', v.obs ? 'Conclusão: ' + v.obs : '', comPend ? '[PENDÊNCIA] ' + v.pend.replace(/\n+/g, ' ') : ''].filter(Boolean).join('\n') });
+    await manutAtualizar('ocorrencias', oc.id, { Situacao: 'Concluída', DataSaida: v.data, HoraSaida: v.hora || '', HorimetroSaida: horimS, DestinoLiberacao: v.destino, ContratoDestino: paraContrato ? v.local : '', DataEnvioContrato: paraContrato ? qEnv.d : null, HoraEnvioContrato: paraContrato ? (qEnv.h === '00:00' ? '' : qEnv.h) : '', Observacao: [oc.observacao || '', v.obs ? 'Conclusão: ' + v.obs : '', comPend ? '[PENDÊNCIA] ' + v.pend.replace(/\n+/g, ' ') : ''].filter(Boolean).join('\n') });
     await manutRecarregar('ocorrencias');
     await garantirDadosMovimentacoes(true);
     manutFiltro = 'historico';
     manutMarcarSidebar();
     manutRenderTudo();
-    mtToast('✅ ' + eq + ' liberado' + (comPend ? ' com pendência' : '') + ' e movido para ' + v.local);
+    mtToast('✅ ' + eq + ' liberado' + (comPend ? ' com pendência' : '') + (paraContrato ? ' e enviado para ' + v.local : ' — disponível na manutenção'));
   }, aviso);
   const selLib = document.getElementById('mtm-lib');
   const alterna = function(){ document.getElementById('mtm-pend').closest('.campo').style.display = selLib.value === 'Com pendência' ? '' : 'none'; };
   selLib.onchange = alterna; alterna();
+  const selDest = document.getElementById('mtm-destino');
+  const alternaDest = function(){
+    const c = selDest.value === 'Enviado para contrato';
+    document.getElementById('mtm-envio').closest('.campo').style.display = c ? '' : 'none';
+    const lb = document.getElementById('mtm-local').closest('.campo').querySelector('label'); if (lb) lb.textContent = c ? 'Contrato / local de destino' : 'Fica no local';
+    document.getElementById('mtm-status').value = c ? 'OPERACIONAL' : 'EM DISPONIBILIDADE';
+    if (c) { const alvo = locais.find(function(l){ return !locDestinoEhManutencao(l) && l !== (frotaLocalAtual[eq] || ''); }); if (alvo) document.getElementById('mtm-local').value = alvo; }
+    else document.getElementById('mtm-local').value = frotaLocalAtual[eq] || locais[0];
+  };
+  selDest.onchange = alternaDest; alternaDest();
+}
+/* depois de liberado e disponível no pátio: registra o envio ao contrato */
+function manutModalEnviarContrato(oc){
+  const eq = oc.equipamento;
+  mtAbrirModal('🚚 Enviar para contrato — ' + eq, [
+    { id: 'envio', label: 'Enviado em (data e hora)', tipo: 'datetime-local', valor: mtAgoraLocal(), obrig: true },
+    { id: 'local', label: 'Contrato / local de destino', tipo: 'select', opcoes: locais.filter(function(l){ return !locDestinoEhManutencao(l); }), valor: '', larga: true },
+    { id: 'obs', label: 'Observação', tipo: 'textarea', valor: '', larga: true }
+  ], '🚚 Registrar envio', async function(v){
+    const q = mtDTsplit(v.envio);
+    if (mtDT(q.d, q.h) < mtDT(oc.dataSaida, oc.horaSaida)) throw new Error('O envio não pode ser antes da liberação (' + mtFmtDT(oc.dataSaida, oc.horaSaida) + ').');
+    const idEquip = frotaIdsExtra[eq] || frotasIds[eq], antes = frotaLocalAtual[eq] || '';
+    await mtAtualizarFrota(idEquip, { LocalAtual: v.local, StatusAtual: 'OPERACIONAL' });
+    frotaLocalAtual[eq] = v.local; frotaStatusAtual[eq] = 'OPERACIONAL';
+    await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', { fields: {
+      Equipamento: eq, ItemVinculado: frotaItemVinculado[eq] || '', LocalOrigem: antes || '—', LocalDestino: v.local, Status: 'OPERACIONAL',
+      Data: q.d + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Enviado ao contrato após a manutenção' + (v.obs ? ' · ' + v.obs : '') } });
+    movimentacoesCarregadas = false;
+    await manutAtualizar('ocorrencias', oc.id, { DestinoLiberacao: 'Enviado para contrato', ContratoDestino: v.local, DataEnvioContrato: q.d, HoraEnvioContrato: q.h === '00:00' ? '' : q.h });
+    await manutRecarregar('ocorrencias');
+    await garantirDadosMovimentacoes(true);
+    manutRenderTudo();
+    mtToast('✅ ' + eq + ' enviado para ' + v.local);
+  });
 }
 
 /* ---------- nova entrada ---------- */
