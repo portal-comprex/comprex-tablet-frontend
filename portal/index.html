@@ -1737,6 +1737,65 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   @keyframes raioxDestaquePulso{0%{background:#fff3cd}100%{background:transparent}}
   .arv-folha.arv-destaque-raiox{animation:raioxDestaquePulso 1.6s ease-out 2}
   .raiox-chip.imp{background:#fdeeee;border-color:#f0b7ae;color:#7a1f16}
+  /* ---- Indicadores de Manutenção ---- */
+  #view-manut-indic{--ind-ok:#1b7a43;--ind-at:#b07d12;--ind-ru:#b3453a;--ind-s1:#2a78d6;--ind-s2:#eb6834;--ind-s3:#1baf7a;--ind-grade:#e3e8e3}
+  body.tema-escuro #view-manut-indic{--ind-ok:#3cb371;--ind-at:#e0a93b;--ind-ru:#e5736a;--ind-s1:#3987e5;--ind-s2:#d95926;--ind-s3:#199e70;--ind-grade:#2c3a4a}
+  .ind-barra{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .ind-grupo label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--cinza);margin-bottom:4px}
+  .ind-grupo select{min-width:170px}
+  .ind-seg{margin:0}
+  .ind-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .ind-acoes button{white-space:nowrap}
+  .ind-painel{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+  .ind-painel h4{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--tinta);margin:0 0 8px}
+  .ind-lista-arq{margin:0;padding:0;list-style:none;font-size:12.5px}
+  .ind-lista-arq li{padding:3px 0;display:flex;gap:8px;align-items:baseline}
+  .ind-lista-arq .ok{color:var(--ind-ok);font-weight:700}
+  .ind-lista-arq .ruim{color:var(--ind-ru);font-weight:700}
+  .ind-nota{font-size:12px;color:var(--cinza);margin-top:6px}
+  .ind-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+  @media(max-width:1200px){.ind-kpis{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:700px){.ind-kpis{grid-template-columns:repeat(2,1fr)}}
+  .ind-kpi{background:var(--card);border:1px solid var(--linha);border-left-width:5px;border-radius:12px;padding:12px 14px;min-height:104px}
+  .ind-kpi.ok{border-left-color:var(--ind-ok)}.ind-kpi.at{border-left-color:var(--ind-at)}.ind-kpi.ru{border-left-color:var(--ind-ru)}.ind-kpi.neutro{border-left-color:var(--linha)}
+  .ind-kpi .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--cinza)}
+  .ind-kpi .n{font-size:28px;font-weight:800;color:var(--tinta);line-height:1.15;margin:3px 0}
+  .ind-kpi .s{font-size:11.5px;color:var(--cinza);line-height:1.35}
+  .ind-tab{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card)}
+  .ind-tab th{background:#1b6b3a;color:#fff;text-align:right;padding:9px 10px;font-size:11.5px;position:sticky;top:0;white-space:nowrap}
+  .ind-tab th:first-child,.ind-tab th.esq{text-align:left}
+  .ind-tab td{padding:8px 10px;border-bottom:1px solid var(--linha);text-align:right;white-space:nowrap}
+  .ind-tab td:first-child,.ind-tab td.esq{text-align:left;white-space:normal}
+  .ind-tab tr.ind-contrato{cursor:pointer;font-weight:700;background:var(--cream)}
+  .ind-tab tr.ind-contrato:hover{background:#dcebdc}
+  .ind-tab tr.ind-filho td{font-weight:400;background:var(--card)}
+  .ind-tab tr.ind-filho td:first-child{padding-left:30px}
+  .ind-tab tr.ind-total td{font-weight:800;border-top:2px solid var(--navy);background:var(--cream)}
+  .ind-tab tr.ind-media td{font-weight:600;color:var(--cinza)}
+  .ind-tab .ind-seta{display:inline-block;width:14px;color:var(--cinza)}
+  .ind-v{font-weight:700}
+  .ind-v.ok{color:var(--ind-ok)}.ind-v.at{color:var(--ind-at)}.ind-v.ru{color:var(--ind-ru)}
+  .ind-v .ico{font-size:10px;margin-right:2px}
+  .ind-alt{display:block;font-size:10.5px;font-weight:400;color:var(--cinza)}
+  .ind-wrap{overflow:auto;border:1px solid var(--linha);border-radius:12px}
+  .ind-filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-end}
+  .ind-filtros input,.ind-filtros select{min-width:170px}
+  .ind-chip{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:999px;background:#fdf1d8;color:#7a5a0e;border:1px solid #ecd9a8;margin:1px 2px 1px 0;cursor:default}
+  .ind-chip.grave{background:#fbe5e2;color:#8f2f26;border-color:#efc3bd}
+  .ind-chip.info{background:#e8f0fb;color:#24508c;border-color:#c5d8f2}
+  .ind-alerta{display:flex;gap:10px;padding:8px 4px;border-bottom:1px solid var(--linha);font-size:12.5px;align-items:baseline}
+  .ind-alerta b{min-width:78px;cursor:pointer;color:var(--navy)}
+  .ind-legenda{display:flex;gap:16px;font-size:12px;margin:6px 0 2px;flex-wrap:wrap}
+  .ind-legenda i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .ind-svg{width:100%;height:auto;max-height:260px}
+  .ind-svg text{font-size:11px;fill:var(--cinza)}
+  .ind-svg .rot{font-weight:700}
+  .ind-cfg h5{font-size:12px;text-transform:uppercase;letter-spacing:.4px;margin:16px 0 6px;color:var(--tinta)}
+  .ind-cfg table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ind-cfg td,.ind-cfg th{padding:4px 6px;border-bottom:1px solid var(--linha);text-align:left}
+  .ind-cfg input{width:100%;min-width:90px}
+  .ind-cfg .peq input{width:90px}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1785,6 +1844,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <div class="sidebar-item" data-view="manut-nova" data-secao="manutencao">Nova Entrada</div>
         <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="disponiveis">Disponíveis na manutenção</div>
         <div class="sidebar-item" data-view="manut" data-secao="manutencao" data-manut-filtro="historico">Histórico</div>
+        <div class="sidebar-item" data-view="manut-indic" data-secao="manutencao">Indicadores</div>
       </div>
     </div>
     <div class="sn-grupo" data-grupo="rastreamento">
@@ -1819,7 +1879,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 09/10/2026 · 77</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 09/10/2026 · 78</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3199,6 +3259,35 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <div class="mt-box" style="margin-top:12px"><h4>📋 Resumo por equipamento no período <span style="font-weight:400;text-transform:none;color:var(--cinza)">(tempo em manutenção, espera de peça, custo e disponibilidade mecânica)</span></h4><div id="mt-ind-resumo" class="mt-scroll"></div></div>
   </div>
 </div>
+<div class="view" id="view-manut-indic">
+  <div id="ind-aviso"></div>
+  <div class="ind-barra">
+    <div class="ind-grupo"><label>Mês</label><select id="ind-sel-mes"><option value="">—</option></select></div>
+    <div class="ind-grupo"><label>EO e IU</label>
+      <div class="frota-toggle ind-seg" id="ind-versao">
+        <button type="button" class="topo-toggle-opt ativo" data-ind-versao="hoje" title="Todas as horas lançadas na parte diária contam como operadas (critério atual da planilha)">Como hoje</button>
+        <button type="button" class="topo-toggle-opt" data-ind-versao="prod" title="Tira as horas 'A DISPOSIÇÃO' e a parada de manutenção lançada no turno">Só horas produtivas</button>
+      </div>
+    </div>
+    <div class="ind-acoes">
+      <button type="button" class="rel-btn-primario" id="ind-btn-importar">📥 Importar planilhas</button>
+      <button type="button" class="rel-btn-secundario" id="ind-btn-salvar">💾 Salvar mês</button>
+      <button type="button" class="rel-btn-secundario" id="ind-btn-excel">📊 Exportar Excel</button>
+      <button type="button" class="rel-btn-secundario" id="ind-btn-config">⚙ Configurar</button>
+    </div>
+    <input type="file" id="ind-arquivos" accept=".xlsx,.xlsm,.xls" multiple style="display:none">
+  </div>
+  <div id="ind-importacao"></div>
+  <div class="ind-kpis" id="ind-kpis"></div>
+  <div class="frota-toggle" id="ind-abas" style="margin:14px 0">
+    <button type="button" class="topo-toggle-opt ativo" data-ind-aba="contratos">🏭 Por contrato</button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="equipamentos">🚜 Equipamentos</button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="alertas">⚠️ Alertas <span id="ind-badge-alertas"></span></button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="historico">📈 Histórico</button>
+  </div>
+  <div id="ind-corpo"></div>
+</div>
+
 <div class="view" id="view-manut-nova">
   <div class="mt-sub">Registre a entrada de um equipamento na manutenção. Isso abre a ficha, muda o status dele para EM MANUTENÇÃO e registra a movimentação.</div>
   <div class="dash-card mt-card" style="max-width:860px">
@@ -4972,7 +5061,8 @@ const MENUS_POR_SECAO = {
   // peças e eventos; marcar só telas deixa a pessoa em modo consulta.
   manutencao: [
     { view: 'manut', label: 'Visão Geral / Fichas' },
-    { view: 'manut-nova', label: 'Nova Entrada' }
+    { view: 'manut-nova', label: 'Nova Entrada' },
+    { view: 'manut-indic', label: 'Indicadores' }
   ]
 };
 function acessosRenderizar(){
@@ -7922,7 +8012,7 @@ function mostrarView(nome){
   document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
     item.classList.toggle('ativo', item.dataset.view === nome);
   });
-const titulos = { painel: 'Painel', 'pendentes-obra': 'Pendentes por obra', 'raiox-obra': 'Raio-x por Obra', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'historico-mov': 'Histórico de Movimentações', 'status-equipamentos': 'Local de Instalação', manut: 'Manutenção de Equipamentos', 'manut-nova': 'Nova Entrada na Manutenção' };
+const titulos = { painel: 'Painel', 'pendentes-obra': 'Pendentes por obra', 'raiox-obra': 'Raio-x por Obra', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'historico-mov': 'Histórico de Movimentações', 'status-equipamentos': 'Local de Instalação', manut: 'Manutenção de Equipamentos', 'manut-nova': 'Nova Entrada na Manutenção', 'manut-indic': 'Indicadores de Manutenção' };
 const INFO_PAGINA = {
   painel: { icone: '🧭', sub: 'Visão geral dos checklists diários da frota', secao: 'Checklists' },
   novo: { icone: '📋', sub: 'Preenchimento diário de inspeção', secao: 'Checklists' },
@@ -7940,13 +8030,14 @@ const INFO_PAGINA = {
   'historico-mov': { icone: '🕒', sub: 'Todas as movimentações já registradas', secao: 'Movimentações' },
   'status-equipamentos': { icone: '📍', sub: 'Onde cada equipamento está instalado, o status atual e as movimentações', secao: 'Movimentações' },
   manut: { icone: '🛠️', sub: 'Acompanhe o status, prazos e disponibilidade da frota em manutenção', secao: 'Manutenção' },
-  'manut-nova': { icone: '➕', sub: 'Registrar a entrada de um equipamento na manutenção', secao: 'Manutenção' }
+  'manut-nova': { icone: '➕', sub: 'Registrar a entrada de um equipamento na manutenção', secao: 'Manutenção' },
+  'manut-indic': { icone: '📊', sub: 'MTTR, MTBF, disponibilidade, eficiência e utilização a partir das planilhas do SAP e da parte diária', secao: 'Manutenção' }
 };
   document.getElementById('topbar-titulo').textContent = titulos[nome] || 'Checklists';
   const VIEWS_POR_SECAO = {
     partediaria: ['partediaria', 'historico-pd', 'dashboard-pd', 'indicadores-pd'],
     rastreamento: ['rastreamento', 'historico-mov', 'status-equipamentos', 'frota'],
-    manutencao: ['manut', 'manut-nova']
+    manutencao: ['manut', 'manut-nova', 'manut-indic']
   };
   const secaoAtiva = VIEWS_POR_SECAO.manutencao.indexOf(nome) !== -1 ? 'manutencao'
     : VIEWS_POR_SECAO.partediaria.indexOf(nome) !== -1 ? 'partediaria'
@@ -7989,10 +8080,880 @@ const INFO_PAGINA = {
   if (nome === 'frota') carregarViewFrota();
   if (nome === 'manut') { manutMarcarSidebar(); carregarManutencao(); }
   if (nome === 'manut-nova') manutNovaIniciar();
+  if (nome === 'manut-indic') carregarIndicadoresManut();
 }
 document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
   item.onclick = function(){ mostrarView(item.dataset.view); };
 });
+/* ===== Indicadores: cálculo ===== */
+/* =====================================================================
+   INDICADORES DE MANUTENÇÃO — núcleo de cálculo (sem DOM)
+   DM = (HP − PM) / HP          Disponibilidade Mecânica
+   EO = HO / (HP − PM)          Eficiência Operacional
+   IU = HO / HP  (= EO × DM)    Índice de Utilização
+   HP = regime planejado (h/mês) · PM = parada em manutenção (SAP) · HO = horas operadas (parte diária)
+   Médias ponderadas: DM = ∑(HP−PM)/∑HP · EO = ∑HO/∑(HP−PM) · IU = ∑HO/∑HP
+   ===================================================================== */
+const IND_REGIME_HP_PADRAO = { '8h': 176, '12h': 330, '24h': 660 };
+const IND_METAS_PADRAO = { DM: 85, EO: 85, IU: 72 };
+const IND_SEM_CONTRATO = 'SEM CONTRATO (pátio)';
+const IND_A_CLASSIFICAR = 'A CLASSIFICAR';
+
+function indSemAcento(s){ return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function indNorm(s){ return indSemAcento(s).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function indUp(s){ return indSemAcento(s).toUpperCase().replace(/\s+/g, ' ').trim(); }
+function indR2(n){ return Math.round((Number(n) || 0) * 100) / 100; }
+/** CAR-12 / car 12 / CAR0012 -> CAR0012 */
+function indNormEq(s){
+  const t = indUp(s).replace(/\s+/g, '');
+  const m = /^([A-Z]{2,4})[-_.]?0*(\d{1,4})$/.exec(t);
+  return m ? (m[1] + ('0000' + m[2]).slice(-4)) : t;
+}
+function indEqValido(s){ return /^[A-Z]{2,4}\d{4}$/.test(s || ''); }
+function indNum(v){
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  const n = Number(String(v).trim().replace(/\./g, '').replace(',', '.'));
+  if (isFinite(n)) return n;
+  const n2 = Number(String(v).trim().replace(',', '.'));
+  return isFinite(n2) ? n2 : null;
+}
+/** serial do Excel / Date / "dd/mm/aaaa" / "aaaa-mm-dd" -> "AAAA-MM-DD" */
+function indDataYMD(v){
+  if (v === null || v === undefined || v === '') return '';
+  if (v instanceof Date && !isNaN(v)) return v.getUTCFullYear() + '-' + ('0' + (v.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + v.getUTCDate()).slice(-2);
+  if (typeof v === 'number') {
+    const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(v) * 86400000);
+    return d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + d.getUTCDate()).slice(-2);
+  }
+  const s = String(v).trim();
+  let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return m[1] + '-' + m[2] + '-' + m[3];
+  m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(s);
+  if (m) { const a = m[3].length === 2 ? '20' + m[3] : m[3]; return a + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
+  return '';
+}
+/** "hh:mm[:ss]" ou fração do dia -> horas */
+function indHoras(v){
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return v * 24;
+  const m = /^(\d{1,3}):(\d{2})(?::(\d{2}))?/.exec(String(v).trim());
+  if (m) return (+m[1]) + (+m[2]) / 60 + (m[3] ? (+m[3]) / 3600 : 0);
+  const n = indNum(v);
+  return n === null ? null : n;
+}
+
+/* ------------------------------ leitura das planilhas ------------------------------ */
+function indAchaCabecalho(aoa, exige){
+  for (let r = 0; r < Math.min(aoa.length, 25); r++) {
+    const cels = (aoa[r] || []).map(indNorm);
+    if (exige.every(function(e){ return cels.some(function(c){ return c.indexOf(e) !== -1; }); })) return r;
+  }
+  return -1;
+}
+function indColuna(cab, testes){
+  for (let i = 0; i < cab.length; i++) {
+    const c = indNorm(cab[i]);
+    if (!c) continue;
+    if (testes.some(function(t){ return typeof t === 'function' ? t(c) : c.indexOf(t) !== -1; })) return i;
+  }
+  return -1;
+}
+/** Extração do SAP (Equipamento, Tempo parado, MTTR, MTBF, custos) */
+function indLerSAP(aoa){
+  const h = indAchaCabecalho(aoa, ['equipamento', 'parada']);
+  if (h < 0) return { linhas: [], erro: 'Não achei as colunas "Equipamento" e "Tempo de máquina parada em manutenção".' };
+  const cab = aoa[h];
+  const col = {
+    eq: indColuna(cab, [function(c){ return c === 'equipamento'; }]),
+    desc: indColuna(cab, ['descricao']),
+    pm: indColuna(cab, ['parada']),
+    mttr: indColuna(cab, ['mttr', 'tempomediodereparo']),
+    mtbf: indColuna(cab, ['mtbf', 'entrefalhas']),
+    moInt: indColuna(cab, ['momint', 'mointerna']),
+    matInt: indColuna(cab, ['materiaisinternos']),
+    servExt: indColuna(cab, ['servicosexternos']),
+    matExt: indColuna(cab, ['materiaisexternos'])
+  };
+  const linhas = [];
+  for (let r = h + 1; r < aoa.length; r++) {
+    const l = aoa[r] || [];
+    const eq = indNormEq(l[col.eq]);
+    if (!indEqValido(eq)) continue;
+    const g = function(i){ return i >= 0 ? (indNum(l[i]) || 0) : 0; };
+    linhas.push({ eq: eq, desc: col.desc >= 0 ? String(l[col.desc] || '').trim() : '', pm: g(col.pm), mttr: g(col.mttr), mtbf: g(col.mtbf),
+      custoMO: g(col.moInt), custoMatInt: g(col.matInt), custoServExt: g(col.servExt), custoMatExt: g(col.matExt) });
+  }
+  return { linhas: linhas, erro: '' };
+}
+/** Parte diária: uma linha por turno/lançamento */
+function indLerPD(aoa){
+  const h = indAchaCabecalho(aoa, ['horastrabalhadas', 'equipamento']);
+  if (h < 0) return { linhas: [], erro: 'Não achei as colunas "Equipamento (padronizado)" e "Horas trabalhadas".' };
+  const cab = aoa[h];
+  const col = {
+    cliente: indColuna(cab, [function(c){ return c === 'cliente'; }]),
+    ordem: indColuna(cab, ['nordem', 'ordem']),
+    desc: indColuna(cab, ['descricaodaordem', 'descricao']),
+    eq: indColuna(cab, ['equipamento']),
+    data: indColuna(cab, [function(c){ return c === 'data'; }]),
+    ini: indColuna(cab, [function(c){ return c === 'inicio'; }]),
+    fim: indColuna(cab, [function(c){ return c === 'termino'; }]),
+    ref: indColuna(cab, ['refeicao']),
+    horas: indColuna(cab, ['horastrabalhadas']),
+    pm: indColuna(cab, ['pmtotal']),
+    obs: indColuna(cab, ['observacao'])
+  };
+  const linhas = [];
+  for (let r = h + 1; r < aoa.length; r++) {
+    const l = aoa[r] || [];
+    const eq = indNormEq(l[col.eq]);
+    if (!indEqValido(eq)) continue;
+    const data = indDataYMD(l[col.data]);
+    if (!data) continue;
+    let horas = col.horas >= 0 ? indHoras(l[col.horas]) : null;
+    if (horas === null && col.ini >= 0 && col.fim >= 0 && typeof l[col.ini] === 'number' && typeof l[col.fim] === 'number') {
+      let d = l[col.fim] - l[col.ini]; if (d <= 0) d += 1;
+      horas = d * 24 - ((col.ref >= 0 && typeof l[col.ref] === 'number') ? l[col.ref] * 24 : 0);
+    }
+    if (horas === null || !isFinite(horas) || horas < 0) horas = 0;
+    const pmH = col.pm >= 0 ? (indHoras(l[col.pm]) || 0) : 0;
+    const obsRaw = col.obs >= 0 ? l[col.obs] : '';
+    const obs = (typeof obsRaw === 'string') ? indUp(obsRaw) : '';
+    linhas.push({ cliente: String(l[col.cliente] || '').trim(), ordem: String(l[col.ordem] == null ? '' : l[col.ordem]).trim(), descOrdem: String(l[col.desc] || '').trim(),
+      eq: eq, data: data, horas: indR2(horas), pm: indR2(pmH), obs: obs, disp: obs.indexOf('DISPOSI') !== -1, manut: obs.indexOf('MANUT') !== -1 });
+  }
+  return { linhas: linhas, erro: '' };
+}
+/** Planilha de indicadores do mês anterior: devolve equipamento -> { contrato (nome da aba), hp } */
+function indLerAnterior(wbAoas){
+  const out = {};
+  wbAoas.forEach(function(aba){
+    const nome = aba.nome;
+    if (indUp(nome) === 'MEDIA') return;
+    const h = indAchaCabecalho(aba.aoa, ['equipamento', 'regimeplanejado']);
+    if (h < 0) return;
+    const cab = aba.aoa[h];
+    const ce = indColuna(cab, [function(c){ return c === 'equipamento'; }]), ch = indColuna(cab, ['regimeplanejado']);
+    for (let r = h + 1; r < aba.aoa.length; r++) {
+      const l = aba.aoa[r] || [];
+      const eq = indNormEq(l[ce]);
+      if (!indEqValido(eq)) continue;
+      out[eq] = { contrato: nome.trim(), hp: indNum(l[ch]) };
+    }
+  });
+  return out;
+}
+
+/* ------------------------------ contratos ------------------------------ */
+/** Nome do contrato (aba do relatório) a partir do cliente/descrição da ordem. Devolve null se não reconhecer. */
+function indContratoPadrao(texto, aceitaDiversos, cliente){
+  const t = indUp(texto);
+  if (/HARSCO/.test(t)) return 'AMT - HARSCO - 500055';
+  if (/TUBARAO|(^|[^A-Z])AMT([^A-Z]|$)/.test(t)) return 'AMT';
+  if (/SIMEC/.test(t) && /VLI/.test(t)) return 'DIVERSOS - SIMEC VLI';
+  if (/SIMEC/.test(t)) return 'SIMEC';
+  if (/PIRACICABA/.test(t)) return 'AMB PIRACICABA';
+  if (/RESENDE/.test(t)) return 'AMB RESENDE';
+  if (/JUIZ DE FORA/.test(t)) return 'AMB JUIZ DE FORA';
+  if (/MONLEVADE/.test(t)) return 'AMB JOÃO MONLEVADE';
+  if (/VALE/.test(t)) {
+    if (/PENEIRA/.test(t)) return 'VALE - PENEIRAMENTO';
+    if (/MASCARENHAS/.test(t)) return 'VALE - MASCARENHAS';
+    if (/VARGEM|FABRICA/.test(t)) return 'VALE - VARGEM GRANDE';
+    if (/GONGO/.test(t)) return 'VALE - GONGO SOCO';
+    return 'VALE - OUTROS';
+  }
+  if (/VILFER/.test(t)) return 'DIVERSOS - VILFER';
+  if (/SIGNUS/.test(t)) return 'DIVERSOS - SIGNUS';
+  if (/ZUCCHI/.test(t)) return 'DIVERSOS - ZUCCHI';
+  if (aceitaDiversos) { const c = String(cliente || texto || '').trim(); return c ? ('DIVERSOS - ' + c.toUpperCase()) : IND_A_CLASSIFICAR; }
+  return null;
+}
+function indOrdemDoLocal(loc){
+  const m = /(?:^|[^0-9])(5\d{5})(?!\d)/.exec(String(loc || ''));
+  return m ? m[1] : '';
+}
+function indContratoDaOrdem(ordem, cliente, desc, cfg){
+  if (ordem && cfg.ordemContrato && cfg.ordemContrato[ordem]) return cfg.ordemContrato[ordem];
+  return indContratoPadrao((cliente || '') + ' ' + (desc || ''), true, cliente);
+}
+/** contrato do LOCAL do portal (null = pátio/oficina/sem contrato) */
+function indContratoDoLocal(loc, cfg){
+  const l = String(loc || '').trim();
+  if (!l) return null;
+  if (/^COMPREX\b/i.test(indSemAcento(l))) return null;
+  const ord = indOrdemDoLocal(l);
+  if (ord) return (cfg.ordemContrato && cfg.ordemContrato[ord]) || indContratoPadrao(l, true, l.replace(/\s*-?\s*5\d{5}\s*$/, ''));
+  return indContratoPadrao(l, false);
+}
+function indLocalDeManutencao(loc){ return /MANUT|OFICINA|ATELI/.test(indUp(loc)); }
+
+/* ------------------------------ dias por contrato (histórico de movimentações) ------------------------------ */
+function indDiasDoMes(ano, mes){ return new Date(Date.UTC(ano, mes, 0)).getUTCDate(); }
+/** events: [{data:'AAAA-MM-DD', localOrigem, localDestino, status}] de UM equipamento */
+function indDiasPorContrato(events, ano, mes, cfg){
+  const D = indDiasDoMes(ano, mes);
+  const out = { D: D, dias: {}, manutDias: {}, semContrato: 0, temHistorico: events.length > 0, trocou: false };
+  if (!events.length) return out;
+  const ev = events.slice().sort(function(a, b){ return a.data < b.data ? -1 : a.data > b.data ? 1 : (a.ordem || 0) - (b.ordem || 0); });
+  const segs = [];
+  segs.push({ de: '0000-00-00', local: ev[0].localOrigem || '', status: '' });
+  ev.forEach(function(e){ segs.push({ de: e.data, local: e.localDestino || '', status: e.status || '' }); });
+  let ultimo = null;
+  segs.forEach(function(s){
+    const c = indContratoDoLocal(s.local, cfg);
+    const manutStatus = s.status === 'EM MANUTENÇÃO' || s.status === 'AGUARDANDO OM';
+    if (c) { ultimo = c; s.contrato = c; }
+    else if ((manutStatus || indLocalDeManutencao(s.local)) && ultimo) { s.contrato = ultimo; s.carry = true; }
+    else s.contrato = null;
+    s.manut = manutStatus || (s.contrato && indLocalDeManutencao(s.local));
+  });
+  for (let d = 1; d <= D; d++) {
+    const dd = ano + '-' + ('0' + mes).slice(-2) + '-' + ('0' + d).slice(-2);
+    let seg = null;
+    for (let i = segs.length - 1; i >= 0; i--) { if (segs[i].de <= dd) { seg = segs[i]; break; } }
+    if (!seg || !seg.contrato) { out.semContrato++; continue; }
+    out.dias[seg.contrato] = (out.dias[seg.contrato] || 0) + 1;
+    if (seg.manut) out.manutDias[seg.contrato] = (out.manutDias[seg.contrato] || 0) + 1;
+  }
+  out.trocou = Object.keys(out.dias).length > 1;
+  return out;
+}
+
+/* ------------------------------ cálculo do mês ------------------------------ */
+/**
+ * entrada: { ano, mes, sap: {eq: linha}, pd: [linhas], equips: [{eq, desc, regime}], movs: {eq: [eventos]}, cfg: {regimeHP, ordemContrato, eqContrato} }
+ * saída: { linhas: [fatias equipamento×contrato], alertas: [{tipo, eq, texto}] }
+ */
+function indCalcularMes(en){
+  const cfg = en.cfg || {};
+  const regimeHP = Object.assign({}, IND_REGIME_HP_PADRAO, cfg.regimeHP || {});
+  const periodo = en.ano + '-' + ('0' + en.mes).slice(-2);
+  const universo = {};
+  (en.equips || []).forEach(function(e){ universo[e.eq] = e; });
+  Object.keys(en.sap || {}).forEach(function(eq){ if (!universo[eq]) universo[eq] = { eq: eq, desc: en.sap[eq].desc, regime: '' }; });
+  const pdPorEq = {};
+  (en.pd || []).forEach(function(l){ (pdPorEq[l.eq] = pdPorEq[l.eq] || []).push(l); if (!universo[l.eq]) universo[l.eq] = { eq: l.eq, desc: '', regime: '' }; });
+  const linhas = [], alertas = [];
+  const add = function(eq, tipo, texto){ alertas.push({ tipo: tipo, eq: eq, texto: texto }); };
+  Object.keys(universo).sort().forEach(function(eq){
+    const u = universo[eq];
+    const sap = (en.sap || {})[eq] || null;
+    const pdl = pdPorEq[eq] || [];
+    const D = indDiasDoMes(en.ano, en.mes);
+    const regime = u.regime || '';
+    const HPfull = regime && regimeHP[regime] ? regimeHP[regime] : (regime ? regimeHP['8h'] : null);
+    // horas da parte diária por contrato
+    const pdC = {};
+    pdl.forEach(function(l){
+      const c = indContratoDaOrdem(l.ordem, l.cliente, l.descOrdem, cfg);
+      const o = pdC[c] = pdC[c] || { ho: 0, disp: 0, manut: 0, prod: 0, pm: 0, linhas: 0 };
+      o.ho += l.horas; o.pm += l.pm; o.linhas++;
+      if (l.disp) o.disp += l.horas;
+      if (l.manut) o.manut += l.horas;
+      // horas produtivas: tira "a disposição" e a parada de manutenção lançada no turno
+      let prod = l.horas;
+      if (l.disp) prod = 0;
+      else if (l.manut) prod = l.pm > 0 ? Math.max(0, l.horas - l.pm) : 0;
+      else prod = Math.max(0, l.horas - l.pm);
+      o.prod += prod;
+    });
+    const dias = indDiasPorContrato((en.movs || {})[eq] || [], en.ano, en.mes, cfg);
+    const diasContratos = Object.keys(dias.dias);
+    const pdContratos = Object.keys(pdC);
+    const hoTotal = pdContratos.reduce(function(s, c){ return s + pdC[c].ho; }, 0);
+    // sem nenhum dado no mês (nem contrato, nem parte diária, nem SAP): fora
+    if (!pdContratos.length && !diasContratos.length && !sap) return;
+    if (!HPfull) add(eq, 'regime', 'Equipamento sem regime de trabalho cadastrado — usei 8h (' + regimeHP['8h'] + ' h).');
+    const HPuso = HPfull || regimeHP['8h'];
+    // pesos de divisão do HP e do PM entre contratos
+    let pesoHP = {}, pesoPM = {}, fonte = '', hpTotal = HPuso;
+    const porDias = function(){
+      const tot = diasContratos.reduce(function(s, c){ return s + dias.dias[c]; }, 0);
+      diasContratos.forEach(function(c){ pesoHP[c] = dias.dias[c] / tot; });
+      hpTotal = HPuso * (tot / D);
+      const totM = diasContratos.reduce(function(s, c){ return s + (dias.manutDias[c] || 0); }, 0);
+      diasContratos.forEach(function(c){ pesoPM[c] = totM > 0 ? (dias.manutDias[c] || 0) / totM : dias.dias[c] / tot; });
+      fonte = 'dias';
+    };
+    if (diasContratos.length && pdContratos.every(function(c){ return diasContratos.indexOf(c) !== -1; })) porDias();
+    else if (pdContratos.length) {
+      pdContratos.forEach(function(c){ pesoHP[c] = hoTotal > 0 ? pdC[c].ho / hoTotal : 1 / pdContratos.length; });
+      pesoPM = pesoHP;
+      fonte = diasContratos.length ? 'pd-conflito' : 'pd';
+      if (diasContratos.length) add(eq, 'conflito', 'Há horas na parte diária em contrato diferente do que o histórico de Movimentações indica (' + pdContratos.filter(function(c){ return diasContratos.indexOf(c) === -1; }).join(', ') + '). Dividi o HP e o PM pelas horas da parte diária.');
+    } else if (diasContratos.length) porDias();
+    else {
+      const c = (cfg.eqContrato && cfg.eqContrato[eq]) || IND_A_CLASSIFICAR;
+      pesoHP[c] = 1; pesoPM = pesoHP; fonte = c === IND_A_CLASSIFICAR ? 'sem' : 'cfg';
+      if (c === IND_A_CLASSIFICAR) add(eq, 'classificar', 'Sem histórico de Movimentações no mês e sem parte diária: não sei em qual contrato colocar. Defina o contrato em ⚙ Configurar.');
+    }
+    const PM = sap ? sap.pm : 0;
+    Object.keys(pesoHP).forEach(function(c){
+      const hp = hpTotal * pesoHP[c];
+      const pm = PM * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c]);
+      const o = pdC[c] || { ho: 0, disp: 0, manut: 0, prod: 0, pm: 0, linhas: 0 };
+      const l = { periodo: periodo, eq: eq, desc: (sap && sap.desc) || u.desc || '', contrato: c, regime: regime || '8h',
+        hp: indR2(hp), pm: indR2(pm), mttr: sap ? sap.mttr : 0, mtbf: sap ? sap.mtbf : 0,
+        ho: indR2(o.ho), hoProd: indR2(o.prod), hDisp: indR2(o.disp), hManutPD: indR2(o.manut), pmPD: indR2(o.pm),
+        dias: fonte === 'dias' ? (dias.dias[c] || 0) : null, diasMes: D, linhasPD: o.linhas,
+        custoMO: sap ? indR2(sap.custoMO * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
+        custoMatInt: sap ? indR2(sap.custoMatInt * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
+        custoServExt: sap ? indR2(sap.custoServExt * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
+        custoMatExt: sap ? indR2(sap.custoMatExt * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0, fonte: fonte };
+      linhas.push(l);
+    });
+    // alertas por equipamento
+    const fat = linhas.filter(function(x){ return x.eq === eq; });
+    const hpSoma = fat.reduce(function(s, x){ return s + x.hp; }, 0), pmSoma = fat.reduce(function(s, x){ return s + x.pm; }, 0);
+    if (PM > hpSoma + 0.01 && hpSoma > 0) add(eq, 'pm-maior', 'PM do SAP (' + indR2(PM) + ' h) maior que o regime planejado (' + indR2(hpSoma) + ' h): a DM foi limitada a 0%. O SAP conta horas corridas e o regime conta só as horas de trabalho.');
+    fat.forEach(function(x){
+      const cap = Math.max(0, x.hp - Math.min(x.pm, x.hp));
+      if (x.ho > cap + 1) add(eq, 'ho-excesso', 'Horas lançadas na parte diária (' + x.ho + ' h) passam do disponível (' + indR2(cap) + ' h) em ' + x.contrato + ': conferi o regime de trabalho do equipamento ou se houve hora extra. Contei só ' + indR2(cap) + ' h.');
+    });
+    if (hpSoma > 0 && !pdl.length) add(eq, 'sem-pd', 'Sem nenhuma parte diária no mês (HO = 0).');
+    const porDia = {};
+    pdl.forEach(function(l){ porDia[l.data] = (porDia[l.data] || 0) + l.horas; });
+    const diasExc = Object.keys(porDia).filter(function(d){ return porDia[d] > 24.01; });
+    if (diasExc.length) add(eq, 'dia-excesso', diasExc.length + ' dia(s) com mais de 24 h lançadas na parte diária (possível lançamento duplicado): ' + diasExc.slice(0, 4).map(function(d){ return d.slice(8, 10) + '/' + d.slice(5, 7) + ' = ' + indR2(porDia[d]) + ' h'; }).join(', ') + (diasExc.length > 4 ? '…' : '') + '.');
+    const hDisp = fat.reduce(function(s, x){ return s + x.hDisp; }, 0);
+    if (hDisp > 0) add(eq, 'a-disposicao', hDisp + ' h marcadas como "A DISPOSIÇÃO" na parte diária.');
+    const pmPD = fat.reduce(function(s, x){ return s + x.pmPD; }, 0);
+    if (pmPD > 0 && sap && Math.abs(pmPD - PM) > Math.max(8, PM * 0.5)) add(eq, 'pm-divergente', 'A parte diária registra ' + indR2(pmPD) + ' h de parada de manutenção e o SAP registra ' + indR2(PM) + ' h.');
+    if (pmPD > 0 && !sap) add(eq, 'pm-sem-sap', 'A parte diária registra ' + indR2(pmPD) + ' h de parada de manutenção, mas o equipamento não está no SAP deste mês.');
+    if (fat.length > 1) add(eq, 'trocou', 'Trocou de contrato no mês: ' + fat.map(function(x){ return x.contrato + (x.dias != null ? ' (' + x.dias + ' d)' : ''); }).join(' · ') + '.');
+  });
+  return { linhas: linhas, alertas: alertas };
+}
+
+/* ------------------------------ métricas / agregação ------------------------------ */
+/** versao: 'hoje' (todas as horas da parte diária) ou 'prod' (sem "a disposição" e sem parada de manutenção) */
+function indMetricas(linhas, versao, opts){
+  opts = opts || {};
+  let HP = 0, PMef = 0, HOef = 0, PMtot = 0, nRep = 0, pmComMttr = 0, mtbfPond = 0, custo = 0, hoBruto = 0;
+  linhas.forEach(function(l){
+    if (opts.ignoraSemPD && !l.linhasPD) return;
+    const pmL = Math.min(l.pm, l.hp);
+    const disp = Math.max(0, l.hp - pmL);
+    const ho = versao === 'prod' ? l.hoProd : l.ho;
+    HP += l.hp; PMef += pmL; PMtot += l.pm; hoBruto += ho;
+    HOef += Math.min(ho, disp);
+    if (l.mttr > 0) { const n = l.pm / l.mttr; nRep += n; pmComMttr += l.pm; mtbfPond += l.mtbf * n; }
+    custo += (l.custoMO || 0) + (l.custoMatInt || 0) + (l.custoServExt || 0) + (l.custoMatExt || 0);
+  });
+  const disp = HP - PMef;
+  return { HP: HP, PM: PMtot, PMef: PMef, HO: HOef, HOBruto: hoBruto,
+    DM: HP > 0 ? disp / HP : null, EO: disp > 0 ? HOef / disp : null, IU: HP > 0 ? HOef / HP : null,
+    reparos: nRep, MTTR: nRep > 0 ? pmComMttr / nRep : null, MTBF: nRep > 0 ? mtbfPond / nRep : null, custo: custo, n: linhas.length };
+}
+function indAgrupar(linhas, chave){
+  const g = {};
+  linhas.forEach(function(l){ const k = typeof chave === 'function' ? chave(l) : l[chave]; (g[k] = g[k] || []).push(l); });
+  return g;
+}
+
+if (false) module.exports = { indLerSAP, indLerPD, indLerAnterior, indCalcularMes, indMetricas, indAgrupar, indNormEq, indContratoPadrao, indDiasPorContrato, indContratoDoLocal, IND_REGIME_HP_PADRAO };
+
+/* =====================================================================
+   INDICADORES DE MANUTENÇÃO — tela (usa o cálculo de ind_core)
+   Uma lista no SharePoint chamada ManutIndicadores, com 3 colunas:
+     Title (texto) — "AAAA-MM" do mês, ou CONFIG para as configurações
+     Parte (texto) — número do pedaço (o mês é guardado em pedaços)
+     Dados (várias linhas de texto, TEXTO SIMPLES) — o JSON do pedaço
+   ===================================================================== */
+const IND_NOME_LISTA = 'ManutIndicadores';
+const IND_PEDACO = 28000;
+let indListaId = null, indCfgItemId = null;
+let indCfg = { regimeHP: {}, ordemContrato: {}, eqContrato: {}, metas: {} };
+let indSalvos = {};                 // 'AAAA-MM' -> { linhas, alertas, itemIds:[] }
+let indDados = null;                // { periodo, linhas, alertas, origem:'calculo'|'salvo', arquivos:[] }
+let indArq = { sap: {}, pd: [], anterior: null, lista: [] };
+let indVersao = 'hoje', indAba = 'contratos';
+let indAbertos = {}, indFiltroTxt = '', indFiltroContrato = '', indOrdem = 'eq';
+let indIniciado = false, indMsgListas = '';
+
+function indMetas(){ return Object.assign({}, IND_METAS_PADRAO, indCfg.metas || {}); }
+function indPct(v, c){ return v === null || v === undefined || !isFinite(v) ? '—' : (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: c == null ? 1 : c, maximumFractionDigits: c == null ? 1 : c }) + '%'; }
+function indN(v, c){ return v === null || v === undefined || !isFinite(v) ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: c == null ? 1 : c, maximumFractionDigits: c == null ? 1 : c }); }
+function indEstado(chave, v){
+  if (v === null || v === undefined) return 'neutro';
+  const m = indMetas()[chave] / 100;
+  return v >= m ? 'ok' : (v >= m - 0.05 ? 'at' : 'ru');
+}
+function indIco(est){ return est === 'ok' ? '✔' : est === 'at' ? '▲' : est === 'ru' ? '✖' : ''; }
+function indCelula(chave, v){
+  const e = indEstado(chave, v);
+  return '<span class="ind-v ' + e + '" title="Meta ' + indMetas()[chave] + '%"><span class="ico">' + indIco(e) + '</span>' + indPct(v) + '</span>';
+}
+function indMesAtualYM(){ const d = new Date(); return d.getFullYear() + '-' + mtP2(d.getMonth() + 1); }
+function indNomeMes(p){
+  const n = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  return n[+p.slice(5, 7) - 1] + '/' + p.slice(0, 4);
+}
+function indLimparTextoSP(t){ return String(t || '').replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/<[^>]+>/g, ''); }
+
+/* ---------- lista no SharePoint ---------- */
+async function indResolverLista(){
+  if (indListaId) return indListaId;
+  const d = await graphGet(GRAPH + '/sites/' + SITE_ID + '/lists?$select=id,displayName&$top=500');
+  const l = (d.value || []).find(function(x){ return (x.displayName || '').trim().toLowerCase() === IND_NOME_LISTA.toLowerCase(); });
+  if (!l) { const e = new Error('lista'); e.semLista = true; throw e; }
+  indListaId = l.id;
+  return indListaId;
+}
+async function indCarregarSalvos(){
+  indMsgListas = '';
+  try {
+    const id = await indResolverLista();
+    const itens = await manutLerLista(id);
+    const grupos = {};
+    itens.forEach(function(i){
+      const f = i.fields || {};
+      const t = String(f.Title || '').trim();
+      if (!t) return;
+      (grupos[t] = grupos[t] || []).push({ id: i.id, parte: Number(f.Parte) || 0, dados: indLimparTextoSP(f.Dados) });
+    });
+    indSalvos = {};
+    Object.keys(grupos).forEach(function(t){
+      const g = grupos[t].sort(function(a, b){ return a.parte - b.parte; });
+      let obj = null;
+      try { obj = JSON.parse(g.map(function(x){ return x.dados; }).join('')); } catch (e) { obj = null; }
+      if (t === 'CONFIG') {
+        indCfgItemId = g[0].id;
+        if (obj) indCfg = Object.assign({ regimeHP: {}, ordemContrato: {}, eqContrato: {}, metas: {} }, obj);
+        indCfgExtras = g.slice(1).map(function(x){ return x.id; });
+      } else if (/^\d{4}-\d{2}$/.test(t) && obj && obj.linhas) {
+        indSalvos[t] = { linhas: obj.linhas, alertas: obj.alertas || [], itemIds: g.map(function(x){ return x.id; }) };
+      }
+    });
+  } catch (e) {
+    indListaId = null;
+    if (e.semLista) indMsgListas = '<div class="mt-erro-listas"><b>⚠️ Falta criar a lista dos indicadores no SharePoint</b><br>Crie uma lista chamada <b>ManutIndicadores</b> com as colunas: <b>Parte</b> (uma linha de texto) e <b>Dados</b> (<b>várias linhas de texto</b>, em <b>texto simples</b>, não "texto avançado"). A coluna Title já existe. Sem a lista você já consegue importar e calcular, só não consegue salvar o mês nem ver o histórico.</div>';
+    else indMsgListas = '<div class="mt-erro-listas">Não consegui ler a lista ManutIndicadores: ' + mtEsc(e.message) + '</div>';
+  }
+}
+let indCfgExtras = [];
+async function indGravarGrupo(titulo, objeto, idsAntigos){
+  const id = await indResolverLista();
+  const txt = JSON.stringify(objeto);
+  const partes = [];
+  for (let i = 0; i < txt.length; i += IND_PEDACO) partes.push(txt.slice(i, i + IND_PEDACO));
+  if (!partes.length) partes.push('{}');
+  const novos = [];
+  try {
+    for (let i = 0; i < partes.length; i++) {
+      const r = await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + id + '/items', { fields: { Title: titulo, Parte: String(i), Dados: partes[i] } });
+      novos.push(r.id);
+    }
+  } catch (e) {
+    for (const n of novos) { try { await apagarItemSimples(id, n); } catch (x) { /* ignora */ } }
+    throw new Error('Não consegui gravar na lista ' + IND_NOME_LISTA + ' (confira se as colunas Parte e Dados existem; Dados deve ser "várias linhas de texto" em texto simples). Detalhe: ' + e.message);
+  }
+  for (const a of (idsAntigos || [])) { try { await apagarItemSimples(id, a); } catch (x) { /* ignora */ } }
+  return novos;
+}
+
+/* ---------- leitura dos arquivos ---------- */
+function indLerArquivoBuffer(buf){
+  const wb = XLSX.read(buf, { type: 'array', cellDates: false });
+  return wb.SheetNames.map(function(n){ return { nome: n, aoa: XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: '' }) }; });
+}
+async function indImportar(files){
+  const caixa = document.getElementById('ind-importacao');
+  caixa.innerHTML = '<div class="ind-painel">⏳ Lendo as planilhas…</div>';
+  const lista = [], novoPD = [], novoSap = {}, anteriorAbas = [];
+  for (const file of files) {
+    try {
+      const abas = indLerArquivoBuffer(await file.arrayBuffer());
+      let tipos = [];
+      abas.forEach(function(a){
+        if (indAchaCabecalho(a.aoa, ['equipamento', 'regimeplanejado']) >= 0) { anteriorAbas.push(a); tipos.push('indicadores anteriores'); return; }
+        const pd = indLerPD(a.aoa);
+        if (pd.linhas.length) { pd.linhas.forEach(function(l){ novoPD.push(l); }); tipos.push('parte diária (' + pd.linhas.length + ' lançamentos)'); return; }
+        const sap = indLerSAP(a.aoa);
+        if (sap.linhas.length) { sap.linhas.forEach(function(l){ if (novoSap[l.eq]) { novoSap[l.eq].dup = true; } novoSap[l.eq] = l; }); tipos.push('SAP (' + sap.linhas.length + ' equipamentos)'); }
+      });
+      tipos = tipos.filter(function(t, i){ return tipos.indexOf(t) === i; });
+      lista.push({ nome: file.name, tipo: tipos.length ? tipos.join(' + ') : '', ok: tipos.length > 0 });
+    } catch (e) { lista.push({ nome: file.name, tipo: 'não consegui abrir: ' + e.message, ok: false }); }
+  }
+  if (novoPD.length) indArq.pd = novoPD;
+  if (Object.keys(novoSap).length) indArq.sap = novoSap;
+  if (anteriorAbas.length) indArq.anterior = indLerAnterior(anteriorAbas);
+  indArq.lista = lista;
+  if (!novoPD.length && !Object.keys(novoSap).length && !anteriorAbas.length) {
+    caixa.innerHTML = '<div class="ind-painel"><h4>Nada reconhecido</h4><ul class="ind-lista-arq">' + lista.map(indLinhaArq).join('') + '</ul><div class="ind-nota">Esperado: extração do SAP (colunas "Equipamento" e "Tempo de máquina parada em manutenção"), parte diária ("Equipamento (padronizado)" e "Horas trabalhadas") ou a planilha de indicadores do mês anterior.</div></div>';
+    return;
+  }
+  // mês: o que mais aparece na parte diária; senão o mês escolhido
+  let periodo = document.getElementById('ind-sel-mes').value || '';
+  if (indArq.pd.length) {
+    const cont = {};
+    indArq.pd.forEach(function(l){ const k = l.data.slice(0, 7); cont[k] = (cont[k] || 0) + 1; });
+    periodo = Object.keys(cont).sort(function(a, b){ return cont[b] - cont[a]; })[0];
+  }
+  if (!periodo) periodo = indMesAtualYM();
+  indPrepararMeses(periodo);
+  document.getElementById('ind-sel-mes').value = periodo;
+  await indCalcular(periodo);
+}
+function indLinhaArq(a){ return '<li><span class="' + (a.ok ? 'ok' : 'ruim') + '">' + (a.ok ? '✔' : '✖') + '</span><span><b>' + mtEsc(a.nome) + '</b> — ' + mtEsc(a.tipo || 'não reconheci este arquivo') + '</span></li>'; }
+
+/* ---------- cálculo ---------- */
+async function indCalcular(periodo){
+  const caixa = document.getElementById('ind-importacao');
+  try { await garantirDadosFrotaExtra(); await garantirDadosMovimentacoes(); } catch (e) { caixa.innerHTML = '<div class="mt-erro-listas">Não consegui ler Frota/Movimentações: ' + mtEsc(e.message) + '</div>'; return; }
+  const ano = +periodo.slice(0, 4), mes = +periodo.slice(5, 7);
+  const equips = [], codigos = {};
+  Object.keys(frotaTipoItem).forEach(function(nome){
+    if (frotaTipoItem[nome] !== 'equipamento') return;
+    let cod = indNormEq(nome);
+    if (!indEqValido(cod)) { const m = /[A-Za-z]{2,4}[-\s_.]?\d{1,4}/.exec(nome); cod = m ? indNormEq(m[0]) : ''; }
+    if (!indEqValido(cod) || codigos[cod]) return;
+    codigos[cod] = nome;
+    equips.push({ eq: cod, desc: frotaDescricao[nome] || '', regime: frotaRegimeTrabalho[nome] || '' });
+  });
+  const movs = {};
+  movimentacoesItens.forEach(function(m){
+    let cod = codigos[indNormEq(m.equipamento)] ? indNormEq(m.equipamento) : '';
+    if (!cod) { const mm = /[A-Za-z]{2,4}[-\s_.]?\d{1,4}/.exec(m.equipamento || ''); cod = mm ? indNormEq(mm[0]) : ''; }
+    if (!indEqValido(cod)) return;
+    const d = new Date(m.criado);
+    const ymd = isNaN(d) ? String(m.criado).slice(0, 10) : d.getFullYear() + '-' + mtP2(d.getMonth() + 1) + '-' + mtP2(d.getDate());
+    (movs[cod] = movs[cod] || []).push({ data: ymd, localOrigem: m.localOrigem, localDestino: m.localDestino, status: m.status });
+  });
+  // contratos do mês anterior servem de "palpite" para quem não tem histórico
+  const eqContrato = {};
+  if (indArq.anterior) Object.keys(indArq.anterior).forEach(function(eq){ eqContrato[eq] = indArq.anterior[eq].contrato; });
+  Object.assign(eqContrato, indCfg.eqContrato || {});
+  const cfg = { regimeHP: indCfg.regimeHP || {}, ordemContrato: indCfg.ordemContrato || {}, eqContrato: eqContrato };
+  const pdMes = indArq.pd.filter(function(l){ return l.data.slice(0, 7) === periodo; });
+  const r = indCalcularMes({ ano: ano, mes: mes, sap: indArq.sap, pd: pdMes, equips: equips, movs: movs, cfg: cfg });
+  indDados = { periodo: periodo, linhas: r.linhas, alertas: r.alertas, origem: 'calculo' };
+  indAbertos = {};
+  // painel de importação
+  const avisos = [];
+  if (!Object.keys(indArq.sap).length) avisos.push('Nenhuma extração do SAP carregada — o PM (horas paradas) ficou zerado.');
+  if (!pdMes.length) avisos.push('Nenhuma parte diária deste mês — as horas operadas (HO) ficaram zeradas.');
+  if (indArq.pd.length && pdMes.length < indArq.pd.length) avisos.push((indArq.pd.length - pdMes.length) + ' lançamentos da parte diária são de outros meses e foram ignorados.');
+  const dups = Object.keys(indArq.sap).filter(function(k){ return indArq.sap[k].dup; });
+  if (dups.length) avisos.push('Equipamento repetido nas extrações do SAP (usei a última): ' + dups.join(', '));
+  const conf = indConferirRegimes();
+  caixa.innerHTML = '<div class="ind-painel"><h4>Arquivos lidos</h4><ul class="ind-lista-arq">' + indArq.lista.map(indLinhaArq).join('') + '</ul>' +
+    '<div class="ind-nota">Mês calculado: <b>' + indNomeMes(periodo) + '</b> · ' + r.linhas.length + ' linhas (equipamento × contrato) · ' + new Set(r.linhas.map(function(l){ return l.eq; })).size + ' equipamentos.</div>' +
+    avisos.map(function(a){ return '<div class="ind-nota">⚠️ ' + mtEsc(a) + '</div>'; }).join('') +
+    (conf.length ? '<div class="ind-nota" style="margin-top:10px">🔎 <b>' + conf.length + ' equipamento(s)</b> com regime de trabalho diferente do HP da planilha do mês anterior. <button type="button" class="rel-btn-secundario" id="ind-btn-conf" style="padding:3px 10px;font-size:12px">Ver e ajustar</button></div>' : '') + '</div>';
+  const bc = document.getElementById('ind-btn-conf'); if (bc) bc.onclick = function(){ indModalConferencia(conf); };
+  indRender();
+}
+function indRegimeDoHP(hp){ return hp >= 500 ? '24h' : hp >= 250 ? '12h' : '8h'; }
+function indConferirRegimes(){
+  const out = [];
+  if (!indArq.anterior) return out;
+  const reg = Object.assign({}, IND_REGIME_HP_PADRAO, indCfg.regimeHP || {});
+  const porCod = {};
+  Object.keys(frotaTipoItem).forEach(function(nome){ if (frotaTipoItem[nome] !== 'equipamento') return; const c = indNormEq(nome); if (indEqValido(c)) porCod[c] = nome; });
+  Object.keys(indArq.anterior).forEach(function(eq){
+    const nome = porCod[eq]; const hp = indArq.anterior[eq].hp;
+    if (!nome || !hp) return;
+    const sug = indRegimeDoHP(hp), atual = frotaRegimeTrabalho[nome] || '8h';
+    if (sug !== atual) out.push({ eq: eq, nome: nome, hp: hp, atual: atual, sugerido: sug, hpAtual: reg[atual] });
+  });
+  return out;
+}
+function indModalConferencia(conf){
+  const corpo = '<div class="ind-nota">Compara o regime cadastrado na Frota com o HP da planilha do mês anterior. Marque o que quer corrigir na Frota.</div><div class="ind-wrap" style="margin-top:8px;max-height:50vh"><table class="ind-tab"><thead><tr><th></th><th class="esq">Equipamento</th><th>HP anterior</th><th>Regime na Frota</th><th>Sugerido</th></tr></thead><tbody>' +
+    conf.map(function(c, i){ return '<tr><td><input type="checkbox" class="ind-conf-ck" data-i="' + i + '" checked></td><td class="esq">' + mtEsc(c.eq) + '</td><td>' + indN(c.hp, 0) + ' h</td><td>' + c.atual + ' (' + c.hpAtual + ' h)</td><td><b>' + c.sugerido + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+  mtAbrirModal('Conferir regime de trabalho', [], '✔ Aplicar na Frota', async function(){
+    if (!mtExigirEdicao()) throw new Error('Sem permissão de edição.');
+    const marc = Array.prototype.slice.call(document.querySelectorAll('.ind-conf-ck')).filter(function(x){ return x.checked; }).map(function(x){ return conf[+x.dataset.i]; });
+    for (const c of marc) {
+      await atualizarCamposItem(LISTA_FROTA_ID, frotaIdsExtra[c.nome], { RegimeTrabalho: c.sugerido });
+      frotaRegimeTrabalho[c.nome] = c.sugerido;
+    }
+    mtToast(marc.length + ' regime(s) atualizado(s) na Frota.');
+    if (indDados && indDados.origem === 'calculo') indCalcular(indDados.periodo);
+  }, corpo);
+}
+
+/* ---------- seleção de mês ---------- */
+function indPrepararMeses(extra){
+  const sel = document.getElementById('ind-sel-mes');
+  const set = {};
+  Object.keys(indSalvos).forEach(function(p){ set[p] = 1; });
+  if (extra) set[extra] = 1;
+  const d = new Date(); d.setDate(1);
+  for (let i = 0; i < 14; i++) { set[d.getFullYear() + '-' + mtP2(d.getMonth() + 1)] = 1; d.setMonth(d.getMonth() - 1); }
+  const atual = sel.value;
+  sel.innerHTML = Object.keys(set).sort().reverse().map(function(p){ return '<option value="' + p + '">' + indNomeMes(p) + (indSalvos[p] ? ' ✔ salvo' : '') + '</option>'; }).join('');
+  if (atual && set[atual]) sel.value = atual;
+}
+function indMudouMes(){
+  const p = document.getElementById('ind-sel-mes').value;
+  if (indDados && indDados.origem === 'calculo' && indDados.periodo === p) return;
+  if ((indArq.pd.length || Object.keys(indArq.sap).length) && !indSalvos[p]) { indCalcular(p); return; }
+  if (indSalvos[p]) indDados = { periodo: p, linhas: indSalvos[p].linhas, alertas: indSalvos[p].alertas, origem: 'salvo' };
+  else indDados = null;
+  document.getElementById('ind-importacao').innerHTML = '';
+  indAbertos = {};
+  indRender();
+}
+
+/* ---------- renderização ---------- */
+function indLinhasFiltradas(){
+  return indDados ? indDados.linhas : [];
+}
+function indMetCtr(linhas){ return indMetricas(linhas, indVersao); }
+function indRender(){
+  const aviso = document.getElementById('ind-aviso');
+  aviso.innerHTML = indMsgListas;
+  document.getElementById('ind-btn-salvar').disabled = !(indDados && indDados.origem === 'calculo');
+  document.getElementById('ind-btn-excel').disabled = !indDados;
+  document.querySelectorAll('[data-ind-versao]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indVersao === indVersao); });
+  document.querySelectorAll('[data-ind-aba]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indAba === indAba); });
+  const nAl = indDados ? indDados.alertas.length : 0;
+  document.getElementById('ind-badge-alertas').textContent = nAl ? '(' + nAl + ')' : '';
+  const k = document.getElementById('ind-kpis'), corpo = document.getElementById('ind-corpo');
+  if (!indDados && indAba !== 'historico') {
+    k.innerHTML = '';
+    corpo.innerHTML = '<div class="ind-painel" style="text-align:center;padding:36px 16px"><div style="font-size:34px">📥</div><b>Importe as planilhas do mês</b><div class="ind-nota">Clique em <b>Importar planilhas</b> e escolha de uma vez só: a(s) extração(ões) do SAP, a parte diária e, se quiser conferir os regimes, a planilha de indicadores do mês anterior. O portal reconhece cada arquivo sozinho.</div></div>';
+    return;
+  }
+  if (indDados) indRenderKpis(k); else k.innerHTML = '';
+  if (indAba === 'contratos') corpo.innerHTML = indHtmlContratos();
+  else if (indAba === 'equipamentos') indRenderEquipamentos(corpo);
+  else if (indAba === 'alertas') corpo.innerHTML = indHtmlAlertas();
+  else corpo.innerHTML = indHtmlHistorico();
+  indLigarCorpo();
+}
+function indRenderKpis(k){
+  const lsK = indDados.linhas.filter(function(l){ return l.contrato !== IND_SEM_CONTRATO && l.contrato !== IND_A_CLASSIFICAR; });
+  const m = indMetCtr(lsK);
+  const porCt = indAgrupar(lsK, 'contrato');
+  const ctr = Object.keys(porCt).filter(function(c){ return c !== IND_SEM_CONTRATO && c !== IND_A_CLASSIFICAR; });
+  const mc = ctr.map(function(c){ return indMetCtr(porCt[c]); });
+  const media = function(ch){ const v = mc.map(function(x){ return x[ch]; }).filter(function(x){ return x !== null; }); return v.length ? v.reduce(function(a, b){ return a + b; }, 0) / v.length : null; };
+  const meta = indMetas();
+  const card = function(rot, chave, v, sub){
+    const e = chave ? indEstado(chave, v) : 'neutro';
+    return '<div class="ind-kpi ' + e + '"><div class="l">' + rot + '</div><div class="n">' + (chave ? indPct(v) : v) + '</div><div class="s">' + (chave ? (indIco(e) + ' meta ' + meta[chave] + '% · ') : '') + sub + '</div></div>';
+  };
+  k.innerHTML =
+    card('Disponibilidade mecânica', 'DM', m.DM, 'média simples dos contratos ' + indPct(media('DM'))) +
+    card('Eficiência operacional', 'EO', m.EO, 'média simples ' + indPct(media('EO'))) +
+    card('Índice de utilização', 'IU', m.IU, 'média simples ' + indPct(media('IU'))) +
+    card('MTTR', null, m.MTTR === null ? '—' : indN(m.MTTR) + ' h', 'tempo médio de reparo') +
+    card('MTBF', null, m.MTBF === null ? '—' : indN(m.MTBF) + ' h', 'tempo médio entre falhas') +
+    card('Horas', null, indN(m.HP, 0), 'planejadas · ' + indN(m.PM, 0) + ' h parado · ' + indN(m.HOBruto, 0) + ' h operadas');
+}
+function indTd(m){
+  return '<td>' + indN(m.HP, 0) + '</td><td>' + indN(m.PM, 0) + '</td><td>' + indN(m.HOBruto, 0) + '</td><td>' + indCelula('DM', m.DM) + '</td><td>' + indCelula('EO', m.EO) + '</td><td>' + indCelula('IU', m.IU) + '</td><td>' + indN(m.MTTR) + '</td><td>' + indN(m.MTBF) + '</td>';
+}
+function indHtmlContratos(){
+  const porCt = indAgrupar(indDados.linhas, 'contrato');
+  const nomes = Object.keys(porCt).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  let h = '<div class="ind-wrap"><table class="ind-tab"><thead><tr><th>Contrato</th><th>HP (h)</th><th>PM (h)</th><th>HO (h)</th><th>DM</th><th>EO</th><th>IU</th><th>MTTR (h)</th><th>MTBF (h)</th></tr></thead><tbody>';
+  const reais = [];
+  nomes.forEach(function(c){
+    const ls = porCt[c], m = indMetCtr(ls);
+    const semC = c === IND_SEM_CONTRATO || c === IND_A_CLASSIFICAR;
+    if (!semC) reais.push(m);
+    const ab = !!indAbertos[c];
+    const qEq = new Set(ls.map(function(l){ return l.eq; })).size;
+    h += '<tr class="ind-contrato" data-ind-ct="' + mtEsc(c) + '"><td><span class="ind-seta">' + (ab ? '▾' : '▸') + '</span>' + mtEsc(c) + ' <span class="ind-alt" style="display:inline">· ' + qEq + ' equip.' + (c === IND_A_CLASSIFICAR ? ' · defina em ⚙ Configurar' : '') + '</span></td>' + indTd(m) + '</tr>';
+    if (ab) ls.slice().sort(function(a, b){ return a.eq < b.eq ? -1 : 1; }).forEach(function(l){
+      const mm = indMetricas([l], indVersao);
+      h += '<tr class="ind-filho"><td>' + mtEsc(l.eq) + ' <span class="ind-alt" style="display:inline">' + mtEsc(l.desc) + (l.dias != null && l.dias < l.diasMes ? ' · ' + l.dias + ' d de ' + l.diasMes : '') + '</span></td>' + indTd(mm) + '</tr>';
+    });
+  });
+  const todos = indDados.linhas.filter(function(l){ return l.contrato !== IND_SEM_CONTRATO && l.contrato !== IND_A_CLASSIFICAR; });
+  const tm = indMetricas(todos, indVersao);
+  h += '<tr class="ind-total"><td>TOTAL (ponderado por horas)</td>' + indTd(tm) + '</tr>';
+  const md = function(ch){ const v = reais.map(function(x){ return x[ch]; }).filter(function(x){ return x !== null; }); return v.length ? v.reduce(function(a, b){ return a + b; }, 0) / v.length : null; };
+  h += '<tr class="ind-media"><td>Média simples dos contratos</td><td></td><td></td><td></td><td>' + indPct(md('DM')) + '</td><td>' + indPct(md('EO')) + '</td><td>' + indPct(md('IU')) + '</td><td></td><td></td></tr>';
+  h += '</tbody></table></div><div class="ind-nota">Clique num contrato para ver os equipamentos. O total é ponderado pelas horas (um equipamento de 24 h pesa mais que um de 8 h); a média simples é a média das linhas de contrato, como na planilha. Equipamento que trocou de contrato no mês aparece nos dois, com HP e PM divididos proporcionalmente aos dias em cada um.</div>';
+  return h;
+}
+const IND_ROTULO_ALERTA = { regime: 'Sem regime', classificar: 'Sem contrato', conflito: 'Contrato divergente', 'pm-maior': 'PM > HP', 'ho-excesso': 'HO acima do possível', 'sem-pd': 'Sem parte diária', 'dia-excesso': 'Dia com mais de 24 h', 'a-disposicao': 'A disposição', 'pm-divergente': 'PM ≠ parte diária', 'pm-sem-sap': 'Parada fora do SAP', trocou: 'Trocou de contrato' };
+const IND_GRAVES = { classificar: 1, conflito: 1, 'pm-maior': 1, 'ho-excesso': 1, 'dia-excesso': 1, regime: 1 };
+function indChips(eq){
+  return indDados.alertas.filter(function(a){ return a.eq === eq; }).map(function(a){
+    return '<span class="ind-chip ' + (IND_GRAVES[a.tipo] ? 'grave' : (a.tipo === 'trocou' || a.tipo === 'a-disposicao' ? 'info' : '')) + '" title="' + mtEsc(a.texto) + '">' + mtEsc(IND_ROTULO_ALERTA[a.tipo] || a.tipo) + '</span>';
+  }).join('');
+}
+function indRenderEquipamentos(corpo){
+  const contratos = Array.from(new Set(indDados.linhas.map(function(l){ return l.contrato; }))).sort();
+  let ls = indDados.linhas.filter(function(l){
+    if (indFiltroContrato && l.contrato !== indFiltroContrato) return false;
+    if (indFiltroTxt) { const t = indSemAcento((l.eq + ' ' + l.desc + ' ' + l.contrato).toLowerCase()); if (t.indexOf(indSemAcento(indFiltroTxt.toLowerCase())) === -1) return false; }
+    return true;
+  });
+  const val = function(l, ch){ const m = indMetricas([l], indVersao); return m[ch] === null ? 9 : m[ch]; };
+  ls = ls.slice().sort(function(a, b){
+    if (indOrdem === 'DM' || indOrdem === 'EO' || indOrdem === 'IU') return val(a, indOrdem) - val(b, indOrdem);
+    if (indOrdem === 'PM') return b.pm - a.pm;
+    return a.eq < b.eq ? -1 : a.eq > b.eq ? 1 : 0;
+  });
+  let h = '<div class="ind-filtros"><div class="ind-grupo"><label>Buscar</label><input type="search" id="ind-f-txt" placeholder="Equipamento, descrição…" value="' + mtEsc(indFiltroTxt) + '"></div>' +
+    '<div class="ind-grupo"><label>Contrato</label><select id="ind-f-ct"><option value="">Todos</option>' + contratos.map(function(c){ return '<option' + (c === indFiltroContrato ? ' selected' : '') + '>' + mtEsc(c) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="ind-grupo"><label>Ordenar por</label><select id="ind-f-ord">' + [['eq', 'Equipamento'], ['DM', 'Pior DM'], ['EO', 'Pior EO'], ['IU', 'Pior IU'], ['PM', 'Mais horas paradas']].map(function(o){ return '<option value="' + o[0] + '"' + (indOrdem === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>';
+  h += '<div class="ind-wrap"><table class="ind-tab"><thead><tr><th>Equipamento</th><th class="esq">Contrato</th><th>Regime</th><th>HP (h)</th><th>PM (h)</th><th>HO (h)</th><th>DM</th><th>EO</th><th>IU</th><th>MTTR</th><th>MTBF</th><th class="esq">Alertas</th></tr></thead><tbody>';
+  ls.forEach(function(l){
+    const m = indMetricas([l], indVersao);
+    h += '<tr><td>' + mtEsc(l.eq) + '<span class="ind-alt">' + mtEsc(l.desc) + '</span></td><td class="esq">' + mtEsc(l.contrato) + (l.dias != null && l.dias < l.diasMes ? '<span class="ind-alt">' + l.dias + ' de ' + l.diasMes + ' dias</span>' : '') + '</td><td>' + mtEsc(l.regime) + '</td><td>' + indN(l.hp, 0) + '</td><td>' + indN(l.pm) + '</td><td>' + indN(m.HOBruto) + '</td><td>' + indCelula('DM', m.DM) + '</td><td>' + indCelula('EO', m.EO) + '</td><td>' + indCelula('IU', m.IU) + '</td><td>' + indN(l.mttr) + '</td><td>' + indN(l.mtbf) + '</td><td class="esq">' + indChips(l.eq) + '</td></tr>';
+  });
+  if (!ls.length) h += '<tr><td colspan="12" class="esq">Nenhum equipamento com esse filtro.</td></tr>';
+  corpo.innerHTML = h + '</tbody></table></div><div class="ind-nota">' + ls.length + ' linhas. Passe o mouse sobre uma etiqueta de alerta para ler a explicação.</div>';
+}
+function indHtmlAlertas(){
+  if (!indDados.alertas.length) return '<div class="ind-painel">✔ Nenhum alerta neste mês.</div>';
+  const g = indAgrupar(indDados.alertas, 'tipo');
+  const ordem = Object.keys(g).sort(function(a, b){ return (IND_GRAVES[b] ? 1 : 0) - (IND_GRAVES[a] ? 1 : 0) || g[b].length - g[a].length; });
+  return ordem.map(function(t){
+    return '<div class="ind-painel"><h4>' + (IND_GRAVES[t] ? '✖ ' : '▲ ') + mtEsc(IND_ROTULO_ALERTA[t] || t) + ' · ' + g[t].length + '</h4>' +
+      g[t].map(function(a){ return '<div class="ind-alerta"><b data-ind-eq="' + mtEsc(a.eq) + '" title="Ver na aba Equipamentos">' + mtEsc(a.eq) + '</b><span>' + mtEsc(a.texto) + '</span></div>'; }).join('') + '</div>';
+  }).join('');
+}
+function indHtmlHistorico(){
+  const per = Object.keys(indSalvos).sort();
+  const pontos = per.map(function(p){ return { p: p, m: indMetricas(indSalvos[p].linhas, indVersao) }; });
+  if (indDados && indDados.origem === 'calculo' && !indSalvos[indDados.periodo]) { pontos.push({ p: indDados.periodo, m: indMetCtr(indDados.linhas), nao: true }); pontos.sort(function(a, b){ return a.p < b.p ? -1 : 1; }); }
+  if (!pontos.length) return '<div class="ind-painel">Ainda não há meses salvos. Calcule um mês e clique em <b>Salvar mês</b> para construir o histórico.</div>';
+  const W = 720, H = 250, ml = 44, mr = 70, mt = 14, mb = 30;
+  const todos = [];
+  pontos.forEach(function(x){ ['DM', 'EO', 'IU'].forEach(function(c){ if (x.m[c] !== null) todos.push(x.m[c] * 100); }); });
+  const ymin = Math.max(0, Math.floor((Math.min.apply(null, todos) - 5) / 10) * 10), ymax = 100;
+  const X = function(i){ return ml + (pontos.length === 1 ? (W - ml - mr) / 2 : i * (W - ml - mr) / (pontos.length - 1)); };
+  const Y = function(v){ return mt + (ymax - v) * (H - mt - mb) / (ymax - ymin); };
+  const cores = { DM: 'var(--ind-s1)', EO: 'var(--ind-s2)', IU: 'var(--ind-s3)' };
+  let s = '<svg class="ind-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Evolução mensal de DM, EO e IU">';
+  for (let v = ymin; v <= ymax; v += 10) s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--ind-grade)" stroke-width="1"/><text x="' + (ml - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + v + '%</text>';
+  pontos.forEach(function(x, i){ s += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + x.p.slice(5, 7) + '/' + x.p.slice(2, 4) + '</text>'; });
+  const rotulos = [];
+  ['DM', 'EO', 'IU'].forEach(function(c){
+    const pts = pontos.map(function(x, i){ return x.m[c] === null ? null : [X(i), Y(x.m[c] * 100), x.m[c], x.p]; }).filter(Boolean);
+    if (pts.length > 1) s += '<polyline fill="none" stroke="' + cores[c] + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="' + pts.map(function(q){ return q[0] + ',' + q[1]; }).join(' ') + '"/>';
+    pts.forEach(function(q){ s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="4.5" fill="' + cores[c] + '" stroke="var(--card)" stroke-width="2"><title>' + c + ' ' + indNomeMes(q[3]) + ': ' + indPct(q[2]) + '</title></circle>'; });
+    if (pts.length) rotulos.push({ c: c, y: pts[pts.length - 1][1], x: pts[pts.length - 1][0], v: pts[pts.length - 1][2] });
+  });
+  rotulos.sort(function(a, b){ return a.y - b.y; });
+  for (let i = 1; i < rotulos.length; i++) if (rotulos[i].y - rotulos[i - 1].y < 14) rotulos[i].y = rotulos[i - 1].y + 14;
+  rotulos.forEach(function(r){ s += '<text class="rot" x="' + (r.x + 9) + '" y="' + (r.y + 4) + '">' + r.c + ' ' + indPct(r.v, 0) + '</text>'; });
+  s += '</svg>';
+  const leg = '<div class="ind-legenda"><span><i style="background:var(--ind-s1)"></i>Disponibilidade mecânica</span><span><i style="background:var(--ind-s2)"></i>Eficiência operacional</span><span><i style="background:var(--ind-s3)"></i>Índice de utilização</span></div>';
+  const tab = '<div class="ind-wrap" style="margin-top:12px"><table class="ind-tab"><thead><tr><th>Mês</th><th>HP (h)</th><th>PM (h)</th><th>DM</th><th>EO</th><th>IU</th><th>MTTR</th><th>MTBF</th></tr></thead><tbody>' +
+    pontos.slice().reverse().map(function(x){ return '<tr><td>' + indNomeMes(x.p) + (x.nao ? ' <span class="ind-alt" style="display:inline">(não salvo)</span>' : '') + '</td><td>' + indN(x.m.HP, 0) + '</td><td>' + indN(x.m.PM, 0) + '</td><td>' + indCelula('DM', x.m.DM) + '</td><td>' + indCelula('EO', x.m.EO) + '</td><td>' + indCelula('IU', x.m.IU) + '</td><td>' + indN(x.m.MTTR) + '</td><td>' + indN(x.m.MTBF) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  return '<div class="ind-painel"><h4>Evolução (total ponderado — ' + (indVersao === 'prod' ? 'só horas produtivas' : 'como hoje') + ')</h4>' + leg + s + '</div>' + tab;
+}
+function indLigarCorpo(){
+  document.querySelectorAll('[data-ind-ct]').forEach(function(tr){ tr.onclick = function(){ const c = tr.dataset.indCt; indAbertos[c] = !indAbertos[c]; indRender(); }; });
+  document.querySelectorAll('[data-ind-eq]').forEach(function(b){ b.onclick = function(){ indFiltroTxt = b.dataset.indEq; indFiltroContrato = ''; indAba = 'equipamentos'; indRender(); }; });
+  const t = document.getElementById('ind-f-txt');
+  if (t) t.oninput = function(){ indFiltroTxt = t.value; const pos = t.selectionStart; indRenderEquipamentos(document.getElementById('ind-corpo')); indLigarCorpo(); const n = document.getElementById('ind-f-txt'); n.focus(); n.setSelectionRange(pos, pos); };
+  const c = document.getElementById('ind-f-ct'); if (c) c.onchange = function(){ indFiltroContrato = c.value; indRender(); };
+  const o = document.getElementById('ind-f-ord'); if (o) o.onchange = function(){ indOrdem = o.value; indRender(); };
+}
+
+/* ---------- salvar / configurar / exportar ---------- */
+async function indSalvarMes(){
+  if (!mtExigirEdicao()) return;
+  if (!indDados || indDados.origem !== 'calculo') return;
+  const p = indDados.periodo;
+  if (indSalvos[p] && !confirm('O mês ' + indNomeMes(p) + ' já está salvo. Substituir pelo cálculo atual?')) return;
+  const btn = document.getElementById('ind-btn-salvar'); btn.disabled = true; const rot = btn.textContent; btn.textContent = 'Salvando…';
+  try {
+    const novos = await indGravarGrupo(p, { linhas: indDados.linhas, alertas: indDados.alertas }, indSalvos[p] ? indSalvos[p].itemIds : []);
+    indSalvos[p] = { linhas: indDados.linhas, alertas: indDados.alertas, itemIds: novos };
+    indPrepararMeses(p); document.getElementById('ind-sel-mes').value = p;
+    mtToast('Mês ' + indNomeMes(p) + ' salvo no histórico.');
+  } catch (e) {
+    if (e.semLista) { indMsgListas = ''; await indCarregarSalvos(); }
+    alert('⚠️ ' + (e.semLista ? 'Falta criar a lista ManutIndicadores no SharePoint (veja o aviso no topo da tela).' : e.message));
+  } finally { btn.textContent = rot; btn.disabled = !(indDados && indDados.origem === 'calculo'); indRender(); }
+}
+function indParseLinhas(txt){
+  const o = {};
+  String(txt || '').split(/\r?\n/).forEach(function(l){
+    const m = /^\s*([^=;:]+?)\s*[=;:]\s*(.+?)\s*$/.exec(l);
+    if (m) o[m[1].trim()] = m[2].trim();
+  });
+  return o;
+}
+function indLinhasTxt(o){ return Object.keys(o || {}).sort().map(function(k){ return k + ' = ' + o[k]; }).join('\n'); }
+function indModalConfig(){
+  if (!mtExigirEdicao()) return;
+  const reg = Object.assign({}, IND_REGIME_HP_PADRAO, indCfg.regimeHP || {}), meta = indMetas();
+  mtAbrirModal('⚙ Configurar indicadores', [
+    { id: 'hp8', label: 'HP regime 8h (h/mês)', tipo: 'number', valor: reg['8h'] },
+    { id: 'hp12', label: 'HP regime 12h (h/mês)', tipo: 'number', valor: reg['12h'] },
+    { id: 'hp24', label: 'HP regime 24h (h/mês)', tipo: 'number', valor: reg['24h'] },
+    { id: 'mDM', label: 'Meta DM (%)', tipo: 'number', valor: meta.DM },
+    { id: 'mEO', label: 'Meta EO (%)', tipo: 'number', valor: meta.EO },
+    { id: 'mIU', label: 'Meta IU (%)', tipo: 'number', valor: meta.IU },
+    { id: 'ordens', label: 'Ordem → contrato (uma por linha: 500055 = AMT - HARSCO - 500055)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.ordemContrato), larga: true, dica: 'Só para ordens que o portal não reconhece sozinho pelo nome do cliente.' },
+    { id: 'eqs', label: 'Equipamento → contrato (uma por linha: ESC0045 = AMT)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.eqContrato), larga: true, dica: 'Vale só para equipamento sem movimentação nem parte diária no mês.' }
+  ], '💾 Salvar configurações', async function(v){
+    const novo = { regimeHP: { '8h': +v.hp8 || 176, '12h': +v.hp12 || 330, '24h': +v.hp24 || 660 }, metas: { DM: +v.mDM || 85, EO: +v.mEO || 85, IU: +v.mIU || 72 }, ordemContrato: indParseLinhas(v.ordens), eqContrato: {} };
+    const eqs = indParseLinhas(v.eqs); Object.keys(eqs).forEach(function(k){ novo.eqContrato[indNormEq(k)] = eqs[k]; });
+    const ids = await indGravarGrupo('CONFIG', novo, [indCfgItemId].concat(indCfgExtras).filter(Boolean));
+    indCfg = novo; indCfgItemId = ids[0]; indCfgExtras = ids.slice(1);
+    mtToast('Configurações salvas.');
+    if (indDados && indDados.origem === 'calculo') indCalcular(indDados.periodo); else indRender();
+  });
+}
+function indNomeAba(n, usados){
+  let b = String(n).replace(/[\\\/?*\[\]:]/g, '-').slice(0, 28) || 'Aba', c = b, i = 2;
+  while (usados[c]) c = b.slice(0, 26) + '_' + (i++);
+  usados[c] = 1; return c;
+}
+function indExportarExcel(){
+  if (!indDados) return;
+  const wb = XLSX.utils.book_new(), usados = {};
+  const pctCols = {};
+  const add = function(nome, aoa, pct){
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+    for (let r = 1; r <= range.e.r; r++) (pct || []).forEach(function(c){ const a = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (a && typeof a.v === 'number') a.z = '0.0%'; });
+    ws['!cols'] = aoa[0].map(function(x, i){ return { wch: i === 0 ? 30 : 14 }; });
+    XLSX.utils.book_append_sheet(wb, ws, indNomeAba(nome, usados));
+  };
+  const f = function(v){ return v === null ? '' : v; };
+  const porCt = indAgrupar(indDados.linhas, 'contrato');
+  const nomes = Object.keys(porCt).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const resumo = [['Contrato', 'Equipamentos', 'HP (h)', 'PM (h)', 'HO (h)', 'DM', 'EO', 'IU', 'MTTR (h)', 'MTBF (h)']];
+  nomes.forEach(function(c){ const m = indMetCtr(porCt[c]); resumo.push([c, new Set(porCt[c].map(function(l){ return l.eq; })).size, indR2(m.HP), indR2(m.PM), indR2(m.HOBruto), f(m.DM), f(m.EO), f(m.IU), f(m.MTTR === null ? null : indR2(m.MTTR)), f(m.MTBF === null ? null : indR2(m.MTBF))]); });
+  const tm = indMetricas(indDados.linhas.filter(function(l){ return l.contrato !== IND_SEM_CONTRATO && l.contrato !== IND_A_CLASSIFICAR; }), indVersao);
+  resumo.push(['TOTAL (ponderado)', '', indR2(tm.HP), indR2(tm.PM), indR2(tm.HOBruto), f(tm.DM), f(tm.EO), f(tm.IU), f(tm.MTTR === null ? null : indR2(tm.MTTR)), f(tm.MTBF === null ? null : indR2(tm.MTBF))]);
+  add('Resumo', resumo, [5, 6, 7]);
+  const cab = ['Equipamento', 'Descrição', 'Regime planejado', 'HP (h)', 'PM (h)', 'MTTR (h)', 'MTBF (h)', 'HO (h)', 'DM', 'EO', 'IU', 'Dias no contrato'];
+  const linhaEq = function(l){ const m = indMetricas([l], indVersao); return [l.eq, l.desc, l.regime, l.hp, l.pm, l.mttr, l.mtbf, indR2(m.HOBruto), f(m.DM), f(m.EO), f(m.IU), l.dias == null ? '' : l.dias]; };
+  nomes.forEach(function(c){ add(c, [cab].concat(porCt[c].map(linhaEq)), [8, 9, 10]); });
+  add('Todos os equipamentos', [['Contrato'].concat(cab)].concat(indDados.linhas.map(function(l){ return [l.contrato].concat(linhaEq(l)); })), [9, 10, 11]);
+  add('Alertas', [['Equipamento', 'Tipo', 'Detalhe']].concat(indDados.alertas.map(function(a){ return [a.eq, IND_ROTULO_ALERTA[a.tipo] || a.tipo, a.texto]; })));
+  XLSX.writeFile(wb, 'Indicadores_Manutencao_' + indDados.periodo + (indVersao === 'prod' ? '_produtivas' : '') + '.xlsx');
+}
+
+/* ---------- entrada da tela ---------- */
+async function carregarIndicadoresManut(){
+  if (!indIniciado) {
+    indIniciado = true;
+    document.getElementById('ind-btn-importar').onclick = function(){ document.getElementById('ind-arquivos').value = ''; document.getElementById('ind-arquivos').click(); };
+    document.getElementById('ind-arquivos').onchange = function(){ if (this.files && this.files.length) indImportar(Array.prototype.slice.call(this.files)); };
+    document.getElementById('ind-btn-salvar').onclick = indSalvarMes;
+    document.getElementById('ind-btn-excel').onclick = indExportarExcel;
+    document.getElementById('ind-btn-config').onclick = indModalConfig;
+    document.getElementById('ind-sel-mes').onchange = indMudouMes;
+    document.querySelectorAll('[data-ind-versao]').forEach(function(b){ b.onclick = function(){ indVersao = b.dataset.indVersao; indRender(); }; });
+    document.querySelectorAll('[data-ind-aba]').forEach(function(b){ b.onclick = function(){ indAba = b.dataset.indAba; indRender(); }; });
+  }
+  indPrepararMeses();
+  indRender();
+  await indCarregarSalvos();
+  indPrepararMeses();
+  if (!indDados) { const ult = Object.keys(indSalvos).sort().pop(); if (ult) { document.getElementById('ind-sel-mes').value = ult; indDados = { periodo: ult, linhas: indSalvos[ult].linhas, alertas: indSalvos[ult].alertas, origem: 'salvo' }; } }
+  indRender();
+}
+
 /* =====================================================================
    MANUTENÇÃO DE EQUIPAMENTOS (substitui a antiga aba Controladoria)
    Três listas novas no SharePoint, achadas pelo NOME (sem colar IDs):
