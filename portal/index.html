@@ -1879,7 +1879,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 09/10/2026 · 78</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 09/10/2026 · 79</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -8396,7 +8396,7 @@ function indCalcularMes(en){
       const l = { periodo: periodo, eq: eq, desc: (sap && sap.desc) || u.desc || '', contrato: c, regime: regime || '8h',
         hp: indR2(hp), pm: indR2(pm), mttr: sap ? sap.mttr : 0, mtbf: sap ? sap.mtbf : 0,
         ho: indR2(o.ho), hoProd: indR2(o.prod), hDisp: indR2(o.disp), hManutPD: indR2(o.manut), pmPD: indR2(o.pm),
-        dias: fonte === 'dias' ? (dias.dias[c] || 0) : null, diasMes: D, linhasPD: o.linhas,
+        dias: fonte === 'dias' ? (dias.dias[c] || 0) : null, diasMes: D, linhasPD: o.linhas, semReg: !sap && !pdl.length,
         custoMO: sap ? indR2(sap.custoMO * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
         custoMatInt: sap ? indR2(sap.custoMatInt * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
         custoServExt: sap ? indR2(sap.custoServExt * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
@@ -8411,7 +8411,8 @@ function indCalcularMes(en){
       const cap = Math.max(0, x.hp - Math.min(x.pm, x.hp));
       if (x.ho > cap + 1) add(eq, 'ho-excesso', 'Horas lançadas na parte diária (' + x.ho + ' h) passam do disponível (' + indR2(cap) + ' h) em ' + x.contrato + ': conferi o regime de trabalho do equipamento ou se houve hora extra. Contei só ' + indR2(cap) + ' h.');
     });
-    if (hpSoma > 0 && !pdl.length) add(eq, 'sem-pd', 'Sem nenhuma parte diária no mês (HO = 0).');
+    if (!sap && !pdl.length) add(eq, 'sem-registro', 'Sem nenhum registro no mês (nem SAP, nem parte diária): colunas zeradas e DM, EO e IU considerados 100%.');
+    else if (hpSoma > 0 && !pdl.length) add(eq, 'sem-pd', 'Sem nenhuma parte diária no mês (HO = 0).');
     const porDia = {};
     pdl.forEach(function(l){ porDia[l.data] = (porDia[l.data] || 0) + l.horas; });
     const diasExc = Object.keys(porDia).filter(function(d){ return porDia[d] > 24.01; });
@@ -8435,8 +8436,8 @@ function indMetricas(linhas, versao, opts){
     if (opts.ignoraSemPD && !l.linhasPD) return;
     const pmL = Math.min(l.pm, l.hp);
     const disp = Math.max(0, l.hp - pmL);
-    const ho = versao === 'prod' ? l.hoProd : l.ho;
-    HP += l.hp; PMef += pmL; PMtot += l.pm; hoBruto += ho;
+    const ho = l.semReg ? disp : (versao === 'prod' ? l.hoProd : l.ho);
+    HP += l.hp; PMef += pmL; PMtot += l.pm; hoBruto += l.semReg ? 0 : ho;
     HOef += Math.min(ho, disp);
     if (l.mttr > 0) { const n = l.pm / l.mttr; nRep += n; pmComMttr += l.pm; mtbfPond += l.mtbf * n; }
     custo += (l.custoMO || 0) + (l.custoMatInt || 0) + (l.custoServExt || 0) + (l.custoMatExt || 0);
@@ -8774,11 +8775,11 @@ function indHtmlContratos(){
   h += '</tbody></table></div><div class="ind-nota">Clique num contrato para ver os equipamentos. O total é ponderado pelas horas (um equipamento de 24 h pesa mais que um de 8 h); a média simples é a média das linhas de contrato, como na planilha. Equipamento que trocou de contrato no mês aparece nos dois, com HP e PM divididos proporcionalmente aos dias em cada um.</div>';
   return h;
 }
-const IND_ROTULO_ALERTA = { regime: 'Sem regime', classificar: 'Sem contrato', conflito: 'Contrato divergente', 'pm-maior': 'PM > HP', 'ho-excesso': 'HO acima do possível', 'sem-pd': 'Sem parte diária', 'dia-excesso': 'Dia com mais de 24 h', 'a-disposicao': 'A disposição', 'pm-divergente': 'PM ≠ parte diária', 'pm-sem-sap': 'Parada fora do SAP', trocou: 'Trocou de contrato' };
+const IND_ROTULO_ALERTA = { regime: 'Sem regime', classificar: 'Sem contrato', conflito: 'Contrato divergente', 'pm-maior': 'PM > HP', 'ho-excesso': 'HO acima do possível', 'sem-pd': 'Sem parte diária', 'sem-registro': 'Sem registros (100%)', 'dia-excesso': 'Dia com mais de 24 h', 'a-disposicao': 'A disposição', 'pm-divergente': 'PM ≠ parte diária', 'pm-sem-sap': 'Parada fora do SAP', trocou: 'Trocou de contrato' };
 const IND_GRAVES = { classificar: 1, conflito: 1, 'pm-maior': 1, 'ho-excesso': 1, 'dia-excesso': 1, regime: 1 };
 function indChips(eq){
   return indDados.alertas.filter(function(a){ return a.eq === eq; }).map(function(a){
-    return '<span class="ind-chip ' + (IND_GRAVES[a.tipo] ? 'grave' : (a.tipo === 'trocou' || a.tipo === 'a-disposicao' ? 'info' : '')) + '" title="' + mtEsc(a.texto) + '">' + mtEsc(IND_ROTULO_ALERTA[a.tipo] || a.tipo) + '</span>';
+    return '<span class="ind-chip ' + (IND_GRAVES[a.tipo] ? 'grave' : (a.tipo === 'trocou' || a.tipo === 'a-disposicao' || a.tipo === 'sem-registro' ? 'info' : '')) + '" title="' + mtEsc(a.texto) + '">' + mtEsc(IND_ROTULO_ALERTA[a.tipo] || a.tipo) + '</span>';
   }).join('');
 }
 function indRenderEquipamentos(corpo){
