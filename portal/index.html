@@ -490,6 +490,9 @@
   .oc-edit-salvar:disabled{opacity:.6;cursor:not-allowed}
   .oc-edit-feedback{font-size:12px;margin-top:2px}
   body.tema-escuro .oc-edit-campo input, body.tema-escuro .oc-edit-campo select{background:#1a222b;border-color:#2a3540;color:#e8edf1}
+  #status-eq-filtros .grid{grid-template-columns:minmax(150px,1.3fr) minmax(150px,1.3fr) minmax(130px,1fr) auto minmax(130px,.9fr) minmax(130px,.9fr);align-items:end}
+  #status-eq-filtros .grid .campo:nth-child(4) button{width:auto !important}
+  @media(max-width:1180px){ #status-eq-filtros .grid{grid-template-columns:repeat(2,1fr)} }
   /* ---- Status dos Equipamentos: árvore + resumo ---- */
   .arv-linha-local{display:grid;grid-template-columns:1fr 140px 120px;gap:10px;align-items:center;
     padding:10px 12px;background:var(--cream);border-radius:8px;margin-top:10px;cursor:pointer;font-weight:700;font-size:12.5px}
@@ -1788,10 +1791,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="sn-cab sn-toggle"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M7.5 12h9"/><path d="m13.5 9 3 3-3 3"/><path d="M9 4.8v2.4M9 16.8v2.4"/></svg><span>Movimentações</span><b class="sn-chev"></b></div>
       <div class="sn-sub">
         <div class="sidebar-item" data-view="rastreamento" data-secao="rastreamento">Mover Equip./Implemento</div>
-        <div class="sidebar-item" data-view="localizacao-atual" data-secao="rastreamento">Localização Atual</div>
         <div class="sidebar-item" data-view="historico-mov" data-secao="rastreamento">Histórico de Movimentações</div>
-        <div class="sidebar-item" data-view="dashboard-mov" data-secao="rastreamento">Dashboard</div>
-        <div class="sidebar-item" data-view="status-equipamentos" data-secao="rastreamento">Status dos Equipamentos</div>
+        <div class="sidebar-item" data-view="status-equipamentos" data-secao="rastreamento">Local de Instalação</div>
         <div class="sidebar-item" data-view="frota" data-secao="rastreamento">Frota</div>
       </div>
     </div>
@@ -1818,7 +1819,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 08/10/2026 · 76</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 09/10/2026 · 77</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -2508,47 +2509,6 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   <div class="erro-msg" id="mov-erro-msg"></div>
   <div class="ok-msg" id="mov-ok-msg">✔ Equipamento movido com sucesso!</div>
 </div>
-<div class="view" id="view-localizacao-atual">
-  <div class="hist-info" id="loc-atual-info">Carregando localização atual…</div>
-  <div class="hist-filtros">
-    <div class="hist-filtro-campo">
-      <label>Equipamento</label>
-      <input type="text" id="loc-atual-busca" placeholder="Buscar por código ou nome…">
-    </div>
-    <div class="hist-filtro-campo">
-      <label>Local</label>
-      <select id="loc-atual-filtro-local"><option value="">Todos</option></select>
-    </div>
-    <div class="hist-filtro-campo">
-      <label>Status</label>
-      <select id="loc-atual-filtro-status"><option value="">Todos</option>
-        <option value="OPERACIONAL">OPERACIONAL</option><option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option><option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option><option value="DISPONÍVEL">DISPONÍVEL</option><option value="AGUARDANDO OM">AGUARDANDO OM</option>
-      </select>
-    </div>
-    <div class="hist-filtro-campo" style="justify-content:flex-end">
-      <label>&nbsp;</label>
-      <div style="display:flex;gap:8px;flex-wrap:nowrap">
-        <button type="button" class="rel-btn-primario" id="loc-atual-pesquisar" style="white-space:nowrap">🔍 Pesquisar</button>
-        <button type="button" class="rel-btn-primario" id="loc-atual-limpar" style="white-space:nowrap;background:#c62828;border-color:#c62828;color:#fff">✖ Limpar filtros</button>
-      </div>
-    </div>
-    <div class="hist-filtro-campo" style="justify-content:flex-end">
-      <label>&nbsp;</label>
-      <button type="button" class="rel-btn-primario" id="loc-atual-imprimir" style="white-space:nowrap">🖨️ Imprimir / Exportar PDF</button>
-    </div>
-    <div class="hist-filtro-campo" style="justify-content:flex-end">
-      <label>&nbsp;</label>
-      <button type="button" class="rel-btn-secundario" id="loc-atual-exportar-excel" style="white-space:nowrap">📊 Exportar Excel</button>
-    </div>
-  </div>
-  <div class="mt-met" id="loc-atual-card" style="display:inline-block;min-width:240px;margin:2px 0 12px"></div>
-  <div class="hist-wrap">
-    <table class="hist-tabela" id="loc-atual-tabela">
-      <thead><tr><th>Equipamento</th><th>Implemento</th><th>Local atual</th><th>Status</th><th>Há quantos dias</th></tr></thead>
-      <tbody id="loc-atual-tbody"></tbody>
-    </table>
-  </div>
-</div>
 <div class="view" id="view-historico-mov">
   <div class="hist-info" id="hist-mov-info">Carregando histórico de movimentações…</div>
   <div class="hist-filtros">
@@ -2605,7 +2565,112 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </table>
   </div>
 </div>
-<div class="view" id="view-dashboard-mov">
+<div class="view" id="view-status-equipamentos">
+  <div class="cab" id="status-eq-filtros">
+    <div class="grid">
+      <div class="campo">
+        <label>Equipamento / Implemento</label>
+        <input type="text" id="status-eq-filtro-busca" placeholder="Buscar equipamento…">
+      </div>
+      <div class="campo">
+        <label>Local</label>
+        <select id="status-eq-filtro-local"><option value="">Todos os locais</option></select>
+      </div>
+      <div class="campo">
+        <label>Status</label>
+        <select id="status-eq-filtro-status">
+          <option value="">Todos</option>
+          <option value="OPERACIONAL">OPERACIONAL</option>
+          <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
+          <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
+          <option value="DISPONÍVEL">DISPONÍVEL</option>
+          <option value="AGUARDANDO OM">AGUARDANDO OM</option>
+        </select>
+      </div>
+      <div class="campo" style="justify-content:flex-end;display:flex;align-items:flex-end;gap:8px">
+        <button type="button" class="rel-btn-primario" id="status-eq-pesquisar" style="width:100%;white-space:nowrap">🔍 Pesquisar</button>
+        <button type="button" class="rel-btn-primario" id="status-eq-limpar-filtros" style="width:100%;white-space:nowrap;background:#c62828;border-color:#c62828;color:#fff">✖ Limpar filtros</button>
+      </div>
+      <div class="campo">
+        <label>Chegada de</label>
+        <input type="date" id="status-eq-filtro-chegada-de">
+      </div>
+      <div class="campo">
+        <label>Chegada até</label>
+        <input type="date" id="status-eq-filtro-chegada-ate">
+      </div>
+    </div>
+  </div>
+  <div class="frota-toggle" id="status-eq-visao-toggle" style="margin:12px 0 14px">
+    <button type="button" class="topo-toggle-opt ativo" data-status-eq-visao="arvore">🌳 Árvore</button>
+    <button type="button" class="topo-toggle-opt" data-status-eq-visao="lista">📋 Lista</button>
+    <button type="button" class="topo-toggle-opt" data-status-eq-visao="dashboard">📊 Dashboard</button>
+    <button type="button" class="topo-toggle-opt" data-status-eq-visao="periodo">🔄 Movimentações no período</button>
+  </div>
+  <div id="status-eq-visao-lista" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+      <div class="mt-met" id="loc-atual-card" style="min-width:240px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="rel-btn-primario" id="loc-atual-imprimir" style="white-space:nowrap">🖨️ Imprimir / Exportar PDF</button>
+        <button type="button" class="rel-btn-secundario" id="loc-atual-exportar-excel" style="white-space:nowrap">📊 Exportar Excel</button>
+      </div>
+    </div>
+    <div class="hist-wrap">
+      <table class="hist-tabela" id="loc-atual-tabela">
+        <thead><tr><th>Equipamento</th><th>Implemento</th><th>Local atual</th><th>Status</th><th>Há quantos dias</th></tr></thead>
+        <tbody id="loc-atual-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+<div id="status-eq-visao-arvore">
+    <div class="dash-kpis" id="status-eq-kpis"></div>
+    <div class="dash-card" id="status-eq-alerta-wrap" style="display:none;margin-bottom:16px;border-left:4px solid #c79a3a">
+      <h3>⏰ Parados há muito tempo no mesmo status</h3>
+      <div id="status-eq-alerta"></div>
+    </div>
+    <div class="dash-row" style="align-items:flex-start">
+      <div class="dash-card" style="flex:2">
+        <h3>🌳 Árvore de Equipamentos</h3>
+        <div id="status-eq-arvore"><div class="lista-vazia-dash">Carregando…</div></div>
+      </div>
+      <div class="dash-card" style="flex:1;position:sticky;top:16px">
+        <h3>📍 Resumo da localização</h3>
+        <div id="status-eq-resumo"><div class="lista-vazia-dash">Selecione um local na árvore para ver o resumo.</div></div>
+      </div>
+    </div>
+  </div>
+  <div id="status-eq-visao-dashboard" style="display:none">
+    <div class="dash-kpis" id="status-eq-dash-kpis"></div>
+    <div class="dash-row" style="align-items:flex-start">
+      <div class="dash-card" style="flex:2">
+        <h3>🔧 Equipamentos em manutenção <span id="status-eq-dash-manut-titulo" style="font-weight:400;text-transform:none;color:var(--cinza)"></span></h3>
+        <div class="deq-tabela-cab">
+          <span>EQUIPAMENTO / ACESSÓRIO</span><span>LOCAL</span><span>DATA DE CHEGADA</span><span>STATUS</span><span>OBSERVAÇÃO (MOTIVO)</span><span>PREVISÃO DE REPARO</span><span></span>
+        </div>
+        <div id="status-eq-dash-manut-tabela"><div class="lista-vazia-dash">Carregando…</div></div>
+        <button type="button" class="rel-btn-secundario" id="status-eq-dash-manut-ver-todos" style="width:100%;margin-top:10px;display:none"></button>
+      </div>
+      <div class="dash-card" style="flex:1;position:sticky;top:16px">
+        <h3>📍 Distribuição por local</h3>
+        <div id="status-eq-dash-donut"><div class="lista-vazia-dash">Carregando…</div></div>
+      </div>
+    </div>
+    <div class="dash-row" style="align-items:flex-start">
+      <div class="dash-card" style="flex:1">
+        <h3>⏱️ Tempo em manutenção (média)</h3>
+        <div id="status-eq-dash-tempo-stats"><div class="lista-vazia-dash">Carregando…</div></div>
+      </div>
+      <div class="dash-card" style="flex:1.6">
+        <h3>📊 Equipamentos em manutenção por tempo</h3>
+        <div id="status-eq-dash-tempo-hist"><div class="lista-vazia-dash">Carregando…</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <h3>🕓 Movimentações recentes <span style="font-weight:400;text-transform:none;color:var(--cinza)">Últimas entradas registradas</span></h3>
+      <div id="status-eq-dash-mov-recentes"><div class="lista-vazia-dash">Carregando…</div></div>
+    </div>
+  </div>
+  <div id="status-eq-visao-periodo" style="display:none">
   <div class="hist-filtros">
     <div class="hist-filtro-campo">
       <label>De</label>
@@ -2667,128 +2732,23 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   </div>
   <div class="dash-row">
     <div class="dash-card">
-      <h3>⚙️ Equipamentos por status</h3>
-      <div id="dash-mov-status-donut" style="display:flex;align-items:center;gap:24px">
-        <div id="dash-mov-status-visual" style="width:90px;height:90px;border-radius:50%;flex-shrink:0"></div>
-        <div id="dash-mov-status-legenda" style="flex:1"></div>
-      </div>
-    </div>
-    <div class="dash-card">
       <h3>🚜 Equipamentos com mais dias em manutenção</h3>
       <div id="dash-mov-rank-manutencao"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
-  </div>
-  <div class="dash-row">
     <div class="dash-card">
       <h3>🔁 Reincidência — mais entradas em manutenção no período</h3>
       <div id="dash-mov-rank-reincidencia"><div class="lista-vazia-dash">Carregando…</div></div>
     </div>
+  </div>
+  <div class="dash-row">
     <div class="dash-card">
-      <h3>🔧 Manutenção — resumo do período</h3>
-      <div class="dash-kpis" style="grid-template-columns:repeat(2,1fr);gap:10px">
-        <div class="kpi-card">
-          <div class="kpi-top"><div class="kpi-icone tan">🔧</div>
-            <div><div class="kpi-num" id="kpi-mov-manut-agora">—</div><div class="kpi-lbl">Em manutenção agora</div></div></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-top"><div class="kpi-icone" style="background:#fbeaea;color:var(--ru)">⏱️</div>
-            <div><div class="kpi-num" id="kpi-mov-manut-media">—</div><div class="kpi-lbl">Duração média (concluídas no período)</div></div></div>
-        </div>
+      <h3>⏱️ Duração média das manutenções concluídas no período</h3>
+      <div class="kpi-card" style="max-width:320px">
+        <div class="kpi-top"><div class="kpi-icone" style="background:#fbeaea;color:var(--ru)">⏱️</div>
+          <div><div class="kpi-num" id="kpi-mov-manut-media">—</div><div class="kpi-lbl">entrada → saída da manutenção</div></div></div>
       </div>
     </div>
   </div>
-  <!-- REMOVIDO (set/2026): "Quantidade de equipamentos por local (agrupado)" saiu
-       daqui porque repetia exatamente o que a tela "Status dos Equipamentos" já
-       mostra. A função dashMovRenderizarQtdPorLocal() continua no arquivo, só
-       não é mais chamada. -->
-</div>
-<div class="view" id="view-status-equipamentos">
-  <div class="cab">
-    <div class="grid">
-      <div class="campo">
-        <label>Local</label>
-        <select id="status-eq-filtro-local"><option value="">Todos os locais</option></select>
-      </div>
-      <div class="campo">
-        <label>Equipamento / Implemento</label>
-        <input type="text" id="status-eq-filtro-busca" placeholder="Buscar equipamento…">
-      </div>
-      <div class="campo">
-        <label>Status</label>
-        <select id="status-eq-filtro-status">
-          <option value="">Todos</option>
-          <option value="OPERACIONAL">OPERACIONAL</option>
-          <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
-          <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
-          <option value="DISPONÍVEL">DISPONÍVEL</option>
-          <option value="AGUARDANDO OM">AGUARDANDO OM</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label>Chegada de</label>
-        <input type="date" id="status-eq-filtro-chegada-de">
-      </div>
-      <div class="campo">
-        <label>Chegada até</label>
-        <input type="date" id="status-eq-filtro-chegada-ate">
-      </div>
-      <div class="campo" style="justify-content:flex-end;display:flex;align-items:flex-end;gap:8px">
-        <button type="button" class="rel-btn-primario" id="status-eq-pesquisar" style="width:100%">🔍 Pesquisar</button>
-        <button type="button" class="rel-btn-secundario" id="status-eq-limpar-filtros" style="width:100%">Limpar filtros</button>
-      </div>
-    </div>
-  </div>
-  <div class="frota-toggle" id="status-eq-visao-toggle" style="margin-bottom:14px">
-    <button type="button" class="topo-toggle-opt ativo" data-status-eq-visao="arvore">🌳 Árvore</button>
-    <button type="button" class="topo-toggle-opt" data-status-eq-visao="dashboard">📊 Dashboard</button>
-  </div>
-  <div id="status-eq-visao-arvore">
-    <div class="dash-kpis" id="status-eq-kpis"></div>
-    <div class="dash-card" id="status-eq-alerta-wrap" style="display:none;margin-bottom:16px;border-left:4px solid #c79a3a">
-      <h3>⏰ Parados há muito tempo no mesmo status</h3>
-      <div id="status-eq-alerta"></div>
-    </div>
-    <div class="dash-row" style="align-items:flex-start">
-      <div class="dash-card" style="flex:2">
-        <h3>🌳 Árvore de Equipamentos</h3>
-        <div id="status-eq-arvore"><div class="lista-vazia-dash">Carregando…</div></div>
-      </div>
-      <div class="dash-card" style="flex:1;position:sticky;top:16px">
-        <h3>📍 Resumo da localização</h3>
-        <div id="status-eq-resumo"><div class="lista-vazia-dash">Selecione um local na árvore para ver o resumo.</div></div>
-      </div>
-    </div>
-  </div>
-  <div id="status-eq-visao-dashboard" style="display:none">
-    <div class="dash-kpis" id="status-eq-dash-kpis"></div>
-    <div class="dash-row" style="align-items:flex-start">
-      <div class="dash-card" style="flex:2">
-        <h3>🔧 Equipamentos em manutenção <span id="status-eq-dash-manut-titulo" style="font-weight:400;text-transform:none;color:var(--cinza)"></span></h3>
-        <div class="deq-tabela-cab">
-          <span>EQUIPAMENTO / ACESSÓRIO</span><span>LOCAL</span><span>DATA DE CHEGADA</span><span>STATUS</span><span>OBSERVAÇÃO (MOTIVO)</span><span>PREVISÃO DE REPARO</span><span></span>
-        </div>
-        <div id="status-eq-dash-manut-tabela"><div class="lista-vazia-dash">Carregando…</div></div>
-        <button type="button" class="rel-btn-secundario" id="status-eq-dash-manut-ver-todos" style="width:100%;margin-top:10px;display:none"></button>
-      </div>
-      <div class="dash-card" style="flex:1;position:sticky;top:16px">
-        <h3>📍 Distribuição por local</h3>
-        <div id="status-eq-dash-donut"><div class="lista-vazia-dash">Carregando…</div></div>
-      </div>
-    </div>
-    <div class="dash-row" style="align-items:flex-start">
-      <div class="dash-card" style="flex:1">
-        <h3>⏱️ Tempo em manutenção (média)</h3>
-        <div id="status-eq-dash-tempo-stats"><div class="lista-vazia-dash">Carregando…</div></div>
-      </div>
-      <div class="dash-card" style="flex:1.6">
-        <h3>📊 Equipamentos em manutenção por tempo</h3>
-        <div id="status-eq-dash-tempo-hist"><div class="lista-vazia-dash">Carregando…</div></div>
-      </div>
-    </div>
-    <div class="dash-card">
-      <h3>🕓 Movimentações recentes <span style="font-weight:400;text-transform:none;color:var(--cinza)">Últimas entradas registradas</span></h3>
-      <div id="status-eq-dash-mov-recentes"><div class="lista-vazia-dash">Carregando…</div></div>
-    </div>
   </div>
 </div>
 <datalist id="lista-tipos-manutencao"></datalist>
@@ -3872,7 +3832,7 @@ async function carregarConfiguracoes(){
         const partes = par.split(':');
         const email = (partes[0] || '').trim().toLowerCase();
         const secoes = (partes[1] || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-        if (email && secoes.length) novoMapa[email] = secoes;
+        if (email && secoes.length) novoMapa[email] = acessoNormalizarTokens(secoes);
       });
       if (Object.keys(novoMapa).length) CONFIG.acessosLimitados = novoMapa;
     }
@@ -3923,6 +3883,14 @@ function usuarioPodeEditarLocal(local){
 }
 /** Devolve o nível de acesso da conta: 'admin' (tudo liberado),
  *  'limitado' (só as seções configuradas) ou 'bloqueado' (nada — nem entra). */
+/** Telas antigas (Localização Atual / Dashboard de Movimentações) viraram modos de "Local de Instalação":
+ *  quem tinha acesso a elas continua com acesso. */
+function acessoNormalizarTokens(tokens){
+  const mapa = { 'rastreamento/localizacao-atual': 'rastreamento/status-equipamentos', 'rastreamento/dashboard-mov': 'rastreamento/status-equipamentos' };
+  const out = [];
+  (tokens || []).forEach(function(t){ const n = mapa[t] || t; if (out.indexOf(n) === -1) out.push(n); });
+  return out;
+}
 function nivelDeAcesso(conta){
   if (usuarioEhAdmin(conta)) return 'admin';
   const email = (conta && conta.username || '').trim().toLowerCase();
@@ -4996,10 +4964,8 @@ const MENUS_POR_SECAO = {
   ],
   rastreamento: [
     { view: 'rastreamento', label: 'Mover Equip./Implemento' },
-    { view: 'localizacao-atual', label: 'Localização Atual' },
     { view: 'historico-mov', label: 'Histórico de Movimentações' },
-    { view: 'dashboard-mov', label: 'Dashboard' },
-    { view: 'status-equipamentos', label: 'Status dos Equipamentos' },
+    { view: 'status-equipamentos', label: 'Local de Instalação' },
     { view: 'frota', label: 'Frota' }
   ],
   // Telas da Manutenção. Marcar a seção inteira libera também editar fichas,
@@ -5362,7 +5328,7 @@ function renderizarListaModal(tipo) {
           '<select class="mli-select-extra" id="mli-edit-regime">' +
             REGIMES_TRABALHO.map(function(r){ return '<option value="'+r+'" '+((frotaRegimeTrabalho[v]||'8h')===r?'selected':'')+'>'+r+'</option>'; }).join('') +
           '</select>' +
-          '<div class="modal-dica" style="width:100%">Pra mudar local ou status, use "Mover Equip./Implemento" ou clique no equipamento em Localização Atual/Status dos Equipamentos.</div>' +
+          '<div class="modal-dica" style="width:100%">Pra mudar local ou status, use "Mover Equip./Implemento" ou clique no equipamento em Local de Instalação.</div>' +
         '</div>'
       ) : '';
       const extrasDescricao =
@@ -5904,58 +5870,60 @@ document.getElementById('mov-salvar').onclick = async function(){
     btn.disabled = false; btn.textContent = '📦 Mover';
   }
 };
-/* ---- Localização Atual ---- */
+/* ---- Lista de equipamentos (antiga "Localização Atual") — agora um modo da tela Local de Instalação ---- */
 let frotaDiasNoLocal = {};
-async function carregarLocalizacaoAtual(){
-  const info = document.getElementById('loc-atual-info');
-  try {
-    await garantirDadosFrotaExtra();
-    const movs = await garantirDadosMovimentacoes();
-    frotaDiasNoLocal = {};
-    movs.forEach(function(m){
-      if (m.aindaNoLocal) frotaDiasNoLocal[m.equipamento] = m.diasNoLocal;
-    });
-    info.style.display = 'none';
-    const selLocal = document.getElementById('loc-atual-filtro-local');
-    /* filtro de Status: todos os status cadastrados (os padrões + qualquer outro que exista na Frota) */
-    const selSt = document.getElementById('loc-atual-filtro-status'), stAnt = selSt.value;
-    const stUsados = Array.from(new Set(STATUS_EQUIPAMENTO.concat(Object.values(frotaStatusAtual).filter(Boolean))));
-    selSt.innerHTML = '<option value="">Todos</option>' + stUsados.map(function(x){ return '<option value="' + x + '">' + x + '</option>'; }).join('');
-    selSt.value = stAnt;
-    const locaisUsados = Array.from(new Set(Object.values(frotaLocalAtual).filter(Boolean))).sort();
-    selLocal.innerHTML = '<option value="">Todos</option>' + locaisUsados.map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
-    locRenderizarTabela();
-  } catch(err) {
-    info.textContent = '⚠️ Erro ao carregar: ' + err.message;
-  }
+async function locCarregarDias(){
+  const movs = await garantirDadosMovimentacoes();
+  frotaDiasNoLocal = {};
+  movs.forEach(function(m){
+    if (m.aindaNoLocal) frotaDiasNoLocal[m.equipamento] = m.diasNoLocal;
+  });
 }
 function locBadgeStatus(status){
   const s = status || 'OPERACIONAL';
   const classe = s === 'OPERACIONAL' ? 'ok' : (s === 'EM MANUTENÇÃO' ? 'parar' : 'at');
   return '<span class="hist-st ' + classe + '">' + s + '</span>';
 }
-function locAtualizarCard(n, busca, local, status){
+function locAtualizarCard(n, f){
   const card = document.getElementById('loc-atual-card');
   if (!card) return;
   const partes = [];
-  if (busca) partes.push('busca "' + busca + '"');
-  if (local) partes.push('local: ' + local);
-  if (status) partes.push('status: ' + status);
+  if (f.busca) partes.push('busca "' + f.busca + '"');
+  if (f.local) partes.push('local: ' + f.local);
+  if (f.status) partes.push('status: ' + f.status);
+  if (f.de || f.ate) partes.push('chegada ' + (f.de ? 'de ' + formatarDataBR(f.de) + ' ' : '') + (f.ate ? 'até ' + formatarDataBR(f.ate) : ''));
   const total = frotas.length;
   card.innerHTML = '<b>' + n + '</b><span>' + (n === 1 ? 'equipamento' : 'equipamentos') + (partes.length ? ' no filtro' : ' no total') + '</span>' +
     '<small style="display:block;color:var(--cinza);margin-top:3px;font-size:11px">' + (partes.length ? mtEsc(partes.join(' · ')) + ' — de ' + total + ' cadastrados' : 'Todos os equipamentos cadastrados') + '</small>';
 }
-function locRenderizarTabela(){
-  const busca = document.getElementById('loc-atual-busca').value.trim().toUpperCase();
-  const filtroLocal = document.getElementById('loc-atual-filtro-local').value;
-  const filtroStatusLoc = document.getElementById('loc-atual-filtro-status').value;
+/** Linhas da Lista, usando os MESMOS filtros do topo da tela (busca, local, status, chegada). */
+function locObterLinhasAtuais(){
+  const f = {
+    busca: document.getElementById('status-eq-filtro-busca').value.trim().toUpperCase(),
+    local: document.getElementById('status-eq-filtro-local').value,
+    status: document.getElementById('status-eq-filtro-status').value,
+    de: document.getElementById('status-eq-filtro-chegada-de').value,
+    ate: document.getElementById('status-eq-filtro-chegada-ate').value
+  };
   const linhas = frotas.filter(function(eq){
-    if (busca && eq.toUpperCase().indexOf(busca) === -1) return false;
-    if (filtroLocal && frotaLocalAtual[eq] !== filtroLocal) return false;
-    if (filtroStatusLoc && (frotaStatusAtual[eq] || 'OPERACIONAL') !== filtroStatusLoc) return false;
+    if (f.busca && eq.toUpperCase().indexOf(f.busca) === -1 && (frotaItemVinculado[eq] || '').toUpperCase().indexOf(f.busca) === -1) return false;
+    if (f.local && frotaLocalAtual[eq] !== f.local) return false;
+    if (f.status && (frotaStatusAtual[eq] || 'OPERACIONAL') !== f.status) return false;
+    if (f.de || f.ate) {
+      const chegada = statusEqDataChegada(eq);
+      if (!chegada) return false;
+      const dc = new Date(chegada);
+      if (f.de && dc < new Date(f.de + 'T00:00:00')) return false;
+      if (f.ate && dc > new Date(f.ate + 'T23:59:59')) return false;
+    }
     return true;
   });
-  locAtualizarCard(linhas.length, busca, filtroLocal, filtroStatusLoc);
+  linhas._f = f;
+  return linhas;
+}
+function locRenderizarTabela(){
+  const linhas = locObterLinhasAtuais();
+  locAtualizarCard(linhas.length, linhas._f);
   const tbody = document.getElementById('loc-atual-tbody');
   if (!linhas.length) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cinza);padding:24px">Nenhum equipamento encontrado.</td></tr>';
@@ -5983,26 +5951,6 @@ function locRenderizarTabela(){
     a.onclick = function(e){ e.stopPropagation(); manutAbrirFicha(a.dataset.fichaEq); };
   });
 }
-// "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
-document.getElementById('loc-atual-pesquisar').onclick = locRenderizarTabela;
-document.getElementById('loc-atual-filtro-status').onchange = locRenderizarTabela;
-document.getElementById('loc-atual-limpar').onclick = function(){
-  document.getElementById('loc-atual-busca').value = '';
-  document.getElementById('loc-atual-filtro-local').value = '';
-  document.getElementById('loc-atual-filtro-status').value = '';
-  locRenderizarTabela();
-};
-function locObterLinhasAtuais(){
-  const busca = document.getElementById('loc-atual-busca').value.trim().toUpperCase();
-  const filtroLocal = document.getElementById('loc-atual-filtro-local').value;
-  const filtroStatusLoc = document.getElementById('loc-atual-filtro-status').value;
-  return frotas.filter(function(eq){
-    if (busca && eq.toUpperCase().indexOf(busca) === -1) return false;
-    if (filtroLocal && frotaLocalAtual[eq] !== filtroLocal) return false;
-    if (filtroStatusLoc && (frotaStatusAtual[eq] || 'OPERACIONAL') !== filtroStatusLoc) return false;
-    return true;
-  });
-}
 document.getElementById('loc-atual-imprimir').onclick = function(){
   const linhas = locObterLinhasAtuais();
   if (!linhas.length) { alert('Nenhum equipamento encontrado para imprimir com esses filtros.'); return; }
@@ -6014,7 +5962,7 @@ document.getElementById('loc-atual-imprimir').onclick = function(){
       '<td>' + (frotaStatusAtual[eq] || 'OPERACIONAL') + '</td><td>' + diasTxt + '</td></tr>';
   }).join('');
   document.getElementById('hist-print-area').innerHTML =
-    '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">Localização Atual dos Equipamentos<small>' + linhas.length + ' equipamento(s) — Comprex Máquinas e Serviços</small></div></div>' +
+    '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">Local de Instalação dos Equipamentos<small>' + linhas.length + ' equipamento(s) — Comprex Máquinas e Serviços</small></div></div>' +
     '<table class="hist-tabela"><thead><tr><th>Equipamento</th><th>Implemento</th><th>Local atual</th><th>Status</th><th>Há quantos dias</th></tr></thead><tbody>' + corpo + '</tbody></table>';
   window.print();
 };
@@ -6034,8 +5982,8 @@ document.getElementById('loc-atual-exportar-excel').onclick = function(){
   const ws = XLSX.utils.json_to_sheet(dados);
   ws['!cols'] = [{wch:16},{wch:14},{wch:26},{wch:18},{wch:14}];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Localização Atual');
-  XLSX.writeFile(wb, 'Localizacao_Atual_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, 'Local de Instalação');
+  XLSX.writeFile(wb, 'Local_de_Instalacao_' + new Date().toISOString().slice(0,10) + '.xlsx');
 };
 /* ---- Modal "Mover equipamento" a partir da Localização Atual ---- */
 let locMoverEquipAlvo = null;
@@ -6196,7 +6144,6 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
       alert('A movimentação foi salva, mas não consegui atualizar a ficha da Manutenção: ' + errManut.message);
     }
     document.getElementById('loc-mover-overlay').classList.remove('aberto');
-    if (document.getElementById('view-localizacao-atual').classList.contains('ativo')) locRenderizarTabela();
     if (document.getElementById('view-status-equipamentos').classList.contains('ativo')) statusEqRenderizar();
   } catch(err) {
     erroEl.textContent = '⚠️ Falha ao mover: ' + err.message;
@@ -6471,53 +6418,6 @@ async function carregarDashboardMov(){
   const rankLocal = Object.keys(porLocal).map(function(k){ return {label:k, valor:porLocal[k], valorFmt:String(porLocal[k])}; })
     .sort(function(a,b){ return b.valor - a.valor; }).slice(0, 8);
   pdRenderizarRanking('dash-mov-rank-local', rankLocal, '#c79a3a', 'local');
-  // ---- Quantidade de equipamentos por status (respeita o filtro de local/equipamento) ----
-  const filtroLocalAtual = document.getElementById('dash-mov-filtro-local').value;
-  const filtroEquipAtual = document.getElementById('dash-mov-filtro-equip').value;
-  const equipsParaStatus = frotas.filter(function(eq){
-    if (filtroLocalAtual && frotaLocalAtual[eq] !== filtroLocalAtual) return false;
-    if (filtroEquipAtual && eq !== filtroEquipAtual) return false;
-    return true;
-  });
-  const porStatus = statusZeros();
-  equipsParaStatus.forEach(function(eq){
-    const s = frotaStatusAtual[eq] || 'OPERACIONAL';
-    if (porStatus.hasOwnProperty(s)) porStatus[s]++;
-  });
-  const totalStatusQtd = STATUS_EQUIPAMENTO.reduce(function(t, k){ return t + porStatus[k]; }, 0);
-  const donutStatus = document.getElementById('dash-mov-status-visual');
-  const legendaStatus = document.getElementById('dash-mov-status-legenda');
-  if (totalStatusQtd <= 0) {
-    donutStatus.style.background = '#eef1ee';
-    legendaStatus.innerHTML = '<div class="lista-vazia-dash">Nenhum equipamento encontrado com esse filtro.</div>';
-  } else {
-    let acumulado = 0;
-    const fatias = [];
-    STATUS_EQUIPAMENTO.forEach(function(s){
-      const pct = porStatus[s] / totalStatusQtd * 100;
-      const cor = STATUS_COR[s];
-      fatias.push(cor + ' ' + acumulado.toFixed(1) + '%, ' + cor + ' ' + (acumulado+pct).toFixed(1) + '%');
-      acumulado += pct;
-    });
-    donutStatus.style.background = 'conic-gradient(' + fatias.join(', ') + ')';
-    // Fatias/legenda clicáveis: "levar pra tela já filtrada" (Status dos
-    // Equipamentos, já com aquele status e o mesmo local do dashboard).
-    legendaStatus.innerHTML = STATUS_EQUIPAMENTO.map(function(s){
-      const cor = STATUS_COR[s];
-      return '<div class="resumo-linha" data-dash-mov-status="'+s+'" style="cursor:pointer" title="Ver esses equipamentos em Status dos Equipamentos"><span class="resumo-dot" style="background:'+cor+'"></span>' +
-        '<span class="resumo-lbl">'+s+'</span><b>'+porStatus[s]+' '+(porStatus[s]===1?'equipamento':'equipamentos')+'</b></div>';
-    }).join('');
-    legendaStatus.querySelectorAll('[data-dash-mov-status]').forEach(function(linha){
-      linha.onclick = function(){
-        mostrarView('status-equipamentos');
-        document.getElementById('status-eq-filtro-status').value = linha.dataset.dashMovStatus;
-        document.getElementById('status-eq-filtro-local').value = filtroLocalAtual || '';
-        statusEqRenderizar();
-      };
-    });
-    donutStatus.style.cursor = 'pointer';
-    donutStatus.title = 'Clique numa cor da legenda ao lado para ver a lista';
-  }
   // ---- Equipamentos com mais dias em manutenção ----
   const porEquipManutencao = {};
   itens.forEach(function(i){
@@ -6541,9 +6441,6 @@ async function carregarDashboardMov(){
     .map(function(k){ return {label:k, valor:porEquipEntradasManut[k], valorFmt: porEquipEntradasManut[k] + (porEquipEntradasManut[k]===1?' entrada':' entradas')}; })
     .sort(function(a,b){ return b.valor - a.valor; }).slice(0, 8);
   pdRenderizarRanking('dash-mov-rank-reincidencia', rankReincidencia, '#7a4fb5', 'equipamento');
-  // ---- Em manutenção agora (não depende do filtro de período — é "agora") ----
-  const emManutAgora = frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'EM MANUTENÇÃO'; });
-  document.getElementById('kpi-mov-manut-agora').textContent = emManutAgora.length;
   // ---- Duração média das manutenções CONCLUÍDAS dentro do período: pareia
   // cada entrada (status vira "EM MANUTENÇÃO") com a saída seguinte do MESMO
   // equipamento (primeiro evento depois dela que não seja mais manutenção),
@@ -6675,26 +6572,41 @@ function statusEqLocalSemPrefixo(local){
   const partes = String(local).split(/\s*-\s*/);
   return partes.length > 1 ? partes.slice(1).join(' - ') : local;
 }
-let statusEqVisualizacao = 'arvore'; // 'arvore' ou 'dashboard' — alternável pelo usuário, sem alterar a árvore original
+let statusEqVisualizacao = 'arvore'; // 'arvore', 'lista', 'dashboard' ou 'periodo' — alternável pelo usuário
+function statusEqDefinirVisao(v){
+  statusEqVisualizacao = v;
+  document.querySelectorAll('#status-eq-visao-toggle [data-status-eq-visao]').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.statusEqVisao === v);
+  });
+  ['arvore', 'lista', 'dashboard', 'periodo'].forEach(function(k){
+    const el = document.getElementById('status-eq-visao-' + k);
+    if (el) el.style.display = v === k ? '' : 'none';
+  });
+  /* os filtros do topo valem para Árvore, Lista e Dashboard; "Movimentações no período" tem os seus próprios */
+  document.getElementById('status-eq-filtros').style.display = v === 'periodo' ? 'none' : '';
+}
+function statusEqLigarToggle(){
+  /* ligado a cada abertura (outros trechos do app também mexem nos .topo-toggle-opt) */
+  document.querySelectorAll('#status-eq-visao-toggle [data-status-eq-visao]').forEach(function(btn){
+    btn.onclick = function(){ statusEqDefinirVisao(btn.dataset.statusEqVisao); statusEqRenderizar(); };
+  });
+}
 async function carregarStatusEquipamentos(){
+  statusEqLigarToggle();
   await garantirDadosFrotaExtra();
   await garantirDadosMovimentacoes();
+  await locCarregarDias();
   if (!statusEqInicializado) {
     statusEqInicializado = true;
     const selLocal = document.getElementById('status-eq-filtro-local');
     selLocal.innerHTML = '<option value="">Todos os locais</option>' + locais.map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
-    document.querySelectorAll('#status-eq-visao-toggle [data-status-eq-visao]').forEach(function(btn){
-      btn.onclick = function(){
-        statusEqVisualizacao = btn.dataset.statusEqVisao;
-        document.querySelectorAll('#status-eq-visao-toggle [data-status-eq-visao]').forEach(function(b){
-          b.classList.toggle('ativo', b === btn);
-        });
-        document.getElementById('status-eq-visao-arvore').style.display = statusEqVisualizacao === 'arvore' ? '' : 'none';
-        document.getElementById('status-eq-visao-dashboard').style.display = statusEqVisualizacao === 'dashboard' ? '' : 'none';
-        statusEqRenderizar();
-      };
-    });
   }
+  /* filtro de Status: todos os status cadastrados (os padrões + qualquer outro que exista na Frota) */
+  const selSt = document.getElementById('status-eq-filtro-status'), stAnt = selSt.value;
+  const stUsados = Array.from(new Set(STATUS_EQUIPAMENTO.concat(Object.values(frotaStatusAtual).filter(Boolean))));
+  selSt.innerHTML = '<option value="">Todos</option>' + stUsados.map(function(x){ return '<option value="' + x + '">' + x + '</option>'; }).join('');
+  selSt.value = stAnt;
+  statusEqDefinirVisao(statusEqVisualizacao);
   statusEqRenderizar();
 }
 /** Soma, para UM equipamento, quantos dias (no total do histórico) ele já
@@ -6783,6 +6695,8 @@ function statusEqRenderizar(){
     }
     return true;
   });
+  if (statusEqVisualizacao === 'lista') { locRenderizarTabela(); return; }
+  if (statusEqVisualizacao === 'periodo') { carregarDashboardMov(); return; }
   // ---- KPIs ----
   const total = equipsFiltrados.length;
   const cont = statusZeros();
@@ -7999,13 +7913,16 @@ let historicoCarregado = false;
 let detalheHistoricoAberto = null;
 let historicoItens = [];
 function mostrarView(nome){
+  /* "Localização Atual" e "Dashboard" de Movimentações agora são modos da tela Local de Instalação */
+  if (nome === 'localizacao-atual') { nome = 'status-equipamentos'; statusEqVisualizacao = 'lista'; }
+  else if (nome === 'dashboard-mov') { nome = 'status-equipamentos'; statusEqVisualizacao = 'periodo'; }
   document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('ativo'); });
   const alvo = document.getElementById('view-' + nome);
   if (alvo) alvo.classList.add('ativo');
   document.querySelectorAll('.sidebar-item[data-view]').forEach(function(item){
     item.classList.toggle('ativo', item.dataset.view === nome);
   });
-const titulos = { painel: 'Painel', 'pendentes-obra': 'Pendentes por obra', 'raiox-obra': 'Raio-x por Obra', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'localizacao-atual': 'Localização Atual', 'historico-mov': 'Histórico de Movimentações', 'dashboard-mov': 'Dashboard', 'status-equipamentos': 'Status dos Equipamentos', manut: 'Manutenção de Equipamentos', 'manut-nova': 'Nova Entrada na Manutenção' };
+const titulos = { painel: 'Painel', 'pendentes-obra': 'Pendentes por obra', 'raiox-obra': 'Raio-x por Obra', novo: 'Checklists', partediaria: 'TESTE', historico: 'Histórico', dashboard: 'Dashboard', ocorrencias: 'Ocorrências', frota: 'Frota', operadores: 'Operadores', indicadores: 'Indicadores', 'historico-pd': 'Histórico', 'dashboard-pd': 'Dashboard', 'indicadores-pd': 'Indicadores', rastreamento: 'Mover Equipamento', 'historico-mov': 'Histórico de Movimentações', 'status-equipamentos': 'Local de Instalação', manut: 'Manutenção de Equipamentos', 'manut-nova': 'Nova Entrada na Manutenção' };
 const INFO_PAGINA = {
   painel: { icone: '🧭', sub: 'Visão geral dos checklists diários da frota', secao: 'Checklists' },
   novo: { icone: '📋', sub: 'Preenchimento diário de inspeção', secao: 'Checklists' },
@@ -8020,17 +7937,15 @@ const INFO_PAGINA = {
   'dashboard-pd': { icone: '📊', sub: 'Visão geral do dia', secao: 'TESTE' },
   'indicadores-pd': { icone: '📈', sub: 'Indicadores de horas trabalhadas e paradas', secao: 'TESTE' },
   rastreamento: { icone: '📦', sub: 'Mover um equipamento entre locais', secao: 'Movimentações' },
-  'localizacao-atual': { icone: '📍', sub: 'Onde cada equipamento está agora', secao: 'Movimentações' },
   'historico-mov': { icone: '🕒', sub: 'Todas as movimentações já registradas', secao: 'Movimentações' },
-  'dashboard-mov': { icone: '📊', sub: 'Visão geral das movimentações', secao: 'Movimentações' },
-  'status-equipamentos': { icone: '🖥️', sub: 'Acompanhamento em tempo real da localização e situação dos equipamentos', secao: 'Movimentações' },
+  'status-equipamentos': { icone: '📍', sub: 'Onde cada equipamento está instalado, o status atual e as movimentações', secao: 'Movimentações' },
   manut: { icone: '🛠️', sub: 'Acompanhe o status, prazos e disponibilidade da frota em manutenção', secao: 'Manutenção' },
   'manut-nova': { icone: '➕', sub: 'Registrar a entrada de um equipamento na manutenção', secao: 'Manutenção' }
 };
   document.getElementById('topbar-titulo').textContent = titulos[nome] || 'Checklists';
   const VIEWS_POR_SECAO = {
     partediaria: ['partediaria', 'historico-pd', 'dashboard-pd', 'indicadores-pd'],
-    rastreamento: ['rastreamento', 'localizacao-atual', 'historico-mov', 'dashboard-mov', 'status-equipamentos', 'frota'],
+    rastreamento: ['rastreamento', 'historico-mov', 'status-equipamentos', 'frota'],
     manutencao: ['manut', 'manut-nova']
   };
   const secaoAtiva = VIEWS_POR_SECAO.manutencao.indexOf(nome) !== -1 ? 'manutencao'
@@ -8069,9 +7984,7 @@ const INFO_PAGINA = {
   if (nome === 'dashboard-pd') carregarDashboardPD();
   if (nome === 'indicadores-pd') carregarIndicadoresPD();
   if (nome === 'rastreamento') inicializarTelaRastreamentoSeNecessario();
-  if (nome === 'localizacao-atual') carregarLocalizacaoAtual();
   if (nome === 'historico-mov') carregarHistoricoMovimentacoes();
-  if (nome === 'dashboard-mov') carregarDashboardMov();
   if (nome === 'status-equipamentos') carregarStatusEquipamentos();
   if (nome === 'frota') carregarViewFrota();
   if (nome === 'manut') { manutMarcarSidebar(); carregarManutencao(); }
@@ -8758,7 +8671,7 @@ function manutRenderTudoBase(){
   ];
   const kc = document.getElementById('mt-kpis');
   kc.innerHTML = kpis.map(function(c){
-    return '<div class="painel-kpi clicavel ' + c.cor + (manutFiltro === c.k ? ' sel' : '') + '" data-mt-kpi="' + c.k + '" title="' + (c.k === 'operacao' ? 'Abrir a Localização Atual' : 'Filtrar a lista') + '">' +
+    return '<div class="painel-kpi clicavel ' + c.cor + (manutFiltro === c.k ? ' sel' : '') + '" data-mt-kpi="' + c.k + '" title="' + (c.k === 'operacao' ? 'Abrir o Local de Instalação' : 'Filtrar a lista') + '">' +
       '<div class="icone">' + c.ico + '</div><div class="lbl">' + c.l + '</div><div class="num">' + c.n + '</div><div class="sub">' + c.sub + '</div>' +
       (c.barra !== undefined ? '<div class="barra"><i style="width:' + Math.min(100, c.barra).toFixed(0) + '%"></i></div>' : '') +
       '<div class="kpi-acao">' + c.acao + '</div></div>';
@@ -9426,7 +9339,7 @@ function manutRenderDetalhe(){
   cont.innerHTML = '<div class="dash-card mt-card">' +
     '<div class="mt-ficha-topo">' +
       '<div class="mt-ficha-foto" id="mt-ficha-foto">' + (frotaTipoItem[eq] === 'implemento' ? '🔧' : '🚜') + '</div>' +
-      '<div><div class="mt-ficha-nome"><a data-mt-acao="loc" title="Ver na Localização Atual">' + mtEsc(eq) + '</a>' +
+      '<div><div class="mt-ficha-nome"><a data-mt-acao="loc" title="Ver em Local de Instalação">' + mtEsc(eq) + '</a>' +
         (aberta ? '<span class="mt-etapa ' + mtClasseEtapa(oc.etapa) + '">' + mtEsc(oc.etapa) + '</span>' : '') +
         '<span class="mt-st s-' + st.chave + '">' + st.texto + '</span>' + mtBadgePri(oc.prioridade) + '</div>' +
         '<div class="mt-ficha-desc">' + mtEsc(frotaDescricao[eq] || '') + '</div>' +
@@ -9449,7 +9362,7 @@ function manutRenderDetalhe(){
       (aberta ? '<button type="button" class="mt-btn ok" data-mt-acao="concluir">✅ Concluir manutenção</button>' : '') +
       (!aberta && mtDest(oc) === 'Disponível na manutenção' ? '<button type="button" class="mt-btn ok" data-mt-acao="enviar-contrato">🚚 Enviar para contrato</button>' : '') +
       '<button type="button" class="mt-btn" data-mt-acao="editar">✏️ Editar ficha</button>' +
-      '<button type="button" class="mt-btn" data-mt-acao="loc">📍 Localização Atual</button>' +
+      '<button type="button" class="mt-btn" data-mt-acao="loc">📍 Local de Instalação</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="movhist">🕒 Histórico completo de movimentações</button>' +
       '<button type="button" class="mt-btn" data-mt-acao="relficha">🖨 Relatório da ficha</button>' +
       (aberta ? '<button type="button" class="mt-btn" data-mt-acao="avisar-email" title="Abre um e-mail pronto com a situação deste equipamento">✉️ Avisar por e-mail</button>' +
@@ -9645,10 +9558,12 @@ function mtAbaMov(oc){
 
 /* ---------- ações da ficha ---------- */
 async function manutIrParaLocalizacao(eq){
-  mostrarView('localizacao-atual');
-  await carregarLocalizacaoAtual();
-  document.getElementById('loc-atual-busca').value = eq;
-  locRenderizarTabela();
+  statusEqVisualizacao = 'lista';
+  mostrarView('status-equipamentos');
+  await carregarStatusEquipamentos();
+  ['status-eq-filtro-local','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('status-eq-filtro-busca').value = eq;
+  statusEqRenderizar();
 }
 async function manutIrParaHistoricoMov(eq){
   mostrarView('historico-mov');
@@ -10208,14 +10123,6 @@ async function manutAbrirFicha(eq){
 document.querySelectorAll('.sidebar-item[data-manut-filtro]').forEach(function(item){
   item.onclick = function(){ manutFiltro = item.dataset.manutFiltro; mostrarView('manut'); };
 });
-/* "Em manutenção agora" do Dashboard de Movimentações vira atalho para a Manutenção */
-(function(){
-  const num = document.getElementById('kpi-mov-manut-agora');
-  const card = num && num.closest('.kpi-card');
-  if (card) { card.style.cursor = 'pointer'; card.title = 'Abrir a Manutenção'; card.onclick = function(){ manutFiltro = 'todos'; mostrarView('manut'); }; }
-})();
-
-
 /* =====================================================================
    SINO DE NOTIFICAÇÕES
    Os avisos que ficavam empilhados no topo das telas (resumo do dia,
@@ -10323,10 +10230,12 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') sinoAb
 const TV_TELAS = [
   { id: 'painel', nome: 'Painel de Checklist', view: 'painel' },
   { id: 'manut', nome: 'Manutenção — Visão Geral', view: 'manut' },
-  { id: 'dashboard-mov', nome: 'Dashboard de Movimentações', view: 'dashboard-mov' },
-  { id: 'status-equipamentos', nome: 'Status dos Equipamentos', view: 'status-equipamentos', depois: function(){
+  { id: 'dashboard-mov', nome: 'Local de Instalação — Movimentações no período', view: 'status-equipamentos', depois: function(){
+      const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=periodo]'); if (b) b.click(); } },
+  { id: 'status-equipamentos', nome: 'Local de Instalação — Dashboard', view: 'status-equipamentos', depois: function(){
       const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=dashboard]'); if (b) b.click(); } },
-  { id: 'localizacao-atual', nome: 'Localização Atual', view: 'localizacao-atual' },
+  { id: 'localizacao-atual', nome: 'Local de Instalação — Lista', view: 'status-equipamentos', depois: function(){
+      const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=lista]'); if (b) b.click(); } },
   { id: 'dashboard', nome: 'Dashboard de Checklists', view: 'dashboard' },
   { id: 'indicadores', nome: 'Indicadores de Checklist', view: 'indicadores' }
 ];
@@ -13949,6 +13858,7 @@ function renderizarPainelResumoDia(){
  *  `equipsDestaque` é passado, essas linhas piscam por alguns segundos pra
  *  facilitar achar exatamente os equipamentos com impeditivo em aberto. */
 function raioxAbrirObraNaArvore(grupo, equipsDestaque){
+  statusEqVisualizacao = 'arvore';
   mostrarView('status-equipamentos');
   ['status-eq-filtro-local','status-eq-filtro-busca','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){
     const el = document.getElementById(id); if (el) el.value = '';
