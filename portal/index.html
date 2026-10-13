@@ -1877,7 +1877,11 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .ind-apres-sair{display:none;position:fixed;top:12px;right:16px;z-index:50;background:#b3453a;color:#fff;border:0;border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer}
   #view-manut-indic.ind-apres{background:#eef5ee;padding:28px 32px;overflow:auto;min-height:100vh}
   body.tema-escuro #view-manut-indic.ind-apres{background:#0f1720}
-  #view-manut-indic.ind-apres .ind-apres-sair{display:block}
+  .ind-apres-ctl{display:none;position:fixed;top:12px;right:16px;z-index:50;gap:6px;flex-wrap:wrap}
+  #view-manut-indic.ind-apres .ind-apres-ctl{display:flex}
+  .ind-apres-ctl button{background:#132436;color:#fff;border:0;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px;opacity:.92}
+  .ind-apres-ctl button:hover{opacity:1}
+  .ind-apres-ctl button.sair{background:#b3453a}
   #view-manut-indic.ind-apres .ind-barra,#view-manut-indic.ind-apres #ind-abas,#view-manut-indic.ind-apres #ind-kpis,#view-manut-indic.ind-apres #ind-importacao,#view-manut-indic.ind-apres #ind-aviso,#view-manut-indic.ind-apres .ex-chips,#view-manut-indic.ind-apres .ex-acoes{display:none}
   #view-manut-indic.ind-apres .ex-card .val{font-size:52px}
   body.tv #view-manut-indic .ind-barra,body.tv #view-manut-indic #ind-abas,body.tv #view-manut-indic .ex-chips,body.tv #view-manut-indic .ex-acoes,body.tv #view-manut-indic #ind-importacao,body.tv #view-manut-indic #ind-aviso,body.tv #view-manut-indic #ind-kpis{display:none !important}
@@ -2030,7 +2034,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 94</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 95</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3449,7 +3453,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <input type="file" id="ind-arquivos" accept=".xlsx,.xlsm,.xls" multiple style="display:none">
     <input type="file" id="ind-arq-hist" accept=".xlsx,.xlsm,.xls" multiple style="display:none">
   </div>
-  <button type="button" class="ind-apres-sair" id="ind-apres-sair">✖ Sair da apresentação</button>
+  <div class="ind-apres-ctl" id="ind-apres-ctl">
+    <button type="button" id="ind-apres-ant" title="Tela anterior (←)">⏮ Voltar</button>
+    <button type="button" id="ind-apres-pausa" title="Pausar / continuar a troca automática (espaço)">⏸ Pausar</button>
+    <button type="button" id="ind-apres-prox" title="Próxima tela (→)">Avançar ⏭</button>
+    <button type="button" class="sair" id="ind-apres-sair">✖ Sair</button>
+  </div>
   <div id="ind-importacao"></div>
   <div class="ind-kpis" id="ind-kpis"></div>
   <div class="frota-toggle" id="ind-abas" style="margin:14px 0">
@@ -9387,7 +9396,7 @@ function indHtmlAlertas(){
   const ordem = Object.keys(g).sort(function(a, b){ return (IND_GRAVES[b] ? 1 : 0) - (IND_GRAVES[a] ? 1 : 0) || g[b].length - g[a].length; });
   return ordem.map(function(t){
     return '<div class="ind-painel"><h4>' + (IND_GRAVES[t] ? '✖ ' : '▲ ') + mtEsc(IND_ROTULO_ALERTA[t] || t) + ' · ' + g[t].length + '</h4>' +
-      g[t].map(function(a){ return '<div class="ind-alerta"><b data-ind-eq="' + mtEsc(a.eq) + '" title="Ver na aba Equipamentos">' + mtEsc(a.eq) + '</b><span>' + mtEsc(a.texto) + '</span></div>'; }).join('') + '</div>';
+      g[t].map(function(a){ return '<div class="ind-alerta"><b data-ind-eq="' + mtEsc(a.eq) + '" title="Ver na aba Equipamentos">' + mtEsc(a.eq) + '</b><span>' + mtEsc(a.texto) + (indSalvos[indDados.periodo] ? ' <button type="button" class="rel-btn-secundario" style="padding:1px 8px;font-size:11px" data-ed-p="' + indDados.periodo + '" data-ed-eq="' + mtEsc(a.eq) + '">✏️ Corrigir</button>' : '') + '</span></div>'; }).join('') + '</div>';
   }).join('');
 }
 function indMetricasHist(ls){
@@ -9913,13 +9922,14 @@ function indHtmlExecEquip(ref, J, sub){
   const tab = porMes.filter(function(x){ return x.ls.length; }).reverse().map(function(x){
     const q = indMetJ(x.ls), sem = x.ls.every(indSemPD);
     const cel = function(ch){ return '<td class="ex-txt-' + indEstado(ch, q[ch]) + '"><b>' + indPct(q[ch], 1) + '</b></td>'; };
-    return '<tr><td class="esq">' + indNomeMes(x.p) + (x.ls[0].contrato !== ct ? '<small>' + mtEsc(x.ls[0].contrato) + '</small>' : '') + '</td><td>' + indN(q.HP, 0) + '</td><td>' + indN(q.PM, 1) + '</td><td>' + indN(q.MTTR, 1) + '</td><td>' + indN(q.MTBF, 0) + '</td>' + cel('DM') + (sem ? '<td colspan="2"><span class="ex-semPD">sem parte diária</span></td>' : cel('EO') + cel('IU')) + '</tr>';
+    const ed = indSalvos[x.p] ? '<td><button type="button" class="ind-editar" title="Corrigir os dados deste mês" data-ed-p="' + x.p + '" data-ed-eq="' + mtEsc(eq) + '">✏️</button></td>' : '<td></td>';
+    return '<tr><td class="esq">' + indNomeMes(x.p) + (x.ls[0].contrato !== ct ? '<small>' + mtEsc(x.ls[0].contrato) + '</small>' : '') + '</td><td>' + indN(q.HP, 0) + '</td><td>' + indN(q.PM, 1) + '</td><td>' + indN(q.MTTR, 1) + '</td><td>' + indN(q.MTBF, 0) + '</td>' + cel('DM') + (sem ? '<td colspan="2"><span class="ex-semPD">sem parte diária</span></td>' : cel('EO') + cel('IU')) + ed + '</tr>';
   }).join('');
   const als = [];
   J.todos.forEach(function(mm){ const sv = indSalvos[mm.p]; ((sv ? sv.alertas : (indDados && indDados.periodo === mm.p ? indDados.alertas : [])) || []).forEach(function(a){ if (a.eq === eq) als.push('<div class="ind-nota" style="margin:2px 0"><b>' + indNomeMes(mm.p) + '</b> · ' + mtEsc(IND_ROTULO_ALERTA[a.tipo] || a.tipo) + ' — ' + mtEsc(a.texto) + '</div>'); }); });
   return indCruzeta() + indTopoExec(ref, mtEsc(eq) + ' <small style="font-weight:400;color:var(--cinza)">' + mtEsc(String(lAt[0].desc || '').toUpperCase()) + '</small>', mtEsc(ct) + ' · ' + sub) + cards +
     '<div class="ind-painel"><h4>Evolução mês a mês</h4>' + graf + '</div>' +
-    '<div class="ind-painel"><h4>Detalhe por mês</h4><div class="ind-wrap"><table class="ex-tab"><thead><tr><th class="esq">Mês</th><th>HP (h)</th><th>PM (h)</th><th>MTTR</th><th>MTBF</th><th>DM</th><th>EO</th><th>IU</th></tr></thead><tbody>' + tab + '</tbody></table></div></div>' +
+    '<div class="ind-painel"><h4>Detalhe por mês</h4><div class="ind-wrap"><table class="ex-tab"><thead><tr><th class="esq">Mês</th><th>HP (h)</th><th>PM (h)</th><th>MTTR</th><th>MTBF</th><th>DM</th><th>EO</th><th>IU</th><th></th></tr></thead><tbody>' + tab + '</tbody></table></div></div>' +
     (als.length ? '<div class="ind-painel"><h4>Alertas deste equipamento</h4>' + als.join('') + '</div>' : '');
 }
 function indHtmlComparar(){
@@ -10023,18 +10033,84 @@ async function indExcluirMes(){
   indRender();
 }
 
+
+/** Corrigir, direto no portal, uma linha (equipamento no mês) de um mês já salvo. */
+function indNumBR(t){ const x = String(t == null ? '' : t).trim(); return x === '' ? null : Number(x); }
+function indModalEditar(p, eq){
+  if (!mtExigirEdicao()) return;
+  const sv = indSalvos[p];
+  if (!sv) { alert('Este mês ainda não está salvo. Salve o mês primeiro para poder corrigir os dados.'); return; }
+  const cand = sv.linhas.map(function(l, i){ return { l: l, i: i }; }).filter(function(x){ return x.l.eq === eq; });
+  if (!cand.length) { alert('Equipamento não encontrado neste mês.'); return; }
+  const nomes = Array.from(new Set(sv.linhas.map(function(l){ return l.contrato; }).concat([IND_SEM_CONTRATO]))).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const rotLinha = function(x){ return x.l.contrato + ' (PM ' + indN(x.l.pm, 1) + ' h)'; };
+  const val = function(x){ return { contrato: x.l.contrato, hp: x.l.hp, pm: x.l.pm, eo: x.l.origem === 'planilha' && x.l.eoPlan !== null && x.l.eoPlan !== undefined ? Math.round(x.l.eoPlan * 1000) / 10 : '' }; };
+  const v0 = val(cand[0]), ehPlan = cand[0].l.origem === 'planilha';
+  const campos = [];
+  if (cand.length > 1) campos.push({ id: 'linha', label: 'Qual linha corrigir', tipo: 'select', opcoes: cand.map(rotLinha), valor: rotLinha(cand[0]), larga: true });
+  campos.push({ id: 'contrato', label: 'Contrato / grupo', tipo: 'select', opcoes: nomes, valor: v0.contrato, larga: true });
+  campos.push({ id: 'hp', label: 'Regime planejado — HP (h)', tipo: 'number', valor: v0.hp, obrig: true, dica: '176 (8 h), 330 (12 h) ou 660 (24 h)' });
+  campos.push({ id: 'pm', label: 'Parada em manutenção — PM (h)', tipo: 'number', valor: v0.pm, obrig: true });
+  if (ehPlan) campos.push({ id: 'eo', label: 'Eficiência operacional — EO (%)', tipo: 'number', valor: v0.eo, dica: 'Deixe em branco se não houve parte diária (fica fora da média de EO e IU).' });
+  campos.push({ id: 'acao', label: 'O que fazer com esta linha', tipo: 'select', opcoes: ['Salvar a correção', 'Remover esta linha do mês'], valor: 'Salvar a correção', larga: true, dica: 'Remover serve para duplicidade (equipamento lançado em dois contratos).' });
+  const aviso = '<div class="ind-nota" style="margin-bottom:8px"><b>' + mtEsc(eq) + '</b> · ' + indNomeMes(p) + '. A correção é gravada no histórico e DM, EO, IU e os alertas do mês são recalculados.</div>';
+  mtAbrirModal('Corrigir ' + eq + ' — ' + indNomeMes(p), campos, '💾 Gravar', async function(v){
+    const alvo = cand.length > 1 ? cand.find(function(x){ return rotLinha(x) === v.linha; }) || cand[0] : cand[0];
+    const l = alvo.l;
+    if (v.acao === 'Remover esta linha do mês') {
+      if (!confirm('Remover ' + eq + ' (' + l.contrato + ') de ' + indNomeMes(p) + '?')) throw new Error('Cancelado.');
+      sv.linhas.splice(alvo.i, 1);
+    } else {
+      const hp = indNumBR(v.hp), pm = indNumBR(v.pm);
+      if (!(hp > 0)) throw new Error('Informe o HP (maior que zero).');
+      if (pm === null || pm < 0) throw new Error('Informe o PM (zero ou mais).');
+      if (pm > hp) throw new Error('O PM (' + pm + ' h) não pode ser maior que o regime (' + hp + ' h).');
+      l.contrato = v.contrato; l.hp = indR2(hp); l.pm = indR2(pm); l.regime = indRegimeDoHP(hp); l.editado = true;
+      if (l.origem === 'planilha') {
+        const eo = indNumBR(v.eo); if (eo !== null && (eo < 0 || eo > 100)) throw new Error('EO deve estar entre 0 e 100.');
+        const e = eo === null ? null : eo / 100, disp = Math.max(0, hp - pm);
+        l.eoPlan = e; l.dmPlan = disp / hp; l.iuPlan = e === null ? null : e * l.dmPlan;
+        l.ho = e === null ? 0 : indR2(Math.min(disp, e * disp)); l.hoProd = l.ho;
+      }
+    }
+    const ant = indSalvos[indPeriodoAnterior(p)];
+    sv.alertas = indValidarLinhas(p, sv.linhas, ant ? ant.linhas : null);
+    sv.itemIds = await indGravarGrupo(p, { linhas: sv.linhas, alertas: sv.alertas, ajustes: sv.ajustes || {} }, sv.itemIds);
+    if (indDados && indDados.periodo === p) { indDados.linhas = sv.linhas; indDados.alertas = sv.alertas; }
+    mtToast('Correção gravada em ' + indNomeMes(p) + '.');
+    indRender();
+  }, aviso);
+  if (cand.length > 1) setTimeout(function(){
+    const sel = document.getElementById('mtm-linha');
+    if (sel) sel.onchange = function(){ const x = cand.find(function(c){ return rotLinha(c) === sel.value; }), q = val(x); ['contrato', 'hp', 'pm', 'eo'].forEach(function(k){ const el = document.getElementById('mtm-' + k); if (el && q[k] !== undefined) el.value = String(q[k]).replace('.', ','); }); };
+  }, 50);
+}
+
+const IND_APRES_SEQ = ['exec', 'diretoria', 'historico', 'mapa', 'pareto', 'comparar'];
+let indApresIdx = 0, indApresPausada = false;
+function indApresIr(d){
+  indApresIdx = (indApresIdx + d + IND_APRES_SEQ.length) % IND_APRES_SEQ.length;
+  indAba = IND_APRES_SEQ[indApresIdx]; indNav = { n: 'geral', ct: '', eq: '' };
+  indRender(); window.scrollTo(0, 0);
+  const v = document.getElementById('view-manut-indic'); if (v) v.scrollTop = 0;
+}
+function indApresTimerLigar(){
+  if (indApresTimer) clearInterval(indApresTimer);
+  indApresTimer = indApresPausada ? null : setInterval(function(){ indApresIr(1); }, 20000);
+  const b = document.getElementById('ind-apres-pausa'); if (b) b.textContent = indApresPausada ? '▶ Continuar' : '⏸ Pausar';
+}
+function indApresPausar(sim){ indApresPausada = sim; indApresTimerLigar(); }
 function indApresentar(){
   const el = document.getElementById('view-manut-indic');
   if (el.classList.contains('ind-apres')) { indSairApres(); return; }
   el.classList.add('ind-apres');
   try { if (el.requestFullscreen) el.requestFullscreen(); } catch (e) {}
-  const seq = ['exec', 'diretoria', 'historico', 'mapa', 'pareto', 'comparar'];
-  let i = 0; indAba = 'exec'; indNav = { n: 'geral', ct: '', eq: '' }; indRender();
-  indApresTimer = setInterval(function(){ i = (i + 1) % seq.length; indAba = seq[i]; indNav = { n: 'geral', ct: '', eq: '' }; indRender(); }, 20000);
+  indApresIdx = -1; indApresPausada = false; indApresIr(1); indApresTimerLigar();
 }
 function indSairApres(){
   const el = document.getElementById('view-manut-indic');
   if (indApresTimer) { clearInterval(indApresTimer); indApresTimer = null; }
+  indApresPausada = false;
   el.classList.remove('ind-apres');
   try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch (e) {}
 }
@@ -10043,10 +10119,11 @@ document.addEventListener('fullscreenchange', function(){
   if (!document.fullscreenElement && el && el.classList.contains('ind-apres')) indSairApres();
 });
 function indLigarExec(){
-  document.querySelectorAll('[data-nav-n]').forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); indNav = { n: b.dataset.navN, ct: b.dataset.navCt || '', eq: b.dataset.navEq || '' }; indAba = 'exec'; indRender(); const t = document.getElementById('ind-abas'); if (t) t.scrollIntoView({ block: 'start' }); }; });
+  document.querySelectorAll('[data-nav-n]').forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); if (document.getElementById('view-manut-indic').classList.contains('ind-apres')) indApresPausar(true); indNav = { n: b.dataset.navN, ct: b.dataset.navCt || '', eq: b.dataset.navEq || '' }; indAba = 'exec'; indRender(); const t = document.getElementById('ind-abas'); if (t) t.scrollIntoView({ block: 'start' }); }; });
   document.querySelectorAll('[data-per]').forEach(function(b){ b.onclick = function(){ indPeriodo = b.dataset.per; indRender(); }; });
   document.querySelectorAll('[data-exec-foco]').forEach(function(b){ b.onclick = function(){ indFoco = b.dataset.execFoco; indRender(); }; });
   document.querySelectorAll('[data-go]').forEach(function(b){ b.onclick = function(){ indAba = b.dataset.go; if (indAba === 'mapa') { indHmIndicador = indFoco; indHmSoRein = !!b.dataset.goRein; } indFiltroTxt = ''; indFiltroContrato = ''; indFiltroEq = ''; indRender(); }; });
+  document.querySelectorAll('[data-ed-p]').forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); indModalEditar(b.dataset.edP, b.dataset.edEq); }; });
   const pdfd = document.getElementById('ind-btn-pdf-dir'); if (pdfd) pdfd.onclick = indImprimirResumo;
   const ca = document.getElementById('ind-cmp-a'); if (ca) ca.onchange = function(){ indCmpA = ca.value; indRender(); };
   const cb = document.getElementById('ind-cmp-b'); if (cb) cb.onchange = function(){ indCmpB = cb.value; indRender(); };
@@ -10159,6 +10236,15 @@ async function carregarIndicadoresManut(){
     document.getElementById('ind-btn-apres').onclick = indApresentar;
     document.getElementById('ind-btn-excluir').onclick = indExcluirMes;
     document.getElementById('ind-apres-sair').onclick = indSairApres;
+    document.getElementById('ind-apres-ant').onclick = function(){ indApresIr(-1); indApresTimerLigar(); };
+    document.getElementById('ind-apres-prox').onclick = function(){ indApresIr(1); indApresTimerLigar(); };
+    document.getElementById('ind-apres-pausa').onclick = function(){ indApresPausar(!indApresPausada); };
+    document.addEventListener('keydown', function(e){
+      if (!document.getElementById('view-manut-indic').classList.contains('ind-apres')) return;
+      if (e.key === 'ArrowLeft') { indApresIr(-1); indApresTimerLigar(); }
+      else if (e.key === 'ArrowRight') { indApresIr(1); indApresTimerLigar(); }
+      else if (e.key === ' ') { e.preventDefault(); indApresPausar(!indApresPausada); }
+    });
     document.getElementById('ind-btn-rel').onclick = indModalRelatorio;
     document.getElementById('ind-btn-hist').onclick = function(){ document.getElementById('ind-arq-hist').value = ''; document.getElementById('ind-arq-hist').click(); };
     document.getElementById('ind-arq-hist').onchange = function(){ if (this.files && this.files.length) indImportarHistorico(Array.prototype.slice.call(this.files)); };
