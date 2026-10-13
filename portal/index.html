@@ -1848,6 +1848,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .ex-card .spk{position:absolute;right:14px;bottom:12px}
   .ex-dl{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
   .ex-dl.up{background:rgba(27,122,67,.16);color:var(--ind-ok)} .ex-dl.dn{background:rgba(179,69,58,.16);color:var(--ind-ru)} .ex-dl.eq{background:var(--cream);color:var(--cinza)}
+  .ex-m4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:6px}
+  .ex-m4 .ex-tile b{font-size:24px;margin:2px 0}
+  .ex-m4 .ex-tile .ex-dl{display:inline-block;margin-top:4px}
+  .ex-ref{font-size:12px;color:var(--cinza);margin:-4px 0 12px}
+  .ex-ref b{color:var(--tinta)}
+  @media(max-width:900px){.ex-m4{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .ex-grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
   .ex-rank{display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(120px,2fr) 62px 86px 14px;gap:10px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--linha);cursor:pointer;border-radius:8px;font-size:13px;width:100%;background:none;border-left:0;border-right:0;border-top:0;font-family:inherit;color:var(--tinta);text-align:left}
   .ex-rank:hover{background:var(--cream)}
@@ -2034,7 +2040,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 95</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 96</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -9670,8 +9676,9 @@ function indHtmlMapa(){
 function indHtmlPareto(){
   const meses = indMesesDisponiveis();
   if (!meses.length) return '<div class="ind-painel">Ainda não há meses para mostrar. Importe o histórico (📚) ou calcule e salve um mês.</div>';
-  const n = indParJanela === 'tudo' ? meses.length : Math.min(+indParJanela, meses.length);
-  const sel = meses.slice(-n);
+  indSincronizarSeletorMes();
+  const Jp = indJanelas(indRefMes());
+  const sel = Jp.atual, n = sel.length;
   const porEq = {}, porCt = {};
   sel.forEach(function(m){ m.linhas.filter(indPassaFiltroLinha).forEach(function(l){
     const e = porEq[l.eq] = porEq[l.eq] || { eq: l.eq, ct: indGrupoDe(l), h: 0 }; e.h += Math.min(l.pm, l.hp || l.pm); e.ct = indGrupoDe(l);
@@ -9694,7 +9701,7 @@ function indHtmlPareto(){
   const porMes = sel.map(function(m){ return { p: m.p, h: m.linhas.filter(indPassaFiltroLinha).reduce(function(s, l){ return s + Math.min(l.pm, l.hp || l.pm); }, 0) }; });
   const maxM = Math.max.apply(null, porMes.map(function(x){ return x.h; })) || 1;
   const mesHtml = porMes.map(function(x){ return '<div class="ind-par-linha" style="grid-template-columns:80px 1fr 80px"><span>' + indNomeMes(x.p).slice(0, 3) + '/' + x.p.slice(2, 4) + '</span><div class="barra"><i style="width:' + (x.h / maxM * 100) + '%;background:var(--ind-s3)"></i></div><span style="text-align:right"><b>' + indN(x.h, 0) + '</b> h</span></div>'; }).join('');
-  const ctl = '<div class="ind-filtros"><div class="ind-grupo"><label>Período</label><select id="ind-par-jan">' + [['1', 'Último mês'], ['3', 'Últimos 3 meses'], ['6', 'Últimos 6 meses'], ['tudo', 'Todo o histórico (' + meses.length + ')']].map(function(o){ return '<option value="' + o[0] + '"' + (indParJanela === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>';
+  const ctl = '<div class="ex-chips" style="margin:0 0 10px">' + [['mes', 'Mês'], ['3m', '3 meses'], ['6m', '6 meses'], ['ytd', 'Ano até agora']].map(function(c){ return '<button type="button" class="ex-chip' + (indPeriodo === c[0] ? ' ativo' : '') + '" data-per="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div>';
   return indHtmlFiltros().replace('<span id="ind-f-extra"></span>', '') +
     '<div class="ind-painel"><h4>📉 Pareto — horas de parada por equipamento · ' + (n === 1 ? indNomeMes(sel[0].p) : indNomeMes(sel[0].p) + ' a ' + indNomeMes(sel[sel.length - 1].p)) + '</h4>' + ctl +
     '<div class="ind-nota" style="margin:0 0 8px"><b>' + nCorte + ' equipamento(s)</b> de ' + arrEq.length + ' concentram 80% das <b>' + indN(total, 0) + ' h</b> paradas (linha tracejada no ranking).</div>' + top +
@@ -9848,6 +9855,17 @@ function indTopoExec(ref, titulo, sub){
   const chips = [['mes', 'Mês'], ['3m', '3 meses'], ['6m', '6 meses'], ['ytd', 'Ano até agora']].map(function(c){ return '<button type="button" class="ex-chip' + (indPeriodo === c[0] ? ' ativo' : '') + '" data-per="' + c[0] + '">' + c[1] + '</button>'; }).join('');
   return '<div class="ex-topo"><div><h3>' + titulo + '</h3><div class="sub">' + sub + '</div></div><div class="ex-chips">' + chips + '</div></div>';
 }
+function indSincronizarSeletorMes(){
+  const sel = document.getElementById('ind-sel-mes'); if (!sel) return;
+  const ref = indRefMes(); if (ref && sel.value !== ref) sel.value = ref;
+}
+function indLinhaRef(J, ref){
+  const at = J.atual, ant = J.ant;
+  const rot = function(a){ return a.length ? (a.length === 1 ? indNomeMes(a[0].p) : indNomeMes(a[0].p) + ' a ' + indNomeMes(a[a.length - 1].p)) : '—'; };
+  const pedido = indPeriodo === '3m' ? 3 : indPeriodo === '6m' ? 6 : indPeriodo === 'ytd' ? 0 : 1;
+  const curto = pedido > 1 && at.length < pedido;
+  return '<div class="ex-ref">Mês de referência: <b>' + indNomeMes(ref) + '</b> · período mostrado: <b>' + rot(at) + '</b>' + (ant.length ? ' · comparado com <b>' + rot(ant) + '</b>' : ' · sem período anterior para comparar') + (curto ? ' · <span style="color:var(--ind-at)">só há ' + at.length + ' mês(es) de histórico até aqui</span>' : '') + '</div>';
+}
 function indRotuloPeriodo(J){
   const a = J.atual; if (a.length === 1) return indNomeMes(a[0].p);
   return indNomeMes(a[0].p) + ' a ' + indNomeMes(a[a.length - 1].p) + ' (' + a.length + ' meses)';
@@ -9855,6 +9873,7 @@ function indRotuloPeriodo(J){
 function indHtmlExec(){
   const meses = indMesesDisponiveis();
   if (!meses.length) return '<div class="ind-painel" style="text-align:center;padding:36px 16px"><div style="font-size:34px">📚</div><b>Ainda não há meses no histórico</b><div class="ind-nota">Clique em <b>Importar histórico (planilhas)</b> para carregar janeiro a setembro, ou calcule um mês e salve.</div></div>';
+  indSincronizarSeletorMes();
   const ref = indRefMes(), J = indJanelas(ref);
   const lAt = indJuntar(J.atual), lAnt = indJuntar(J.ant);
   const sub = indRotuloPeriodo(J) + ' · EO e IU sem os equipamentos "sem parte diária"';
@@ -9862,7 +9881,7 @@ function indHtmlExec(){
   if (indNav.n === 'equip') return indHtmlExecEquip(ref, J, sub);
   const g = indMediaJ(lAt), gAnt = lAnt.length ? indMediaJ(lAnt) : null, pond = indMetJ(lAt);
   const serie = function(ch){ return J.todos.slice(-8).map(function(m){ const x = indMediaJ(indJuntar([m])); return x[ch]; }); };
-  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, g, gAnt, serie(ch), indFoco === ch, true, 'ponderada (todas as máquinas): <b>' + indPct(pond[ch]) + '</b>'); }).join('') + '</div>' + indHtmlDisponiveis(J);
+  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, g, gAnt, serie(ch), indFoco === ch, true, 'ponderada (todas as máquinas): <b>' + indPct(pond[ch]) + '</b>'); }).join('') + '</div>' + indTilesManut(indMetJ(lAt), lAnt.length ? indMetJ(lAnt) : null) + indHtmlDisponiveis(J);
   // ranking de contratos
   const porCt = indAgrupar(lAt, indChave), porCtAnt = indAgrupar(lAnt, indChave), meta = indMetas()[indFoco] / 100;
   const rk = Object.keys(porCt).map(function(c){ const m = indMetJ(porCt[c]); const ma = porCtAnt[c] ? indMetJ(porCtAnt[c]) : null; return { c: c, v: m[indFoco], a: ma ? ma[indFoco] : null, n: new Set(porCt[c].map(function(l){ return l.eq; })).size }; });
@@ -9885,7 +9904,7 @@ function indHtmlExec(){
     '<button type="button" class="ex-tile" data-go="alertas"><b>' + nSem + '</b><span>📝 equipamentos sem parte diária · ver alertas</span></button>' +
     '<button type="button" class="ex-tile" data-go="comparar"><b>⚖</b><span>comparar dois meses lado a lado</span></button></div>';
   const evol = indSvgLinhas(J.todos.map(function(m){ return m.p; }), ['DM', 'EO', 'IU'].map(function(ch){ return { c: ch, vals: J.todos.map(function(m){ return indMediaJ(indJuntar([m]))[ch]; }) }; }));
-  return indTopoExec(ref, 'Visão executiva', sub) + cards +
+  return indTopoExec(ref, 'Visão executiva', sub) + indLinhaRef(J, ref) + cards +
     '<div class="ex-grid2"><div class="ind-painel"><h4>Contratos · ' + IND_NOMES_IND[indFoco] + ' (do menor para o maior) — clique para abrir</h4>' + rkHtml + '<div class="ind-nota">A linha preta marca a meta de ' + indMetas()[indFoco] + '%. Clique nos cartões acima para trocar o indicador.</div></div>' +
     '<div><div class="ind-painel"><h4>Atalhos</h4>' + tiles + '</div><div class="ind-painel"><h4>⚠ Mais baixos em ' + indFoco + '</h4>' + (piores.map(itemEq).join('') || '—') + '</div><div class="ind-painel"><h4>★ Melhores em ' + indFoco + '</h4>' + (melhores.map(itemEq).join('') || '—') + '</div></div></div>' +
     '<div class="ind-painel"><h4>Evolução da média geral (todos os meses)</h4>' + evol + '</div>';
@@ -9898,7 +9917,7 @@ function indHtmlExecContrato(ref, J, sub){
   if (!lAt.length) return indCruzeta() + '<div class="ind-painel">Sem dados deste contrato no período escolhido.</div>';
   const m = indMetJ(lAt), ma = lAnt.length ? indMetJ(lAnt) : null;
   const serie = function(ch){ return todos.slice(-8).map(function(x){ return x.linhas.length ? indMetJ(x.linhas)[ch] : null; }); };
-  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, m, ma, serie(ch), false, false); }).join('') + '</div>';
+  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, m, ma, serie(ch), false, false); }).join('') + '</div>' + indTilesManut(m, ma);
   const porEq = indAgrupar(lAt, 'eq');
   const linhas = Object.keys(porEq).sort().map(function(e){
     const x = indMetJ(porEq[e]), sem = porEq[e].every(indSemPD);
@@ -9906,7 +9925,7 @@ function indHtmlExecContrato(ref, J, sub){
     const cel = function(ch){ return '<td class="ex-txt-' + indEstado(ch, x[ch]) + '"><b>' + indPct(x[ch], 0) + '</b></td>'; };
     return '<tr class="cl" data-nav-n="equip" data-nav-ct="' + mtEsc(ct) + '" data-nav-eq="' + mtEsc(e) + '"><td><b>' + mtEsc(e) + '</b><small>' + mtEsc(String(porEq[e][0].desc || '').toUpperCase().slice(0, 36)) + '</small></td><td>' + indN(x.PM, 0) + ' h</td>' + cel('DM') + (sem ? '<td colspan="2"><span class="ex-semPD" title="EO e IU ficam fora da média">sem parte diária</span></td>' : cel('EO') + cel('IU')) + '<td>' + sp + '</td></tr>';
   }).join('');
-  return indCruzeta() + indTopoExec(ref, mtEsc(ct), sub) +
+  return indCruzeta() + indTopoExec(ref, mtEsc(ct), sub) + indLinhaRef(J, ref) +
     '<div class="ex-acoes"><button type="button" class="rel-btn-secundario" data-rel-ct="' + mtEsc(ct) + '">📄 Relatório PDF deste contrato</button><button type="button" class="rel-btn-secundario" data-xls-ct="' + mtEsc(ct) + '">📊 Excel deste contrato</button></div>' + cards +
     '<div class="ind-painel"><h4>Equipamentos do contrato — clique para ver o histórico</h4><div class="ind-wrap"><table class="ex-tab"><thead><tr><th>Equipamento</th><th>Parada</th><th>DM</th><th>EO</th><th>IU</th><th>DM nos meses</th></tr></thead><tbody>' + linhas + '</tbody></table></div></div>';
 }
@@ -9917,7 +9936,7 @@ function indHtmlExecEquip(ref, J, sub){
   if (!lAt.length) return indCruzeta() + '<div class="ind-painel">Este equipamento não tem dados no período escolhido.</div>';
   const m = indMetJ(lAt), ma = lAnt.length ? indMetJ(lAnt) : null;
   const serie = function(ch){ return porMes.slice(-8).map(function(x){ return x.ls.length ? indMetJ(x.ls)[ch] : null; }); };
-  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, m, ma, serie(ch), false, false); }).join('') + '</div>';
+  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, m, ma, serie(ch), false, false); }).join('') + '</div>' + indTilesManut(m, ma);
   const graf = indSvgLinhas(porMes.map(function(x){ return x.p; }), ['DM', 'EO', 'IU'].map(function(ch){ return { c: ch, vals: porMes.map(function(x){ return x.ls.length ? indMetJ(x.ls)[ch] : null; }) }; }));
   const tab = porMes.filter(function(x){ return x.ls.length; }).reverse().map(function(x){
     const q = indMetJ(x.ls), sem = x.ls.every(indSemPD);
@@ -9927,7 +9946,7 @@ function indHtmlExecEquip(ref, J, sub){
   }).join('');
   const als = [];
   J.todos.forEach(function(mm){ const sv = indSalvos[mm.p]; ((sv ? sv.alertas : (indDados && indDados.periodo === mm.p ? indDados.alertas : [])) || []).forEach(function(a){ if (a.eq === eq) als.push('<div class="ind-nota" style="margin:2px 0"><b>' + indNomeMes(mm.p) + '</b> · ' + mtEsc(IND_ROTULO_ALERTA[a.tipo] || a.tipo) + ' — ' + mtEsc(a.texto) + '</div>'); }); });
-  return indCruzeta() + indTopoExec(ref, mtEsc(eq) + ' <small style="font-weight:400;color:var(--cinza)">' + mtEsc(String(lAt[0].desc || '').toUpperCase()) + '</small>', mtEsc(ct) + ' · ' + sub) + cards +
+  return indCruzeta() + indTopoExec(ref, mtEsc(eq) + ' <small style="font-weight:400;color:var(--cinza)">' + mtEsc(String(lAt[0].desc || '').toUpperCase()) + '</small>', mtEsc(ct) + ' · ' + sub) + indLinhaRef(J, ref) + cards +
     '<div class="ind-painel"><h4>Evolução mês a mês</h4>' + graf + '</div>' +
     '<div class="ind-painel"><h4>Detalhe por mês</h4><div class="ind-wrap"><table class="ex-tab"><thead><tr><th class="esq">Mês</th><th>HP (h)</th><th>PM (h)</th><th>MTTR</th><th>MTBF</th><th>DM</th><th>EO</th><th>IU</th><th></th></tr></thead><tbody>' + tab + '</tbody></table></div></div>' +
     (als.length ? '<div class="ind-painel"><h4>Alertas deste equipamento</h4>' + als.join('') + '</div>' : '');
@@ -9935,6 +9954,7 @@ function indHtmlExecEquip(ref, J, sub){
 function indHtmlComparar(){
   const meses = indMesesDisponiveis().map(function(m){ return m.p; });
   if (meses.length < 2) return '<div class="ind-painel">Precisa de pelo menos dois meses no histórico para comparar.</div>';
+  indSincronizarSeletorMes();
   const ref = indRefMes();
   if (!indCmpB || meses.indexOf(indCmpB) < 0) indCmpB = ref;
   if (!indCmpA || meses.indexOf(indCmpA) < 0 || indCmpA === indCmpB) { const i = meses.indexOf(indCmpB); indCmpA = meses[i > 0 ? i - 1 : 1]; }
@@ -9954,6 +9974,26 @@ function indHtmlComparar(){
     '<div class="ex-cmp-sel"><div class="ind-grupo"><label>Mês base</label>' + sel('ind-cmp-a', indCmpA) + '</div><div class="ind-grupo"><label>Comparar com</label>' + sel('ind-cmp-b', indCmpB) + '</div></div>' + dest +
     '<div class="ind-painel"><div class="ind-wrap"><table class="ex-tab"><thead><tr><th class="esq" rowspan="2">Contrato</th><th colspan="3" style="text-align:center">DM</th><th colspan="3" style="text-align:center">EO</th><th colspan="3" style="text-align:center">IU</th></tr><tr>' + ['DM', 'EO', 'IU'].map(function(){ return '<th>' + indNomeMes(indCmpA).slice(0, 3) + '</th><th>' + indNomeMes(indCmpB).slice(0, 3) + '</th><th>Δ</th>'; }).join('') + '</tr></thead><tbody>' + lin.map(function(x){ return x.h; }).join('') +
     '<tr style="font-weight:800"><td class="esq">MÉDIA GERAL</td>' + ['DM', 'EO', 'IU'].map(function(ch){ return '<td>' + indPct(tA[ch], 1) + '</td><td>' + indPct(tB[ch], 1) + '</td><td>' + indDeltaHtml(tB[ch], tA[ch]) + '</td>'; }).join('') + '</tr></tbody></table></div><div class="ind-nota">Clique em um contrato para abrir o detalhe. EO e IU ignoram equipamentos sem parte diária.</div></div>';
+}
+
+
+function indDeltaNum(a, b, menorMelhor, dec){
+  if (a === null || a === undefined || b === null || b === undefined) return '';
+  const d = a - b;
+  if (Math.abs(d) < Math.pow(10, -(dec == null ? 1 : dec)) / 2) return '<span class="ex-dl eq">= igual</span>';
+  const bom = menorMelhor ? d < 0 : d > 0;
+  return '<span class="ex-dl ' + (bom ? 'up' : 'dn') + '">' + (d > 0 ? '▲ +' : '▼ −') + Math.abs(d).toLocaleString('pt-BR', { minimumFractionDigits: dec == null ? 1 : dec, maximumFractionDigits: dec == null ? 1 : dec }) + '</span>';
+}
+/** Linha de 4 números de manutenção: parada, reparos, MTTR e MTBF (com variação). */
+function indTilesManut(m, mA){
+  const tl = function(rot, val, dica, d){ return '<div class="ex-tile" style="cursor:default" title="' + dica + '"><span>' + rot + '</span><b>' + val + '</b>' + d + '</div>'; };
+  const pmP = m.PM, rep = m.reparos;
+  return '<div class="ex-m4">' +
+    tl('Parada em manutenção (PM)', indN(pmP, 0) + ' h', 'Horas em que a máquina ficou parada para manutenção no período.', indDeltaNum(pmP, mA ? mA.PM : null, true, 0)) +
+    tl('Nº de reparos', rep > 0 ? indN(rep, 0) : '—', 'Estimado: horas de parada ÷ MTTR de cada equipamento.', indDeltaNum(rep > 0 ? rep : null, mA && mA.reparos > 0 ? mA.reparos : null, true, 0)) +
+    tl('MTTR — tempo médio de reparo', m.MTTR === null ? '—' : indN(m.MTTR, 1) + ' h', 'Horas de reparo ÷ número de reparos. Quanto menor, melhor.', indDeltaNum(m.MTTR, mA ? mA.MTTR : null, true, 1)) +
+    tl('MTBF — tempo médio entre falhas', m.MTBF === null ? '—' : indN(m.MTBF, 0) + ' h', 'Horas operadas entre uma falha e outra. Quanto maior, melhor.', indDeltaNum(m.MTBF, mA ? mA.MTBF : null, false, 0)) +
+    '</div><div class="ind-nota" style="margin:0 0 14px">MTTR = horas de reparo ÷ nº de reparos · MTBF = horas operadas entre falhas. Esses dois números <b>vêm prontos da extração do SAP / das suas planilhas</b>; o portal só soma e pondera pelo nº de reparos (o portal não os recalcula a partir da parte diária). Equipamento sem MTTR informado fica fora dessas duas médias.</div>';
 }
 
 /** Equipamentos "Disponível - Manutenção" (sem contrato) que NÃO aparecem em nenhum contrato no mesmo mês. */
@@ -9977,6 +10017,7 @@ function indReincidentes(todos, ch){
 function indResumoHtml(){
   const meses = indMesesDisponiveis();
   if (!meses.length) return '<div class="ind-painel">Ainda não há meses no histórico.</div>';
+  indSincronizarSeletorMes();
   const ref = indRefMes(), J = indJanelas(ref), lAt = indJuntar(J.atual), lAnt = indJuntar(J.ant);
   const per = indRotuloPeriodo(J), meta = indMetas();
   const g = indMediaJ(lAt), gA = lAnt.length ? indMediaJ(lAnt) : null, pd = indMetJ(lAt);
