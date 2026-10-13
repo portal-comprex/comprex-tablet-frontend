@@ -1821,6 +1821,67 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .ind-lista-arq .ok{color:var(--ind-ok);font-weight:700}
   .ind-lista-arq .ruim{color:var(--ind-ru);font-weight:700}
 
+
+  /* ---- visão executiva ---- */
+  .ex-topo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .ex-topo h3{margin:0;font-size:18px;color:var(--tinta);letter-spacing:.2px}
+  .ex-topo .sub{font-size:12.5px;color:var(--cinza)}
+  .ex-chips{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+  .ex-chip{border:1px solid var(--linha);background:var(--card);color:var(--tinta);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .ex-chip:hover{border-color:var(--navy)}
+  .ex-chip.ativo{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .ex-cruz{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;margin-bottom:10px}
+  .ex-cruz button{background:none;border:0;padding:2px 4px;color:var(--navy);font-weight:700;cursor:pointer;font-size:13px;border-radius:6px}
+  .ex-cruz button:hover{background:var(--cream)}
+  .ex-cruz .atual{font-weight:800;color:var(--tinta)}
+  .ex-cruz .sep{color:var(--cinza)}
+  .ex-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}
+  .ex-card{text-align:left;background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:16px 18px;cursor:pointer;position:relative;overflow:hidden;font-family:inherit;color:var(--tinta);transition:transform .12s,box-shadow .12s}
+  .ex-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.10)}
+  .ex-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--cinza)}
+  .ex-card.e-ok::before{background:var(--ind-ok)} .ex-card.e-at::before{background:var(--ind-at)} .ex-card.e-ru::before{background:var(--ind-ru)}
+  .ex-card.foco{box-shadow:0 0 0 2px var(--navy)}
+  .ex-card .rot{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza);font-weight:700}
+  .ex-card .val{font-size:38px;font-weight:800;line-height:1.1;margin:4px 0}
+  .ex-card.e-ok .val{color:var(--ind-ok)} .ex-card.e-at .val{color:var(--ind-at)} .ex-card.e-ru .val{color:var(--ind-ru)}
+  .ex-card .meta{font-size:12px;color:var(--cinza)}
+  .ex-card .spk{position:absolute;right:14px;bottom:12px}
+  .ex-dl{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
+  .ex-dl.up{background:rgba(27,122,67,.16);color:var(--ind-ok)} .ex-dl.dn{background:rgba(179,69,58,.16);color:var(--ind-ru)} .ex-dl.eq{background:var(--cream);color:var(--cinza)}
+  .ex-grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+  .ex-rank{display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(120px,2fr) 62px 86px 14px;gap:10px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--linha);cursor:pointer;border-radius:8px;font-size:13px;width:100%;background:none;border-left:0;border-right:0;border-top:0;font-family:inherit;color:var(--tinta);text-align:left}
+  .ex-rank:hover{background:var(--cream)}
+  .ex-rank .bar{height:12px;background:var(--linha);border-radius:6px;position:relative}
+  .ex-rank .bar i{display:block;height:100%;border-radius:6px}
+  .ex-rank .bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--tinta);opacity:.7}
+  .ex-rank .chev{color:var(--cinza)}
+  .ex-bg-ok{background:var(--ind-ok)} .ex-bg-at{background:var(--ind-at)} .ex-bg-ru{background:var(--ind-ru)} .ex-bg-neutro{background:var(--cinza)}
+  .ex-txt-ok{color:var(--ind-ok)} .ex-txt-at{color:var(--ind-at)} .ex-txt-ru{color:var(--ind-ru)} .ex-txt-neutro{color:var(--cinza)}
+  .ex-atalhos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .ex-tile{text-align:left;background:var(--cream);border:1px solid var(--linha);border-radius:12px;padding:12px;cursor:pointer;font-family:inherit;color:var(--tinta)}
+  .ex-tile:hover{border-color:var(--navy)}
+  .ex-tile b{display:block;font-size:22px} .ex-tile span{font-size:12px;color:var(--cinza)}
+  .ex-eqlist{display:flex;justify-content:space-between;gap:8px;padding:6px 4px;border-bottom:1px solid var(--linha);cursor:pointer;font-size:12.5px;background:none;border-left:0;border-right:0;border-top:0;width:100%;font-family:inherit;color:var(--tinta);text-align:left;border-radius:6px}
+  .ex-eqlist:hover{background:var(--cream)}
+  .ex-eqlist small{display:block;color:var(--cinza);font-size:10.5px}
+  .ex-tab{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ex-tab th{font-size:10.5px;text-transform:uppercase;color:var(--cinza);text-align:right;padding:6px 8px;border-bottom:2px solid var(--linha)}
+  .ex-tab th:first-child,.ex-tab td:first-child,.ex-tab th.esq,.ex-tab td.esq{text-align:left}
+  .ex-tab td{padding:7px 8px;border-bottom:1px solid var(--linha);text-align:right}
+  .ex-tab tr.cl{cursor:pointer} .ex-tab tr.cl:hover td{background:var(--cream)}
+  .ex-tab td small{display:block;color:var(--cinza);font-size:10.5px;font-weight:400}
+  .ex-semPD{font-size:10.5px;background:#fff3cd;color:#7a5a00;border-radius:999px;padding:1px 7px;font-weight:700}
+  body.tema-escuro .ex-semPD{background:#3d3315;color:#f0c36a}
+  .ex-acoes{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+  .ex-cmp-sel{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+  .ind-apres-sair{display:none;position:fixed;top:12px;right:16px;z-index:50;background:#b3453a;color:#fff;border:0;border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer}
+  #view-manut-indic.ind-apres{background:#eef5ee;padding:28px 32px;overflow:auto;min-height:100vh}
+  body.tema-escuro #view-manut-indic.ind-apres{background:#0f1720}
+  #view-manut-indic.ind-apres .ind-apres-sair{display:block}
+  #view-manut-indic.ind-apres .ind-barra,#view-manut-indic.ind-apres #ind-abas,#view-manut-indic.ind-apres #ind-kpis,#view-manut-indic.ind-apres #ind-importacao,#view-manut-indic.ind-apres #ind-aviso,#view-manut-indic.ind-apres .ex-chips,#view-manut-indic.ind-apres .ex-acoes{display:none}
+  #view-manut-indic.ind-apres .ex-card .val{font-size:52px}
+  @media(max-width:900px){.ex-cards{grid-template-columns:1fr}.ex-grid2{grid-template-columns:1fr}.ex-rank{grid-template-columns:90px 1fr 54px 70px 10px}}
+
   /* ---- mapa de calor / pareto / histórico importado ---- */
   .ind-hm{border-collapse:separate;border-spacing:2px;font-size:12px;width:100%;background:var(--card)}
   .ind-hm th{font-size:11px;color:var(--cinza);font-weight:700;padding:4px 6px;text-align:center;white-space:nowrap;position:sticky;top:0;background:var(--card)}
@@ -1968,7 +2029,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 92</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 93</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3380,18 +3441,22 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <button type="button" class="rel-btn-secundario" id="ind-btn-excel">📊 Exportar Excel</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-rel" title="Relatório do mês por contrato, em PDF (imprimir) ou Excel">📄 Relatório por contrato</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-hist" title="Carrega o histórico das suas planilhas KPIs POR OBRA (um arquivo por mês)">📚 Importar histórico (planilhas)</button>
+      <button type="button" class="rel-btn-secundario" id="ind-btn-apres" title="Tela cheia, com troca automática entre as telas (Esc para sair)">📺 Apresentar</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-config">⚙ Configurar</button>
     </div>
     <input type="file" id="ind-arquivos" accept=".xlsx,.xlsm,.xls" multiple style="display:none">
     <input type="file" id="ind-arq-hist" accept=".xlsx,.xlsm,.xls" multiple style="display:none">
   </div>
+  <button type="button" class="ind-apres-sair" id="ind-apres-sair">✖ Sair da apresentação</button>
   <div id="ind-importacao"></div>
   <div class="ind-kpis" id="ind-kpis"></div>
   <div class="frota-toggle" id="ind-abas" style="margin:14px 0">
-    <button type="button" class="topo-toggle-opt ativo" data-ind-aba="contratos">🏭 Por contrato</button>
+    <button type="button" class="topo-toggle-opt ativo" data-ind-aba="exec">🏠 Visão executiva</button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="contratos">🏭 Por contrato</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="equipamentos">🚜 Equipamentos</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="alertas">⚠️ Alertas <span id="ind-badge-alertas"></span></button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="historico">📈 Histórico</button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="comparar">⚖ Comparar meses</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="mapa">🔥 Mapa de calor</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="pareto">📉 Pareto de paradas</button>
   </div>
@@ -8779,9 +8844,11 @@ function indCalcularMes(en){
 
 /* ------------------------------ métricas / agregação ------------------------------ */
 /** versao: 'hoje' (todas as horas da parte diária) ou 'prod' (sem "a disposição" e sem parada de manutenção) */
+/** Linha da planilha com EO = 0% mas máquina disponível: quase sempre é parte diária não lançada, não máquina parada. */
+function indSemPD(l){ return !!(l.semPD || (l.origem === 'planilha' && (l.eoPlan === 0 || l.eoPlan === null || l.eoPlan === undefined) && (l.dmPlan || 0) > 0.5)); }
 function indMetricas(linhas, versao, opts){
   opts = opts || {};
-  let HP = 0, PMef = 0, HOef = 0, PMtot = 0, nRep = 0, pmComMttr = 0, mtbfPond = 0, custo = 0, hoBruto = 0, temPD = false;
+  let HPe = 0, dispE = 0, HOe = 0, nSemPD = 0, HP = 0, PMef = 0, HOef = 0, PMtot = 0, nRep = 0, pmComMttr = 0, mtbfPond = 0, custo = 0, hoBruto = 0, temPD = false;
   linhas.forEach(function(l){
     if (opts.ignoraSemPD && !l.linhasPD) return;
     const pmL = Math.min(l.pm, l.hp);
@@ -8790,12 +8857,13 @@ function indMetricas(linhas, versao, opts){
     if (!l.noPD) temPD = true;
     HP += l.hp; PMef += pmL; PMtot += l.pm; hoBruto += l.semReg ? 0 : ho;
     HOef += Math.min(ho, disp);
+    if (indSemPD(l)) nSemPD++; else { HPe += l.hp; dispE += disp; HOe += Math.min(ho, disp); }
     if (l.mttr > 0) { const n = l.pm / l.mttr; nRep += n; pmComMttr += l.pm; mtbfPond += l.mtbf * n; }
     custo += (l.custoMO || 0) + (l.custoMatInt || 0) + (l.custoServExt || 0) + (l.custoMatExt || 0);
   });
   const disp = HP - PMef;
   return { HP: HP, PM: PMtot, PMef: PMef, HO: HOef, HOBruto: hoBruto,
-    DM: HP > 0 ? disp / HP : null, EO: temPD && disp > 0 ? HOef / disp : null, IU: temPD && HP > 0 ? HOef / HP : null,
+    DM: HP > 0 ? disp / HP : null, EO: temPD && dispE > 0 ? HOe / dispE : null, IU: temPD && HPe > 0 ? HOe / HPe : null, nSemPD: nSemPD,
     reparos: nRep, MTTR: nRep > 0 ? pmComMttr / nRep : null, MTBF: nRep > 0 ? mtbfPond / nRep : null, custo: custo, n: linhas.length };
 }
 function indAgrupar(linhas, chave){
@@ -8822,7 +8890,7 @@ let indCfg = { regimeHP: {}, ordemContrato: {}, eqContrato: {}, metas: {} };
 let indSalvos = {};                 // 'AAAA-MM' -> { linhas, alertas, itemIds:[] }
 let indDados = null;                // { periodo, linhas, alertas, origem:'calculo'|'salvo', arquivos:[] }
 let indArq = { sap: {}, pd: [], anterior: null, lista: [], porArquivo: {} };
-let indVersao = 'hoje', indAba = 'contratos';
+let indVersao = 'hoje', indAba = 'exec';
 let indAbertos = {}, indFiltroTxt = '', indFiltroContrato = '', indFiltroEq = '', indOrdem = 'eq';
 let indIniciado = false, indMsgListas = '';
 let indAgrup = 'grupo';           // grupo = contrato como nas abas da planilha | local = por local/ordem
@@ -9109,15 +9177,18 @@ function indRender(){
   const nAl = indDados ? indDados.alertas.length : 0;
   document.getElementById('ind-badge-alertas').textContent = nAl ? '(' + nAl + ')' : '';
   const k = document.getElementById('ind-kpis'), corpo = document.getElementById('ind-corpo');
-  if (!indDados && indAba !== 'historico' && indAba !== 'mapa' && indAba !== 'pareto') {
+  const indSemDados = ['historico', 'mapa', 'pareto', 'exec', 'comparar'].indexOf(indAba) >= 0;
+  if (!indDados && !indSemDados) {
     k.innerHTML = '';
     corpo.innerHTML = '<div class="ind-painel" style="text-align:center;padding:36px 16px"><div style="font-size:34px">📥</div><b>Importe as planilhas do mês</b><div class="ind-nota">Clique em <b>Importar planilhas</b> e escolha de uma vez só: a(s) extração(ões) do SAP, a parte diária e, se quiser conferir os regimes, a planilha de indicadores do mês anterior. O portal reconhece cada arquivo sozinho.</div></div>';
     return;
   }
-  if (indDados) indRenderKpis(k); else k.innerHTML = '';
+  if (indDados && indAba !== 'exec' && indAba !== 'comparar') indRenderKpis(k); else k.innerHTML = '';
   if (indAba === 'contratos') corpo.innerHTML = indHtmlContratos();
   else if (indAba === 'equipamentos') indRenderEquipamentos(corpo);
   else if (indAba === 'alertas') corpo.innerHTML = indHtmlAlertas();
+  else if (indAba === 'exec') corpo.innerHTML = indHtmlExec();
+  else if (indAba === 'comparar') corpo.innerHTML = indHtmlComparar();
   else if (indAba === 'mapa') corpo.innerHTML = indHtmlMapa();
   else if (indAba === 'pareto') corpo.innerHTML = indHtmlPareto();
   else corpo.innerHTML = indHtmlHistorico();
@@ -9281,7 +9352,7 @@ function indHtmlContratos(){
   return h;
 }
 const IND_ROTULO_ALERTA = { regime: 'Sem regime', classificar: 'Sem contrato', conflito: 'Contrato divergente', 'pm-maior': 'PM > HP', 'ho-excesso': 'HO acima do possível', 'sem-pd': 'Sem parte diária', 'sem-registro': 'Sem registros (100%)', 'dia-excesso': 'Dia com mais de 24 h', 'a-disposicao': 'A disposição', 'pm-divergente': 'PM ≠ parte diária', 'pm-sem-sap': 'Parada fora do SAP', trocou: 'Trocou de contrato' };
-IND_ROTULO_ALERTA['eo-zero'] = 'EO zerado'; IND_ROTULO_ALERTA['duas-abas'] = 'Em dois contratos'; IND_ROTULO_ALERTA['hp-fora'] = 'HP fora do regime'; IND_ROTULO_ALERTA['repetido'] = 'Valor repetido'; IND_ROTULO_ALERTA['iu-incoerente'] = 'IU ≠ EO × DM'; IND_ROTULO_ALERTA['dm-incoerente'] = 'DM não bate';
+IND_ROTULO_ALERTA['eo-zero'] = 'Sem parte diária'; IND_ROTULO_ALERTA['duas-abas'] = 'Em dois contratos'; IND_ROTULO_ALERTA['hp-fora'] = 'HP fora do regime'; IND_ROTULO_ALERTA['repetido'] = 'Valor repetido'; IND_ROTULO_ALERTA['iu-incoerente'] = 'IU ≠ EO × DM'; IND_ROTULO_ALERTA['dm-incoerente'] = 'DM não bate';
 const IND_GRAVES = { 'hp-fora': 1, 'dm-incoerente': 1, classificar: 1, conflito: 1, 'pm-maior': 1, 'ho-excesso': 1, 'dia-excesso': 1, regime: 1 };
 function indChips(eq){
   return indDados.alertas.filter(function(a){ return a.eq === eq; }).map(function(a){
@@ -9352,6 +9423,7 @@ function indHtmlHistorico(){
   return '<div class="ind-painel"><h4>Evolução (média geral dos contratos — ' + (indVersao === 'prod' ? 'só horas produtivas' : 'como hoje') + ')</h4>' + leg + s + '</div>' + tab;
 }
 function indLigarCorpo(){
+  indLigarExec();
   document.querySelectorAll('[data-ind-ct]').forEach(function(tr){ tr.onclick = function(){ const c = tr.dataset.indCt; indAbertos[c] = !indAbertos[c]; indRender(); }; });
   document.querySelectorAll('[data-ind-eq]').forEach(function(b){ b.onclick = function(){ indFiltroTxt = ''; indFiltroEq = b.dataset.indEq; indFiltroContrato = ''; indAba = 'equipamentos'; indRender(); }; });
   const t = document.getElementById('ind-f-txt');
@@ -9454,7 +9526,7 @@ function indValidarLinhas(periodo, linhas, prev){
     ls.forEach(function(l){
       if (l.hp && !regs.some(function(r){ return Math.abs(r - l.hp) < 0.5; }) && ls.length === 1) add(eq, 'hp-fora', 'Regime planejado de ' + l.hp + ' h não é 176, 330 nem 660 — provável erro de digitação.');
       if (l.origem === 'planilha') {
-        if (l.eoPlan === 0 && (l.dmPlan || 0) > 0.5) add(eq, 'eo-zero', 'EO = 0% com DM de ' + indPct(l.dmPlan, 0) + ': provavelmente não houve parte diária lançada (e não que a máquina ficou parada).');
+        if (indSemPD(l)) add(eq, 'eo-zero', 'EO ' + (l.eoPlan === 0 ? '= 0%' : 'em branco') + ' com DM de ' + indPct(l.dmPlan, 0) + ': provavelmente não houve parte diária lançada. Foi tratado como "sem parte diária" e fica fora da média de EO e IU (a DM continua valendo).');
         if (l.eoPlan != null && l.dmPlan != null && l.iuPlan != null && Math.abs(l.eoPlan * l.dmPlan - l.iuPlan) > 0.03) add(eq, 'iu-incoerente', 'IU da planilha (' + indPct(l.iuPlan, 0) + ') não bate com EO × DM (' + indPct(l.eoPlan * l.dmPlan, 0) + ').');
         if (l.dmPlan != null && l.hp) { const calc = (l.hp - Math.min(l.pm, l.hp)) / l.hp; if (Math.abs(calc - l.dmPlan) > 0.02) add(eq, 'dm-incoerente', 'DM da planilha (' + indPct(l.dmPlan, 0) + ') não bate com (HP − PM) / HP = ' + indPct(calc, 0) + '.'); }
       }
@@ -9690,6 +9762,214 @@ function indModalRelatorio(){
   }, 50);
 }
 
+
+/* =====================================================================
+   VISÃO EXECUTIVA, COMPARAR MESES, APRESENTAÇÃO
+   ===================================================================== */
+let indNav = { n: 'geral', ct: '', eq: '' }, indPeriodo = 'mes', indFoco = 'DM', indCmpA = '', indCmpB = '', indApresTimer = null;
+const IND_NOMES_IND = { DM: 'Disponibilidade mecânica', EO: 'Eficiência operacional', IU: 'Índice de utilização' };
+function indRefMes(){
+  const all = indMesesDisponiveis().map(function(m){ return m.p; });
+  const v = (document.getElementById('ind-sel-mes') || {}).value;
+  return all.indexOf(v) >= 0 ? v : all[all.length - 1];
+}
+function indJanelas(ref){
+  const all = indMesesDisponiveis().filter(function(m){ return m.p <= ref; });
+  let N = indPeriodo === '3m' ? 3 : indPeriodo === '6m' ? 6 : 1;
+  if (indPeriodo === 'ytd') N = all.filter(function(m){ return m.p.slice(0, 4) === ref.slice(0, 4); }).length;
+  N = Math.max(1, Math.min(N, all.length));
+  return { atual: all.slice(all.length - N), ant: all.slice(Math.max(0, all.length - 2 * N), all.length - N), todos: all };
+}
+function indJuntar(ms){ return [].concat.apply([], ms.map(function(m){ return m.linhas.filter(function(l){ return !indSemOuClass(l); }); })); }
+function indMetJ(ls){ return indMetricas(ls, indVersao); }
+function indMediaJ(ls){ const g = indMediaGeral(ls, indVersao); return { DM: g.DM, EO: g.EO, IU: g.IU }; }
+function indDeltaHtml(a, b){
+  if (a === null || a === undefined || b === null || b === undefined) return '';
+  const d = (a - b) * 100;
+  if (Math.abs(d) < 0.05) return '<span class="ex-dl eq">= igual</span>';
+  return '<span class="ex-dl ' + (d > 0 ? 'up' : 'dn') + '">' + (d > 0 ? '▲ +' : '▼ −') + Math.abs(d).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' pp</span>';
+}
+function indSpark(vals, ch){
+  const pts = vals.map(function(v, i){ return v === null || v === undefined ? null : [i, v]; }).filter(Boolean);
+  if (pts.length < 2) return '';
+  const W = 96, H = 30, mn = Math.min.apply(null, pts.map(function(q){ return q[1]; }).concat([indMetas()[ch] / 100])) - 0.03, mx = Math.max.apply(null, pts.map(function(q){ return q[1]; }).concat([indMetas()[ch] / 100])) + 0.03;
+  const X = function(i){ return 3 + i * (W - 6) / (vals.length - 1); }, Y = function(v){ return 3 + (mx - v) * (H - 6) / (mx - mn); };
+  const ym = Y(indMetas()[ch] / 100);
+  return '<svg class="spk" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><line x1="0" x2="' + W + '" y1="' + ym + '" y2="' + ym + '" stroke="var(--cinza)" stroke-dasharray="3 3" opacity=".5"/><polyline fill="none" stroke="var(--ind-s' + ({ DM: 1, EO: 2, IU: 3 })[ch] + ')" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="' + pts.map(function(q){ return X(q[0]) + ',' + Y(q[1]); }).join(' ') + '"/><circle cx="' + X(pts[pts.length - 1][0]) + '" cy="' + Y(pts[pts.length - 1][1]) + '" r="3" fill="var(--ind-s' + ({ DM: 1, EO: 2, IU: 3 })[ch] + ')"/></svg>';
+}
+/** gráfico de linhas generico: meses (AAAA-MM), series {c, vals[]} */
+function indSvgLinhas(meses, series){
+  const W = 760, H = 250, ml = 44, mr = 30, mt = 14, mb = 30, todos = [];
+  series.forEach(function(sr){ sr.vals.forEach(function(v){ if (v !== null && v !== undefined) todos.push(v * 100); }); });
+  if (!todos.length) return '<div class="ind-nota">Sem dados para o gráfico.</div>';
+  const ymin = Math.max(0, Math.floor((Math.min.apply(null, todos) - 5) / 10) * 10), ymax = 100;
+  const X = function(i){ return ml + (meses.length === 1 ? (W - ml - mr) / 2 : i * (W - ml - mr) / (meses.length - 1)); };
+  const Y = function(v){ return mt + (ymax - v) * (H - mt - mb) / (ymax - ymin); };
+  let t = '<svg class="ind-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img">';
+  for (let v = ymin; v <= ymax; v += 10) t += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--ind-grade)"/><text x="' + (ml - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + v + '%</text>';
+  meses.forEach(function(p, i){ t += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + p.slice(5, 7) + '/' + p.slice(2, 4) + '</text>'; });
+  series.forEach(function(sr){
+    const cor = 'var(--ind-s' + ({ DM: 1, EO: 2, IU: 3 })[sr.c] + ')', mt2 = indMetas()[sr.c];
+    if (mt2 >= ymin) t += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(mt2) + '" y2="' + Y(mt2) + '" stroke="' + cor + '" stroke-dasharray="4 4" opacity=".45"><title>Meta ' + sr.c + ' ' + mt2 + '%</title></line>';
+    let seg = [];
+    const flush = function(){ if (seg.length > 1) t += '<polyline fill="none" stroke="' + cor + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" points="' + seg.map(function(q){ return q[0] + ',' + q[1]; }).join(' ') + '"/>'; seg = []; };
+    sr.vals.forEach(function(v, i){ if (v === null || v === undefined) { flush(); return; } seg.push([X(i), Y(v * 100)]); });
+    flush();
+    sr.vals.forEach(function(v, i){ if (v !== null && v !== undefined) t += '<circle cx="' + X(i) + '" cy="' + Y(v * 100) + '" r="4.5" fill="' + cor + '" stroke="var(--card)" stroke-width="2"><title>' + sr.c + ' · ' + indNomeMes(meses[i]) + ': ' + indPct(v) + '</title></circle>'; });
+  });
+  return t + '</svg><div class="ind-legenda"><span><i style="background:var(--ind-s1)"></i>DM</span><span><i style="background:var(--ind-s2)"></i>EO</span><span><i style="background:var(--ind-s3)"></i>IU</span><span>tracejado = meta</span></div>';
+}
+function indCardInd(ch, m, mAnt, serie, foco, clicavel){
+  const v = m[ch], est = indEstado(ch, v);
+  const tag = clicavel ? 'button' : 'div';
+  return '<' + tag + ' type="button" class="ex-card e-' + est + (foco ? ' foco' : '') + '"' + (clicavel ? ' data-exec-foco="' + ch + '"' : '') + ' title="' + (clicavel ? 'Clique para ordenar o ranking por ' + ch : '') + '"><div class="rot">' + IND_NOMES_IND[ch] + ' · ' + ch + '</div><div class="val">' + indPct(v) + '</div><div class="meta">meta ' + indMetas()[ch] + '% ' + (v === null ? '' : (v >= indMetas()[ch] / 100 ? '✔ atingida' : '✖ abaixo')) + '</div><div style="margin-top:6px">' + indDeltaHtml(v, mAnt ? mAnt[ch] : null) + (mAnt ? ' <span class="meta">vs período anterior</span>' : '') + '</div>' + indSpark(serie, ch) + '</' + tag + '>';
+}
+function indCruzeta(){
+  let h = '<div class="ex-cruz"><button type="button" data-nav-n="geral">🏠 Visão geral</button>';
+  if (indNav.n === 'contrato' || indNav.n === 'equip') h += '<span class="sep">›</span>' + (indNav.n === 'contrato' ? '<span class="atual">' + mtEsc(indNav.ct) + '</span>' : '<button type="button" data-nav-n="contrato" data-nav-ct="' + mtEsc(indNav.ct) + '">' + mtEsc(indNav.ct) + '</button>');
+  if (indNav.n === 'equip') h += '<span class="sep">›</span><span class="atual">' + mtEsc(indNav.eq) + '</span>';
+  return h + '</div>';
+}
+function indTopoExec(ref, titulo, sub){
+  const chips = [['mes', 'Mês'], ['3m', '3 meses'], ['6m', '6 meses'], ['ytd', 'Ano até agora']].map(function(c){ return '<button type="button" class="ex-chip' + (indPeriodo === c[0] ? ' ativo' : '') + '" data-per="' + c[0] + '">' + c[1] + '</button>'; }).join('');
+  return '<div class="ex-topo"><div><h3>' + titulo + '</h3><div class="sub">' + sub + '</div></div><div class="ex-chips">' + chips + '</div></div>';
+}
+function indRotuloPeriodo(J){
+  const a = J.atual; if (a.length === 1) return indNomeMes(a[0].p);
+  return indNomeMes(a[0].p) + ' a ' + indNomeMes(a[a.length - 1].p) + ' (' + a.length + ' meses)';
+}
+function indHtmlExec(){
+  const meses = indMesesDisponiveis();
+  if (!meses.length) return '<div class="ind-painel" style="text-align:center;padding:36px 16px"><div style="font-size:34px">📚</div><b>Ainda não há meses no histórico</b><div class="ind-nota">Clique em <b>Importar histórico (planilhas)</b> para carregar janeiro a setembro, ou calcule um mês e salve.</div></div>';
+  const ref = indRefMes(), J = indJanelas(ref);
+  const lAt = indJuntar(J.atual), lAnt = indJuntar(J.ant);
+  const sub = indRotuloPeriodo(J) + ' · EO e IU sem os equipamentos "sem parte diária"';
+  if (indNav.n === 'contrato') return indHtmlExecContrato(ref, J, sub);
+  if (indNav.n === 'equip') return indHtmlExecEquip(ref, J, sub);
+  const g = indMediaJ(lAt), gAnt = lAnt.length ? indMediaJ(lAnt) : null;
+  const serie = function(ch){ return J.todos.slice(-8).map(function(m){ const x = indMediaJ(indJuntar([m])); return x[ch]; }); };
+  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, g, gAnt, serie(ch), indFoco === ch, true); }).join('') + '</div>';
+  // ranking de contratos
+  const porCt = indAgrupar(lAt, indChave), porCtAnt = indAgrupar(lAnt, indChave), meta = indMetas()[indFoco] / 100;
+  const rk = Object.keys(porCt).map(function(c){ const m = indMetJ(porCt[c]); const ma = porCtAnt[c] ? indMetJ(porCtAnt[c]) : null; return { c: c, v: m[indFoco], a: ma ? ma[indFoco] : null, n: new Set(porCt[c].map(function(l){ return l.eq; })).size }; });
+  rk.sort(function(a, b){ return (a.v === null) - (b.v === null) || (a.v === null ? 0 : a.v - b.v); });
+  const rkHtml = rk.map(function(r){
+    const est = indEstado(indFoco, r.v);
+    return '<button type="button" class="ex-rank" data-nav-n="contrato" data-nav-ct="' + mtEsc(r.c) + '" title="Abrir ' + mtEsc(r.c) + '"><span><b>' + mtEsc(r.c) + '</b><br><small style="color:var(--cinza)">' + r.n + ' equip.</small></span><span class="bar"><i class="ex-bg-' + est + '" style="width:' + (r.v === null ? 0 : Math.min(100, r.v * 100)) + '%"></i><b style="left:' + (meta * 100) + '%"></b></span><b class="ex-txt-' + est + '">' + indPct(r.v, 1) + '</b><span>' + indDeltaHtml(r.v, r.a) + '</span><span class="chev">›</span></button>';
+  }).join('');
+  // equipamentos: melhores e piores
+  const porEq = indAgrupar(lAt, 'eq');
+  const eqs = Object.keys(porEq).map(function(e){ const m = indMetJ(porEq[e]); return { e: e, ct: indChave(porEq[e][0]), d: String(porEq[e][0].desc || '').toUpperCase().slice(0, 28), v: m[indFoco], pm: m.PM }; }).filter(function(x){ return x.v !== null; }).sort(function(a, b){ return a.v - b.v; });
+  const itemEq = function(x){ return '<button type="button" class="ex-eqlist" data-nav-n="equip" data-nav-ct="' + mtEsc(x.ct) + '" data-nav-eq="' + mtEsc(x.e) + '"><span><b>' + mtEsc(x.e) + '</b><small>' + mtEsc(x.ct) + ' · ' + mtEsc(x.d) + '</small></span><b class="ex-txt-' + indEstado(indFoco, x.v) + '">' + indPct(x.v, 0) + '</b></button>'; };
+  const piores = eqs.slice(0, 5), melhores = eqs.slice(-5).reverse();
+  // atalhos
+  const nSem = (function(){ let n = 0; Object.keys(porEq).forEach(function(e){ if (porEq[e].every(indSemPD)) n++; }); return n; })();
+  const hParado = lAt.reduce(function(a, l){ return a + Math.min(l.pm, l.hp || l.pm); }, 0);
+  let nRein = 0; (function(){ const pe = {}; J.todos.forEach(function(m){ const por = indAgrupar(m.linhas.filter(function(l){ return !indSemOuClass(l); }), 'eq'); Object.keys(por).forEach(function(e){ const v = indMetricas(por[e], indVersao)[indFoco]; if (v !== null && v < meta) pe[e] = (pe[e] || 0) + 1; }); }); nRein = Object.keys(pe).filter(function(e){ return pe[e] >= 3; }).length; })();
+  const tiles = '<div class="ex-atalhos"><button type="button" class="ex-tile" data-go="mapa" data-go-rein="1"><b>' + nRein + '</b><span>🔁 reincidentes em ' + indFoco + ' (3+ meses abaixo) · abrir mapa de calor</span></button>' +
+    '<button type="button" class="ex-tile" data-go="pareto"><b>' + indN(hParado, 0) + ' h</b><span>📉 horas paradas no período · abrir Pareto</span></button>' +
+    '<button type="button" class="ex-tile" data-go="alertas"><b>' + nSem + '</b><span>📝 equipamentos sem parte diária · ver alertas</span></button>' +
+    '<button type="button" class="ex-tile" data-go="comparar"><b>⚖</b><span>comparar dois meses lado a lado</span></button></div>';
+  const evol = indSvgLinhas(J.todos.map(function(m){ return m.p; }), ['DM', 'EO', 'IU'].map(function(ch){ return { c: ch, vals: J.todos.map(function(m){ return indMediaJ(indJuntar([m]))[ch]; }) }; }));
+  return indTopoExec(ref, 'Visão executiva', sub) + cards +
+    '<div class="ex-grid2"><div class="ind-painel"><h4>Contratos · ' + IND_NOMES_IND[indFoco] + ' (do menor para o maior) — clique para abrir</h4>' + rkHtml + '<div class="ind-nota">A linha preta marca a meta de ' + indMetas()[indFoco] + '%. Clique nos cartões acima para trocar o indicador.</div></div>' +
+    '<div><div class="ind-painel"><h4>Atalhos</h4>' + tiles + '</div><div class="ind-painel"><h4>⚠ Mais baixos em ' + indFoco + '</h4>' + (piores.map(itemEq).join('') || '—') + '</div><div class="ind-painel"><h4>★ Melhores em ' + indFoco + '</h4>' + (melhores.map(itemEq).join('') || '—') + '</div></div></div>' +
+    '<div class="ind-painel"><h4>Evolução da média geral (todos os meses)</h4>' + evol + '</div>';
+}
+function indHtmlExecContrato(ref, J, sub){
+  const ct = indNav.ct;
+  const filtra = function(ms){ return ms.map(function(m){ return { p: m.p, linhas: m.linhas.filter(function(l){ return !indSemOuClass(l) && indChave(l) === ct; }) }; }); };
+  const at = filtra(J.atual), an = filtra(J.ant), todos = filtra(J.todos);
+  const lAt = [].concat.apply([], at.map(function(m){ return m.linhas; })), lAnt = [].concat.apply([], an.map(function(m){ return m.linhas; }));
+  if (!lAt.length) return indCruzeta() + '<div class="ind-painel">Sem dados deste contrato no período escolhido.</div>';
+  const m = indMetJ(lAt), ma = lAnt.length ? indMetJ(lAnt) : null;
+  const serie = function(ch){ return todos.slice(-8).map(function(x){ return x.linhas.length ? indMetJ(x.linhas)[ch] : null; }); };
+  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, m, ma, serie(ch), false, false); }).join('') + '</div>';
+  const porEq = indAgrupar(lAt, 'eq');
+  const linhas = Object.keys(porEq).sort().map(function(e){
+    const x = indMetJ(porEq[e]), sem = porEq[e].every(indSemPD);
+    const sp = indSpark(todos.slice(-8).map(function(t){ const q = t.linhas.filter(function(l){ return l.eq === e; }); return q.length ? indMetJ(q).DM : null; }), 'DM').replace('class="spk"', 'style="vertical-align:middle"');
+    const cel = function(ch){ return '<td class="ex-txt-' + indEstado(ch, x[ch]) + '"><b>' + indPct(x[ch], 0) + '</b></td>'; };
+    return '<tr class="cl" data-nav-n="equip" data-nav-ct="' + mtEsc(ct) + '" data-nav-eq="' + mtEsc(e) + '"><td><b>' + mtEsc(e) + '</b><small>' + mtEsc(String(porEq[e][0].desc || '').toUpperCase().slice(0, 36)) + '</small></td><td>' + indN(x.PM, 0) + ' h</td>' + cel('DM') + (sem ? '<td colspan="2"><span class="ex-semPD" title="EO e IU ficam fora da média">sem parte diária</span></td>' : cel('EO') + cel('IU')) + '<td>' + sp + '</td></tr>';
+  }).join('');
+  return indCruzeta() + indTopoExec(ref, mtEsc(ct), sub) +
+    '<div class="ex-acoes"><button type="button" class="rel-btn-secundario" data-rel-ct="' + mtEsc(ct) + '">📄 Relatório PDF deste contrato</button><button type="button" class="rel-btn-secundario" data-xls-ct="' + mtEsc(ct) + '">📊 Excel deste contrato</button></div>' + cards +
+    '<div class="ind-painel"><h4>Equipamentos do contrato — clique para ver o histórico</h4><div class="ind-wrap"><table class="ex-tab"><thead><tr><th>Equipamento</th><th>Parada</th><th>DM</th><th>EO</th><th>IU</th><th>DM nos meses</th></tr></thead><tbody>' + linhas + '</tbody></table></div></div>';
+}
+function indHtmlExecEquip(ref, J, sub){
+  const eq = indNav.eq, ct = indNav.ct;
+  const porMes = J.todos.map(function(m){ return { p: m.p, ls: m.linhas.filter(function(l){ return l.eq === eq; }) }; });
+  const lAt = indJuntar(J.atual).filter(function(l){ return l.eq === eq; }), lAnt = indJuntar(J.ant).filter(function(l){ return l.eq === eq; });
+  if (!lAt.length) return indCruzeta() + '<div class="ind-painel">Este equipamento não tem dados no período escolhido.</div>';
+  const m = indMetJ(lAt), ma = lAnt.length ? indMetJ(lAnt) : null;
+  const serie = function(ch){ return porMes.slice(-8).map(function(x){ return x.ls.length ? indMetJ(x.ls)[ch] : null; }); };
+  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, m, ma, serie(ch), false, false); }).join('') + '</div>';
+  const graf = indSvgLinhas(porMes.map(function(x){ return x.p; }), ['DM', 'EO', 'IU'].map(function(ch){ return { c: ch, vals: porMes.map(function(x){ return x.ls.length ? indMetJ(x.ls)[ch] : null; }) }; }));
+  const tab = porMes.filter(function(x){ return x.ls.length; }).reverse().map(function(x){
+    const q = indMetJ(x.ls), sem = x.ls.every(indSemPD);
+    const cel = function(ch){ return '<td class="ex-txt-' + indEstado(ch, q[ch]) + '"><b>' + indPct(q[ch], 1) + '</b></td>'; };
+    return '<tr><td class="esq">' + indNomeMes(x.p) + (x.ls[0].contrato !== ct ? '<small>' + mtEsc(x.ls[0].contrato) + '</small>' : '') + '</td><td>' + indN(q.HP, 0) + '</td><td>' + indN(q.PM, 1) + '</td><td>' + indN(q.MTTR, 1) + '</td><td>' + indN(q.MTBF, 0) + '</td>' + cel('DM') + (sem ? '<td colspan="2"><span class="ex-semPD">sem parte diária</span></td>' : cel('EO') + cel('IU')) + '</tr>';
+  }).join('');
+  const als = [];
+  J.todos.forEach(function(mm){ const sv = indSalvos[mm.p]; ((sv ? sv.alertas : (indDados && indDados.periodo === mm.p ? indDados.alertas : [])) || []).forEach(function(a){ if (a.eq === eq) als.push('<div class="ind-nota" style="margin:2px 0"><b>' + indNomeMes(mm.p) + '</b> · ' + mtEsc(IND_ROTULO_ALERTA[a.tipo] || a.tipo) + ' — ' + mtEsc(a.texto) + '</div>'); }); });
+  return indCruzeta() + indTopoExec(ref, mtEsc(eq) + ' <small style="font-weight:400;color:var(--cinza)">' + mtEsc(String(lAt[0].desc || '').toUpperCase()) + '</small>', mtEsc(ct) + ' · ' + sub) + cards +
+    '<div class="ind-painel"><h4>Evolução mês a mês</h4>' + graf + '</div>' +
+    '<div class="ind-painel"><h4>Detalhe por mês</h4><div class="ind-wrap"><table class="ex-tab"><thead><tr><th class="esq">Mês</th><th>HP (h)</th><th>PM (h)</th><th>MTTR</th><th>MTBF</th><th>DM</th><th>EO</th><th>IU</th></tr></thead><tbody>' + tab + '</tbody></table></div></div>' +
+    (als.length ? '<div class="ind-painel"><h4>Alertas deste equipamento</h4>' + als.join('') + '</div>' : '');
+}
+function indHtmlComparar(){
+  const meses = indMesesDisponiveis().map(function(m){ return m.p; });
+  if (meses.length < 2) return '<div class="ind-painel">Precisa de pelo menos dois meses no histórico para comparar.</div>';
+  const ref = indRefMes();
+  if (!indCmpB || meses.indexOf(indCmpB) < 0) indCmpB = ref;
+  if (!indCmpA || meses.indexOf(indCmpA) < 0 || indCmpA === indCmpB) { const i = meses.indexOf(indCmpB); indCmpA = meses[i > 0 ? i - 1 : 1]; }
+  const get = function(p){ return indJuntar([indMesesDisponiveis().find(function(m){ return m.p === p; })]); };
+  const A = get(indCmpA), B = get(indCmpB), gA = indAgrupar(A, indChave), gB = indAgrupar(B, indChave);
+  const nomes = Array.from(new Set(Object.keys(gA).concat(Object.keys(gB)))).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const sel = function(id, val){ return '<select id="' + id + '">' + meses.slice().reverse().map(function(p){ return '<option value="' + p + '"' + (p === val ? ' selected' : '') + '>' + indNomeMes(p) + '</option>'; }).join('') + '</select>'; };
+  const lin = nomes.map(function(c){
+    const a = gA[c] ? indMetJ(gA[c]) : null, b = gB[c] ? indMetJ(gB[c]) : null;
+    const col = function(ch){ return '<td>' + (a ? indPct(a[ch], 1) : '—') + '</td><td><b class="ex-txt-' + indEstado(ch, b ? b[ch] : null) + '">' + (b ? indPct(b[ch], 1) : '—') + '</b></td><td>' + (a && b ? indDeltaHtml(b[ch], a[ch]) : '') + '</td>'; };
+    return { c: c, dDM: a && b && a.DM !== null && b.DM !== null ? b.DM - a.DM : null, h: '<tr class="cl" data-nav-n="contrato" data-nav-ct="' + mtEsc(c) + '"><td class="esq"><b>' + mtEsc(c) + '</b></td>' + col('DM') + col('EO') + col('IU') + '</tr>' };
+  });
+  const tA = indMediaJ(A), tB = indMediaJ(B);
+  const comD = lin.filter(function(x){ return x.dDM !== null; }).sort(function(a, b){ return a.dDM - b.dDM; });
+  const dest = comD.length ? '<div class="ex-atalhos" style="margin-bottom:12px"><div class="ex-tile" style="cursor:default"><b class="ex-txt-ok">' + mtEsc(comD[comD.length - 1].c) + '</b><span>maior melhora de DM (' + (comD[comD.length - 1].dDM * 100 >= 0 ? '+' : '') + (comD[comD.length - 1].dDM * 100).toFixed(1).replace('.', ',') + ' pp)</span></div><div class="ex-tile" style="cursor:default"><b class="ex-txt-ru">' + mtEsc(comD[0].c) + '</b><span>maior queda de DM (' + (comD[0].dDM * 100).toFixed(1).replace('.', ',') + ' pp)</span></div></div>' : '';
+  return '<div class="ex-topo"><div><h3>Comparar meses</h3><div class="sub">Escolha dois meses. As setas mostram quanto o mês da direita melhorou ou piorou em relação ao da esquerda.</div></div></div>' +
+    '<div class="ex-cmp-sel"><div class="ind-grupo"><label>Mês base</label>' + sel('ind-cmp-a', indCmpA) + '</div><div class="ind-grupo"><label>Comparar com</label>' + sel('ind-cmp-b', indCmpB) + '</div></div>' + dest +
+    '<div class="ind-painel"><div class="ind-wrap"><table class="ex-tab"><thead><tr><th class="esq" rowspan="2">Contrato</th><th colspan="3" style="text-align:center">DM</th><th colspan="3" style="text-align:center">EO</th><th colspan="3" style="text-align:center">IU</th></tr><tr>' + ['DM', 'EO', 'IU'].map(function(){ return '<th>' + indNomeMes(indCmpA).slice(0, 3) + '</th><th>' + indNomeMes(indCmpB).slice(0, 3) + '</th><th>Δ</th>'; }).join('') + '</tr></thead><tbody>' + lin.map(function(x){ return x.h; }).join('') +
+    '<tr style="font-weight:800"><td class="esq">MÉDIA GERAL</td>' + ['DM', 'EO', 'IU'].map(function(ch){ return '<td>' + indPct(tA[ch], 1) + '</td><td>' + indPct(tB[ch], 1) + '</td><td>' + indDeltaHtml(tB[ch], tA[ch]) + '</td>'; }).join('') + '</tr></tbody></table></div><div class="ind-nota">Clique em um contrato para abrir o detalhe. EO e IU ignoram equipamentos sem parte diária.</div></div>';
+}
+function indApresentar(){
+  const el = document.getElementById('view-manut-indic');
+  if (el.classList.contains('ind-apres')) { indSairApres(); return; }
+  el.classList.add('ind-apres');
+  try { if (el.requestFullscreen) el.requestFullscreen(); } catch (e) {}
+  const seq = ['exec', 'historico', 'mapa', 'pareto', 'comparar'];
+  let i = 0; indAba = 'exec'; indNav = { n: 'geral', ct: '', eq: '' }; indRender();
+  indApresTimer = setInterval(function(){ i = (i + 1) % seq.length; indAba = seq[i]; indNav = { n: 'geral', ct: '', eq: '' }; indRender(); }, 20000);
+}
+function indSairApres(){
+  const el = document.getElementById('view-manut-indic');
+  if (indApresTimer) { clearInterval(indApresTimer); indApresTimer = null; }
+  el.classList.remove('ind-apres');
+  try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch (e) {}
+}
+document.addEventListener('fullscreenchange', function(){
+  const el = document.getElementById('view-manut-indic');
+  if (!document.fullscreenElement && el && el.classList.contains('ind-apres')) indSairApres();
+});
+function indLigarExec(){
+  document.querySelectorAll('[data-nav-n]').forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); indNav = { n: b.dataset.navN, ct: b.dataset.navCt || '', eq: b.dataset.navEq || '' }; indAba = 'exec'; indRender(); const t = document.getElementById('ind-abas'); if (t) t.scrollIntoView({ block: 'start' }); }; });
+  document.querySelectorAll('[data-per]').forEach(function(b){ b.onclick = function(){ indPeriodo = b.dataset.per; indRender(); }; });
+  document.querySelectorAll('[data-exec-foco]').forEach(function(b){ b.onclick = function(){ indFoco = b.dataset.execFoco; indRender(); }; });
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.onclick = function(){ indAba = b.dataset.go; if (indAba === 'mapa') { indHmIndicador = indFoco; indHmSoRein = !!b.dataset.goRein; } indFiltroTxt = ''; indFiltroContrato = ''; indFiltroEq = ''; indRender(); }; });
+  const ca = document.getElementById('ind-cmp-a'); if (ca) ca.onchange = function(){ indCmpA = ca.value; indRender(); };
+  const cb = document.getElementById('ind-cmp-b'); if (cb) cb.onchange = function(){ indCmpB = cb.value; indRender(); };
+  document.querySelectorAll('[data-rel-ct]').forEach(function(b){ b.onclick = function(){ const ref = indRefMes(), m = indMesesDisponiveis().find(function(x){ return x.p === ref; }); document.getElementById('hist-print-area').innerHTML = indRelatorioHtml(ref, m.linhas, b.dataset.relCt); setTimeout(function(){ window.print(); }, 200); }; });
+  document.querySelectorAll('[data-xls-ct]').forEach(function(b){ b.onclick = function(){ const ref = indRefMes(), m = indMesesDisponiveis().find(function(x){ return x.p === ref; }); indExportarExcel({ periodo: ref, linhas: m.linhas, alertas: (indSalvos[ref] ? indSalvos[ref].alertas : []) }, b.dataset.xlsCt); }; });
+}
+
 /* ---------- salvar / configurar / exportar ---------- */
 async function indSalvarMes(){
   if (!mtExigirEdicao()) return;
@@ -9792,6 +10072,8 @@ async function carregarIndicadoresManut(){
     document.getElementById('ind-btn-salvar').onclick = indSalvarMes;
     document.getElementById('ind-btn-excel').onclick = indExportarExcel;
     document.getElementById('ind-btn-config').onclick = indModalConfig;
+    document.getElementById('ind-btn-apres').onclick = indApresentar;
+    document.getElementById('ind-apres-sair').onclick = indSairApres;
     document.getElementById('ind-btn-rel').onclick = indModalRelatorio;
     document.getElementById('ind-btn-hist').onclick = function(){ document.getElementById('ind-arq-hist').value = ''; document.getElementById('ind-arq-hist').click(); };
     document.getElementById('ind-arq-hist').onchange = function(){ if (this.files && this.files.length) indImportarHistorico(Array.prototype.slice.call(this.files)); };
