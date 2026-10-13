@@ -909,6 +909,11 @@
   .arv-folha{display:grid;grid-template-columns:1fr 140px 100px 130px 140px;gap:10px;align-items:center;
     padding:8px 10px 8px 54px;border-bottom:1px solid var(--linha);font-size:12.5px}
   .arv-folha:last-child{border-bottom:none}
+  .arv-barra-sap{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}
+  .arv-barra-sap button{font:inherit;font-size:12px;padding:4px 10px;border:1px solid #8aa0b8;background:var(--card);color:var(--tinta);border-radius:3px;cursor:pointer}
+  .arv-barra-sap button:hover{background:#e8f0fa}
+  body.tema-escuro .arv-barra-sap button:hover{background:#243447}
+  .arv-barra-sap button:disabled{opacity:.5;cursor:wait}
   .arv-cab-tabela{display:grid;grid-template-columns:1fr 140px 100px 130px 140px;gap:10px;
     padding:0 10px 8px;font-size:10px;font-weight:700;color:var(--cinza);letter-spacing:.4px;border-bottom:2px solid var(--linha);margin-bottom:6px}
   /* Distinção visual entre equipamento e implemento na árvore: o código do
@@ -1763,6 +1768,9 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   body.tema-escuro .ind-form tbody tr:nth-child(n+3) td{background:#1f3a2c;color:#fff}
   .ind-editar{border:none;background:transparent;cursor:pointer;font-size:12px;padding:0 3px;opacity:.7}
   .ind-editar:hover{opacity:1}
+  .ind-graficos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:1300px){.ind-graficos{grid-template-columns:1fr}}
+  .ind-grafico h4{font-size:12.5px;margin:0 0 4px;color:var(--tinta)}
   /* ---- Indicadores de Manutenção ---- */
   #view-manut-indic{--ind-ok:#1b7a43;--ind-at:#b07d12;--ind-ru:#b3453a;--ind-s1:#2a78d6;--ind-s2:#eb6834;--ind-s3:#1baf7a;--ind-grade:#e3e8e3}
   body.tema-escuro #view-manut-indic{--ind-ok:#3cb371;--ind-at:#e0a93b;--ind-ru:#e5736a;--ind-s1:#3987e5;--ind-s2:#d95926;--ind-s3:#199e70;--ind-grade:#2c3a4a}
@@ -1905,7 +1913,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 84</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 86</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -2717,6 +2725,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <div class="dash-row" style="align-items:flex-start">
       <div class="dash-card" style="flex:2">
         <h3>🌳 Árvore de Equipamentos</h3>
+        <div class="arv-barra-sap" id="arv-barra-sap">
+          <button type="button" data-arv-sap="atualizar" title="Recarrega os dados do SharePoint">⟳ Atualizar</button>
+          <button type="button" data-arv-sap="expandir" title="Abre mais um nível da árvore (Comprex › Local de instalação › Obra › Equipamento)">Expandir nível</button>
+          <button type="button" data-arv-sap="ocultar" title="Fecha o nível mais profundo que está aberto">Ocultar nível</button>
+          <button type="button" data-arv-sap="total" title="Abre a árvore inteira">Explosão total</button>
+        </div>
         <div id="status-eq-arvore"><div class="lista-vazia-dash">Carregando…</div></div>
       </div>
       <div class="dash-card" style="flex:1;position:sticky;top:16px">
@@ -3563,8 +3577,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <input type="email" id="acessos-novo-limitado-email" placeholder="email@comprex.com.br" style="width:100%;margin-bottom:10px">
         <div id="acessos-arvore-menus"></div>
         <div id="acessos-localidades-wrap" style="margin-top:14px;border-top:1px solid var(--linha);padding-top:12px;display:none">
-          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">🔒 Restringir edição de Movimentações a estas localidades (opcional)</div>
-          <div style="font-size:11px;color:var(--cinza);margin-bottom:8px">Se marcar alguma, essa pessoa só edita (move/muda status) equipamentos dessas localidades — as demais ficam somente leitura para ela. Se deixar tudo desmarcado, edita qualquer local normalmente.</div>
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">🔒 Restringir edição de Movimentações a estes locais de instalação (opcional)</div>
+          <div style="font-size:11px;color:var(--cinza);margin-bottom:8px">Marque o local de instalação (ex.: COMPREX-AMT) e a pessoa edita todas as obras dele, inclusive as criadas depois. Se precisar, abra «Ver / escolher só algumas obras» e marque só as desejadas. Fora disso fica somente leitura. Tudo desmarcado = edita qualquer local.</div>
           <div id="acessos-lista-localidades" style="display:flex;flex-wrap:wrap;gap:8px"></div>
         </div>
         <button type="button" class="rel-btn-secundario" id="acessos-add-limitado" style="margin-top:10px">+ Adicionar pessoa</button>
@@ -3995,12 +4009,26 @@ function usuarioEhAdmin(conta){
  *  que está nesse local — admin sempre pode; quem não tem restrição
  *  configurada também pode (comportamento de sempre); só bloqueia quem tem
  *  uma lista de localidades e esse local não está nela. */
+/** Local de instalação (nível acima da obra) como no SAP: AMT -> COMPREX-AMT. */
+const LOCAL_INSTALACAO_SAP = {
+  AMB: { cod: 'COMPREX-AMB', nome: 'Obras - Fora do Estado ArcelorMittal' },
+  AMT: { cod: 'COMPREX-AMT', nome: 'Obras - ArcelorMittal Tubarão' },
+  DIVERSOS: { cod: 'COMPREX-DIV', nome: 'Obras - Diversas' },
+  COMPREX: { cod: 'COMPREX-PAT', nome: 'Comprex - Pátio de Manutenção' },
+  SIMEC: { cod: 'COMPREX-SIM', nome: 'Obras - Simec Cariacica' },
+  VALE: { cod: 'COMPREX-VAL', nome: 'Obras - Vale' }
+};
+function localInstalacaoDe(local){
+  const pref = String(local || '').split(/\s*-\s*/)[0].trim().toUpperCase();
+  const m = LOCAL_INSTALACAO_SAP[pref];
+  return m ? m : { cod: 'COMPREX-' + pref.slice(0, 3), nome: pref };
+}
 function usuarioPodeEditarLocal(local){
   if (usuarioEhAdmin(contaAtual)) return true;
   const email = (contaAtual && contaAtual.username || '').trim().toLowerCase();
   const restricao = CONFIG.localidadesPorUsuario[email];
   if (!restricao) return true; // sem restrição configurada = sem mudança de comportamento
-  return restricao.indexOf(local) !== -1;
+  return restricao.indexOf(local) !== -1 || restricao.indexOf(localInstalacaoDe(local).cod) !== -1;
 }
 /** Devolve o nível de acesso da conta: 'admin' (tudo liberado),
  *  'limitado' (só as seções configuradas) ou 'bloqueado' (nada — nem entra). */
@@ -5036,6 +5064,15 @@ function acessosAbrirTela(){
   acessosRenderizar();
   document.getElementById('acessos-overlay').classList.add('aberto');
 }
+/** Quando o local de instalação inteiro está marcado, as obras dele ficam marcadas e travadas. */
+function acessosSincLocalidades(){
+  document.querySelectorAll('.acessos-li-chk').forEach(function(g){
+    document.querySelectorAll('.acessos-obra-chk[data-de-grupo="'+g.value+'"]').forEach(function(o){
+      if (g.checked) o.checked = true;
+      o.disabled = g.checked;
+    });
+  });
+}
 /** Desenha os checkboxes de "o que essa nova pessoa vai poder ver",
  *  agrupados por seção — um checkbox por tela de verdade. */
 function acessosRenderizarArvoreMenus(){
@@ -5050,9 +5087,18 @@ function acessosRenderizarArvoreMenus(){
       '</div>' +
     '</div>';
   }).join('');
-  document.getElementById('acessos-lista-localidades').innerHTML = locais.slice().sort().map(function(l){
-    return '<label style="font-size:12px"><input type="checkbox" class="acessos-nova-localidade" value="'+l+'"> ' + l + '</label>';
+  const gruposLoc = {};
+  locais.slice().sort().forEach(function(l){ const g = localInstalacaoDe(l); (gruposLoc[g.cod] = gruposLoc[g.cod] || { info: g, obras: [] }).obras.push(l); });
+  document.getElementById('acessos-lista-localidades').innerHTML = Object.keys(gruposLoc).sort().map(function(cod){
+    const g = gruposLoc[cod];
+    return '<div class="acessos-li-grupo" style="width:100%;border:1px solid var(--linha);border-radius:8px;padding:8px 10px">' +
+      '<label style="font-size:13px;font-weight:700"><input type="checkbox" class="acessos-nova-localidade acessos-li-chk" data-grupo="'+cod+'" value="'+cod+'"> ' + cod + ' <span style="font-weight:400;color:var(--cinza)">— ' + g.info.nome + ' (' + g.obras.length + ' obras)</span></label>' +
+      '<details style="margin-top:4px"><summary style="font-size:11.5px;color:var(--cinza);cursor:pointer">Ver / escolher só algumas obras</summary>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px">' + g.obras.map(function(l){
+        return '<label style="font-size:12px"><input type="checkbox" class="acessos-nova-localidade acessos-obra-chk" data-de-grupo="'+cod+'" value="'+l+'"> ' + l + '</label>';
+      }).join('') + '</div></details></div>';
   }).join('');
+  document.getElementById('acessos-lista-localidades').onchange = acessosSincLocalidades;
   function atualizarVisibilidadeLocalidades(){
     const temRastreamento = Array.from(document.querySelectorAll('.acessos-nova-view')).some(function(c){
       return c.dataset.secao === 'rastreamento' && c.checked;
@@ -5115,7 +5161,7 @@ function acessosRenderizar(){
         }).join(', ');
         const localidades = acessosRascunhoLocalidades[email];
         const linhaLocalidades = localidades && localidades.length
-          ? '<div class="acessos-secoes">🔒 Só edita: ' + localidades.join(', ') + '</div>' : '';
+          ? '<div class="acessos-secoes">🔒 Só edita: ' + localidades.map(function(x){ return /^COMPREX-/.test(x) ? x + ' (todas as obras)' : x; }).join(', ') + '</div>' : '';
         return '<div class="acessos-linha"><span>' + email + '<div class="acessos-secoes">' + nomesViews + '</div>' + linhaLocalidades + '</span>' +
           '<div style="display:flex;gap:4px">' +
           '<button type="button" class="acessos-remover" data-editar-limitado="' + email + '" style="color:var(--navy)" title="Editar">✏️</button>' +
@@ -5154,6 +5200,7 @@ function acessosCarregarParaEdicao(email){
   document.querySelectorAll('.acessos-nova-localidade').forEach(function(chk){
     chk.checked = localidadesDaPessoa.indexOf(chk.value) !== -1;
   });
+  acessosSincLocalidades();
   const temRastreamento = tokens.some(function(t){ return t === 'rastreamento' || t.indexOf('rastreamento/') === 0; });
   document.getElementById('acessos-localidades-wrap').style.display = temRastreamento ? 'block' : 'none';
   document.getElementById('acessos-novo-limitado-email').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -5189,12 +5236,13 @@ document.getElementById('acessos-add-limitado').onclick = function(){
     }
   });
   acessosRascunhoLimitados[email] = tokens;
-  const localidadesMarcadas = Array.from(document.querySelectorAll('.acessos-nova-localidade:checked')).map(function(c){ return c.value; });
+  const localidadesMarcadas = Array.from(document.querySelectorAll('.acessos-nova-localidade:checked')).filter(function(c){ return !(c.dataset.deGrupo && document.querySelector('.acessos-li-chk[data-grupo="'+c.dataset.deGrupo+'"]').checked); }).map(function(c){ return c.value; });
   if (localidadesMarcadas.length) acessosRascunhoLocalidades[email] = localidadesMarcadas;
   else delete acessosRascunhoLocalidades[email];
   document.getElementById('acessos-novo-limitado-email').value = '';
   document.querySelectorAll('.acessos-nova-view').forEach(function(c){ c.checked = false; });
   document.querySelectorAll('.acessos-nova-localidade').forEach(function(c){ c.checked = false; });
+  acessosSincLocalidades();
   document.getElementById('acessos-localidades-wrap').style.display = 'none';
   acessosRenderizar();
 };
@@ -7360,6 +7408,54 @@ document.getElementById('status-eq-limpar-filtros').onclick = function(){
 // "Pesquisar": os filtros só aplicam quando o botão é clicado (a pedido do Lucas, set/2026).
 // (os cliques em cards/árvore que já chamam statusEqRenderizar() diretamente continuam funcionando)
 document.getElementById('status-eq-pesquisar').onclick = statusEqRenderizar;
+/* ---- Botões estilo SAP da árvore: Atualizar / Expandir nível / Ocultar nível / Explosão total ---- */
+function statusEqArvNos(){
+  const arv = document.getElementById('status-eq-arvore');
+  return Array.from(arv.querySelectorAll('.arv-no')).map(function(el){
+    const m = /arv-nivel-(\d)/.exec(el.className);
+    const filhos = arv.querySelector('[data-filhos-de="' + el.dataset.no + '"]');
+    return { el: el, id: el.dataset.no, nivel: m ? +m[1] : 0, filhos: filhos, visivel: !el.closest('.arv-filhos.colapsado'), colapsado: el.classList.contains('colapsado') };
+  }).filter(function(n){ return n.filhos; });
+}
+function statusEqArvDefinir(n, fechar){
+  n.el.classList.toggle('colapsado', fechar);
+  n.filhos.classList.toggle('colapsado', fechar);
+  if (fechar) statusEqColapsados.add(n.id); else statusEqColapsados.delete(n.id);
+}
+function statusEqArvExpandirNivel(){
+  const nos = statusEqArvNos().filter(function(n){ return n.visivel && n.colapsado; });
+  if (!nos.length) return;
+  const alvo = Math.min.apply(null, nos.map(function(n){ return n.nivel; }));
+  nos.forEach(function(n){ if (n.nivel === alvo) statusEqArvDefinir(n, false); });
+}
+function statusEqArvOcultarNivel(){
+  const nos = statusEqArvNos().filter(function(n){ return n.visivel && !n.colapsado; });
+  if (!nos.length) return;
+  const alvo = Math.max.apply(null, nos.map(function(n){ return n.nivel; }));
+  nos.forEach(function(n){ if (n.nivel === alvo) statusEqArvDefinir(n, true); });
+}
+function statusEqArvExplosaoTotal(){
+  statusEqArvNos().forEach(function(n){ statusEqArvDefinir(n, false); });
+}
+async function statusEqArvAtualizar(btn){
+  btn.disabled = true;
+  try {
+    await garantirDadosFrotaExtra(true);
+    await garantirDadosMovimentacoes(true);
+    await locCarregarDias();
+    statusEqRenderizar();
+  } catch(err) { alert('Não consegui atualizar: ' + err.message); }
+  finally { btn.disabled = false; }
+}
+document.getElementById('arv-barra-sap').addEventListener('click', function(e){
+  const b = e.target.closest('[data-arv-sap]'); if (!b) return;
+  const a = b.dataset.arvSap;
+  if (a === 'atualizar') statusEqArvAtualizar(b);
+  else if (a === 'expandir') statusEqArvExpandirNivel();
+  else if (a === 'ocultar') statusEqArvOcultarNivel();
+  else if (a === 'total') statusEqArvExplosaoTotal();
+});
+
 let pdInicializada = false;
 /** Deixa o horário flexível: aceita digitar só números (ex.: "0930" vira "09:30")
  *  ou já digitar com ":" — sempre no formato HH:MM. */
@@ -8366,6 +8462,7 @@ function indCalcularMes(en){
   Object.keys(en.sap || {}).forEach(function(eq){ if (!universo[eq]) universo[eq] = { eq: eq, desc: en.sap[eq].desc, regime: '' }; });
   const pdPorEq = {};
   (en.pd || []).forEach(function(l){ (pdPorEq[l.eq] = pdPorEq[l.eq] || []).push(l); if (!universo[l.eq]) universo[l.eq] = { eq: l.eq, desc: '', regime: '' }; });
+  const sapCarregado = Object.keys(en.sap || {}).length > 0, pdCarregado = (en.pd || []).length > 0;
   const linhas = [], alertas = [];
   const add = function(eq, tipo, texto){ alertas.push({ tipo: tipo, eq: eq, texto: texto }); };
   Object.keys(universo).sort().forEach(function(eq){
@@ -8437,7 +8534,7 @@ function indCalcularMes(en){
       const l = { periodo: periodo, eq: eq, desc: (sap && sap.desc) || u.desc || '', contrato: c, regime: regime || '8h',
         hp: indR2(hp), pm: indR2(pm), mttr: sap ? sap.mttr : 0, mtbf: sap ? sap.mtbf : 0,
         ho: indR2(o.ho), hoProd: indR2(o.prod), hDisp: indR2(o.disp), hManutPD: indR2(o.manut), pmPD: indR2(o.pm),
-        dias: fonte === 'dias' ? (dias.dias[c] || 0) : null, diasMes: D, linhasPD: o.linhas, semReg: !sap && !pdl.length,
+        dias: fonte === 'dias' ? (dias.dias[c] || 0) : null, diasMes: D, linhasPD: o.linhas, semReg: !sap && !pdl.length && sapCarregado, noPD: !pdCarregado,
         custoMO: sap ? indR2(sap.custoMO * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
         custoMatInt: sap ? indR2(sap.custoMatInt * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
         custoServExt: sap ? indR2(sap.custoServExt * (pesoPM[c] != null ? pesoPM[c] : pesoHP[c])) : 0,
@@ -8452,8 +8549,8 @@ function indCalcularMes(en){
       const cap = Math.max(0, x.hp - Math.min(x.pm, x.hp));
       if (x.ho > cap + 1) add(eq, 'ho-excesso', 'Horas lançadas na parte diária (' + x.ho + ' h) passam do disponível (' + indR2(cap) + ' h) em ' + x.contrato + ': conferi o regime de trabalho do equipamento ou se houve hora extra. Contei só ' + indR2(cap) + ' h.');
     });
-    if (!sap && !pdl.length) add(eq, 'sem-registro', 'Sem nenhum registro no mês (nem SAP, nem parte diária): colunas zeradas e DM, EO e IU considerados 100%.');
-    else if (hpSoma > 0 && !pdl.length) add(eq, 'sem-pd', 'Sem nenhuma parte diária no mês (HO = 0).');
+    if (!sap && !pdl.length && sapCarregado) add(eq, 'sem-registro', 'Sem nenhum registro no mês (nem SAP, nem parte diária): colunas zeradas e DM, EO e IU considerados 100%.');
+    else if (hpSoma > 0 && !pdl.length && pdCarregado) add(eq, 'sem-pd', 'Sem nenhuma parte diária no mês (HO = 0).');
     const porDia = {};
     pdl.forEach(function(l){ porDia[l.data] = (porDia[l.data] || 0) + l.horas; });
     const diasExc = Object.keys(porDia).filter(function(d){ return porDia[d] > 24.01; });
@@ -8472,12 +8569,13 @@ function indCalcularMes(en){
 /** versao: 'hoje' (todas as horas da parte diária) ou 'prod' (sem "a disposição" e sem parada de manutenção) */
 function indMetricas(linhas, versao, opts){
   opts = opts || {};
-  let HP = 0, PMef = 0, HOef = 0, PMtot = 0, nRep = 0, pmComMttr = 0, mtbfPond = 0, custo = 0, hoBruto = 0;
+  let HP = 0, PMef = 0, HOef = 0, PMtot = 0, nRep = 0, pmComMttr = 0, mtbfPond = 0, custo = 0, hoBruto = 0, temPD = false;
   linhas.forEach(function(l){
     if (opts.ignoraSemPD && !l.linhasPD) return;
     const pmL = Math.min(l.pm, l.hp);
     const disp = Math.max(0, l.hp - pmL);
     const ho = l.semReg ? disp : (versao === 'prod' ? l.hoProd : l.ho);
+    if (!l.noPD) temPD = true;
     HP += l.hp; PMef += pmL; PMtot += l.pm; hoBruto += l.semReg ? 0 : ho;
     HOef += Math.min(ho, disp);
     if (l.mttr > 0) { const n = l.pm / l.mttr; nRep += n; pmComMttr += l.pm; mtbfPond += l.mtbf * n; }
@@ -8485,7 +8583,7 @@ function indMetricas(linhas, versao, opts){
   });
   const disp = HP - PMef;
   return { HP: HP, PM: PMtot, PMef: PMef, HO: HOef, HOBruto: hoBruto,
-    DM: HP > 0 ? disp / HP : null, EO: disp > 0 ? HOef / disp : null, IU: HP > 0 ? HOef / HP : null,
+    DM: HP > 0 ? disp / HP : null, EO: temPD && disp > 0 ? HOef / disp : null, IU: temPD && HP > 0 ? HOef / HP : null,
     reparos: nRep, MTTR: nRep > 0 ? pmComMttr / nRep : null, MTBF: nRep > 0 ? mtbfPond / nRep : null, custo: custo, n: linhas.length };
 }
 function indAgrupar(linhas, chave){
@@ -8511,7 +8609,7 @@ let indListaId = null, indCfgItemId = null;
 let indCfg = { regimeHP: {}, ordemContrato: {}, eqContrato: {}, metas: {} };
 let indSalvos = {};                 // 'AAAA-MM' -> { linhas, alertas, itemIds:[] }
 let indDados = null;                // { periodo, linhas, alertas, origem:'calculo'|'salvo', arquivos:[] }
-let indArq = { sap: {}, pd: [], anterior: null, lista: [] };
+let indArq = { sap: {}, pd: [], anterior: null, lista: [], porArquivo: {} };
 let indVersao = 'hoje', indAba = 'contratos';
 let indAbertos = {}, indFiltroTxt = '', indFiltroContrato = '', indFiltroEq = '', indOrdem = 'eq';
 let indIniciado = false, indMsgListas = '';
@@ -8607,28 +8705,27 @@ function indLerArquivoBuffer(buf){
 async function indImportar(files){
   const caixa = document.getElementById('ind-importacao');
   caixa.innerHTML = '<div class="ind-painel">⏳ Lendo as planilhas…</div>';
-  const lista = [], novoPD = [], novoSap = {}, anteriorAbas = [];
+  let algumReconhecido = false;
+  const ruins = [];
   for (const file of files) {
     try {
       const abas = indLerArquivoBuffer(await file.arrayBuffer());
-      let tipos = [];
+      const ent = { nome: file.name, pd: [], sap: [], anterior: [], tipos: [] };
       abas.forEach(function(a){
-        if (indAchaCabecalho(a.aoa, ['equipamento', 'regimeplanejado']) >= 0) { anteriorAbas.push(a); tipos.push('indicadores anteriores'); return; }
+        if (indAchaCabecalho(a.aoa, ['equipamento', 'regimeplanejado']) >= 0) { ent.anterior.push(a); ent.tipos.push('indicadores anteriores'); return; }
         const pd = indLerPD(a.aoa);
-        if (pd.linhas.length) { pd.linhas.forEach(function(l){ novoPD.push(l); }); tipos.push('parte diária (' + pd.linhas.length + ' lançamentos)'); return; }
+        if (pd.linhas.length) { pd.linhas.forEach(function(l){ ent.pd.push(l); }); ent.tipos.push('parte diária (' + pd.linhas.length + ' lançamentos)'); return; }
         const sap = indLerSAP(a.aoa);
-        if (sap.linhas.length) { sap.linhas.forEach(function(l){ const a = novoSap[l.eq]; if (a) { const dup = true; if (l.pm >= a.pm) { l.dup = dup; novoSap[l.eq] = l; } else a.dup = dup; } else novoSap[l.eq] = l; }); tipos.push('SAP (' + sap.linhas.length + ' equipamentos)'); }
+        if (sap.linhas.length) { sap.linhas.forEach(function(l){ ent.sap.push(l); }); ent.tipos.push('SAP (' + sap.linhas.length + ' equipamentos)'); }
       });
-      tipos = tipos.filter(function(t, i){ return tipos.indexOf(t) === i; });
-      lista.push({ nome: file.name, tipo: tipos.length ? tipos.join(' + ') : '', ok: tipos.length > 0 });
-    } catch (e) { lista.push({ nome: file.name, tipo: 'não consegui abrir: ' + e.message, ok: false }); }
+      ent.tipos = ent.tipos.filter(function(t, i){ return ent.tipos.indexOf(t) === i; });
+      if (ent.tipos.length) { indArq.porArquivo[file.name] = ent; algumReconhecido = true; }
+      else ruins.push({ nome: file.name, tipo: '', ok: false });
+    } catch (e) { ruins.push({ nome: file.name, tipo: 'não consegui abrir: ' + e.message, ok: false }); }
   }
-  if (novoPD.length) indArq.pd = novoPD;
-  if (Object.keys(novoSap).length) indArq.sap = novoSap;
-  if (anteriorAbas.length) indArq.anterior = indLerAnterior(anteriorAbas);
-  indArq.lista = lista;
-  if (!novoPD.length && !Object.keys(novoSap).length && !anteriorAbas.length) {
-    caixa.innerHTML = '<div class="ind-painel"><h4>Nada reconhecido</h4><ul class="ind-lista-arq">' + lista.map(indLinhaArq).join('') + '</ul><div class="ind-nota">Esperado: extração do SAP (colunas "Equipamento" e "Tempo de máquina parada em manutenção"), parte diária ("Equipamento (padronizado)" e "Horas trabalhadas") ou a planilha de indicadores do mês anterior.</div></div>';
+  indReconstruirArq(ruins);
+  if (!algumReconhecido) {
+    caixa.innerHTML = '<div class="ind-painel"><h4>Nada reconhecido</h4><ul class="ind-lista-arq">' + ruins.map(indLinhaArq).join('') + '</ul><div class="ind-nota">Esperado: extração do SAP (colunas "Equipamento" e "Tempo de máquina parada em manutenção"), parte diária ("Equipamento (padronizado)" e "Horas trabalhadas") ou a planilha de indicadores do mês anterior.</div></div>';
     return;
   }
   // mês: o que mais aparece na parte diária; senão o mês escolhido
@@ -8644,6 +8741,25 @@ async function indImportar(files){
   indAbertos = {};
   if (!indAjustes[periodo] && indSalvos[periodo] && indSalvos[periodo].ajustes) indAjustes[periodo] = Object.assign({}, indSalvos[periodo].ajustes);
   await indCalcular(periodo);
+}
+/** junta tudo o que já foi importado nesta sessão (várias importações se somam; o mesmo arquivo importado de novo substitui o anterior) */
+function indReconstruirArq(extras){
+  const ents = Object.keys(indArq.porArquivo).map(function(k){ return indArq.porArquivo[k]; });
+  indArq.pd = []; indArq.sap = {}; indArq.anterior = null;
+  const ab = [];
+  ents.forEach(function(e){
+    e.pd.forEach(function(l){ indArq.pd.push(l); });
+    e.sap.forEach(function(l){ const a = indArq.sap[l.eq]; if (a) { if (l.pm >= a.pm) { l.dup = true; indArq.sap[l.eq] = l; } else a.dup = true; } else indArq.sap[l.eq] = l; });
+    e.anterior.forEach(function(a){ ab.push(a); });
+  });
+  if (ab.length) indArq.anterior = indLerAnterior(ab);
+  indArq.lista = ents.map(function(e){ return { nome: e.nome, tipo: e.tipos.join(' + '), ok: true }; }).concat(extras || []);
+}
+function indLimparArquivos(){
+  indArq = { sap: {}, pd: [], anterior: null, lista: [], porArquivo: {} };
+  indDados = indSalvos[document.getElementById('ind-sel-mes').value] ? { periodo: document.getElementById('ind-sel-mes').value, linhas: indSalvos[document.getElementById('ind-sel-mes').value].linhas, alertas: indSalvos[document.getElementById('ind-sel-mes').value].alertas, origem: 'salvo' } : null;
+  document.getElementById('ind-importacao').innerHTML = '<div class="ind-painel">Arquivos descartados. Importe as planilhas do mês novamente.</div>';
+  indRender();
 }
 function indLinhaArq(a){ return '<li><span class="' + (a.ok ? 'ok' : 'ruim') + '">' + (a.ok ? '✔' : '✖') + '</span><span><b>' + mtEsc(a.nome) + '</b> — ' + mtEsc(a.tipo || 'não reconheci este arquivo') + '</span></li>'; }
 
@@ -8689,17 +8805,19 @@ async function indCalcular(periodo){
   if (!Object.keys(indArq.sap).length) avisos.push('Nenhuma extração do SAP carregada — o PM (horas paradas), o MTTR e o MTBF ficaram zerados.');
   if (usouRef) avisos.push('Usei o regime de trabalho das suas planilhas em ' + usouRef + ' equipamento(s) em que a Frota estava diferente. Para não depender disso nos próximos meses, grave na Frota pelo botão abaixo.');
 
-  if (!pdMes.length) avisos.push('Nenhuma parte diária deste mês — as horas operadas (HO) ficaram zeradas.');
+  if (!pdMes.length) avisos.push('Nenhuma parte diária de ' + indNomeMes(periodo) + ' foi importada' + (indArq.pd.length ? ' (a parte diária carregada é de outro mês — troque o mês no seletor ou importe a deste mês)' : '') + ' — por isso EO e IU aparecem como "—".');
   if (indArq.pd.length && pdMes.length < indArq.pd.length) avisos.push((indArq.pd.length - pdMes.length) + ' lançamentos da parte diária são de outros meses e foram ignorados.');
   const dups = Object.keys(indArq.sap).filter(function(k){ return indArq.sap[k].dup; });
   if (dups.length) avisos.push('Equipamento repetido nas extrações do SAP (fiquei com a linha de maior tempo parado): ' + dups.join(', '));
   const conf = indConferirRegimes();
   caixa.innerHTML = '<div class="ind-painel"><h4>Arquivos lidos</h4><ul class="ind-lista-arq">' + indArq.lista.map(indLinhaArq).join('') + '</ul>' +
+    '<div class="ind-nota"><button type="button" class="rel-btn-secundario" id="ind-btn-limpar-arq" style="padding:3px 10px;font-size:12px">🗑 Limpar arquivos carregados</button> &nbsp;Importações se somam: você pode enviar os arquivos juntos ou em etapas.</div>' +
     '<div class="ind-nota">SAP: <b>' + Object.keys(indArq.sap).length + '</b> equipamentos lidos (' + indN(Object.keys(indArq.sap).reduce(function(a, k){ return a + indArq.sap[k].pm; }, 0), 0) + ' h de parada no total, ' + Object.keys(indArq.sap).filter(function(k){ return indArq.sap[k].mttr > 0; }).length + ' com MTTR) · Parte diária: <b>' + pdMes.length + '</b> lançamentos de ' + indNomeMes(periodo) + '. O SAP não informa o mês: o portal usou as extrações como sendo de ' + indNomeMes(periodo) + ' — se não for, troque o mês no seletor.</div>' +
     '<div class="ind-nota">Mês calculado: <b>' + indNomeMes(periodo) + '</b> · ' + r.linhas.length + ' linhas (equipamento × contrato) · ' + new Set(r.linhas.map(function(l){ return l.eq; })).size + ' equipamentos.</div>' +
     avisos.map(function(a){ return '<div class="ind-nota">⚠️ ' + mtEsc(a) + '</div>'; }).join('') +
     (conf.length ? '<div class="ind-aviso-conf">⚠️ <b>' + conf.length + ' equipamento(s)</b> estão na Frota com regime de trabalho diferente do HP das suas planilhas — isso muda HP, DM, EO e IU. <button type="button" class="rel-btn-primario" id="ind-btn-conf" style="padding:5px 14px;font-size:12px;margin-left:8px">Conferir e corrigir na Frota</button></div>' : '') + '</div>';
   const bc = document.getElementById('ind-btn-conf'); if (bc) bc.onclick = function(){ indModalConferencia(conf); };
+  const bl = document.getElementById('ind-btn-limpar-arq'); if (bl) bl.onclick = indLimparArquivos;
   indRender();
 }
 function indCodigoDe(nome){
@@ -8893,6 +9011,34 @@ function indHtmlFormulas(ls, titulo){
     '<tr><td class="lab">Fórmula média<br>ponderada<br>(%)</td><td>DM = Σ(HP − PM) / ΣHP</td><td>EO = ΣHO / Σ(HP − PM)</td><td>IU = ΣHO / ΣHP</td></tr>' +
     '<tr><td class="lab">Média geral<br>(%)</td><td colspan="3">Média simples das médias ponderadas de cada contrato — o mesmo cálculo da aba MÉDIA da planilha</td></tr></tbody></table>';
 }
+function indSvgBarras(titulo, itens, metaPct, cor){
+  const lin = 24, ml = 150, mr = 56, W = 520, topo = 8, H = itens.length * lin + topo + 22;
+  const larg = W - ml - mr, X = function(v){ return ml + Math.max(0, Math.min(1, v)) * larg; };
+  let g = '<svg class="ind-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + mtEsc(titulo) + '" style="max-height:none">';
+  [0, 0.25, 0.5, 0.75, 1].forEach(function(t){ g += '<line x1="' + X(t) + '" x2="' + X(t) + '" y1="' + topo + '" y2="' + (H - 18) + '" stroke="var(--ind-grade)"/><text x="' + X(t) + '" y="' + (H - 4) + '" text-anchor="middle">' + (t * 100) + '%</text>'; });
+  itens.forEach(function(it, i){
+    const y = topo + i * lin;
+    g += '<text x="' + (ml - 8) + '" y="' + (y + 15) + '" text-anchor="end" style="fill:var(--tinta)">' + mtEsc(it.rot.length > 24 ? it.rot.slice(0, 23) + '…' : it.rot) + '</text>';
+    if (it.v === null || it.v === undefined) { g += '<text x="' + (ml + 4) + '" y="' + (y + 15) + '">sem dado</text>'; return; }
+    const w = Math.max(2, X(it.v) - ml);
+    g += '<path d="M' + ml + ' ' + (y + 4) + 'h' + Math.max(0, w - 4) + 'a4 4 0 0 1 4 4v4a4 4 0 0 1 -4 4h-' + Math.max(0, w - 4) + 'z" fill="' + cor + '"><title>' + mtEsc(it.rot) + ': ' + indPct(it.v) + '</title></path>';
+    g += '<text class="rot" x="' + (ml + w + 6) + '" y="' + (y + 15) + '" style="fill:var(--tinta)">' + indPct(it.v, 1) + '</text>';
+  });
+  g += '<line x1="' + X(metaPct / 100) + '" x2="' + X(metaPct / 100) + '" y1="' + (topo - 2) + '" y2="' + (H - 18) + '" stroke="var(--ind-ru)" stroke-width="1.5" stroke-dasharray="4 3"><title>Meta ' + metaPct + '%</title></line>';
+  return '<div class="ind-grafico"><h4>' + mtEsc(titulo) + ' <span class="ind-alt" style="display:inline">· linha tracejada = meta ' + metaPct + '%</span></h4>' + g + '</svg></div>';
+}
+function indHtmlGraficos(ls){
+  const reais = ls.filter(function(l){ return !indSemOuClass(l); });
+  if (!reais.length) return '';
+  const grupos = indAgrupar(reais, indChave), nomes = Object.keys(grupos).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const porEq = nomes.length <= 1;
+  const itens = porEq ? reais.slice().sort(function(a, b){ return a.eq < b.eq ? -1 : 1; }).map(function(l){ return { rot: l.eq, m: indMetricas([l], indVersao) }; })
+    : nomes.map(function(n){ return { rot: n, m: indMetricas(grupos[n], indVersao) }; });
+  const meta = indMetas();
+  const mk = function(tit, ch, cor){ return indSvgBarras(tit, itens.map(function(i){ return { rot: i.rot, v: i.m[ch] }; }), meta[ch], cor); };
+  return '<div class="ind-painel" style="margin-top:14px"><h4>Gráficos — ' + (porEq ? 'por equipamento' : 'por contrato') + '</h4><div class="ind-graficos">' +
+    mk('Disponibilidade mecânica (DM)', 'DM', 'var(--ind-s1)') + mk('Eficiência operacional (EO)', 'EO', 'var(--ind-s2)') + mk('Índice de utilização (IU)', 'IU', 'var(--ind-s3)') + '</div></div>';
+}
 function indHtmlContratos(){
   const filtrando = indFiltroAtivo();
   const lsF = indFiltradas();
@@ -8912,6 +9058,7 @@ function indHtmlContratos(){
   });
   h += '</tbody></table></div>';
   h += '<div class="ind-nota">Clique numa localidade para ver os equipamentos. A linha da localidade é a média ponderada pelas horas. Equipamento que trocou de local no mês aparece nos dois, com HP e PM divididos pelos dias em cada um.</div>';
+  h += indHtmlGraficos(lsF);
   h += '<div style="margin-top:14px">' + indHtmlFormulas(lsF, indFiltroContrato || (filtrando ? 'filtro atual' : 'todas as localidades')) + '</div>';
   return h;
 }
