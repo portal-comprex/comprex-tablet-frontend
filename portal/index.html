@@ -502,6 +502,39 @@
   .arv-linha-equip:last-child{border-bottom:none}
   .arv-nome{font-weight:700;color:var(--tinta)}
   .arv-sub{color:var(--cinza);font-size:10.5px}
+  /* ---- Resumo da localização (dashboard) ---- */
+  #status-eq-resumo{font-size:12.5px}
+  .rs-escopo{display:flex;flex-direction:column;gap:2px;margin-bottom:12px}
+  .rs-escopo b{font-size:14px;color:var(--navy);line-height:1.25;word-break:break-word}
+  .rs-escopo span{font-size:11px;color:var(--cinza)}
+  .rs-kpi{display:flex;align-items:center;gap:12px;background:var(--cream);border:1px solid var(--linha);border-radius:12px;padding:10px 14px;margin-bottom:6px}
+  .rs-kpi-n{font-size:34px;font-weight:800;color:var(--ok);line-height:1}
+  .rs-kpi-l{font-size:11.5px;color:var(--cinza);line-height:1.3}
+  .rs-secao{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza);font-weight:700;margin:16px 0 8px}
+  .rs-atual{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .rs-rosca{width:132px;height:132px;flex:0 0 auto}
+  .rs-rosca-n{font-size:26px;font-weight:800;fill:var(--tinta)}
+  .rs-rosca-l{font-size:9.5px;fill:var(--cinza)}
+  .rs-legs{flex:1;min-width:140px;display:flex;flex-direction:column;gap:5px}
+  .rs-leg{display:flex;align-items:center;gap:7px;font-size:12px}
+  .rs-leg i{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+  .rs-leg span{flex:1;color:var(--cinza)}
+  .rs-leg b{color:var(--tinta)}
+  .rs-barra{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--linha);gap:2px}
+  .rs-barra span{display:block;height:100%}
+  .rs-barra.vazia{opacity:.6}
+  .rs-chips{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:11px}
+  .rs-chip b{font-weight:800}
+  .rs-vazio{color:var(--cinza);font-size:11px}
+  .rs-obras{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto;padding-right:2px}
+  .rs-obra{border:1px solid var(--linha);border-radius:10px;padding:8px 10px;cursor:pointer;background:var(--card)}
+  .rs-obra:hover{border-color:var(--navy);background:var(--cream)}
+  .rs-obra-topo{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .rs-obra-nome{flex:1;font-weight:700;color:var(--tinta);font-size:12px;line-height:1.25;word-break:break-word}
+  .rs-obra-n{font-size:11px;font-weight:800;color:var(--navy);background:var(--cream);border:1px solid var(--linha);border-radius:999px;padding:1px 8px;white-space:nowrap}
+  .rs-obra-lupa{border:0;background:transparent;cursor:pointer;font-size:13px;padding:0 2px}
+  .rs-obra-pe{display:flex;justify-content:space-between;font-size:10.5px;color:var(--cinza);margin-top:5px}
+  .arv-no.rs-flash{outline:2px solid var(--tan,#c79a3a);outline-offset:-2px;border-radius:6px}
   .arv-resumo-linha{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12.5px}
   .arv-resumo-pct{font-weight:700}
   .arv-resumo-total{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:2px}
@@ -1914,7 +1947,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 90</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 91</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -7084,7 +7117,7 @@ function statusEqRenderizar(){
   document.getElementById('lista-tipos-manutencao').innerHTML =
     tiposManutencaoConhecidos().map(function(t){ return '<option value="'+t.replace(/"/g,'&quot;')+'">'; }).join('');
   arv.classList.toggle('arv-modo-manut', modoManutencao);
-  let html = '<div class="arv-cab-tabela"><span>EQUIPAMENTO / ACESSÓRIO</span><span>DIAS NO LOCAL</span><span></span><span>DATA DE CHEGADA</span><span>STATUS</span>' +
+  let html = '<div class="arv-cab-tabela"><span>EQUIPAMENTO / ACESSÓRIO</span><span>DIAS NO LOCAL</span><span>DATA DE CHEGADA</span><span>STATUS</span><span>HISTÓRICO NO LOCAL</span>' +
     (modoManutencao ? '<span>OBSERVAÇÃO</span><span>PREVISÃO DE REPARO</span><span></span>' : '') + '</div>';
   html += noExpansor('root', 0, '🏢', 'COMPREX', null, 'arv-nivel-0');
   html += '<div class="arv-filhos'+(statusEqColapsados.has('root')?' colapsado':'')+'" data-filhos-de="root">';
@@ -7182,7 +7215,7 @@ function statusEqRenderizar(){
       });
     };
   });
-  statusEqRenderizarResumoTodos(locaisOrdenados);
+  statusEqRenderizarResumoTodos(locaisOrdenados, porLocal, equipsFiltrados);
   statusEqRenderizarAlertaParados();
   let btnFora = document.getElementById('status-eq-ver-fora-manut');
   if (modoManutencao) {
@@ -7461,30 +7494,90 @@ function statusEqRenderizarDashboard(equipsFiltrados){
     }).join('');
   }
 }
-/** Mostra, no painel da direita, um cartão de resumo PARA CADA LOCAL visível
- *  na árvore — sem precisar clicar, igual ao modelo de referência. */
-function statusEqRenderizarResumoTodos(locaisOrdenados){
+/** Painel "Resumo da localização" em formato de dashboard: rosca com a situação atual dos equipamentos,
+ *  barra com o tempo acumulado por status e a lista das obras (clique = vai até a obra na árvore). */
+function statusEqRenderizarResumoTodos(locaisOrdenados, porLocal, equipsFiltrados){
   const cores = Object.assign({}, STATUS_COR, { 'EM OPERAÇÃO': 'var(--ok)', 'EM MANUTENÇÃO': 'var(--ru)' });
-  document.getElementById('status-eq-resumo').innerHTML = locaisOrdenados.map(function(local){
-    const registrosDoLocal = movimentacoesItens.filter(function(m){ return m.localDestino === local && m.status; });
-    const totais = somarDiasPorStatus(registrosDoLocal);
-    const totalDias = STATUS_EQUIPAMENTO.reduce(function(t, k){ return t + totais[k]; }, 0);
-    const ultimaMov = movimentacoesItens.filter(function(m){ return m.localDestino === local; })
-      .sort(function(a,b){ return new Date(b.criado) - new Date(a.criado); })[0];
-    const linhas = STATUS_EQUIPAMENTO.map(function(s){
-      const p = totalDias > 0 ? Math.round(totais[s]/totalDias*100) : 0;
-      return '<div class="arv-resumo-linha"><span><span class="resumo-dot" style="background:'+cores[s]+';display:inline-block;margin-right:6px"></span>'+s+'</span>' +
-        '<span class="arv-resumo-pct" style="color:'+cores[s]+'">'+totais[s]+'d ('+p+'%)</span></div>';
-    }).join('');
-    return '<div class="dash-card" id="resumo-local-'+local.replace(/[^a-zA-Z0-9]/g,'')+'" style="margin-bottom:14px">' +
-      '<div class="arv-resumo-total" data-ver-equip-local="'+local+'" style="cursor:pointer" title="Ver equipamentos desse local">'+local+' 🔍</div>' +
-      '<div style="font-size:11px;color:var(--cinza);margin-bottom:10px">'+totalDias+' dias registrados</div>' +
-      linhas +
-      (ultimaMov ? '<div style="font-size:11px;color:var(--cinza);margin-top:10px;border-top:1px solid var(--linha);padding-top:8px">Última movimentação: '+formatarDataHist(ultimaMov.criado)+'</div>' : '') +
-    '</div>';
+  porLocal = porLocal || {}; equipsFiltrados = equipsFiltrados || [];
+  const box = document.getElementById('status-eq-resumo');
+  // --- escopo (o que está sendo resumido) ---
+  const li = document.getElementById('status-eq-filtro-li').value, ob = document.getElementById('status-eq-filtro-local').value;
+  let titulo = 'COMPREX · todas as obras', sub = locaisOrdenados.length + ' obra(s)';
+  if (ob) { titulo = ob; sub = 'Obra' + (li ? ' · ' + li : ''); }
+  else if (li) { const g = localInstalacaoDe(locaisOrdenados[0] || ''); titulo = li + (g.nome ? ' > ' + g.nome : ''); sub = locaisOrdenados.length + ' obra(s) neste local de instalação'; }
+  // --- situação atual (nº de equipamentos por status) ---
+  const atual = statusZeros();
+  equipsFiltrados.forEach(function(eq){ const st = frotaStatusAtual[eq] || 'EM OPERAÇÃO'; if (atual.hasOwnProperty(st)) atual[st]++; });
+  const totalEq = STATUS_EQUIPAMENTO.reduce(function(t, k){ return t + atual[k]; }, 0);
+  const R = 52, C = 2 * Math.PI * R; let acum = 0;
+  const arcos = STATUS_EQUIPAMENTO.map(function(k){
+    if (!atual[k]) return '';
+    const len = atual[k] / totalEq * C;
+    const seg = '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="' + cores[k] + '" stroke-width="18" stroke-dasharray="' + Math.max(len - 2, 0.5) + ' ' + (C - Math.max(len - 2, 0.5)) + '" stroke-dashoffset="' + (-acum) + '" transform="rotate(-90 70 70)"><title>' + k + ': ' + atual[k] + '</title></circle>';
+    acum += len; return seg;
   }).join('');
-  document.querySelectorAll('[data-ver-equip-local]').forEach(function(el){
-    el.onclick = function(){ mostrarEquipamentosDoLocalTooltip(el, el.dataset.verEquipLocal); };
+  const pctOp = totalEq ? Math.round(atual['EM OPERAÇÃO'] / totalEq * 100) : 0;
+  const rosca = '<svg viewBox="0 0 140 140" class="rs-rosca" role="img" aria-label="Equipamentos por status">' +
+    '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="var(--linha)" stroke-width="18"></circle>' + arcos +
+    '<text x="70" y="68" text-anchor="middle" class="rs-rosca-n">' + totalEq + '</text><text x="70" y="86" text-anchor="middle" class="rs-rosca-l">equipamentos</text></svg>';
+  const legenda = STATUS_EQUIPAMENTO.map(function(k){
+    return '<div class="rs-leg"><i style="background:' + cores[k] + '"></i><span>' + k + '</span><b>' + atual[k] + '</b></div>';
+  }).join('');
+  // --- tempo acumulado por status (histórico de movimentações das obras visíveis) ---
+  function diasDoLocal(local){
+    const regs = movimentacoesItens.filter(function(m){ return m.localDestino === local && m.status; });
+    return somarDiasPorStatus(regs);
+  }
+  const totGeral = statusZeros();
+  const linhasObra = locaisOrdenados.map(function(local){
+    const t = diasDoLocal(local);
+    STATUS_EQUIPAMENTO.forEach(function(k){ totGeral[k] += t[k]; });
+    const tot = STATUS_EQUIPAMENTO.reduce(function(x, k){ return x + t[k]; }, 0);
+    const n = (porLocal[local] || []).length;
+    const ult = movimentacoesItens.filter(function(m){ return m.localDestino === local; }).sort(function(x, y){ return new Date(y.criado) - new Date(x.criado); })[0];
+    return { local: local, t: t, tot: tot, n: n, ult: ult };
+  }).sort(function(x, y){ return y.n - x.n || x.local.localeCompare(y.local, 'pt-BR'); });
+  const totDias = STATUS_EQUIPAMENTO.reduce(function(x, k){ return x + totGeral[k]; }, 0);
+  function barraEmpilhada(t, tot){
+    if (!tot) return '<div class="rs-barra vazia"></div>';
+    return '<div class="rs-barra">' + STATUS_EQUIPAMENTO.map(function(k){
+      return t[k] ? '<span style="width:' + (t[k] / tot * 100) + '%;background:' + cores[k] + '" title="' + k + ': ' + t[k] + 'd (' + Math.round(t[k] / tot * 100) + '%)"></span>' : '';
+    }).join('') + '</div>';
+  }
+  const resumoDias = totDias ? STATUS_EQUIPAMENTO.filter(function(k){ return totGeral[k]; }).map(function(k){
+    return '<span class="rs-chip" style="color:' + cores[k] + '">' + k + ' <b>' + Math.round(totGeral[k] / totDias * 100) + '%</b></span>';
+  }).join('') : '<span class="rs-vazio">Sem histórico registrado.</span>';
+  const lista = linhasObra.map(function(o){
+    const pOp = o.tot ? Math.round(o.t['EM OPERAÇÃO'] / o.tot * 100) : null;
+    return '<div class="rs-obra" data-rs-ir="' + frotaEsc(o.local) + '" title="Ir para esta obra na árvore' + (o.ult ? ' · última movimentação: ' + formatarDataHist(o.ult.criado) : '') + '">' +
+      '<div class="rs-obra-topo"><span class="rs-obra-nome">' + frotaEsc(o.local) + '</span><span class="rs-obra-n">' + o.n + ' eq.</span>' +
+      '<button type="button" class="rs-obra-lupa" data-ver-equip-local="' + frotaEsc(o.local) + '" title="Ver os equipamentos desta obra">🔍</button></div>' +
+      barraEmpilhada(o.t, o.tot) +
+      '<div class="rs-obra-pe"><span>' + o.tot + ' dias registrados</span><span>' + (pOp === null ? '—' : pOp + '% em operação') + '</span></div></div>';
+  }).join('');
+  box.innerHTML =
+    '<div class="rs-escopo"><b>' + frotaEsc(titulo) + '</b><span>' + frotaEsc(sub) + '</span></div>' +
+    '<div class="rs-kpi"><div class="rs-kpi-n">' + pctOp + '%</div><div class="rs-kpi-l">dos equipamentos<br>em operação agora</div></div>' +
+    '<div class="rs-secao">Situação atual</div>' +
+    '<div class="rs-atual">' + rosca + '<div class="rs-legs">' + legenda + '</div></div>' +
+    '<div class="rs-secao">Tempo acumulado por status</div>' + barraEmpilhada(totGeral, totDias) +
+    '<div class="rs-chips">' + resumoDias + '</div>' +
+    '<div class="rs-secao">Obras (' + linhasObra.length + ')</div><div class="rs-obras">' + lista + '</div>';
+  box.querySelectorAll('[data-ver-equip-local]').forEach(function(el){
+    el.onclick = function(e){ e.stopPropagation(); mostrarEquipamentosDoLocalTooltip(el, el.dataset.verEquipLocal); };
+  });
+  box.querySelectorAll('[data-rs-ir]').forEach(function(el){
+    el.onclick = function(){
+      const arv = document.getElementById('status-eq-arvore');
+      const local = el.dataset.rsIr, g = statusEqGrupoDoLocal(local);
+      ['root', 'g:' + g, 'l:' + local].forEach(function(id){
+        statusEqColapsados.delete(id);
+        const no = arv.querySelector('[data-no="' + id + '"]'), fi = arv.querySelector('[data-filhos-de="' + id + '"]');
+        if (no) no.classList.remove('colapsado'); if (fi) fi.classList.remove('colapsado');
+      });
+      const alvo = arv.querySelector('[data-no="l:' + local + '"]');
+      if (alvo) { alvo.scrollIntoView({ behavior: 'smooth', block: 'center' }); alvo.classList.add('rs-flash'); setTimeout(function(){ alvo.classList.remove('rs-flash'); }, 1800); }
+    };
   });
 }
 document.getElementById('status-eq-limpar-filtros').onclick = function(){
