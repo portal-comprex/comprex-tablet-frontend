@@ -1738,25 +1738,28 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .arv-folha.arv-destaque-raiox{animation:raioxDestaquePulso 1.6s ease-out 2}
   .raiox-chip.imp{background:#fdeeee;border-color:#f0b7ae;color:#7a1f16}
 
-  .ind-tab.plan th{background:#d9e1f2;color:#000;text-align:center;vertical-align:middle;font-size:12px;font-weight:700;padding:10px 8px;border:1px solid #fff;position:sticky;top:0;z-index:1;white-space:normal;line-height:1.3}
-  body.tema-escuro .ind-tab.plan th{background:#2b3f5e;color:#fff;border-color:#1b2a40}
+  .ind-tab.plan th{background:var(--cream);color:var(--navy);text-align:center;vertical-align:middle;font-size:11px;font-weight:700;padding:9px 8px;border-bottom:2px solid #1b6b3a;position:sticky;top:0;z-index:1;white-space:normal;line-height:1.3;text-transform:uppercase;letter-spacing:.3px}
+  body.tema-escuro .ind-tab.plan th{background:#22344f;color:#e6edf6;border-bottom-color:#3cb371}
   .ind-tab.plan td{text-align:center}
   .ind-tab.plan td.esq{text-align:left}
-  .ind-tab.plan tr.ind-contrato td{background:#e2efda;font-weight:700}
+  .ind-tab.plan tr.ind-contrato td{background:#e8f3ea;font-weight:700}
   body.tema-escuro .ind-tab.plan tr.ind-contrato td{background:#1f3a2c}
   .ind-funil{border:1px solid #8c9bb5;background:#fff;color:#333;font-size:11px;line-height:1;padding:1px 4px;border-radius:2px;cursor:pointer;margin-left:4px;vertical-align:middle}
-  .ind-banner{background:#3a3a3a;color:#fff;text-align:center;font-weight:800;font-size:16px;letter-spacing:.3px;padding:12px;border-radius:8px 8px 0 0;line-height:1.4}
+  .ind-banner{background:linear-gradient(90deg,#1b6b3a,#2f8f55);color:#fff;font-weight:800;font-size:15px;letter-spacing:.3px;padding:12px 16px;border-radius:12px 12px 0 0;line-height:1.35}
+  .ind-banner small{display:block;font-weight:500;opacity:.85;font-size:12px}
+  .ind-aviso-conf{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#fdf1d8;border:1px solid #ecd9a8;color:#6b4e0c;font-size:13px}
   .ind-form{border-collapse:collapse;font-size:12.5px;max-width:820px;width:100%;background:var(--card)}
-  .ind-form th{background:#3a3a3a;color:#fff;font-size:18px;font-weight:800;padding:12px;text-align:center;border:1px solid #fff}
-  .ind-form thead tr+tr th{background:#d9e1f2;color:#000;font-size:12.5px;font-weight:700;padding:10px 8px}
+  .ind-form{border-radius:12px;overflow:hidden}
+  .ind-form th{background:linear-gradient(90deg,#1b6b3a,#2f8f55);color:#fff;font-size:14px;font-weight:800;padding:11px 14px;text-align:left;border:1px solid transparent}
+  .ind-form thead tr+tr th{background:var(--cream);color:var(--navy);font-size:12px;font-weight:700;padding:9px 8px;text-align:center;background-image:none}
   .ind-form td{border:1px solid var(--linha);padding:10px 8px;text-align:center;vertical-align:middle}
-  .ind-form td.lab,.ind-form tbody tr:nth-child(n+3) td:first-child{background:#e2efda;font-weight:700}
-  .ind-form tbody tr:nth-child(n+3) td{background:#e2efda}
+  .ind-form td.lab,.ind-form tbody tr:nth-child(n+3) td:first-child{background:#eef6ef;font-weight:700}
+  .ind-form tbody tr:nth-child(n+3) td{background:#f6faf6}
   .ind-form .vazio{background:transparent !important;border:none}
   .ind-form tr.val td{font-size:15px;font-weight:700}
   .ind-form tr.val.peq td{font-size:12px;font-weight:600;color:var(--cinza)}
   .ind-form tr.val td.lab{background:transparent;font-size:11px}
-  body.tema-escuro .ind-form thead tr+tr th{background:#2b3f5e;color:#fff}
+  body.tema-escuro .ind-form thead tr+tr th{background:#22344f;color:#e6edf6}
   body.tema-escuro .ind-form tbody tr:nth-child(n+3) td{background:#1f3a2c;color:#fff}
   .ind-editar{border:none;background:transparent;cursor:pointer;font-size:12px;padding:0 3px;opacity:.7}
   .ind-editar:hover{opacity:1}
@@ -1902,7 +1905,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 82</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 84</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -8390,6 +8393,12 @@ function indCalcularMes(en){
       o.prod += prod;
     });
     const dias = indDiasPorContrato((en.movs || {})[eq] || [], en.ano, en.mes, cfg);
+    if (cfg.trocaModo === 'principal' && Object.keys(dias.dias).length > 1) {
+      const ks = Object.keys(dias.dias).sort(function(a, b){ return dias.dias[b] - dias.dias[a]; });
+      const outros = ks.slice(1).map(function(k){ return k + ' (' + dias.dias[k] + ' d)'; });
+      dias.dias = {}; dias.dias[ks[0]] = dias.D; dias.manutDias = {}; dias.trocou = false; dias.semContrato = 0;
+      add(eq, 'trocou', 'Trocou de contrato no mês; ficou inteiro em ' + ks[0] + ' (onde passou mais dias). Também passou por: ' + outros.join(', ') + '.');
+    }
     const diasContratos = Object.keys(dias.dias);
     const pdContratos = Object.keys(pdC);
     const hoTotal = pdContratos.reduce(function(s, c){ return s + pdC[c].ho; }, 0);
@@ -8494,6 +8503,8 @@ if (false) module.exports = { indLerSAP, indLerPD, indLerAnterior, indCalcularMe
      Parte (texto) — número do pedaço (o mês é guardado em pedaços)
      Dados (várias linhas de texto, TEXTO SIMPLES) — o JSON do pedaço
    ===================================================================== */
+/* regime planejado (HP) de cada equipamento, conforme as suas planilhas de agosto/setembro de 2026 */
+const IND_HP_REF = {"CAR0012":660,"CAR0018":660,"ESC0038":330,"ESC0039":330,"ESC0043":330,"ESC0044":330,"ESC0045":330,"ESC0049":176,"ESC0079":330,"ESC0080":330,"ESC0083":176,"ESC0085":330,"ESC0087":330,"ESC0088":330,"ESC0089":330,"ESC0092":330,"ESC0093":330,"MHS0005":330,"MHS0007":330,"MHS0008":660,"MHS0011":330,"MHS0012":660,"MHS0013":660,"MHS0014":660,"MHS0015":660,"MHS0016":660,"REH0027":176,"VEP0018":330,"VEP0019":660,"VEP0021":660,"VEP0022":660,"VEP0024":330,"ESC0025":176,"MCA0010":176,"MHS0001":176,"MHS0002":176,"MHS0004":176,"MHS0006":660,"MHS0009":660,"ESC0064":176,"ESC0065":330,"ESC0042":330,"ESC0054":330,"ESC0061":330,"ESC0041":330,"ESC0063":330,"ESC0068":330,"ESC0073":330,"ESC0077":330,"ESC0086":330,"ESC0053":176,"ESC0056":176,"ESC0074":176,"ESC0076":176,"ESC0078":176,"ESC0084":176,"ESC0090":176,"VEP0017":176,"ESC0081":330,"ESC0052":176,"ESC0071":176,"ESC0072":176,"ESC0034":176,"ESC0050":176,"ESC0055":176,"ESC0060":176,"MES0011":176,"REH0025":176,"ESC0051":176,"MES0012":176,"VEP0020":176,"MHS0003":176,"ESC0047":176,"ESC0057":176,"ESC0058":176,"ESC0069":176,"ESC0082":176,"MHS0010":330,"ESC0059":176,"ESC0066":176};
 const IND_NOME_LISTA = 'ManutIndicadores';
 const IND_PEDACO = 28000;
 let indListaId = null, indCfgItemId = null;
@@ -8606,7 +8617,7 @@ async function indImportar(files){
         const pd = indLerPD(a.aoa);
         if (pd.linhas.length) { pd.linhas.forEach(function(l){ novoPD.push(l); }); tipos.push('parte diária (' + pd.linhas.length + ' lançamentos)'); return; }
         const sap = indLerSAP(a.aoa);
-        if (sap.linhas.length) { sap.linhas.forEach(function(l){ if (novoSap[l.eq]) { novoSap[l.eq].dup = true; } novoSap[l.eq] = l; }); tipos.push('SAP (' + sap.linhas.length + ' equipamentos)'); }
+        if (sap.linhas.length) { sap.linhas.forEach(function(l){ const a = novoSap[l.eq]; if (a) { const dup = true; if (l.pm >= a.pm) { l.dup = dup; novoSap[l.eq] = l; } else a.dup = dup; } else novoSap[l.eq] = l; }); tipos.push('SAP (' + sap.linhas.length + ' equipamentos)'); }
       });
       tipos = tipos.filter(function(t, i){ return tipos.indexOf(t) === i; });
       lista.push({ nome: file.name, tipo: tipos.length ? tipos.join(' + ') : '', ok: tipos.length > 0 });
@@ -8642,13 +8653,16 @@ async function indCalcular(periodo){
   try { await garantirDadosFrotaExtra(); await garantirDadosMovimentacoes(); } catch (e) { caixa.innerHTML = '<div class="mt-erro-listas">Não consegui ler Frota/Movimentações: ' + mtEsc(e.message) + '</div>'; return; }
   const ano = +periodo.slice(0, 4), mes = +periodo.slice(5, 7);
   const equips = [], codigos = {};
+  let usouRef = 0;
   Object.keys(frotaTipoItem).forEach(function(nome){
     if (frotaTipoItem[nome] !== 'equipamento') return;
     let cod = indNormEq(nome);
     if (!indEqValido(cod)) { const m = /[A-Za-z]{2,4}[-\s_.]?\d{1,4}/.exec(nome); cod = m ? indNormEq(m[0]) : ''; }
     if (!indEqValido(cod) || codigos[cod]) return;
     codigos[cod] = nome;
-    equips.push({ eq: cod, desc: frotaDescricao[nome] || '', regime: frotaRegimeTrabalho[nome] || '' });
+    let reg = frotaRegimeTrabalho[nome] || '';
+    if (IND_HP_REF[cod]) { const rr = indRegimeDoHP(IND_HP_REF[cod]); if (rr !== reg) { reg = rr; usouRef++; } }
+    equips.push({ eq: cod, desc: frotaDescricao[nome] || '', regime: reg });
   });
   const movs = {};
   movimentacoesItens.forEach(function(m){
@@ -8666,42 +8680,50 @@ async function indCalcular(periodo){
   const ordens = {};
   (typeof locais !== 'undefined' ? locais : []).forEach(function(nome){ const o = indOrdemDoLocal(nome); if (o && !ordens[o]) ordens[o] = String(nome).trim().replace(/\s+/g, ' '); });
   Object.assign(ordens, indCfg.ordemContrato || {});
-  const cfg = { regimeHP: indCfg.regimeHP || {}, ordemContrato: ordens, eqContrato: Object.assign({}, indCfg.eqContrato || {}, indAjustes[periodo] || {}), eqContratoSug: eqSug };
+  const cfg = { regimeHP: indCfg.regimeHP || {}, trocaModo: indCfg.trocaModo || 'proporcional', ordemContrato: ordens, eqContrato: Object.assign({}, indCfg.eqContrato || {}, indAjustes[periodo] || {}), eqContratoSug: eqSug };
   const pdMes = indArq.pd.filter(function(l){ return l.data.slice(0, 7) === periodo; });
   const r = indCalcularMes({ ano: ano, mes: mes, sap: indArq.sap, pd: pdMes, equips: equips, movs: movs, cfg: cfg });
   indDados = { periodo: periodo, linhas: r.linhas, alertas: r.alertas, origem: 'calculo' };
   // painel de importação
   const avisos = [];
-  if (!Object.keys(indArq.sap).length) avisos.push('Nenhuma extração do SAP carregada — o PM (horas paradas) ficou zerado.');
+  if (!Object.keys(indArq.sap).length) avisos.push('Nenhuma extração do SAP carregada — o PM (horas paradas), o MTTR e o MTBF ficaram zerados.');
+  if (usouRef) avisos.push('Usei o regime de trabalho das suas planilhas em ' + usouRef + ' equipamento(s) em que a Frota estava diferente. Para não depender disso nos próximos meses, grave na Frota pelo botão abaixo.');
+
   if (!pdMes.length) avisos.push('Nenhuma parte diária deste mês — as horas operadas (HO) ficaram zeradas.');
   if (indArq.pd.length && pdMes.length < indArq.pd.length) avisos.push((indArq.pd.length - pdMes.length) + ' lançamentos da parte diária são de outros meses e foram ignorados.');
   const dups = Object.keys(indArq.sap).filter(function(k){ return indArq.sap[k].dup; });
-  if (dups.length) avisos.push('Equipamento repetido nas extrações do SAP (usei a última): ' + dups.join(', '));
+  if (dups.length) avisos.push('Equipamento repetido nas extrações do SAP (fiquei com a linha de maior tempo parado): ' + dups.join(', '));
   const conf = indConferirRegimes();
   caixa.innerHTML = '<div class="ind-painel"><h4>Arquivos lidos</h4><ul class="ind-lista-arq">' + indArq.lista.map(indLinhaArq).join('') + '</ul>' +
+    '<div class="ind-nota">SAP: <b>' + Object.keys(indArq.sap).length + '</b> equipamentos lidos (' + indN(Object.keys(indArq.sap).reduce(function(a, k){ return a + indArq.sap[k].pm; }, 0), 0) + ' h de parada no total, ' + Object.keys(indArq.sap).filter(function(k){ return indArq.sap[k].mttr > 0; }).length + ' com MTTR) · Parte diária: <b>' + pdMes.length + '</b> lançamentos de ' + indNomeMes(periodo) + '. O SAP não informa o mês: o portal usou as extrações como sendo de ' + indNomeMes(periodo) + ' — se não for, troque o mês no seletor.</div>' +
     '<div class="ind-nota">Mês calculado: <b>' + indNomeMes(periodo) + '</b> · ' + r.linhas.length + ' linhas (equipamento × contrato) · ' + new Set(r.linhas.map(function(l){ return l.eq; })).size + ' equipamentos.</div>' +
     avisos.map(function(a){ return '<div class="ind-nota">⚠️ ' + mtEsc(a) + '</div>'; }).join('') +
-    (conf.length ? '<div class="ind-nota" style="margin-top:10px">🔎 <b>' + conf.length + ' equipamento(s)</b> com regime de trabalho diferente do HP da planilha do mês anterior. <button type="button" class="rel-btn-secundario" id="ind-btn-conf" style="padding:3px 10px;font-size:12px">Ver e ajustar</button></div>' : '') + '</div>';
+    (conf.length ? '<div class="ind-aviso-conf">⚠️ <b>' + conf.length + ' equipamento(s)</b> estão na Frota com regime de trabalho diferente do HP das suas planilhas — isso muda HP, DM, EO e IU. <button type="button" class="rel-btn-primario" id="ind-btn-conf" style="padding:5px 14px;font-size:12px;margin-left:8px">Conferir e corrigir na Frota</button></div>' : '') + '</div>';
   const bc = document.getElementById('ind-btn-conf'); if (bc) bc.onclick = function(){ indModalConferencia(conf); };
   indRender();
+}
+function indCodigoDe(nome){
+  let cod = indNormEq(nome);
+  if (!indEqValido(cod)) { const m = /[A-Za-z]{2,4}[-\s_.]?\d{1,4}/.exec(nome || ''); cod = m ? indNormEq(m[0]) : ''; }
+  return indEqValido(cod) ? cod : '';
 }
 function indRegimeDoHP(hp){ return hp >= 500 ? '24h' : hp >= 250 ? '12h' : '8h'; }
 function indConferirRegimes(){
   const out = [];
-  if (!indArq.anterior) return out;
   const reg = Object.assign({}, IND_REGIME_HP_PADRAO, indCfg.regimeHP || {});
-  const porCod = {};
-  Object.keys(frotaTipoItem).forEach(function(nome){ if (frotaTipoItem[nome] !== 'equipamento') return; const c = indNormEq(nome); if (indEqValido(c)) porCod[c] = nome; });
-  Object.keys(indArq.anterior).forEach(function(eq){
-    const nome = porCod[eq]; const hp = indArq.anterior[eq].hp;
-    if (!nome || !hp) return;
-    const sug = indRegimeDoHP(hp), atual = frotaRegimeTrabalho[nome] || '8h';
-    if (sug !== atual) out.push({ eq: eq, nome: nome, hp: hp, atual: atual, sugerido: sug, hpAtual: reg[atual] });
+  const ref = {};
+  Object.keys(IND_HP_REF).forEach(function(eq){ ref[eq] = IND_HP_REF[eq]; });
+  if (indArq.anterior) Object.keys(indArq.anterior).forEach(function(eq){ if (indArq.anterior[eq].hp) ref[eq] = indArq.anterior[eq].hp; });
+  Object.keys(frotaTipoItem).forEach(function(nome){
+    if (frotaTipoItem[nome] !== 'equipamento') return;
+    const eq = indCodigoDe(nome); if (!eq || !ref[eq]) return;
+    const sug = indRegimeDoHP(ref[eq]), atual = frotaRegimeTrabalho[nome] || '8h';
+    if (sug !== atual) out.push({ eq: eq, nome: nome, hp: ref[eq], atual: atual, sugerido: sug, hpAtual: reg[atual] });
   });
   return out;
 }
 function indModalConferencia(conf){
-  const corpo = '<div class="ind-nota">Compara o regime cadastrado na Frota com o HP da planilha do mês anterior. Marque o que quer corrigir na Frota.</div><div class="ind-wrap" style="margin-top:8px;max-height:50vh"><table class="ind-tab"><thead><tr><th></th><th class="esq">Equipamento</th><th>HP anterior</th><th>Regime na Frota</th><th>Sugerido</th></tr></thead><tbody>' +
+  const corpo = '<div class="ind-nota">Compara o regime cadastrado na Frota com o HP das suas planilhas (agosto/setembro de 2026). Marque o que quer corrigir na Frota.</div><div class="ind-wrap" style="margin-top:8px;max-height:50vh"><table class="ind-tab"><thead><tr><th></th><th class="esq">Equipamento</th><th>HP da planilha</th><th>Regime na Frota</th><th>Sugerido</th></tr></thead><tbody>' +
     conf.map(function(c, i){ return '<tr><td><input type="checkbox" class="ind-conf-ck" data-i="' + i + '" checked></td><td class="esq">' + mtEsc(c.eq) + '</td><td>' + indN(c.hp, 0) + ' h</td><td>' + c.atual + ' (' + c.hpAtual + ' h)</td><td><b>' + c.sugerido + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
   mtAbrirModal('Conferir regime de trabalho', [], '✔ Aplicar na Frota', async function(){
     if (!mtExigirEdicao()) throw new Error('Sem permissão de edição.');
@@ -8787,7 +8809,7 @@ function indMediaGeral(ls, versao){
   return { DM: md('DM'), EO: md('EO'), IU: md('IU'), n: ms.length };
 }
 function indRenderKpis(k){
-  const lsK = indDados.linhas.filter(function(l){ return !indSemOuClass(l); });
+  const lsK = indFiltradas().filter(function(l){ return !indSemOuClass(l); });
   const m = indMetCtr(lsK);
   const g = indMediaGeral(lsK, indVersao);
   const meta = indMetas();
@@ -8795,13 +8817,14 @@ function indRenderKpis(k){
     const e = chave ? indEstado(chave, v) : 'neutro';
     return '<div class="ind-kpi ' + e + '"><div class="l">' + rot + '</div><div class="n">' + (chave ? indPct(v) : v) + '</div><div class="s">' + (chave ? (indIco(e) + ' meta ' + meta[chave] + '% · ') : '') + sub + '</div></div>';
   };
-  const sub = function(ch){ return 'média geral de ' + g.n + ' contratos · ponderado por horas ' + indPct(m[ch]); };
+  const escopo = indFiltroAtivo() ? (indFiltroEq ? indFiltroEq : (indFiltroContrato && !indFiltroTxt ? indFiltroContrato : 'filtro atual')) : 'todos os contratos';
+  const sub = function(ch){ return (g.n > 1 ? 'média geral de ' + g.n + ' contratos · ' : escopo + ' · ') + 'ponderado por horas ' + indPct(m[ch]); };
   k.innerHTML =
     card('Disponibilidade mecânica', 'DM', g.DM, sub('DM')) +
     card('Eficiência operacional', 'EO', g.EO, sub('EO')) +
     card('Índice de utilização', 'IU', g.IU, sub('IU')) +
-    card('MTTR', null, m.MTTR === null ? '—' : indN(m.MTTR) + ' h', 'tempo médio de reparo') +
-    card('MTBF', null, m.MTBF === null ? '—' : indN(m.MTBF) + ' h', 'tempo médio entre falhas') +
+    card('MTTR', null, m.MTTR === null ? '—' : indN(m.MTTR) + ' h', 'tempo médio de reparo · ' + escopo) +
+    card('MTBF', null, m.MTBF === null ? '—' : indN(m.MTBF) + ' h', 'tempo médio entre falhas · ' + escopo) +
     card('Horas', null, indN(m.HP, 0), 'planejadas · ' + indN(m.PM, 0) + ' h parado · ' + indN(m.HOBruto, 0) + ' h operadas');
 }
 function indTd(m){
@@ -8851,7 +8874,7 @@ function indModalLocal(eq){
 function indDesc(l){ return mtEsc(String(l.desc || '').toUpperCase()); }
 /* cabeçalho igual ao da planilha (Item, Equipamento, Descrição, PM, MTTR, MTBF, HP, DM, EO, IU) */
 function indCabPlanilha(extraLocal){
-  const f = function(t, foco){ return t + (foco ? ' <button type="button" class="ind-funil" data-ind-foco="' + foco + '" title="Filtrar">▾</button>' : ''); };
+  const f = function(t){ return t; };
   return '<thead><tr><th style="width:52px">Item</th><th>' + f('Equipamento', 'ind-f-eq') + '</th><th style="min-width:300px">' + f('Descrição do Equipamento', 'ind-f-txt') + '</th>' + (extraLocal ? '<th>' + f('Localidade', 'ind-f-ct') + '</th>' : '') +
     '<th>Tempo de máquina Parada em Manutenção<br>(PM)</th><th>Tempo Médio de Reparo<br>(MTTR)</th><th>Tempo Médio entre Falhas ou entre Reparo<br>(MTBF)</th><th>Regime Planejado<br>(HP)</th><th>Disponibilidade Mecânica (DM)</th><th>Eficiência Operacional (EO)</th><th>Índice de Utilização<br>(IU)</th>' + (extraLocal ? '<th>Alertas</th><th></th>' : '') + '</tr></thead>';
 }
@@ -8875,7 +8898,7 @@ function indHtmlContratos(){
   const lsF = indFiltradas();
   const porCt = indAgrupar(lsF, indChave);
   const nomes = Object.keys(porCt).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
-  let h = indHtmlFiltros() + (indFiltroContrato ? '<div class="ind-banner">INDICADORES DE MANUTENÇÃO - ' + mtEsc(indFiltroContrato.toUpperCase()) + '<br>' + indNomeMesCaps() + ' DE ' + indDados.periodo.slice(0, 4) + '</div>' : '') +
+  let h = indHtmlFiltros() + (indFiltroContrato ? '<div class="ind-banner">' + mtEsc(indFiltroContrato) + '<small>Indicadores de manutenção · ' + indNomeMes(indDados.periodo) + '</small></div>' : '') +
     '<div class="ind-wrap"><table class="ind-tab plan">' + indCabPlanilha(false) + '<tbody>';
   nomes.forEach(function(c){
     const ls = porCt[c], m = indMetCtr(ls);
@@ -9012,10 +9035,11 @@ function indModalConfig(){
     { id: 'mEO', label: 'Meta EO (%)', tipo: 'number', valor: meta.EO },
     { id: 'mIU', label: 'Meta IU (%)', tipo: 'number', valor: meta.IU },
     { id: 'ordens', label: 'Ordem → local (uma por linha: 500055 = AMT - Harsco - 500055)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.ordemContrato), larga: true, dica: 'Normalmente não precisa: o portal usa o nome do local cadastrado que tem o número da ordem. Preencha só para ordens que não aparecem nos Locais.' },
+    { id: 'troca', label: 'Equipamento que troca de contrato no mês', tipo: 'select', opcoes: ['Dividir pelos dias em cada contrato', 'Ficar inteiro no contrato onde passou mais dias (como na planilha)'], valor: indCfg.trocaModo === 'principal' ? 'Ficar inteiro no contrato onde passou mais dias (como na planilha)' : 'Dividir pelos dias em cada contrato', larga: true },
     { id: 'grupos', label: 'Local → contrato da planilha (uma por linha: AMT - Boleamento - 500008 = AMT)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.grupos), larga: true, dica: 'Normalmente não precisa: o portal agrupa pelo nome (AMT, SIMEC, AMB JUIZ DE FORA, VALE - PENEIRAMENTO…). Use para corrigir um local que caiu no contrato errado. Aceita também só o número da ordem.' },
     { id: 'eqs', label: 'Equipamento → local FIXO (uma por linha: ESC0043 = AMT - Boleamento - 500008)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.eqContrato), larga: true, dica: 'Use quando o histórico de Movimentações estiver errado ou incompleto: o equipamento inteiro (HP, PM e horas) vai para esse local, em todos os meses, até você apagar a linha.' }
   ], '💾 Salvar configurações', async function(v){
-    const novo = { regimeHP: { '8h': +v.hp8 || 176, '12h': +v.hp12 || 330, '24h': +v.hp24 || 660 }, metas: { DM: +v.mDM || 85, EO: +v.mEO || 85, IU: +v.mIU || 72 }, ordemContrato: indParseLinhas(v.ordens), grupos: indParseLinhas(v.grupos), eqContrato: {} };
+    const novo = { regimeHP: { '8h': +v.hp8 || 176, '12h': +v.hp12 || 330, '24h': +v.hp24 || 660 }, metas: { DM: +v.mDM || 85, EO: +v.mEO || 85, IU: +v.mIU || 72 }, ordemContrato: indParseLinhas(v.ordens), grupos: indParseLinhas(v.grupos), trocaModo: /inteiro/.test(v.troca) ? 'principal' : 'proporcional', eqContrato: {} };
     const eqs = indParseLinhas(v.eqs); Object.keys(eqs).forEach(function(k){ novo.eqContrato[indNormEq(k)] = eqs[k]; });
     const ids = await indGravarGrupo('CONFIG', novo, [indCfgItemId].concat(indCfgExtras).filter(Boolean));
     indCfg = novo; indCfgItemId = ids[0]; indCfgExtras = ids.slice(1);
