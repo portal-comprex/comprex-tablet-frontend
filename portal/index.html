@@ -783,6 +783,7 @@
   body.tv .painel-filtros, body.tv .mt-filtros, body.tv .mt-chips, body.tv #painel-ver-mais, body.tv #mt-ver-mais, body.tv #mt-detalhe,
   body.tv .chart-toggle, body.tv .kpi-acao, body.tv .mt-seta, body.tv .painel-btn-tela, body.tv .painel-btn-ghost, body.tv .painel-link-rodape,
   body.tv #status-eq-visao-toggle, body.tv .mt-sub{display:none !important}
+  #status-eq-visao-toggle{display:none !important} /* abas Lista / Dashboard / Movimentações no período removidas da tela (a TV ainda as aciona por código) */
   body.tv .painel-card-inferior, body.tv .mt-lista-card, body.tv .painel-tabela-wrap{height:auto !important;max-height:none !important}
   #tv-modal{position:fixed;inset:0;z-index:3000;background:rgba(10,25,40,.55);display:none;align-items:center;justify-content:center;padding:16px}
   #tv-modal .tvm-box{background:var(--card);color:var(--tinta);border-radius:16px;width:min(560px,96vw);max-height:92vh;overflow:auto;padding:22px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
@@ -1913,7 +1914,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 89</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 90</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -2667,8 +2668,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <input type="text" id="status-eq-filtro-busca" placeholder="Buscar equipamento…">
       </div>
       <div class="campo">
-        <label>Local</label>
-        <select id="status-eq-filtro-local"><option value="">Todos os locais</option></select>
+        <label>Local de instalação</label>
+        <select id="status-eq-filtro-li"><option value="">Todos os locais de instalação</option></select>
+      </div>
+      <div class="campo">
+        <label>Obra</label>
+        <select id="status-eq-filtro-local"><option value="">Todas as obras</option></select>
       </div>
       <div class="campo">
         <label>Status</label>
@@ -6826,16 +6831,34 @@ function statusEqLigarToggle(){
     btn.onclick = function(){ statusEqDefinirVisao(btn.dataset.statusEqVisao); statusEqRenderizar(); };
   });
 }
+/** Filtros "Local de instalação" (COMPREX-AMT…) e "Obra" (as obras do local escolhido). */
+function statusEqPopularFiltrosLocal(){
+  const selLI = document.getElementById('status-eq-filtro-li'), selOb = document.getElementById('status-eq-filtro-local');
+  const liAnt = selLI.value, obAnt = selOb.value;
+  const todas = Array.from(new Set(locais.concat(Object.values(frotaLocalAtual).filter(Boolean)))).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const lis = {};
+  todas.forEach(function(l){ const g = localInstalacaoDe(l); if (!lis[g.cod]) lis[g.cod] = g.nome; });
+  selLI.innerHTML = '<option value="">Todos os locais de instalação</option>' + Object.keys(lis).sort().map(function(c){
+    return '<option value="' + frotaEsc(c) + '">' + frotaEsc(c) + (lis[c] ? ' > ' + frotaEsc(lis[c]) : '') + '</option>';
+  }).join('');
+  selLI.value = Array.from(selLI.options).some(function(o){ return o.value === liAnt; }) ? liAnt : '';
+  statusEqPopularObras(obAnt);
+}
+function statusEqPopularObras(manter){
+  const li = document.getElementById('status-eq-filtro-li').value, selOb = document.getElementById('status-eq-filtro-local');
+  const todas = Array.from(new Set(locais.concat(Object.values(frotaLocalAtual).filter(Boolean)))).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const obras = todas.filter(function(l){ return !li || localInstalacaoDe(l).cod === li; });
+  selOb.innerHTML = '<option value="">' + (li ? 'Todas as obras deste local' : 'Todas as obras') + '</option>' + obras.map(function(l){ return '<option value="' + frotaEsc(l) + '">' + frotaEsc(l) + '</option>'; }).join('');
+  selOb.value = obras.indexOf(manter) !== -1 ? manter : '';
+}
+document.getElementById('status-eq-filtro-li').onchange = function(){ statusEqPopularObras(''); statusEqRenderizar(); };
+document.getElementById('status-eq-filtro-local').onchange = function(){ statusEqRenderizar(); };
 async function carregarStatusEquipamentos(){
   statusEqLigarToggle();
   await garantirDadosFrotaExtra();
   await garantirDadosMovimentacoes();
   await locCarregarDias();
-  if (!statusEqInicializado) {
-    statusEqInicializado = true;
-    const selLocal = document.getElementById('status-eq-filtro-local');
-    selLocal.innerHTML = '<option value="">Todos os locais</option>' + locais.map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
-  }
+  statusEqPopularFiltrosLocal();
   /* filtro de Status: todos os status cadastrados (os padrões + qualquer outro que exista na Frota) */
   const selSt = document.getElementById('status-eq-filtro-status'), stAnt = selSt.value;
   const stUsados = Array.from(new Set(STATUS_EQUIPAMENTO.concat(Object.values(frotaStatusAtual).filter(Boolean))));
@@ -6904,6 +6927,7 @@ function formatarDataBR(iso){
 }
 function statusEqRenderizar(){
   const filtroLocal = document.getElementById('status-eq-filtro-local').value;
+  const filtroLI = document.getElementById('status-eq-filtro-li').value;
   const filtroBusca = document.getElementById('status-eq-filtro-busca').value.trim().toUpperCase();
   const filtroStatus = document.getElementById('status-eq-filtro-status').value;
   const filtroChegadaDe = document.getElementById('status-eq-filtro-chegada-de').value;
@@ -6919,6 +6943,7 @@ function statusEqRenderizar(){
   const equipsFiltrados = frotas.filter(function(eq){
     if (frotaTipoItem[eq] === 'implemento' && implementosVinculados.has(eq)) return false;
     if (filtroLocal && frotaLocalAtual[eq] !== filtroLocal) return false;
+    if (filtroLI && localInstalacaoDe(frotaLocalAtual[eq] || '').cod !== filtroLI) return false;
     if (filtroStatus && (frotaStatusAtual[eq] || 'EM OPERAÇÃO') !== filtroStatus) return false;
     if (filtroBusca && eq.toUpperCase().indexOf(filtroBusca) === -1 && (frotaItemVinculado[eq]||'').toUpperCase().indexOf(filtroBusca) === -1) return false;
     if (filtroChegadaDe || filtroChegadaAte) {
@@ -7463,6 +7488,8 @@ function statusEqRenderizarResumoTodos(locaisOrdenados){
   });
 }
 document.getElementById('status-eq-limpar-filtros').onclick = function(){
+  document.getElementById('status-eq-filtro-li').value = '';
+  statusEqPopularObras('');
   document.getElementById('status-eq-filtro-local').value = '';
   document.getElementById('status-eq-filtro-busca').value = '';
   document.getElementById('status-eq-filtro-status').value = '';
@@ -8199,6 +8226,7 @@ function mostrarView(nome){
   /* "Localização Atual" e "Dashboard" de Movimentações agora são modos da tela Local de Instalação */
   if (nome === 'localizacao-atual') { nome = 'status-equipamentos'; statusEqVisualizacao = 'lista'; }
   else if (nome === 'dashboard-mov') { nome = 'status-equipamentos'; statusEqVisualizacao = 'periodo'; }
+  if (nome === 'status-equipamentos' && !document.body.classList.contains('tv')) statusEqVisualizacao = 'arvore'; /* só a Árvore existe fora do Modo TV */
   document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('ativo'); });
   const alvo = document.getElementById('view-' + nome);
   if (alvo) alvo.classList.add('ativo');
@@ -10889,10 +10917,11 @@ function mtAbaMov(oc){
 
 /* ---------- ações da ficha ---------- */
 async function manutIrParaLocalizacao(eq){
-  statusEqVisualizacao = 'lista';
+  statusEqVisualizacao = 'arvore';
   mostrarView('status-equipamentos');
   await carregarStatusEquipamentos();
-  ['status-eq-filtro-local','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){ document.getElementById(id).value = ''; });
+  ['status-eq-filtro-li','status-eq-filtro-local','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){ document.getElementById(id).value = ''; });
+  statusEqPopularObras('');
   document.getElementById('status-eq-filtro-busca').value = eq;
   statusEqRenderizar();
 }
@@ -15191,9 +15220,10 @@ function renderizarPainelResumoDia(){
 function raioxAbrirObraNaArvore(grupo, equipsDestaque){
   statusEqVisualizacao = 'arvore';
   mostrarView('status-equipamentos');
-  ['status-eq-filtro-local','status-eq-filtro-busca','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){
+  ['status-eq-filtro-li','status-eq-filtro-local','status-eq-filtro-busca','status-eq-filtro-status','status-eq-filtro-chegada-de','status-eq-filtro-chegada-ate'].forEach(function(id){
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  statusEqPopularObras('');
   statusEqColapsados.delete('root');
   statusEqColapsados.delete('g:' + grupo);
   statusEqRenderizar();
