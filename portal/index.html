@@ -1737,6 +1737,29 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   @keyframes raioxDestaquePulso{0%{background:#fff3cd}100%{background:transparent}}
   .arv-folha.arv-destaque-raiox{animation:raioxDestaquePulso 1.6s ease-out 2}
   .raiox-chip.imp{background:#fdeeee;border-color:#f0b7ae;color:#7a1f16}
+
+  .ind-tab.plan th{background:#d9e1f2;color:#000;text-align:center;vertical-align:middle;font-size:12px;font-weight:700;padding:10px 8px;border:1px solid #fff;position:sticky;top:0;z-index:1;white-space:normal;line-height:1.3}
+  body.tema-escuro .ind-tab.plan th{background:#2b3f5e;color:#fff;border-color:#1b2a40}
+  .ind-tab.plan td{text-align:center}
+  .ind-tab.plan td.esq{text-align:left}
+  .ind-tab.plan tr.ind-contrato td{background:#e2efda;font-weight:700}
+  body.tema-escuro .ind-tab.plan tr.ind-contrato td{background:#1f3a2c}
+  .ind-funil{border:1px solid #8c9bb5;background:#fff;color:#333;font-size:11px;line-height:1;padding:1px 4px;border-radius:2px;cursor:pointer;margin-left:4px;vertical-align:middle}
+  .ind-banner{background:#3a3a3a;color:#fff;text-align:center;font-weight:800;font-size:16px;letter-spacing:.3px;padding:12px;border-radius:8px 8px 0 0;line-height:1.4}
+  .ind-form{border-collapse:collapse;font-size:12.5px;max-width:820px;width:100%;background:var(--card)}
+  .ind-form th{background:#3a3a3a;color:#fff;font-size:18px;font-weight:800;padding:12px;text-align:center;border:1px solid #fff}
+  .ind-form thead tr+tr th{background:#d9e1f2;color:#000;font-size:12.5px;font-weight:700;padding:10px 8px}
+  .ind-form td{border:1px solid var(--linha);padding:10px 8px;text-align:center;vertical-align:middle}
+  .ind-form td.lab,.ind-form tbody tr:nth-child(n+3) td:first-child{background:#e2efda;font-weight:700}
+  .ind-form tbody tr:nth-child(n+3) td{background:#e2efda}
+  .ind-form .vazio{background:transparent !important;border:none}
+  .ind-form tr.val td{font-size:15px;font-weight:700}
+  .ind-form tr.val.peq td{font-size:12px;font-weight:600;color:var(--cinza)}
+  .ind-form tr.val td.lab{background:transparent;font-size:11px}
+  body.tema-escuro .ind-form thead tr+tr th{background:#2b3f5e;color:#fff}
+  body.tema-escuro .ind-form tbody tr:nth-child(n+3) td{background:#1f3a2c;color:#fff}
+  .ind-editar{border:none;background:transparent;cursor:pointer;font-size:12px;padding:0 3px;opacity:.7}
+  .ind-editar:hover{opacity:1}
   /* ---- Indicadores de Manutenção ---- */
   #view-manut-indic{--ind-ok:#1b7a43;--ind-at:#b07d12;--ind-ru:#b3453a;--ind-s1:#2a78d6;--ind-s2:#eb6834;--ind-s3:#1baf7a;--ind-grade:#e3e8e3}
   body.tema-escuro #view-manut-indic{--ind-ok:#3cb371;--ind-at:#e0a93b;--ind-ru:#e5736a;--ind-s1:#3987e5;--ind-s2:#d95926;--ind-s3:#199e70;--ind-grade:#2c3a4a}
@@ -1879,7 +1902,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 09/10/2026 · 79</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 82</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3267,6 +3290,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="frota-toggle ind-seg" id="ind-versao">
         <button type="button" class="topo-toggle-opt ativo" data-ind-versao="hoje" title="Todas as horas lançadas na parte diária contam como operadas (critério atual da planilha)">Como hoje</button>
         <button type="button" class="topo-toggle-opt" data-ind-versao="prod" title="Tira as horas 'A DISPOSIÇÃO' e a parada de manutenção lançada no turno">Só horas produtivas</button>
+      </div>
+    </div>
+    <div class="ind-grupo"><label>Agrupar por</label>
+      <div class="frota-toggle ind-seg" id="ind-agrup">
+        <button type="button" class="topo-toggle-opt ativo" data-ind-agrup="grupo" title="Contrato como nas abas da planilha: AMT, SIMEC, AMB Juiz de Fora…">Contrato</button>
+        <button type="button" class="topo-toggle-opt" data-ind-agrup="local" title="Cada local/ordem separado: AMT - Boleamento - 500008…">Local / ordem</button>
       </div>
     </div>
     <div class="ind-acoes">
@@ -8283,7 +8312,7 @@ function indContratoDoLocal(loc, cfg){
   if (!l) return null;
   if (/^COMPREX\b/i.test(indSemAcento(l))) return null;
   const ord = indOrdemDoLocal(l);
-  if (ord) return (cfg.ordemContrato && cfg.ordemContrato[ord]) || indContratoPadrao(l, true, l.replace(/\s*-?\s*5\d{5}\s*$/, ''));
+  if (ord) return (cfg.ordemContrato && cfg.ordemContrato[ord]) || l.replace(/\s+/g, ' ');
   return indContratoPadrao(l, false);
 }
 function indLocalDeManutencao(loc){ return /MANUT|OFICINA|ATELI/.test(indUp(loc)); }
@@ -8337,6 +8366,7 @@ function indCalcularMes(en){
   const linhas = [], alertas = [];
   const add = function(eq, tipo, texto){ alertas.push({ tipo: tipo, eq: eq, texto: texto }); };
   Object.keys(universo).sort().forEach(function(eq){
+    if (cfg.eqContrato && cfg.eqContrato[eq] === '__EXCLUIR__') return;
     const u = universo[eq];
     const sap = (en.sap || {})[eq] || null;
     const pdl = pdPorEq[eq] || [];
@@ -8345,8 +8375,9 @@ function indCalcularMes(en){
     const HPfull = regime && regimeHP[regime] ? regimeHP[regime] : (regime ? regimeHP['8h'] : null);
     // horas da parte diária por contrato
     const pdC = {};
+    const forcado = cfg.eqContrato && cfg.eqContrato[eq];
     pdl.forEach(function(l){
-      const c = indContratoDaOrdem(l.ordem, l.cliente, l.descOrdem, cfg);
+      const c = forcado || indContratoDaOrdem(l.ordem, l.cliente, l.descOrdem, cfg);
       const o = pdC[c] = pdC[c] || { ho: 0, disp: 0, manut: 0, prod: 0, pm: 0, linhas: 0 };
       o.ho += l.horas; o.pm += l.pm; o.linhas++;
       if (l.disp) o.disp += l.horas;
@@ -8376,7 +8407,8 @@ function indCalcularMes(en){
       diasContratos.forEach(function(c){ pesoPM[c] = totM > 0 ? (dias.manutDias[c] || 0) / totM : dias.dias[c] / tot; });
       fonte = 'dias';
     };
-    if (diasContratos.length && pdContratos.every(function(c){ return diasContratos.indexOf(c) !== -1; })) porDias();
+    if (forcado) { pesoHP[forcado] = 1; pesoPM = pesoHP; fonte = 'fixo'; }
+    else if (diasContratos.length && pdContratos.every(function(c){ return diasContratos.indexOf(c) !== -1; })) porDias();
     else if (pdContratos.length) {
       pdContratos.forEach(function(c){ pesoHP[c] = hoTotal > 0 ? pdC[c].ho / hoTotal : 1 / pdContratos.length; });
       pesoPM = pesoHP;
@@ -8384,7 +8416,7 @@ function indCalcularMes(en){
       if (diasContratos.length) add(eq, 'conflito', 'Há horas na parte diária em contrato diferente do que o histórico de Movimentações indica (' + pdContratos.filter(function(c){ return diasContratos.indexOf(c) === -1; }).join(', ') + '). Dividi o HP e o PM pelas horas da parte diária.');
     } else if (diasContratos.length) porDias();
     else {
-      const c = (cfg.eqContrato && cfg.eqContrato[eq]) || IND_A_CLASSIFICAR;
+      const c = (cfg.eqContratoSug && cfg.eqContratoSug[eq]) || IND_A_CLASSIFICAR;
       pesoHP[c] = 1; pesoPM = pesoHP; fonte = c === IND_A_CLASSIFICAR ? 'sem' : 'cfg';
       if (c === IND_A_CLASSIFICAR) add(eq, 'classificar', 'Sem histórico de Movimentações no mês e sem parte diária: não sei em qual contrato colocar. Defina o contrato em ⚙ Configurar.');
     }
@@ -8470,8 +8502,10 @@ let indSalvos = {};                 // 'AAAA-MM' -> { linhas, alertas, itemIds:[
 let indDados = null;                // { periodo, linhas, alertas, origem:'calculo'|'salvo', arquivos:[] }
 let indArq = { sap: {}, pd: [], anterior: null, lista: [] };
 let indVersao = 'hoje', indAba = 'contratos';
-let indAbertos = {}, indFiltroTxt = '', indFiltroContrato = '', indOrdem = 'eq';
+let indAbertos = {}, indFiltroTxt = '', indFiltroContrato = '', indFiltroEq = '', indOrdem = 'eq';
 let indIniciado = false, indMsgListas = '';
+let indAgrup = 'grupo';           // grupo = contrato como nas abas da planilha | local = por local/ordem
+let indAjustes = {};              // 'AAAA-MM' -> { equipamento: local | '__EXCLUIR__' }
 
 function indMetas(){ return Object.assign({}, IND_METAS_PADRAO, indCfg.metas || {}); }
 function indPct(v, c){ return v === null || v === undefined || !isFinite(v) ? '—' : (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: c == null ? 1 : c, maximumFractionDigits: c == null ? 1 : c }) + '%'; }
@@ -8524,7 +8558,7 @@ async function indCarregarSalvos(){
         if (obj) indCfg = Object.assign({ regimeHP: {}, ordemContrato: {}, eqContrato: {}, metas: {} }, obj);
         indCfgExtras = g.slice(1).map(function(x){ return x.id; });
       } else if (/^\d{4}-\d{2}$/.test(t) && obj && obj.linhas) {
-        indSalvos[t] = { linhas: obj.linhas, alertas: obj.alertas || [], itemIds: g.map(function(x){ return x.id; }) };
+        indSalvos[t] = { linhas: obj.linhas, alertas: obj.alertas || [], ajustes: obj.ajustes || {}, itemIds: g.map(function(x){ return x.id; }) };
       }
     });
   } catch (e) {
@@ -8596,6 +8630,8 @@ async function indImportar(files){
   if (!periodo) periodo = indMesAtualYM();
   indPrepararMeses(periodo);
   document.getElementById('ind-sel-mes').value = periodo;
+  indAbertos = {};
+  if (!indAjustes[periodo] && indSalvos[periodo] && indSalvos[periodo].ajustes) indAjustes[periodo] = Object.assign({}, indSalvos[periodo].ajustes);
   await indCalcular(periodo);
 }
 function indLinhaArq(a){ return '<li><span class="' + (a.ok ? 'ok' : 'ruim') + '">' + (a.ok ? '✔' : '✖') + '</span><span><b>' + mtEsc(a.nome) + '</b> — ' + mtEsc(a.tipo || 'não reconheci este arquivo') + '</span></li>'; }
@@ -8624,14 +8660,16 @@ async function indCalcular(periodo){
     (movs[cod] = movs[cod] || []).push({ data: ymd, localOrigem: m.localOrigem, localDestino: m.localDestino, status: m.status });
   });
   // contratos do mês anterior servem de "palpite" para quem não tem histórico
-  const eqContrato = {};
-  if (indArq.anterior) Object.keys(indArq.anterior).forEach(function(eq){ eqContrato[eq] = indArq.anterior[eq].contrato; });
-  Object.assign(eqContrato, indCfg.eqContrato || {});
-  const cfg = { regimeHP: indCfg.regimeHP || {}, ordemContrato: indCfg.ordemContrato || {}, eqContrato: eqContrato };
+  const eqSug = {};
+  if (indArq.anterior) Object.keys(indArq.anterior).forEach(function(eq){ eqSug[eq] = indArq.anterior[eq].contrato; });
+  // ordem -> nome do local no portal (ex.: 500020 -> AMB - Juiz de Fora Sucata - 500020); o que você escreve em Configurar tem prioridade
+  const ordens = {};
+  (typeof locais !== 'undefined' ? locais : []).forEach(function(nome){ const o = indOrdemDoLocal(nome); if (o && !ordens[o]) ordens[o] = String(nome).trim().replace(/\s+/g, ' '); });
+  Object.assign(ordens, indCfg.ordemContrato || {});
+  const cfg = { regimeHP: indCfg.regimeHP || {}, ordemContrato: ordens, eqContrato: Object.assign({}, indCfg.eqContrato || {}, indAjustes[periodo] || {}), eqContratoSug: eqSug };
   const pdMes = indArq.pd.filter(function(l){ return l.data.slice(0, 7) === periodo; });
   const r = indCalcularMes({ ano: ano, mes: mes, sap: indArq.sap, pd: pdMes, equips: equips, movs: movs, cfg: cfg });
   indDados = { periodo: periodo, linhas: r.linhas, alertas: r.alertas, origem: 'calculo' };
-  indAbertos = {};
   // painel de importação
   const avisos = [];
   if (!Object.keys(indArq.sap).length) avisos.push('Nenhuma extração do SAP carregada — o PM (horas paradas) ficou zerado.');
@@ -8692,6 +8730,7 @@ function indPrepararMeses(extra){
 function indMudouMes(){
   const p = document.getElementById('ind-sel-mes').value;
   if (indDados && indDados.origem === 'calculo' && indDados.periodo === p) return;
+  indAbertos = {};
   if ((indArq.pd.length || Object.keys(indArq.sap).length) && !indSalvos[p]) { indCalcular(p); return; }
   if (indSalvos[p]) indDados = { periodo: p, linhas: indSalvos[p].linhas, alertas: indSalvos[p].alertas, origem: 'salvo' };
   else indDados = null;
@@ -8710,6 +8749,7 @@ function indRender(){
   aviso.innerHTML = indMsgListas;
   document.getElementById('ind-btn-salvar').disabled = !(indDados && indDados.origem === 'calculo');
   document.getElementById('ind-btn-excel').disabled = !indDados;
+  document.querySelectorAll('[data-ind-agrup]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indAgrup === indAgrup); });
   document.querySelectorAll('[data-ind-versao]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indVersao === indVersao); });
   document.querySelectorAll('[data-ind-aba]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indAba === indAba); });
   const nAl = indDados ? indDados.alertas.length : 0;
@@ -8727,52 +8767,129 @@ function indRender(){
   else corpo.innerHTML = indHtmlHistorico();
   indLigarCorpo();
 }
+function indSemOuClass(l){ return l.contrato === IND_SEM_CONTRATO || l.contrato === IND_A_CLASSIFICAR; }
+/** contrato "como nas abas da planilha" (AMT, SIMEC, AMB JUIZ DE FORA…) a partir do nome do local */
+function indGrupoDe(l){
+  const n = l.contrato;
+  if (n === IND_SEM_CONTRATO || n === IND_A_CLASSIFICAR) return n;
+  const g = indCfg.grupos || {};
+  if (g[n]) return g[n];
+  const o = indOrdemDoLocal(n); if (o && g[o]) return g[o];
+  return indContratoPadrao(n, false) || n;
+}
+function indChave(l){ return indAgrup === 'grupo' ? indGrupoDe(l) : l.contrato; }
+/** "Média geral" da sua planilha: média simples das médias (ponderadas) de cada contrato */
+function indMediaGeral(ls, versao){
+  const reais = ls.filter(function(l){ return !indSemOuClass(l); });
+  const g = indAgrupar(reais, indChave);
+  const ms = Object.keys(g).map(function(c){ return indMetricas(g[c], versao); });
+  const md = function(ch){ const v = ms.map(function(x){ return x[ch]; }).filter(function(x){ return x !== null; }); return v.length ? v.reduce(function(a, b){ return a + b; }, 0) / v.length : null; };
+  return { DM: md('DM'), EO: md('EO'), IU: md('IU'), n: ms.length };
+}
 function indRenderKpis(k){
-  const lsK = indDados.linhas.filter(function(l){ return l.contrato !== IND_SEM_CONTRATO && l.contrato !== IND_A_CLASSIFICAR; });
+  const lsK = indDados.linhas.filter(function(l){ return !indSemOuClass(l); });
   const m = indMetCtr(lsK);
-  const porCt = indAgrupar(lsK, 'contrato');
-  const ctr = Object.keys(porCt).filter(function(c){ return c !== IND_SEM_CONTRATO && c !== IND_A_CLASSIFICAR; });
-  const mc = ctr.map(function(c){ return indMetCtr(porCt[c]); });
-  const media = function(ch){ const v = mc.map(function(x){ return x[ch]; }).filter(function(x){ return x !== null; }); return v.length ? v.reduce(function(a, b){ return a + b; }, 0) / v.length : null; };
+  const g = indMediaGeral(lsK, indVersao);
   const meta = indMetas();
   const card = function(rot, chave, v, sub){
     const e = chave ? indEstado(chave, v) : 'neutro';
     return '<div class="ind-kpi ' + e + '"><div class="l">' + rot + '</div><div class="n">' + (chave ? indPct(v) : v) + '</div><div class="s">' + (chave ? (indIco(e) + ' meta ' + meta[chave] + '% · ') : '') + sub + '</div></div>';
   };
+  const sub = function(ch){ return 'média geral de ' + g.n + ' contratos · ponderado por horas ' + indPct(m[ch]); };
   k.innerHTML =
-    card('Disponibilidade mecânica', 'DM', m.DM, 'média simples dos contratos ' + indPct(media('DM'))) +
-    card('Eficiência operacional', 'EO', m.EO, 'média simples ' + indPct(media('EO'))) +
-    card('Índice de utilização', 'IU', m.IU, 'média simples ' + indPct(media('IU'))) +
+    card('Disponibilidade mecânica', 'DM', g.DM, sub('DM')) +
+    card('Eficiência operacional', 'EO', g.EO, sub('EO')) +
+    card('Índice de utilização', 'IU', g.IU, sub('IU')) +
     card('MTTR', null, m.MTTR === null ? '—' : indN(m.MTTR) + ' h', 'tempo médio de reparo') +
     card('MTBF', null, m.MTBF === null ? '—' : indN(m.MTBF) + ' h', 'tempo médio entre falhas') +
     card('Horas', null, indN(m.HP, 0), 'planejadas · ' + indN(m.PM, 0) + ' h parado · ' + indN(m.HOBruto, 0) + ' h operadas');
 }
 function indTd(m){
-  return '<td>' + indN(m.HP, 0) + '</td><td>' + indN(m.PM, 0) + '</td><td>' + indN(m.HOBruto, 0) + '</td><td>' + indCelula('DM', m.DM) + '</td><td>' + indCelula('EO', m.EO) + '</td><td>' + indCelula('IU', m.IU) + '</td><td>' + indN(m.MTTR) + '</td><td>' + indN(m.MTBF) + '</td>';
+  return '<td>' + indN(m.PM, 2) + '</td><td>' + indN(m.MTTR, 2) + '</td><td>' + indN(m.MTBF, 2) + '</td><td>' + indN(m.HP, 0) + '</td><td>' + indCelula('DM', m.DM) + '</td><td>' + indCelula('EO', m.EO) + '</td><td>' + indCelula('IU', m.IU) + '</td>';
+}
+function indFiltradas(){
+  return indDados.linhas.filter(function(l){
+    if (indFiltroContrato && indChave(l) !== indFiltroContrato) return false;
+    if (indFiltroEq && l.eq !== indFiltroEq) return false;
+    if (indFiltroTxt) { const t = indSemAcento((l.eq + ' ' + l.desc + ' ' + l.contrato).toLowerCase()); if (t.indexOf(indSemAcento(indFiltroTxt.toLowerCase())) === -1) return false; }
+    return true;
+  });
+}
+function indFiltroAtivo(){ return !!(indFiltroContrato || indFiltroTxt || indFiltroEq); }
+function indHtmlFiltros(){
+  const contratos = Array.from(new Set(indDados.linhas.map(indChave))).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const eqs = Array.from(new Set(indDados.linhas.filter(function(l){ return !indFiltroContrato || indChave(l) === indFiltroContrato; }).map(function(l){ return l.eq; }))).sort();
+  return '<div class="ind-filtros"><div class="ind-grupo"><label>' + (indAgrup === 'grupo' ? 'Contrato' : 'Local / ordem') + '</label><select id="ind-f-ct"><option value="">Todos</option>' + contratos.map(function(c){ return '<option' + (c === indFiltroContrato ? ' selected' : '') + '>' + mtEsc(c) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="ind-grupo"><label>Equipamento</label><select id="ind-f-eq"><option value="">Todos</option>' + eqs.map(function(c){ return '<option' + (c === indFiltroEq ? ' selected' : '') + '>' + mtEsc(c) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="ind-grupo"><label>Filtro rápido (digite)</label><input type="search" id="ind-f-txt" placeholder="Código, descrição ou local…" value="' + mtEsc(indFiltroTxt) + '" autocomplete="off"></div>' +
+    '<span id="ind-f-extra"></span>' +
+    (indFiltroAtivo() ? '<button type="button" class="rel-btn-secundario" id="ind-f-limpar" style="background:#b3453a;color:#fff;border-color:#b3453a">✖ Limpar filtros</button>' : '') + '</div>';
+}
+function indBotaoLocal(eq){
+  if (!indDados || indDados.origem !== 'calculo') return '';
+  const aj = (indAjustes[indDados.periodo] || {})[eq];
+  return ' <button type="button" class="ind-editar" data-ind-edit="' + mtEsc(eq) + '" title="Corrigir o local deste equipamento neste mês">' + (aj ? '📌' : '✏️') + '</button>';
+}
+function indModalLocal(eq){
+  const p = indDados.periodo;
+  const atual = (indAjustes[p] || {})[eq] || '';
+  const nomes = {};
+  (typeof locais !== 'undefined' ? locais : []).forEach(function(n){ nomes[String(n).trim().replace(/\s+/g, ' ')] = 1; });
+  indDados.linhas.forEach(function(l){ if (!indSemOuClass(l)) nomes[l.contrato] = 1; });
+  const ops = ['(automático — usar o histórico de Movimentações)', 'EXCLUIR este equipamento dos indicadores do mês'].concat(Object.keys(nomes).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); }));
+  const val = atual === '__EXCLUIR__' ? ops[1] : (atual || ops[0]);
+  const atuais = indDados.linhas.filter(function(l){ return l.eq === eq; });
+  mtAbrirModal('📌 Local de ' + eq + ' em ' + indNomeMes(p), [
+    { id: 'dest', label: 'Local / contrato neste mês', tipo: 'select', opcoes: ops, valor: val, larga: true, dica: 'Hoje: ' + (atuais.length ? atuais.map(function(l){ return mtEsc(l.contrato) + (l.dias != null && l.dias < l.diasMes ? ' (' + l.dias + ' d)' : ''); }).join(' · ') : 'fora dos indicadores') + '. Ao escolher um local, o equipamento inteiro (HP, PM e horas) vai para ele só neste mês. O ajuste é gravado junto com o mês ao clicar em Salvar mês.' }
+  ], '✔ Aplicar', async function(v){
+    const a = Object.assign({}, indAjustes[p] || {});
+    if (v.dest === ops[0]) delete a[eq]; else a[eq] = v.dest === ops[1] ? '__EXCLUIR__' : v.dest;
+    indAjustes[p] = a;
+    await indCalcular(p);
+  });
+}
+function indDesc(l){ return mtEsc(String(l.desc || '').toUpperCase()); }
+/* cabeçalho igual ao da planilha (Item, Equipamento, Descrição, PM, MTTR, MTBF, HP, DM, EO, IU) */
+function indCabPlanilha(extraLocal){
+  const f = function(t, foco){ return t + (foco ? ' <button type="button" class="ind-funil" data-ind-foco="' + foco + '" title="Filtrar">▾</button>' : ''); };
+  return '<thead><tr><th style="width:52px">Item</th><th>' + f('Equipamento', 'ind-f-eq') + '</th><th style="min-width:300px">' + f('Descrição do Equipamento', 'ind-f-txt') + '</th>' + (extraLocal ? '<th>' + f('Localidade', 'ind-f-ct') + '</th>' : '') +
+    '<th>Tempo de máquina Parada em Manutenção<br>(PM)</th><th>Tempo Médio de Reparo<br>(MTTR)</th><th>Tempo Médio entre Falhas ou entre Reparo<br>(MTBF)</th><th>Regime Planejado<br>(HP)</th><th>Disponibilidade Mecânica (DM)</th><th>Eficiência Operacional (EO)</th><th>Índice de Utilização<br>(IU)</th>' + (extraLocal ? '<th>Alertas</th><th></th>' : '') + '</tr></thead>';
+}
+function indNomeMesCaps(){ const n = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO']; return n[+indDados.periodo.slice(5, 7) - 1]; }
+function indHtmlFormulas(ls, titulo){
+  const meta = indMetas(), mes = indNomeMesCaps();
+  const reais = ls.filter(function(l){ return !indSemOuClass(l); });
+  const m = indMetricas(reais, indVersao);
+  const g = indMediaGeral(reais, indVersao);
+  const eoTxt = indVersao === 'prod' ? '(H. Totais − H. Manut − Parada Operacional) / (H. Totais − H. Manut)' : 'Horas operadas (HO) / (Regime Planejado − Tempo Máq. Parada)';
+  return '<table class="ind-form"><thead><tr><th colspan="4">FÓRMULAS' + (titulo ? ' — ' + mtEsc(titulo) : '') + '</th></tr>' +
+    '<tr><th class="vazio"></th><th>Média DM - ' + mes + '<br>DM &gt;' + meta.DM + '%</th><th>Média EO - ' + mes + '<br>EO &gt;' + meta.EO + '%</th><th>Média IU - ' + mes + '<br>IU&gt;=' + meta.IU + '%</th></tr></thead><tbody>' +
+    '<tr class="val"><td class="lab" style="background:transparent;font-size:11px">Média geral (' + g.n + ' ' + (g.n === 1 ? 'contrato' : 'contratos') + ')</td><td>' + indCelula('DM', g.DM) + '</td><td>' + indCelula('EO', g.EO) + '</td><td>' + indCelula('IU', g.IU) + '</td></tr>' +
+    '<tr class="val peq"><td class="lab">Ponderada por horas (todos os equipamentos)</td><td>' + indPct(m.DM) + '</td><td>' + indPct(m.EO) + '</td><td>' + indPct(m.IU) + '</td></tr>' +
+    '<tr><td class="lab">Fórmula cálculo<br>DM, EO e IU<br>(%)</td><td>(Regime Planejado − Tempo Máq. Parada) / Regime Planejado</td><td>' + eoTxt + '</td><td>Eficiência Operacional × Disponibilidade Mecânica</td></tr>' +
+    '<tr><td class="lab">Fórmula média<br>ponderada<br>(%)</td><td>DM = Σ(HP − PM) / ΣHP</td><td>EO = ΣHO / Σ(HP − PM)</td><td>IU = ΣHO / ΣHP</td></tr>' +
+    '<tr><td class="lab">Média geral<br>(%)</td><td colspan="3">Média simples das médias ponderadas de cada contrato — o mesmo cálculo da aba MÉDIA da planilha</td></tr></tbody></table>';
 }
 function indHtmlContratos(){
-  const porCt = indAgrupar(indDados.linhas, 'contrato');
+  const filtrando = indFiltroAtivo();
+  const lsF = indFiltradas();
+  const porCt = indAgrupar(lsF, indChave);
   const nomes = Object.keys(porCt).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
-  let h = '<div class="ind-wrap"><table class="ind-tab"><thead><tr><th>Contrato</th><th>HP (h)</th><th>PM (h)</th><th>HO (h)</th><th>DM</th><th>EO</th><th>IU</th><th>MTTR (h)</th><th>MTBF (h)</th></tr></thead><tbody>';
-  const reais = [];
+  let h = indHtmlFiltros() + (indFiltroContrato ? '<div class="ind-banner">INDICADORES DE MANUTENÇÃO - ' + mtEsc(indFiltroContrato.toUpperCase()) + '<br>' + indNomeMesCaps() + ' DE ' + indDados.periodo.slice(0, 4) + '</div>' : '') +
+    '<div class="ind-wrap"><table class="ind-tab plan">' + indCabPlanilha(false) + '<tbody>';
   nomes.forEach(function(c){
     const ls = porCt[c], m = indMetCtr(ls);
-    const semC = c === IND_SEM_CONTRATO || c === IND_A_CLASSIFICAR;
-    if (!semC) reais.push(m);
-    const ab = !!indAbertos[c];
+    const ab = filtrando || !!indAbertos[c];
     const qEq = new Set(ls.map(function(l){ return l.eq; })).size;
-    h += '<tr class="ind-contrato" data-ind-ct="' + mtEsc(c) + '"><td><span class="ind-seta">' + (ab ? '▾' : '▸') + '</span>' + mtEsc(c) + ' <span class="ind-alt" style="display:inline">· ' + qEq + ' equip.' + (c === IND_A_CLASSIFICAR ? ' · defina em ⚙ Configurar' : '') + '</span></td>' + indTd(m) + '</tr>';
-    if (ab) ls.slice().sort(function(a, b){ return a.eq < b.eq ? -1 : 1; }).forEach(function(l){
+    h += '<tr class="ind-contrato" data-ind-ct="' + mtEsc(c) + '"><td><span class="ind-seta">' + (ab ? '▾' : '▸') + '</span></td><td class="esq" colspan="2">' + mtEsc(c) + ' <span class="ind-alt" style="display:inline">· ' + qEq + ' equip. · média ponderada' + (c === IND_A_CLASSIFICAR ? ' · defina em ⚙ Configurar' : '') + '</span></td>' + indTd(m) + '</tr>';
+    if (ab) ls.slice().sort(function(a, b){ return a.eq < b.eq ? -1 : 1; }).forEach(function(l, i){
       const mm = indMetricas([l], indVersao);
-      h += '<tr class="ind-filho"><td>' + mtEsc(l.eq) + ' <span class="ind-alt" style="display:inline">' + mtEsc(l.desc) + (l.dias != null && l.dias < l.diasMes ? ' · ' + l.dias + ' d de ' + l.diasMes : '') + '</span></td>' + indTd(mm) + '</tr>';
+      h += '<tr class="ind-filho"><td>' + (i + 1) + '</td><td class="esq"><b>' + mtEsc(l.eq) + '</b></td><td class="esq">' + indDesc(l) + (indAgrup === 'grupo' && l.contrato !== c ? ' <span class="ind-alt" style="display:inline">· ' + mtEsc(l.contrato) + '</span>' : '') + (l.dias != null && l.dias < l.diasMes ? ' <span class="ind-alt" style="display:inline">· ' + l.dias + ' d de ' + l.diasMes + '</span>' : '') + indBotaoLocal(l.eq) + '</td>' + indTd({ PM: l.pm, MTTR: l.mttr || null, MTBF: l.mtbf || null, HP: l.hp, DM: mm.DM, EO: mm.EO, IU: mm.IU }) + '</tr>';
     });
   });
-  const todos = indDados.linhas.filter(function(l){ return l.contrato !== IND_SEM_CONTRATO && l.contrato !== IND_A_CLASSIFICAR; });
-  const tm = indMetricas(todos, indVersao);
-  h += '<tr class="ind-total"><td>TOTAL (ponderado por horas)</td>' + indTd(tm) + '</tr>';
-  const md = function(ch){ const v = reais.map(function(x){ return x[ch]; }).filter(function(x){ return x !== null; }); return v.length ? v.reduce(function(a, b){ return a + b; }, 0) / v.length : null; };
-  h += '<tr class="ind-media"><td>Média simples dos contratos</td><td></td><td></td><td></td><td>' + indPct(md('DM')) + '</td><td>' + indPct(md('EO')) + '</td><td>' + indPct(md('IU')) + '</td><td></td><td></td></tr>';
-  h += '</tbody></table></div><div class="ind-nota">Clique num contrato para ver os equipamentos. O total é ponderado pelas horas (um equipamento de 24 h pesa mais que um de 8 h); a média simples é a média das linhas de contrato, como na planilha. Equipamento que trocou de contrato no mês aparece nos dois, com HP e PM divididos proporcionalmente aos dias em cada um.</div>';
+  h += '</tbody></table></div>';
+  h += '<div class="ind-nota">Clique numa localidade para ver os equipamentos. A linha da localidade é a média ponderada pelas horas. Equipamento que trocou de local no mês aparece nos dois, com HP e PM divididos pelos dias em cada um.</div>';
+  h += '<div style="margin-top:14px">' + indHtmlFormulas(lsF, indFiltroContrato || (filtrando ? 'filtro atual' : 'todas as localidades')) + '</div>';
   return h;
 }
 const IND_ROTULO_ALERTA = { regime: 'Sem regime', classificar: 'Sem contrato', conflito: 'Contrato divergente', 'pm-maior': 'PM > HP', 'ho-excesso': 'HO acima do possível', 'sem-pd': 'Sem parte diária', 'sem-registro': 'Sem registros (100%)', 'dia-excesso': 'Dia com mais de 24 h', 'a-disposicao': 'A disposição', 'pm-divergente': 'PM ≠ parte diária', 'pm-sem-sap': 'Parada fora do SAP', trocou: 'Trocou de contrato' };
@@ -8783,28 +8900,21 @@ function indChips(eq){
   }).join('');
 }
 function indRenderEquipamentos(corpo){
-  const contratos = Array.from(new Set(indDados.linhas.map(function(l){ return l.contrato; }))).sort();
-  let ls = indDados.linhas.filter(function(l){
-    if (indFiltroContrato && l.contrato !== indFiltroContrato) return false;
-    if (indFiltroTxt) { const t = indSemAcento((l.eq + ' ' + l.desc + ' ' + l.contrato).toLowerCase()); if (t.indexOf(indSemAcento(indFiltroTxt.toLowerCase())) === -1) return false; }
-    return true;
-  });
+  let ls = indFiltradas();
   const val = function(l, ch){ const m = indMetricas([l], indVersao); return m[ch] === null ? 9 : m[ch]; };
   ls = ls.slice().sort(function(a, b){
     if (indOrdem === 'DM' || indOrdem === 'EO' || indOrdem === 'IU') return val(a, indOrdem) - val(b, indOrdem);
     if (indOrdem === 'PM') return b.pm - a.pm;
     return a.eq < b.eq ? -1 : a.eq > b.eq ? 1 : 0;
   });
-  let h = '<div class="ind-filtros"><div class="ind-grupo"><label>Buscar</label><input type="search" id="ind-f-txt" placeholder="Equipamento, descrição…" value="' + mtEsc(indFiltroTxt) + '"></div>' +
-    '<div class="ind-grupo"><label>Contrato</label><select id="ind-f-ct"><option value="">Todos</option>' + contratos.map(function(c){ return '<option' + (c === indFiltroContrato ? ' selected' : '') + '>' + mtEsc(c) + '</option>'; }).join('') + '</select></div>' +
-    '<div class="ind-grupo"><label>Ordenar por</label><select id="ind-f-ord">' + [['eq', 'Equipamento'], ['DM', 'Pior DM'], ['EO', 'Pior EO'], ['IU', 'Pior IU'], ['PM', 'Mais horas paradas']].map(function(o){ return '<option value="' + o[0] + '"' + (indOrdem === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>';
-  h += '<div class="ind-wrap"><table class="ind-tab"><thead><tr><th>Equipamento</th><th class="esq">Contrato</th><th>Regime</th><th>HP (h)</th><th>PM (h)</th><th>HO (h)</th><th>DM</th><th>EO</th><th>IU</th><th>MTTR</th><th>MTBF</th><th class="esq">Alertas</th></tr></thead><tbody>';
-  ls.forEach(function(l){
+  let h = indHtmlFiltros().replace('<span id="ind-f-extra"></span>', '<div class="ind-grupo"><label>Ordenar por</label><select id="ind-f-ord">' + [['eq', 'Equipamento'], ['DM', 'Pior DM'], ['EO', 'Pior EO'], ['IU', 'Pior IU'], ['PM', 'Mais horas paradas']].map(function(o){ return '<option value="' + o[0] + '"' + (indOrdem === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>');
+  h += '<div class="ind-wrap"><table class="ind-tab plan">' + indCabPlanilha(true) + '<tbody>';
+  ls.forEach(function(l, i){
     const m = indMetricas([l], indVersao);
-    h += '<tr><td>' + mtEsc(l.eq) + '<span class="ind-alt">' + mtEsc(l.desc) + '</span></td><td class="esq">' + mtEsc(l.contrato) + (l.dias != null && l.dias < l.diasMes ? '<span class="ind-alt">' + l.dias + ' de ' + l.diasMes + ' dias</span>' : '') + '</td><td>' + mtEsc(l.regime) + '</td><td>' + indN(l.hp, 0) + '</td><td>' + indN(l.pm) + '</td><td>' + indN(m.HOBruto) + '</td><td>' + indCelula('DM', m.DM) + '</td><td>' + indCelula('EO', m.EO) + '</td><td>' + indCelula('IU', m.IU) + '</td><td>' + indN(l.mttr) + '</td><td>' + indN(l.mtbf) + '</td><td class="esq">' + indChips(l.eq) + '</td></tr>';
+    h += '<tr><td>' + (i + 1) + '</td><td class="esq"><b>' + mtEsc(l.eq) + '</b></td><td class="esq">' + indDesc(l) + '</td><td class="esq">' + mtEsc(l.contrato) + (indAgrup === 'grupo' && indGrupoDe(l) !== l.contrato ? '<span class="ind-alt">contrato ' + mtEsc(indGrupoDe(l)) + '</span>' : '') + (l.dias != null && l.dias < l.diasMes ? '<span class="ind-alt">' + l.dias + ' de ' + l.diasMes + ' dias</span>' : '') + (l.fonte === 'fixo' ? '<span class="ind-alt">local fixo (Configurar)</span>' : '') + '</td><td>' + indN(l.pm, 2) + '</td><td>' + indN(l.mttr, 2) + '</td><td>' + indN(l.mtbf, 2) + '</td><td>' + indN(l.hp, 0) + '</td><td>' + indCelula('DM', m.DM) + '</td><td>' + indCelula('EO', m.EO) + '</td><td>' + indCelula('IU', m.IU) + '</td><td class="esq">' + indChips(l.eq) + '</td><td>' + indBotaoLocal(l.eq) + '</td></tr>';
   });
-  if (!ls.length) h += '<tr><td colspan="12" class="esq">Nenhum equipamento com esse filtro.</td></tr>';
-  corpo.innerHTML = h + '</tbody></table></div><div class="ind-nota">' + ls.length + ' linhas. Passe o mouse sobre uma etiqueta de alerta para ler a explicação.</div>';
+  if (!ls.length) h += '<tr><td colspan="13" class="esq">Nenhum equipamento com esse filtro.</td></tr>';
+  corpo.innerHTML = h + '</tbody></table></div><div class="ind-nota">' + ls.length + ' linhas. Passe o mouse sobre uma etiqueta de alerta para ler a explicação. Se um equipamento estiver na localidade errada, fixe o local dele em ⚙ Configurar.</div><div style="margin-top:14px">' + indHtmlFormulas(indFiltradas(), indFiltroContrato || (indFiltroAtivo() ? 'filtro atual' : 'todas as localidades')) + '</div>';
 }
 function indHtmlAlertas(){
   if (!indDados.alertas.length) return '<div class="ind-painel">✔ Nenhum alerta neste mês.</div>';
@@ -8815,10 +8925,16 @@ function indHtmlAlertas(){
       g[t].map(function(a){ return '<div class="ind-alerta"><b data-ind-eq="' + mtEsc(a.eq) + '" title="Ver na aba Equipamentos">' + mtEsc(a.eq) + '</b><span>' + mtEsc(a.texto) + '</span></div>'; }).join('') + '</div>';
   }).join('');
 }
+function indMetricasHist(ls){
+  const reais = ls.filter(function(l){ return !indSemOuClass(l); });
+  const m = indMetricas(reais, indVersao), g = indMediaGeral(reais, indVersao);
+  m.DM = g.DM; m.EO = g.EO; m.IU = g.IU;
+  return m;
+}
 function indHtmlHistorico(){
   const per = Object.keys(indSalvos).sort();
-  const pontos = per.map(function(p){ return { p: p, m: indMetricas(indSalvos[p].linhas, indVersao) }; });
-  if (indDados && indDados.origem === 'calculo' && !indSalvos[indDados.periodo]) { pontos.push({ p: indDados.periodo, m: indMetCtr(indDados.linhas), nao: true }); pontos.sort(function(a, b){ return a.p < b.p ? -1 : 1; }); }
+  const pontos = per.map(function(p){ return { p: p, m: indMetricasHist(indSalvos[p].linhas) }; });
+  if (indDados && indDados.origem === 'calculo' && !indSalvos[indDados.periodo]) { pontos.push({ p: indDados.periodo, m: indMetricasHist(indDados.linhas), nao: true }); pontos.sort(function(a, b){ return a.p < b.p ? -1 : 1; }); }
   if (!pontos.length) return '<div class="ind-painel">Ainda não há meses salvos. Calcule um mês e clique em <b>Salvar mês</b> para construir o histórico.</div>';
   const W = 720, H = 250, ml = 44, mr = 70, mt = 14, mb = 30;
   const todos = [];
@@ -8844,14 +8960,18 @@ function indHtmlHistorico(){
   const leg = '<div class="ind-legenda"><span><i style="background:var(--ind-s1)"></i>Disponibilidade mecânica</span><span><i style="background:var(--ind-s2)"></i>Eficiência operacional</span><span><i style="background:var(--ind-s3)"></i>Índice de utilização</span></div>';
   const tab = '<div class="ind-wrap" style="margin-top:12px"><table class="ind-tab"><thead><tr><th>Mês</th><th>HP (h)</th><th>PM (h)</th><th>DM</th><th>EO</th><th>IU</th><th>MTTR</th><th>MTBF</th></tr></thead><tbody>' +
     pontos.slice().reverse().map(function(x){ return '<tr><td>' + indNomeMes(x.p) + (x.nao ? ' <span class="ind-alt" style="display:inline">(não salvo)</span>' : '') + '</td><td>' + indN(x.m.HP, 0) + '</td><td>' + indN(x.m.PM, 0) + '</td><td>' + indCelula('DM', x.m.DM) + '</td><td>' + indCelula('EO', x.m.EO) + '</td><td>' + indCelula('IU', x.m.IU) + '</td><td>' + indN(x.m.MTTR) + '</td><td>' + indN(x.m.MTBF) + '</td></tr>'; }).join('') + '</tbody></table></div>';
-  return '<div class="ind-painel"><h4>Evolução (total ponderado — ' + (indVersao === 'prod' ? 'só horas produtivas' : 'como hoje') + ')</h4>' + leg + s + '</div>' + tab;
+  return '<div class="ind-painel"><h4>Evolução (média geral dos contratos — ' + (indVersao === 'prod' ? 'só horas produtivas' : 'como hoje') + ')</h4>' + leg + s + '</div>' + tab;
 }
 function indLigarCorpo(){
   document.querySelectorAll('[data-ind-ct]').forEach(function(tr){ tr.onclick = function(){ const c = tr.dataset.indCt; indAbertos[c] = !indAbertos[c]; indRender(); }; });
-  document.querySelectorAll('[data-ind-eq]').forEach(function(b){ b.onclick = function(){ indFiltroTxt = b.dataset.indEq; indFiltroContrato = ''; indAba = 'equipamentos'; indRender(); }; });
+  document.querySelectorAll('[data-ind-eq]').forEach(function(b){ b.onclick = function(){ indFiltroTxt = ''; indFiltroEq = b.dataset.indEq; indFiltroContrato = ''; indAba = 'equipamentos'; indRender(); }; });
   const t = document.getElementById('ind-f-txt');
-  if (t) t.oninput = function(){ indFiltroTxt = t.value; const pos = t.selectionStart; indRenderEquipamentos(document.getElementById('ind-corpo')); indLigarCorpo(); const n = document.getElementById('ind-f-txt'); n.focus(); n.setSelectionRange(pos, pos); };
-  const c = document.getElementById('ind-f-ct'); if (c) c.onchange = function(){ indFiltroContrato = c.value; indRender(); };
+  if (t) t.oninput = function(){ indFiltroTxt = t.value; const pos = t.selectionStart; indRender(); const n = document.getElementById('ind-f-txt'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } };
+  const c = document.getElementById('ind-f-ct'); if (c) c.onchange = function(){ indFiltroContrato = c.value; indFiltroEq = ''; indRender(); };
+  const fe = document.getElementById('ind-f-eq'); if (fe) fe.onchange = function(){ indFiltroEq = fe.value; indRender(); };
+  document.querySelectorAll('[data-ind-foco]').forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); const x = document.getElementById(b.dataset.indFoco); if (x) { x.scrollIntoView({ block: 'center' }); x.focus(); } }; });
+  document.querySelectorAll('[data-ind-edit]').forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); indModalLocal(b.dataset.indEdit); }; });
+  const lp = document.getElementById('ind-f-limpar'); if (lp) lp.onclick = function(){ indFiltroTxt = ''; indFiltroContrato = ''; indFiltroEq = ''; indRender(); };
   const o = document.getElementById('ind-f-ord'); if (o) o.onchange = function(){ indOrdem = o.value; indRender(); };
 }
 
@@ -8863,8 +8983,8 @@ async function indSalvarMes(){
   if (indSalvos[p] && !confirm('O mês ' + indNomeMes(p) + ' já está salvo. Substituir pelo cálculo atual?')) return;
   const btn = document.getElementById('ind-btn-salvar'); btn.disabled = true; const rot = btn.textContent; btn.textContent = 'Salvando…';
   try {
-    const novos = await indGravarGrupo(p, { linhas: indDados.linhas, alertas: indDados.alertas }, indSalvos[p] ? indSalvos[p].itemIds : []);
-    indSalvos[p] = { linhas: indDados.linhas, alertas: indDados.alertas, itemIds: novos };
+    const novos = await indGravarGrupo(p, { linhas: indDados.linhas, alertas: indDados.alertas, ajustes: indAjustes[p] || {} }, indSalvos[p] ? indSalvos[p].itemIds : []);
+    indSalvos[p] = { linhas: indDados.linhas, alertas: indDados.alertas, ajustes: Object.assign({}, indAjustes[p] || {}), itemIds: novos };
     indPrepararMeses(p); document.getElementById('ind-sel-mes').value = p;
     mtToast('Mês ' + indNomeMes(p) + ' salvo no histórico.');
   } catch (e) {
@@ -8891,10 +9011,11 @@ function indModalConfig(){
     { id: 'mDM', label: 'Meta DM (%)', tipo: 'number', valor: meta.DM },
     { id: 'mEO', label: 'Meta EO (%)', tipo: 'number', valor: meta.EO },
     { id: 'mIU', label: 'Meta IU (%)', tipo: 'number', valor: meta.IU },
-    { id: 'ordens', label: 'Ordem → contrato (uma por linha: 500055 = AMT - HARSCO - 500055)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.ordemContrato), larga: true, dica: 'Só para ordens que o portal não reconhece sozinho pelo nome do cliente.' },
-    { id: 'eqs', label: 'Equipamento → contrato (uma por linha: ESC0045 = AMT)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.eqContrato), larga: true, dica: 'Vale só para equipamento sem movimentação nem parte diária no mês.' }
+    { id: 'ordens', label: 'Ordem → local (uma por linha: 500055 = AMT - Harsco - 500055)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.ordemContrato), larga: true, dica: 'Normalmente não precisa: o portal usa o nome do local cadastrado que tem o número da ordem. Preencha só para ordens que não aparecem nos Locais.' },
+    { id: 'grupos', label: 'Local → contrato da planilha (uma por linha: AMT - Boleamento - 500008 = AMT)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.grupos), larga: true, dica: 'Normalmente não precisa: o portal agrupa pelo nome (AMT, SIMEC, AMB JUIZ DE FORA, VALE - PENEIRAMENTO…). Use para corrigir um local que caiu no contrato errado. Aceita também só o número da ordem.' },
+    { id: 'eqs', label: 'Equipamento → local FIXO (uma por linha: ESC0043 = AMT - Boleamento - 500008)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.eqContrato), larga: true, dica: 'Use quando o histórico de Movimentações estiver errado ou incompleto: o equipamento inteiro (HP, PM e horas) vai para esse local, em todos os meses, até você apagar a linha.' }
   ], '💾 Salvar configurações', async function(v){
-    const novo = { regimeHP: { '8h': +v.hp8 || 176, '12h': +v.hp12 || 330, '24h': +v.hp24 || 660 }, metas: { DM: +v.mDM || 85, EO: +v.mEO || 85, IU: +v.mIU || 72 }, ordemContrato: indParseLinhas(v.ordens), eqContrato: {} };
+    const novo = { regimeHP: { '8h': +v.hp8 || 176, '12h': +v.hp12 || 330, '24h': +v.hp24 || 660 }, metas: { DM: +v.mDM || 85, EO: +v.mEO || 85, IU: +v.mIU || 72 }, ordemContrato: indParseLinhas(v.ordens), grupos: indParseLinhas(v.grupos), eqContrato: {} };
     const eqs = indParseLinhas(v.eqs); Object.keys(eqs).forEach(function(k){ novo.eqContrato[indNormEq(k)] = eqs[k]; });
     const ids = await indGravarGrupo('CONFIG', novo, [indCfgItemId].concat(indCfgExtras).filter(Boolean));
     indCfg = novo; indCfgItemId = ids[0]; indCfgExtras = ids.slice(1);
@@ -8903,34 +9024,45 @@ function indModalConfig(){
   });
 }
 function indNomeAba(n, usados){
-  let b = String(n).replace(/[\\\/?*\[\]:]/g, '-').slice(0, 28) || 'Aba', c = b, i = 2;
-  while (usados[c]) c = b.slice(0, 26) + '_' + (i++);
+  let b = String(n).replace(/[\\\/?*\[\]:]/g, '-');
+  if (b.length > 31) b = b.replace(/\s+-\s+/g, '-');
+  b = b.slice(0, 31) || 'Aba'; let c = b, i = 2;
+  while (usados[c]) c = b.slice(0, 28) + '_' + (i++);
   usados[c] = 1; return c;
 }
 function indExportarExcel(){
   if (!indDados) return;
   const wb = XLSX.utils.book_new(), usados = {};
-  const pctCols = {};
-  const add = function(nome, aoa, pct){
+  const mesTxt = indNomeMes(indDados.periodo).toUpperCase().replace('/', ' DE ');
+  const f = function(v){ return v === null || v === undefined ? '' : v; };
+  const add = function(nome, aoa, pct, larguras, merges){
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
-    for (let r = 1; r <= range.e.r; r++) (pct || []).forEach(function(c){ const a = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (a && typeof a.v === 'number') a.z = '0.0%'; });
-    ws['!cols'] = aoa[0].map(function(x, i){ return { wch: i === 0 ? 30 : 14 }; });
+    for (let r = 0; r <= range.e.r; r++) (pct || []).forEach(function(c){ const a = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (a && typeof a.v === 'number') a.z = '0.0%'; });
+    ws['!cols'] = larguras.map(function(w){ return { wch: w }; });
+    if (merges) ws['!merges'] = merges;
     XLSX.utils.book_append_sheet(wb, ws, indNomeAba(nome, usados));
   };
-  const f = function(v){ return v === null ? '' : v; };
-  const porCt = indAgrupar(indDados.linhas, 'contrato');
+  const cab = ['Item', 'Equipamento', 'Descrição do Equipamento', 'Tempo de máquina Parada em Manutenção (PM)', 'Tempo Médio de Reparo (MTTR)', 'Tempo Médio entre Falhas ou entre Reparo (MTBF)', 'Regime Planejado (HP)', 'Disponibilidade Mecânica (DM)', 'Eficiência Operacional (EO)', 'Índice de Utilização (IU)'];
+  const larg = [6, 12, 46, 20, 16, 20, 14, 16, 16, 16];
+  const porCt = indAgrupar(indDados.linhas, indChave);
   const nomes = Object.keys(porCt).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
-  const resumo = [['Contrato', 'Equipamentos', 'HP (h)', 'PM (h)', 'HO (h)', 'DM', 'EO', 'IU', 'MTTR (h)', 'MTBF (h)']];
-  nomes.forEach(function(c){ const m = indMetCtr(porCt[c]); resumo.push([c, new Set(porCt[c].map(function(l){ return l.eq; })).size, indR2(m.HP), indR2(m.PM), indR2(m.HOBruto), f(m.DM), f(m.EO), f(m.IU), f(m.MTTR === null ? null : indR2(m.MTTR)), f(m.MTBF === null ? null : indR2(m.MTBF))]); });
-  const tm = indMetricas(indDados.linhas.filter(function(l){ return l.contrato !== IND_SEM_CONTRATO && l.contrato !== IND_A_CLASSIFICAR; }), indVersao);
-  resumo.push(['TOTAL (ponderado)', '', indR2(tm.HP), indR2(tm.PM), indR2(tm.HOBruto), f(tm.DM), f(tm.EO), f(tm.IU), f(tm.MTTR === null ? null : indR2(tm.MTTR)), f(tm.MTBF === null ? null : indR2(tm.MTBF))]);
-  add('Resumo', resumo, [5, 6, 7]);
-  const cab = ['Equipamento', 'Descrição', 'Regime planejado', 'HP (h)', 'PM (h)', 'MTTR (h)', 'MTBF (h)', 'HO (h)', 'DM', 'EO', 'IU', 'Dias no contrato'];
-  const linhaEq = function(l){ const m = indMetricas([l], indVersao); return [l.eq, l.desc, l.regime, l.hp, l.pm, l.mttr, l.mtbf, indR2(m.HOBruto), f(m.DM), f(m.EO), f(m.IU), l.dias == null ? '' : l.dias]; };
-  nomes.forEach(function(c){ add(c, [cab].concat(porCt[c].map(linhaEq)), [8, 9, 10]); });
-  add('Todos os equipamentos', [['Contrato'].concat(cab)].concat(indDados.linhas.map(function(l){ return [l.contrato].concat(linhaEq(l)); })), [9, 10, 11]);
-  add('Alertas', [['Equipamento', 'Tipo', 'Detalhe']].concat(indDados.alertas.map(function(a){ return [a.eq, IND_ROTULO_ALERTA[a.tipo] || a.tipo, a.texto]; })));
+  const resumo = [['INDICADORES DE MANUTENÇÃO — ' + mesTxt + (indVersao === 'prod' ? ' (só horas produtivas)' : '')], [''], ['Localidade', 'Equipamentos', 'PM', 'MTTR', 'MTBF', 'HP', 'DM', 'EO', 'IU']];
+  nomes.forEach(function(c){ const m = indMetCtr(porCt[c]); resumo.push([c, new Set(porCt[c].map(function(l){ return l.eq; })).size, indR2(m.PM), f(m.MTTR === null ? null : indR2(m.MTTR)), f(m.MTBF === null ? null : indR2(m.MTBF)), indR2(m.HP), f(m.DM), f(m.EO), f(m.IU)]); });
+  const tm = indMetricas(indDados.linhas.filter(function(l){ return !indSemOuClass(l); }), indVersao);
+  const gm = indMediaGeral(indDados.linhas, indVersao);
+  resumo.push(['MÉDIA GERAL (média dos contratos)', '', '', '', '', '', f(gm.DM), f(gm.EO), f(gm.IU)]);
+  resumo.push(['TOTAL PONDERADO (todos os equipamentos)', '', indR2(tm.PM), f(tm.MTTR === null ? null : indR2(tm.MTTR)), f(tm.MTBF === null ? null : indR2(tm.MTBF)), indR2(tm.HP), f(tm.DM), f(tm.EO), f(tm.IU)]);
+  add('Resumo', resumo, [6, 7, 8], [44, 13, 12, 12, 12, 12, 12, 12, 12], [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }]);
+  const linhaEq = function(l, i){ const m = indMetricas([l], indVersao); return [i + 1, l.eq, String(l.desc || '').toUpperCase(), l.pm, l.mttr, l.mtbf, l.hp, f(m.DM), f(m.EO), f(m.IU)]; };
+  nomes.forEach(function(c){
+    const ls = porCt[c].slice().sort(function(a, b){ return a.eq < b.eq ? -1 : 1; });
+    const m = indMetCtr(ls);
+    const aoa = [['INDICADORES DE MANUTENÇÃO - ' + c.toUpperCase()], [mesTxt], cab].concat(ls.map(linhaEq));
+    aoa.push(['', '', 'TOTAL / MÉDIA PONDERADA', indR2(m.PM), f(m.MTTR === null ? null : indR2(m.MTTR)), f(m.MTBF === null ? null : indR2(m.MTBF)), indR2(m.HP), f(m.DM), f(m.EO), f(m.IU)]);
+    add(c, aoa, [7, 8, 9], larg, [{ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }]);
+  });
+  add('Alertas', [['Equipamento', 'Tipo', 'Detalhe']].concat(indDados.alertas.map(function(a){ return [a.eq, IND_ROTULO_ALERTA[a.tipo] || a.tipo, a.texto]; })), [], [14, 26, 120]);
   XLSX.writeFile(wb, 'Indicadores_Manutencao_' + indDados.periodo + (indVersao === 'prod' ? '_produtivas' : '') + '.xlsx');
 }
 
@@ -8945,6 +9077,7 @@ async function carregarIndicadoresManut(){
     document.getElementById('ind-btn-config').onclick = indModalConfig;
     document.getElementById('ind-sel-mes').onchange = indMudouMes;
     document.querySelectorAll('[data-ind-versao]').forEach(function(b){ b.onclick = function(){ indVersao = b.dataset.indVersao; indRender(); }; });
+    document.querySelectorAll('[data-ind-agrup]').forEach(function(b){ b.onclick = function(){ indAgrup = b.dataset.indAgrup; indFiltroContrato = ''; indFiltroEq = ''; indAbertos = {}; indRender(); }; });
     document.querySelectorAll('[data-ind-aba]').forEach(function(b){ b.onclick = function(){ indAba = b.dataset.indAba; indRender(); }; });
   }
   indPrepararMeses();
