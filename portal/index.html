@@ -1913,7 +1913,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 88</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 89</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3312,7 +3312,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <div class="ind-grupo"><label>Agrupar por</label>
       <div class="frota-toggle ind-seg" id="ind-agrup">
         <button type="button" class="topo-toggle-opt ativo" data-ind-agrup="grupo" title="Contrato como nas abas da planilha: AMT, SIMEC, AMB Juiz de Fora…">Contrato</button>
-        <button type="button" class="topo-toggle-opt" data-ind-agrup="local" title="Cada local/ordem separado: AMT - Boleamento - 500008…">Local / ordem</button>
+        <button type="button" class="topo-toggle-opt" data-ind-agrup="local" title="Cada local/ordem separado: AMT - BOLEAMENTO - 500008…">Local / ordem</button>
       </div>
     </div>
     <div class="ind-acoes">
@@ -4015,7 +4015,7 @@ function localInstalacaoDe(local){
   const pref = sapSemAcento(String(local || '').split(/\s*-\s*/)[0].trim());
   const chave = pref === 'DIVERSOS' ? 'DIVERSAS' : (pref === 'PATIO' || pref === 'COMPREX' ? 'PÁTIO' : pref);
   const m = SAP_LOCAIS_INSTALACAO[chave];
-  return m ? m : { cod: 'COMPREX-' + pref.slice(0, 3), nome: pref };
+  return m ? m : { cod: String(local || '').split(/\s*-\s*/)[0].trim() || pref, nome: '' };
 }
 function usuarioPodeEditarLocal(local){
   if (usuarioEhAdmin(contaAtual)) return true;
@@ -6797,7 +6797,8 @@ function statusEqGrupoDoLocal(local){
   const partes = String(local).split(/\s*-\s*/);
   const g = (partes[0] || local).trim();
   const u = sapSemAcento(g);
-  return (u === 'DIVERSOS' || u === 'DIVERSAS') ? 'DIVERSAS' : (u === 'PATIO' || u === 'COMPREX') ? 'PÁTIO' : g;
+  const chave = (u === 'DIVERSOS' || u === 'DIVERSAS') ? 'DIVERSAS' : (u === 'PATIO' || u === 'COMPREX') ? 'PÁTIO' : u;
+  return SAP_LOCAIS_INSTALACAO[chave] ? SAP_LOCAIS_INSTALACAO[chave].cod : g;
 }
 /** Remove o prefixo do grupo do nome do local, só pra exibição na árvore —
  *  já que o grupo aparece como "pai" e não precisa ser repetido no filho.
@@ -7065,7 +7066,7 @@ function statusEqRenderizar(){
   gruposOrdenados.forEach(function(grupo){
     const idGrupo = 'g:' + grupo;
     const totalEquipGrupo = porGrupo[grupo].reduce(function(s,l){ return s + porLocal[l].length; }, 0);
-    html += noExpansor(idGrupo, 1, '🏭', localInstalacaoDe(porGrupo[grupo][0]).cod + ' <span style="font-weight:400;opacity:.75">· ' + localInstalacaoDe(porGrupo[grupo][0]).nome + '</span>', totalEquipGrupo + ' equipamento(s)');
+    html += noExpansor(idGrupo, 1, '🏭', localInstalacaoDe(porGrupo[grupo][0]).cod + (localInstalacaoDe(porGrupo[grupo][0]).nome ? ' <span style="font-weight:400;opacity:.75">· ' + localInstalacaoDe(porGrupo[grupo][0]).nome + '</span>' : ''), totalEquipGrupo + ' equipamento(s)');
     html += '<div class="arv-filhos'+(statusEqColapsados.has(idGrupo)?' colapsado':'')+'" data-filhos-de="'+idGrupo+'">';
     porGrupo[grupo].forEach(function(local){
       const idLocal = 'l:' + local;
@@ -9245,10 +9246,10 @@ function indModalConfig(){
     { id: 'mDM', label: 'Meta DM (%)', tipo: 'number', valor: meta.DM },
     { id: 'mEO', label: 'Meta EO (%)', tipo: 'number', valor: meta.EO },
     { id: 'mIU', label: 'Meta IU (%)', tipo: 'number', valor: meta.IU },
-    { id: 'ordens', label: 'Ordem → local (uma por linha: 500055 = AMT - Harsco - 500055)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.ordemContrato), larga: true, dica: 'Normalmente não precisa: o portal usa o nome do local cadastrado que tem o número da ordem. Preencha só para ordens que não aparecem nos Locais.' },
+    { id: 'ordens', label: 'Ordem → local (uma por linha: 500055 = DIVERSAS - HARSCO METALS - 500055)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.ordemContrato), larga: true, dica: 'Normalmente não precisa: o portal usa o nome do local cadastrado que tem o número da ordem. Preencha só para ordens que não aparecem nos Locais.' },
     { id: 'troca', label: 'Equipamento que troca de contrato no mês', tipo: 'select', opcoes: ['Dividir pelos dias em cada contrato', 'Ficar inteiro no contrato onde passou mais dias (como na planilha)'], valor: indCfg.trocaModo === 'principal' ? 'Ficar inteiro no contrato onde passou mais dias (como na planilha)' : 'Dividir pelos dias em cada contrato', larga: true },
-    { id: 'grupos', label: 'Local → contrato da planilha (uma por linha: AMT - Boleamento - 500008 = AMT)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.grupos), larga: true, dica: 'Normalmente não precisa: o portal agrupa pelo nome (AMT, SIMEC, AMB JUIZ DE FORA, VALE - PENEIRAMENTO…). Use para corrigir um local que caiu no contrato errado. Aceita também só o número da ordem.' },
-    { id: 'eqs', label: 'Equipamento → local FIXO (uma por linha: ESC0043 = AMT - Boleamento - 500008)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.eqContrato), larga: true, dica: 'Use quando o histórico de Movimentações estiver errado ou incompleto: o equipamento inteiro (HP, PM e horas) vai para esse local, em todos os meses, até você apagar a linha.' }
+    { id: 'grupos', label: 'Local → contrato da planilha (uma por linha: AMT - BOLEAMENTO - 500008 = AMT)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.grupos), larga: true, dica: 'Normalmente não precisa: o portal agrupa pelo nome (AMT, SIMEC, AMB JUIZ DE FORA, VALE - PENEIRAMENTO…). Use para corrigir um local que caiu no contrato errado. Aceita também só o número da ordem.' },
+    { id: 'eqs', label: 'Equipamento → local FIXO (uma por linha: ESC0043 = AMT - BOLEAMENTO - 500008)', tipo: 'textarea', linhas: 4, valor: indLinhasTxt(indCfg.eqContrato), larga: true, dica: 'Use quando o histórico de Movimentações estiver errado ou incompleto: o equipamento inteiro (HP, PM e horas) vai para esse local, em todos os meses, até você apagar a linha.' }
   ], '💾 Salvar configurações', async function(v){
     const novo = { regimeHP: { '8h': +v.hp8 || 176, '12h': +v.hp12 || 330, '24h': +v.hp24 || 660 }, metas: { DM: +v.mDM || 85, EO: +v.mEO || 85, IU: +v.mIU || 72 }, ordemContrato: indParseLinhas(v.ordens), grupos: indParseLinhas(v.grupos), trocaModo: /inteiro/.test(v.troca) ? 'principal' : 'proporcional', eqContrato: {} };
     const eqs = indParseLinhas(v.eqs); Object.keys(eqs).forEach(function(k){ novo.eqContrato[indNormEq(k)] = eqs[k]; });
@@ -9474,7 +9475,7 @@ function mtMapOcorrencia(i){
     dataParada: mtData(f.DataParada), horaParada: mtHora(f.HoraParada), horaInicio: mtHora(f.HoraInicio),
     horaEntrada: mtHora(f.HoraEntrada), horaSaida: mtHora(f.HoraSaida),
     horimetroEntrada: mtNum(f.HorimetroEntrada), horimetroSaida: mtNum(f.HorimetroSaida),
-    destino: f.DestinoLiberacao || '', contrato: f.ContratoDestino || '', dataEnvio: mtData(f.DataEnvioContrato), horaEnvio: mtHora(f.HoraEnvioContrato),
+    destino: f.DestinoLiberacao || '', contrato: normLocal(f.ContratoDestino || ''), dataEnvio: mtData(f.DataEnvioContrato), horaEnvio: mtHora(f.HoraEnvioContrato),
     inicio: mtData(f.DataInicio), prioridade: MANUT_PRIORIDADES.indexOf(f.Prioridade) !== -1 ? f.Prioridade : 'Normal' };
 }
 function mtMapPeca(i){
