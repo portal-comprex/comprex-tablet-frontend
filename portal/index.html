@@ -1820,6 +1820,27 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .ind-lista-arq li{padding:3px 0;display:flex;gap:8px;align-items:baseline}
   .ind-lista-arq .ok{color:var(--ind-ok);font-weight:700}
   .ind-lista-arq .ruim{color:var(--ind-ru);font-weight:700}
+
+  /* ---- mapa de calor / pareto / histórico importado ---- */
+  .ind-hm{border-collapse:separate;border-spacing:2px;font-size:12px;width:100%;background:var(--card)}
+  .ind-hm th{font-size:11px;color:var(--cinza);font-weight:700;padding:4px 6px;text-align:center;white-space:nowrap;position:sticky;top:0;background:var(--card)}
+  .ind-hm td{padding:5px 6px;text-align:center;border-radius:5px;min-width:52px;font-weight:700}
+  .ind-hm td.eq{text-align:left;font-weight:700;background:transparent;white-space:nowrap;cursor:pointer;color:var(--navy)}
+  .ind-hm td.eq small{display:block;font-weight:400;color:var(--cinza);font-size:10px}
+  .ind-hm td.c-ok{background:rgba(27,122,67,.20);color:var(--ind-ok)}
+  .ind-hm td.c-at{background:rgba(224,169,59,.28);color:#8a5d00}
+  .ind-hm td.c-ru{background:rgba(179,69,58,.24);color:var(--ind-ru)}
+  .ind-hm td.c-nd{background:var(--cream);color:var(--cinza);font-weight:400}
+  .ind-hm tr.ind-hm-grupo td{background:var(--cream);text-align:left;font-weight:800;color:var(--tinta);border-radius:0}
+  body.tema-escuro .ind-hm td.c-at{color:#f0c36a}
+  .ind-par-linha{display:grid;grid-template-columns:28px 92px minmax(120px,1.3fr) 2fr 70px 60px;gap:8px;align-items:center;padding:4px 0;font-size:12.5px;border-bottom:1px solid var(--linha)}
+  .ind-par-linha .barra{height:12px;border-radius:4px;background:var(--linha);position:relative;overflow:hidden}
+  .ind-par-linha .barra i{display:block;height:100%;background:var(--ind-s2);border-radius:4px}
+  .ind-par-linha.corte{border-bottom:2px dashed var(--ind-ru)}
+  .ind-par-linha .acum{color:var(--cinza);text-align:right}
+  .ind-rein{display:grid;grid-template-columns:90px 1fr auto;gap:8px;padding:6px 0;border-bottom:1px solid var(--linha);font-size:12.5px;align-items:baseline}
+  .ind-meses-chip{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:999px;background:#fbe5e2;color:#8f2f26;margin:1px 2px 1px 0}
+  .ind-origem{display:inline-block;font-size:10px;color:var(--cinza);border:1px solid var(--linha);border-radius:999px;padding:0 6px;margin-left:6px}
   .ind-nota{font-size:12px;color:var(--cinza);margin-top:6px}
   .ind-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
   @media(max-width:1200px){.ind-kpis{grid-template-columns:repeat(3,1fr)}}
@@ -1947,7 +1968,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 91</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 92</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3357,9 +3378,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <button type="button" class="rel-btn-primario" id="ind-btn-importar">📥 Importar planilhas</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-salvar">💾 Salvar mês</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-excel">📊 Exportar Excel</button>
+      <button type="button" class="rel-btn-secundario" id="ind-btn-rel" title="Relatório do mês por contrato, em PDF (imprimir) ou Excel">📄 Relatório por contrato</button>
+      <button type="button" class="rel-btn-secundario" id="ind-btn-hist" title="Carrega o histórico das suas planilhas KPIs POR OBRA (um arquivo por mês)">📚 Importar histórico (planilhas)</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-config">⚙ Configurar</button>
     </div>
     <input type="file" id="ind-arquivos" accept=".xlsx,.xlsm,.xls" multiple style="display:none">
+    <input type="file" id="ind-arq-hist" accept=".xlsx,.xlsm,.xls" multiple style="display:none">
   </div>
   <div id="ind-importacao"></div>
   <div class="ind-kpis" id="ind-kpis"></div>
@@ -3368,6 +3392,8 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <button type="button" class="topo-toggle-opt" data-ind-aba="equipamentos">🚜 Equipamentos</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="alertas">⚠️ Alertas <span id="ind-badge-alertas"></span></button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="historico">📈 Histórico</button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="mapa">🔥 Mapa de calor</button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="pareto">📉 Pareto de paradas</button>
   </div>
   <div id="ind-corpo"></div>
 </div>
@@ -8985,6 +9011,8 @@ async function indCalcular(periodo){
   const cfg = { regimeHP: indCfg.regimeHP || {}, trocaModo: indCfg.trocaModo || 'proporcional', ordemContrato: ordens, eqContrato: (function(){ const o = Object.assign({}, indCfg.eqContrato || {}, indAjustes[periodo] || {}); Object.keys(o).forEach(function(k){ if (o[k] !== '__EXCLUIR__') o[k] = normLocal(o[k]); }); return o; })(), eqContratoSug: eqSug };
   const pdMes = indArq.pd.filter(function(l){ return l.data.slice(0, 7) === periodo; });
   const r = indCalcularMes({ ano: ano, mes: mes, sap: indArq.sap, pd: pdMes, equips: equips, movs: movs, cfg: cfg });
+  const pAnt = indSalvos[indPeriodoAnterior(periodo)];
+  r.alertas = r.alertas.concat(indValidarLinhas(periodo, r.linhas, pAnt ? pAnt.linhas : null));
   indDados = { periodo: periodo, linhas: r.linhas, alertas: r.alertas, origem: 'calculo' };
   // painel de importação
   const avisos = [];
@@ -9081,7 +9109,7 @@ function indRender(){
   const nAl = indDados ? indDados.alertas.length : 0;
   document.getElementById('ind-badge-alertas').textContent = nAl ? '(' + nAl + ')' : '';
   const k = document.getElementById('ind-kpis'), corpo = document.getElementById('ind-corpo');
-  if (!indDados && indAba !== 'historico') {
+  if (!indDados && indAba !== 'historico' && indAba !== 'mapa' && indAba !== 'pareto') {
     k.innerHTML = '';
     corpo.innerHTML = '<div class="ind-painel" style="text-align:center;padding:36px 16px"><div style="font-size:34px">📥</div><b>Importe as planilhas do mês</b><div class="ind-nota">Clique em <b>Importar planilhas</b> e escolha de uma vez só: a(s) extração(ões) do SAP, a parte diária e, se quiser conferir os regimes, a planilha de indicadores do mês anterior. O portal reconhece cada arquivo sozinho.</div></div>';
     return;
@@ -9090,12 +9118,15 @@ function indRender(){
   if (indAba === 'contratos') corpo.innerHTML = indHtmlContratos();
   else if (indAba === 'equipamentos') indRenderEquipamentos(corpo);
   else if (indAba === 'alertas') corpo.innerHTML = indHtmlAlertas();
+  else if (indAba === 'mapa') corpo.innerHTML = indHtmlMapa();
+  else if (indAba === 'pareto') corpo.innerHTML = indHtmlPareto();
   else corpo.innerHTML = indHtmlHistorico();
   indLigarCorpo();
 }
 function indSemOuClass(l){ return l.contrato === IND_SEM_CONTRATO || l.contrato === IND_A_CLASSIFICAR; }
 /** contrato "como nas abas da planilha" (AMT, SIMEC, AMB JUIZ DE FORA…) a partir do nome do local */
 function indGrupoDe(l){
+  if (l.origem === 'planilha') return l.contrato;
   const n = l.contrato;
   if (n === IND_SEM_CONTRATO || n === IND_A_CLASSIFICAR) return n;
   const g = indCfg.grupos || {};
@@ -9144,8 +9175,9 @@ function indFiltradas(){
 }
 function indFiltroAtivo(){ return !!(indFiltroContrato || indFiltroTxt || indFiltroEq); }
 function indHtmlFiltros(){
-  const contratos = Array.from(new Set(indDados.linhas.map(indChave))).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
-  const eqs = Array.from(new Set(indDados.linhas.filter(function(l){ return !indFiltroContrato || indChave(l) === indFiltroContrato; }).map(function(l){ return l.eq; }))).sort();
+  const baseL = indDados ? indDados.linhas : [].concat.apply([], indMesesDisponiveis().map(function(m){ return m.linhas; }));
+  const contratos = Array.from(new Set(baseL.map(indChave))).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const eqs = Array.from(new Set(baseL.filter(function(l){ return !indFiltroContrato || indChave(l) === indFiltroContrato; }).map(function(l){ return l.eq; }))).sort();
   return '<div class="ind-filtros"><div class="ind-grupo"><label>' + (indAgrup === 'grupo' ? 'Contrato' : 'Local / ordem') + '</label><select id="ind-f-ct"><option value="">Todos</option>' + contratos.map(function(c){ return '<option' + (c === indFiltroContrato ? ' selected' : '') + '>' + mtEsc(c) + '</option>'; }).join('') + '</select></div>' +
     '<div class="ind-grupo"><label>Equipamento</label><select id="ind-f-eq"><option value="">Todos</option>' + eqs.map(function(c){ return '<option' + (c === indFiltroEq ? ' selected' : '') + '>' + mtEsc(c) + '</option>'; }).join('') + '</select></div>' +
     '<div class="ind-grupo"><label>Filtro rápido (digite)</label><input type="search" id="ind-f-txt" placeholder="Código, descrição ou local…" value="' + mtEsc(indFiltroTxt) + '" autocomplete="off"></div>' +
@@ -9249,7 +9281,8 @@ function indHtmlContratos(){
   return h;
 }
 const IND_ROTULO_ALERTA = { regime: 'Sem regime', classificar: 'Sem contrato', conflito: 'Contrato divergente', 'pm-maior': 'PM > HP', 'ho-excesso': 'HO acima do possível', 'sem-pd': 'Sem parte diária', 'sem-registro': 'Sem registros (100%)', 'dia-excesso': 'Dia com mais de 24 h', 'a-disposicao': 'A disposição', 'pm-divergente': 'PM ≠ parte diária', 'pm-sem-sap': 'Parada fora do SAP', trocou: 'Trocou de contrato' };
-const IND_GRAVES = { classificar: 1, conflito: 1, 'pm-maior': 1, 'ho-excesso': 1, 'dia-excesso': 1, regime: 1 };
+IND_ROTULO_ALERTA['eo-zero'] = 'EO zerado'; IND_ROTULO_ALERTA['duas-abas'] = 'Em dois contratos'; IND_ROTULO_ALERTA['hp-fora'] = 'HP fora do regime'; IND_ROTULO_ALERTA['repetido'] = 'Valor repetido'; IND_ROTULO_ALERTA['iu-incoerente'] = 'IU ≠ EO × DM'; IND_ROTULO_ALERTA['dm-incoerente'] = 'DM não bate';
+const IND_GRAVES = { 'hp-fora': 1, 'dm-incoerente': 1, classificar: 1, conflito: 1, 'pm-maior': 1, 'ho-excesso': 1, 'dia-excesso': 1, regime: 1 };
 function indChips(eq){
   return indDados.alertas.filter(function(a){ return a.eq === eq; }).map(function(a){
     return '<span class="ind-chip ' + (IND_GRAVES[a.tipo] ? 'grave' : (a.tipo === 'trocou' || a.tipo === 'a-disposicao' || a.tipo === 'sem-registro' ? 'info' : '')) + '" title="' + mtEsc(a.texto) + '">' + mtEsc(IND_ROTULO_ALERTA[a.tipo] || a.tipo) + '</span>';
@@ -9329,6 +9362,332 @@ function indLigarCorpo(){
   document.querySelectorAll('[data-ind-edit]').forEach(function(b){ b.onclick = function(ev){ ev.stopPropagation(); indModalLocal(b.dataset.indEdit); }; });
   const lp = document.getElementById('ind-f-limpar'); if (lp) lp.onclick = function(){ indFiltroTxt = ''; indFiltroContrato = ''; indFiltroEq = ''; indRender(); };
   const o = document.getElementById('ind-f-ord'); if (o) o.onchange = function(){ indOrdem = o.value; indRender(); };
+  const hi = document.getElementById('ind-hm-ind'); if (hi) hi.onchange = function(){ indHmIndicador = hi.value; indRender(); };
+  const hr = document.getElementById('ind-hm-rein'); if (hr) hr.onchange = function(){ indHmSoRein = hr.checked; indRender(); };
+  const pj = document.getElementById('ind-par-jan'); if (pj) pj.onchange = function(){ indParJanela = pj.value; indRender(); };
+}
+
+
+/* =====================================================================
+   HISTÓRICO (planilhas KPIs POR OBRA), VALIDAÇÕES, MAPA DE CALOR, PARETO, RELATÓRIO
+   ===================================================================== */
+const IND_MESES_NOME = { JANEIRO: 1, FEVEREIRO: 2, FEVEIREIRO: 2, MARCO: 3, 'MAR O': 3, ABRIL: 4, MAIO: 5, JUNHO: 6, JULHO: 7, AGOSTO: 8, SETEMBRO: 9, OUTUBRO: 10, NOVEMBRO: 11, DEZEMBRO: 12 };
+const IND_NOMES_CONTRATO_PLANILHA = {
+  'AM PIRACICABA': 'AMB PIRACICABA', 'AM RESENDE': 'AMB RESENDE', 'AMJF': 'AMB JUIZ DE FORA', 'AMJM': 'AMB JOÃO MONLEVADE',
+  'VALE PENEIRAMENTO': 'VALE - PENEIRAMENTO', 'VALE MASCARENHAS': 'VALE - MASCARENHAS', 'VALE VARGEM GRANDE': 'VALE - VARGEM GRANDE',
+  'VALE GONGO SOCO': 'VALE - GONGO SOCO', 'VALE MINA DE CAUE': 'VALE - MINA DE CAUÊ', 'VALE SAO LUIS': 'VALE - SÃO LUÍS',
+  'SIMEC VLI': 'DIVERSOS - SIMEC VLI', 'ZUCCHI': 'DIVERSOS - ZUCCHI', 'VILFER': 'DIVERSOS - VILFER', 'SIGNUS': 'DIVERSOS - SIGNUS',
+  'HARSCO': 'AMT - HARSCO - 500055', 'DISPONIVEL - MANUTENCAO': IND_SEM_CONTRATO
+};
+function indContratoDaAba(aba){
+  const t = indUp(aba);
+  return IND_NOMES_CONTRATO_PLANILHA[t] || String(aba).trim().toUpperCase();
+}
+function indMesDoArquivo(nome, aoas){
+  const t = indUp(nome).replace(/[^A-Z0-9 ]/g, ' ');
+  let mes = 0, ano = 0;
+  Object.keys(IND_MESES_NOME).forEach(function(k){ if (!mes && new RegExp('(^|[^A-Z])' + k + '([^A-Z]|$)').test(t.replace(/_/g, ' '))) mes = IND_MESES_NOME[k]; });
+  const ma = /(20\d\d)/.exec(t); if (ma) ano = +ma[1];
+  if ((!mes || !ano) && aoas && aoas.length) {
+    for (let r = 0; r < Math.min(4, aoas[0].aoa.length) && (!mes || !ano); r++) {
+      const tx = indUp(aoas[0].aoa[r].join(' '));
+      Object.keys(IND_MESES_NOME).forEach(function(k){ if (!mes && tx.indexOf(k) >= 0) mes = IND_MESES_NOME[k]; });
+      const m2 = /(20\d\d)/.exec(tx); if (!ano && m2) ano = +m2[1];
+    }
+  }
+  return mes && ano ? ano + '-' + mtP2(mes) : '';
+}
+/** Lê uma pasta de trabalho no formato "KPIs POR OBRA" (uma aba por contrato) e devolve as linhas do mês. */
+function indLerKPIs(abas, periodo){
+  const linhas = [], D = indDiasDoMes(+periodo.slice(0, 4), +periodo.slice(5, 7));
+  const resumoAbas = [];
+  abas.forEach(function(a){
+    if (/^M[EÉ]DIA/i.test(indSemAcento(a.nome).trim())) return;
+    const aoa = a.aoa; let hdr = null, n = 0;
+    for (let r = 0; r < aoa.length; r++) {
+      const t = aoa[r].map(function(x){ return indNorm(x); });
+      if (!hdr) {
+        if (t.indexOf('item') >= 0 && t.indexOf('equipamento') >= 0) {
+          hdr = {};
+          t.forEach(function(x, i){
+            if (x === 'item') hdr.item = i; else if (x === 'equipamento') hdr.eq = i;
+            else if (x.indexOf('descricao') === 0) hdr.desc = i;
+            else if (x.indexOf('paradaemmanutencao') >= 0) hdr.pm = i;
+            else if (x.indexOf('mttr') >= 0) hdr.mttr = i;
+            else if (x.indexOf('mtbf') >= 0) hdr.mtbf = i;
+            else if (x.indexOf('regimeplanejado') >= 0) hdr.hp = i;
+            else if (x.indexOf('disponibilidademecanica') >= 0) hdr.dm = i;
+            else if (x.indexOf('eficienciaoperacional') >= 0) hdr.eo = i;
+            else if (x.indexOf('indicedeutilizacao') >= 0) hdr.iu = i;
+          });
+        }
+        continue;
+      }
+      const row = aoa[r];
+      const eq = indNormEq(row[hdr.eq]);
+      if (!indEqValido(eq)) continue;
+      const g = function(k){ return hdr[k] === undefined ? null : (typeof row[hdr[k]] === 'number' ? row[hdr[k]] : null); };
+      const hp = g('hp') || 0, pm = g('pm') || 0, eo = g('eo'), dm = g('dm'), iu = g('iu');
+      const disp = Math.max(0, hp - Math.min(pm, hp));
+      const ho = eo === null ? 0 : Math.min(disp, eo * disp);
+      linhas.push({ periodo: periodo, eq: eq, desc: String(row[hdr.desc] || '').trim(), contrato: indContratoDaAba(a.nome), regime: indRegimeDoHP(hp), hp: indR2(hp), pm: indR2(pm),
+        mttr: g('mttr') || 0, mtbf: g('mtbf') || 0, ho: indR2(ho), hoProd: indR2(ho), hDisp: 0, hManutPD: 0, pmPD: 0, dias: null, diasMes: D, linhasPD: 1, semReg: false, noPD: false,
+        custoMO: 0, custoMatInt: 0, custoServExt: 0, custoMatExt: 0, fonte: 'planilha', origem: 'planilha', aba: a.nome, dmPlan: dm, eoPlan: eo, iuPlan: iu });
+      n++;
+    }
+    resumoAbas.push({ aba: a.nome, n: n });
+  });
+  return { periodo: periodo, linhas: linhas, abas: resumoAbas };
+}
+/** Validações de qualidade dos dados de um mês. prev = linhas do mês anterior (ou null). */
+function indValidarLinhas(periodo, linhas, prev){
+  const al = [], add = function(eq, tipo, texto){ al.push({ tipo: tipo, eq: eq, texto: texto }); };
+  const regs = [176, 330, 660];
+  const porEq = {};
+  linhas.forEach(function(l){ (porEq[l.eq] = porEq[l.eq] || []).push(l); });
+  const prevEq = {};
+  (prev || []).forEach(function(l){ (prevEq[l.eq] = prevEq[l.eq] || []).push(l); });
+  Object.keys(porEq).forEach(function(eq){
+    const ls = porEq[eq];
+    const abas = Array.from(new Set(ls.map(function(l){ return l.contrato; })));
+    if (abas.length > 1 && ls.every(function(l){ return l.origem === 'planilha'; })) add(eq, 'duas-abas', 'Aparece em mais de um contrato no mesmo mês (' + abas.join(' e ') + '). Se não trocou de obra, o HP está sendo contado duas vezes.');
+    ls.forEach(function(l){
+      if (l.hp && !regs.some(function(r){ return Math.abs(r - l.hp) < 0.5; }) && ls.length === 1) add(eq, 'hp-fora', 'Regime planejado de ' + l.hp + ' h não é 176, 330 nem 660 — provável erro de digitação.');
+      if (l.origem === 'planilha') {
+        if (l.eoPlan === 0 && (l.dmPlan || 0) > 0.5) add(eq, 'eo-zero', 'EO = 0% com DM de ' + indPct(l.dmPlan, 0) + ': provavelmente não houve parte diária lançada (e não que a máquina ficou parada).');
+        if (l.eoPlan != null && l.dmPlan != null && l.iuPlan != null && Math.abs(l.eoPlan * l.dmPlan - l.iuPlan) > 0.03) add(eq, 'iu-incoerente', 'IU da planilha (' + indPct(l.iuPlan, 0) + ') não bate com EO × DM (' + indPct(l.eoPlan * l.dmPlan, 0) + ').');
+        if (l.dmPlan != null && l.hp) { const calc = (l.hp - Math.min(l.pm, l.hp)) / l.hp; if (Math.abs(calc - l.dmPlan) > 0.02) add(eq, 'dm-incoerente', 'DM da planilha (' + indPct(l.dmPlan, 0) + ') não bate com (HP − PM) / HP = ' + indPct(calc, 0) + '.'); }
+      }
+      const a = (prevEq[eq] || []).find(function(x){ return x.contrato === l.contrato; });
+      if (a && l.pm >= 20 && Math.abs(a.pm - l.pm) < 0.01) add(eq, 'repetido', 'PM idêntico ao mês anterior (' + indR2(l.pm) + ' h) — confira se o valor não foi copiado.');
+    });
+  });
+  return al;
+}
+function indPeriodoAnterior(p){ const d = new Date(+p.slice(0, 4), +p.slice(5, 7) - 2, 1); return d.getFullYear() + '-' + mtP2(d.getMonth() + 1); }
+
+/* ---------- importar histórico ---------- */
+async function indImportarHistorico(files){
+  const lidos = [], erros = [];
+  for (const f of files) {
+    try {
+      const abas = indLerArquivoBuffer(await f.arrayBuffer());
+      const per = indMesDoArquivo(f.name, abas);
+      if (!per) { erros.push(f.name + ': não consegui descobrir o mês (o nome do arquivo precisa ter o mês e o ano, ex.: JANEIRO 2026).'); continue; }
+      const r = indLerKPIs(abas, per);
+      if (!r.linhas.length) { erros.push(f.name + ': não encontrei a tabela (Item / Equipamento / PM / MTTR…) em nenhuma aba.'); continue; }
+      lidos.push({ nome: f.name, per: per, r: r });
+    } catch (e) { erros.push(f.name + ': ' + e.message); }
+  }
+  if (!lidos.length) { alert('Nenhum arquivo foi lido.\n\n' + erros.join('\n')); return; }
+  lidos.sort(function(a, b){ return a.per < b.per ? -1 : 1; });
+  const porMes = {};
+  lidos.forEach(function(x){ porMes[x.per] = x; });
+  const pers = Object.keys(porMes).sort();
+  pers.forEach(function(p){
+    const ant = porMes[indPeriodoAnterior(p)];
+    const prevLinhas = ant ? ant.r.linhas : (indSalvos[indPeriodoAnterior(p)] ? indSalvos[indPeriodoAnterior(p)].linhas : null);
+    porMes[p].alertas = indValidarLinhas(p, porMes[p].r.linhas, prevLinhas);
+  });
+  const linhasTab = pers.map(function(p){
+    const x = porMes[p], ls = x.r.linhas, g = indMediaGeral(ls.filter(function(l){ return !indSemOuClass(l); }), 'hoje');
+    const jaTem = indSalvos[p];
+    const cont = Object.keys(indAgrupar(ls, 'contrato')).length;
+    const tipos = {}; x.alertas.forEach(function(a){ tipos[a.tipo] = (tipos[a.tipo] || 0) + 1; });
+    return '<tr><td><input type="checkbox" class="ind-hist-ck" data-p="' + p + '"' + (jaTem && jaTem.linhas.some(function(l){ return l.origem !== 'planilha'; }) ? '' : ' checked') + '></td><td class="esq"><b>' + indNomeMes(p) + '</b>' + (jaTem ? '<span class="ind-alt">já salvo' + (jaTem.linhas.some(function(l){ return l.origem !== 'planilha'; }) ? ' (cálculo do portal)' : ' (planilha)') + ' — será substituído</span>' : '') + '</td><td>' + new Set(ls.map(function(l){ return l.eq; })).size + '</td><td>' + cont + '</td><td>' + indPct(g.DM) + '</td><td>' + indPct(g.EO) + '</td><td>' + indPct(g.IU) + '</td><td class="esq">' +
+      (Object.keys(tipos).length ? Object.keys(tipos).map(function(t){ return '<span class="ind-chip ' + (IND_GRAVES[t] ? 'grave' : '') + '">' + mtEsc(IND_ROTULO_ALERTA[t] || t) + ' ' + tipos[t] + '</span>'; }).join('') : '✔') + '</td></tr>';
+  }).join('');
+  const aviso = '<div class="ind-nota">As planilhas trazem só o resultado de cada equipamento. As horas operadas (HO) são recalculadas por EO × (HP − PM), então DM, EO e IU voltam exatamente como estão nas planilhas. A "Média geral" abaixo é a média simples das médias dos contratos, como na aba MÉDIA. A aba "Disponível - Manutenção" de setembro fica fora da média (os mesmos equipamentos já estão em Mina de Cauê).</div>' +
+    '<div class="ind-wrap" style="margin-top:8px;max-height:48vh"><table class="ind-tab"><thead><tr><th></th><th class="esq">Mês</th><th>Equip.</th><th>Contratos</th><th>DM</th><th>EO</th><th>IU</th><th class="esq">Validações</th></tr></thead><tbody>' + linhasTab + '</tbody></table></div>' +
+    (erros.length ? '<div class="ind-nota">⚠️ ' + erros.map(mtEsc).join('<br>') + '</div>' : '') +
+    '<div class="ind-nota">As validações aparecem depois na aba <b>Alertas</b> de cada mês. Os meses marcados serão gravados na lista ManutIndicadores.</div>';
+  mtAbrirModal('Importar histórico das planilhas', [], '💾 Salvar meses marcados no histórico', async function(){
+    if (!mtExigirEdicao()) throw new Error('Sem permissão de edição.');
+    const marc = Array.prototype.slice.call(document.querySelectorAll('.ind-hist-ck')).filter(function(c){ return c.checked; }).map(function(c){ return c.dataset.p; });
+    if (!marc.length) throw new Error('Marque pelo menos um mês.');
+    const btn = document.getElementById('mt-modal-salvar');
+    for (let i = 0; i < marc.length; i++) {
+      const p = marc[i];
+      btn.textContent = 'Salvando ' + indNomeMes(p) + ' (' + (i + 1) + '/' + marc.length + ')…';
+      const x = porMes[p];
+      const novos = await indGravarGrupo(p, { linhas: x.r.linhas, alertas: x.alertas, ajustes: {} }, indSalvos[p] ? indSalvos[p].itemIds : []);
+      indSalvos[p] = { linhas: x.r.linhas, alertas: x.alertas, ajustes: {}, itemIds: novos };
+    }
+    mtToast(marc.length + ' mês(es) salvo(s) no histórico.');
+    indPrepararMeses(); indAba = 'historico';
+    const ult = marc[marc.length - 1]; document.getElementById('ind-sel-mes').value = ult;
+    indDados = { periodo: ult, linhas: indSalvos[ult].linhas, alertas: indSalvos[ult].alertas, origem: 'salvo' };
+    indRender();
+  }, aviso);
+}
+
+/* ---------- dados por equipamento e mês (mapa de calor / pareto) ---------- */
+function indMesesDisponiveis(){
+  const set = {};
+  Object.keys(indSalvos).forEach(function(p){ set[p] = indSalvos[p].linhas; });
+  if (indDados && indDados.origem === 'calculo') set[indDados.periodo] = indDados.linhas;
+  return Object.keys(set).sort().map(function(p){ return { p: p, linhas: set[p] }; });
+}
+function indPassaFiltroLinha(l){
+  if (indSemOuClass(l)) return false;
+  if (indFiltroContrato && indChave(l) !== indFiltroContrato) return false;
+  if (indFiltroTxt) { const t = indUp(indFiltroTxt); if (indUp(l.eq).indexOf(t) < 0 && indUp(l.desc).indexOf(t) < 0) return false; }
+  if (indFiltroEq && l.eq !== indFiltroEq) return false;
+  return true;
+}
+let indHmIndicador = 'DM', indHmSoRein = false, indParJanela = 'tudo';
+function indHtmlMapa(){
+  const meses = indMesesDisponiveis();
+  if (!meses.length) return '<div class="ind-painel">Ainda não há meses para mostrar. Importe o histórico (📚) ou calcule e salve um mês.</div>';
+  const ch = indHmIndicador, meta = indMetas()[ch] / 100;
+  const eqs = {};
+  meses.forEach(function(m, mi){
+    const por = indAgrupar(m.linhas.filter(indPassaFiltroLinha), 'eq');
+    Object.keys(por).forEach(function(eq){
+      const e = eqs[eq] = eqs[eq] || { eq: eq, desc: '', contrato: '', v: {}, pm: {} };
+      e.desc = por[eq][0].desc || e.desc; e.contrato = indGrupoDe(por[eq][0]);
+      const x = indMetricas(por[eq], indVersao);
+      e.v[m.p] = x[ch]; e.pm[m.p] = x.PM;
+    });
+  });
+  const lista = Object.keys(eqs).map(function(k){
+    const e = eqs[k]; const abaixo = meses.filter(function(m){ return e.v[m.p] !== undefined && e.v[m.p] !== null && e.v[m.p] < meta; }).map(function(m){ return m.p; });
+    e.abaixo = abaixo; e.nMeses = meses.filter(function(m){ return e.v[m.p] !== undefined; }).length;
+    return e;
+  });
+  const rein = lista.filter(function(e){ return e.abaixo.length >= 3; }).sort(function(a, b){ return b.abaixo.length - a.abaixo.length || a.eq < b.eq ? -1 : 1; });
+  let vis = lista.filter(function(e){ return !indHmSoRein || e.abaixo.length >= 3; });
+  vis.sort(function(a, b){ return a.contrato.localeCompare(b.contrato, 'pt-BR') || (a.eq < b.eq ? -1 : 1); });
+  const cab = '<tr><th class="esq" style="text-align:left">Equipamento</th>' + meses.map(function(m){ return '<th>' + indNomeMes(m.p).slice(0, 3) + '/' + m.p.slice(2, 4) + '</th>'; }).join('') + '<th>Meses<br>abaixo</th></tr>';
+  let corpo = '', ult = null;
+  vis.forEach(function(e){
+    if (e.contrato !== ult) { ult = e.contrato; corpo += '<tr class="ind-hm-grupo"><td colspan="' + (meses.length + 2) + '">' + mtEsc(e.contrato) + '</td></tr>'; }
+    corpo += '<tr><td class="eq" data-ind-eq="' + mtEsc(e.eq) + '" title="Ver na aba Equipamentos">' + mtEsc(e.eq) + '<small>' + mtEsc(String(e.desc || '').toUpperCase().slice(0, 34)) + '</small></td>' +
+      meses.map(function(m){
+        const v = e.v[m.p];
+        if (v === undefined) return '<td class="c-nd">·</td>';
+        if (v === null) return '<td class="c-nd">—</td>';
+        const est = v >= meta ? 'ok' : (v >= meta - 0.05 ? 'at' : 'ru');
+        return '<td class="c-' + est + '" title="' + mtEsc(e.eq + ' · ' + indNomeMes(m.p) + ' · ' + ch + ' ' + indPct(v) + ' · PM ' + indN(e.pm[m.p], 0) + ' h') + '">' + Math.round(v * 100) + '</td>';
+      }).join('') + '<td class="c-nd"' + (e.abaixo.length >= 3 ? ' style="color:var(--ind-ru);font-weight:800"' : '') + '>' + e.abaixo.length + '/' + e.nMeses + '</td></tr>';
+  });
+  const nomesInd = { DM: 'Disponibilidade mecânica (DM)', EO: 'Eficiência operacional (EO)', IU: 'Índice de utilização (IU)' };
+  const controles = '<div class="ind-filtros"><div class="ind-grupo"><label>Indicador</label><select id="ind-hm-ind">' + ['DM', 'EO', 'IU'].map(function(c){ return '<option value="' + c + '"' + (c === ch ? ' selected' : '') + '>' + nomesInd[c] + '</option>'; }).join('') + '</select></div>' +
+    '<label style="display:flex;gap:6px;align-items:center;font-size:12.5px;margin-bottom:6px"><input type="checkbox" id="ind-hm-rein"' + (indHmSoRein ? ' checked' : '') + '> só reincidentes (abaixo da meta em 3+ meses)</label></div>';
+  const filtros = indHtmlFiltros().replace('<span id="ind-f-extra"></span>', '');
+  const legenda = '<div class="ind-legenda"><span><i style="background:rgba(27,122,67,.6)"></i>≥ meta (' + (meta * 100) + '%)</span><span><i style="background:rgba(224,169,59,.8)"></i>até 5 pontos abaixo</span><span><i style="background:rgba(179,69,58,.7)"></i>mais de 5 pontos abaixo</span><span>· sem dado no mês</span></div>';
+  const reinHtml = rein.length ? '<div class="ind-painel"><h4>🔁 Reincidentes — ' + ch + ' abaixo da meta em 3 ou mais meses (' + rein.length + ')</h4>' + rein.slice(0, 14).map(function(e){
+    return '<div class="ind-rein"><b data-ind-eq="' + mtEsc(e.eq) + '" style="cursor:pointer;color:var(--navy)">' + mtEsc(e.eq) + '</b><span>' + mtEsc(e.contrato) + '<br>' + e.abaixo.map(function(p){ return '<span class="ind-meses-chip">' + indNomeMes(p).slice(0, 3) + ' ' + Math.round(e.v[p] * 100) + '%</span>'; }).join('') + '</span><b style="color:var(--ind-ru)">' + e.abaixo.length + '/' + e.nMeses + ' meses</b></div>';
+  }).join('') + (rein.length > 14 ? '<div class="ind-nota">… e mais ' + (rein.length - 14) + ' (marque "só reincidentes" para ver todos).</div>' : '') + '</div>' : '<div class="ind-painel">✔ Nenhum equipamento abaixo da meta de ' + ch + ' em 3 ou mais meses.</div>';
+  return filtros + reinHtml + '<div class="ind-painel" style="margin-top:14px"><h4>Mapa de calor — ' + nomesInd[ch] + ' por equipamento e mês</h4>' + controles + legenda + '<div class="ind-wrap" style="max-height:70vh"><table class="ind-hm"><thead>' + cab + '</thead><tbody>' + corpo + '</tbody></table></div><div class="ind-nota">Clique no equipamento para abrir a aba Equipamentos. Passe o mouse na célula para ver o mês e as horas paradas.</div></div>';
+}
+function indHtmlPareto(){
+  const meses = indMesesDisponiveis();
+  if (!meses.length) return '<div class="ind-painel">Ainda não há meses para mostrar. Importe o histórico (📚) ou calcule e salve um mês.</div>';
+  const n = indParJanela === 'tudo' ? meses.length : Math.min(+indParJanela, meses.length);
+  const sel = meses.slice(-n);
+  const porEq = {}, porCt = {};
+  sel.forEach(function(m){ m.linhas.filter(indPassaFiltroLinha).forEach(function(l){
+    const e = porEq[l.eq] = porEq[l.eq] || { eq: l.eq, ct: indGrupoDe(l), h: 0 }; e.h += Math.min(l.pm, l.hp || l.pm); e.ct = indGrupoDe(l);
+    const c = indGrupoDe(l); porCt[c] = (porCt[c] || 0) + Math.min(l.pm, l.hp || l.pm);
+  }); });
+  const arrEq = Object.keys(porEq).map(function(k){ return porEq[k]; }).sort(function(a, b){ return b.h - a.h; });
+  const total = arrEq.reduce(function(s, e){ return s + e.h; }, 0);
+  if (!total) return '<div class="ind-painel">Sem horas de parada no período escolhido.</div>';
+  const maxH = arrEq[0].h;
+  let ac = 0, corteMarcado = false, nCorte = 0;
+  const top = arrEq.slice(0, 15).map(function(e, i){
+    ac += e.h; const pa = ac / total; let corte = false;
+    if (!corteMarcado && pa >= 0.8) { corte = true; corteMarcado = true; nCorte = i + 1; }
+    return '<div class="ind-par-linha' + (corte ? ' corte' : '') + '"><span class="ind-alt" style="display:inline">' + (i + 1) + '</span><b data-ind-eq="' + mtEsc(e.eq) + '" style="cursor:pointer;color:var(--navy)">' + mtEsc(e.eq) + '</b><span>' + mtEsc(e.ct) + '</span><div class="barra"><i style="width:' + (e.h / maxH * 100) + '%"></i></div><span style="text-align:right"><b>' + indN(e.h, 0) + '</b> h</span><span class="acum">' + Math.round(pa * 100) + '%</span></div>';
+  }).join('');
+  if (!nCorte) { let a2 = 0; arrEq.forEach(function(e, i){ a2 += e.h; if (!nCorte && a2 / total >= 0.8) nCorte = i + 1; }); }
+  const arrCt = Object.keys(porCt).map(function(k){ return { c: k, h: porCt[k] }; }).sort(function(a, b){ return b.h - a.h; });
+  const maxC = arrCt[0].h;
+  const ctHtml = arrCt.map(function(x){ return '<div class="ind-par-linha" style="grid-template-columns:minmax(150px,1.4fr) 2fr 70px 60px"><span>' + mtEsc(x.c) + '</span><div class="barra"><i style="width:' + (x.h / maxC * 100) + '%;background:var(--ind-s1)"></i></div><span style="text-align:right"><b>' + indN(x.h, 0) + '</b> h</span><span class="acum">' + Math.round(x.h / total * 100) + '%</span></div>'; }).join('');
+  const porMes = sel.map(function(m){ return { p: m.p, h: m.linhas.filter(indPassaFiltroLinha).reduce(function(s, l){ return s + Math.min(l.pm, l.hp || l.pm); }, 0) }; });
+  const maxM = Math.max.apply(null, porMes.map(function(x){ return x.h; })) || 1;
+  const mesHtml = porMes.map(function(x){ return '<div class="ind-par-linha" style="grid-template-columns:80px 1fr 80px"><span>' + indNomeMes(x.p).slice(0, 3) + '/' + x.p.slice(2, 4) + '</span><div class="barra"><i style="width:' + (x.h / maxM * 100) + '%;background:var(--ind-s3)"></i></div><span style="text-align:right"><b>' + indN(x.h, 0) + '</b> h</span></div>'; }).join('');
+  const ctl = '<div class="ind-filtros"><div class="ind-grupo"><label>Período</label><select id="ind-par-jan">' + [['1', 'Último mês'], ['3', 'Últimos 3 meses'], ['6', 'Últimos 6 meses'], ['tudo', 'Todo o histórico (' + meses.length + ')']].map(function(o){ return '<option value="' + o[0] + '"' + (indParJanela === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>';
+  return indHtmlFiltros().replace('<span id="ind-f-extra"></span>', '') +
+    '<div class="ind-painel"><h4>📉 Pareto — horas de parada por equipamento · ' + (n === 1 ? indNomeMes(sel[0].p) : indNomeMes(sel[0].p) + ' a ' + indNomeMes(sel[sel.length - 1].p)) + '</h4>' + ctl +
+    '<div class="ind-nota" style="margin:0 0 8px"><b>' + nCorte + ' equipamento(s)</b> de ' + arrEq.length + ' concentram 80% das <b>' + indN(total, 0) + ' h</b> paradas (linha tracejada no ranking).</div>' + top +
+    (arrEq.length > 15 ? '<div class="ind-nota">Mostrando os 15 primeiros de ' + arrEq.length + ' equipamentos.</div>' : '') + '</div>' +
+    '<div class="ind-graficos" style="margin-top:14px"><div class="ind-painel"><h4>Por contrato</h4>' + ctHtml + '</div><div class="ind-painel"><h4>Por mês</h4>' + mesHtml + '</div></div>';
+}
+
+/* ---------- relatório mensal por contrato ---------- */
+function indRelatorioHtml(periodo, linhas, contrato){
+  const mesTxt = indNomeMes(periodo).toUpperCase().replace('/', ' DE ');
+  const grupos = indAgrupar(linhas.filter(function(l){ return !indSemOuClass(l); }), function(l){ return indAgrup === 'grupo' ? indGrupoDe(l) : l.contrato; });
+  const nomes = (contrato ? [contrato] : Object.keys(grupos).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); })).filter(function(n){ return grupos[n]; });
+  const meta = indMetas();
+  const cor = function(ch, v){ if (v === null || v === undefined) return '#555'; const m = meta[ch] / 100; return v >= m ? '#1b7a43' : (v >= m - 0.05 ? '#9a6b00' : '#b3453a'); };
+  const pc = function(v){ return indPct(v); };
+  const css = '<style>.rp{font-family:Arial,sans-serif;color:#111;font-size:11px}.rp h2{font-size:15px;margin:4px 0}.rp .sub{color:#555;margin-bottom:8px}.rp table{width:100%;border-collapse:collapse;margin:6px 0}.rp th{background:#1b6b3a;color:#fff;padding:4px 5px;font-size:10px;text-align:right}.rp th:nth-child(-n+3){text-align:left}.rp td{padding:3px 5px;border-bottom:1px solid #ddd;text-align:right}.rp td:nth-child(-n+3){text-align:left}.rp tr.tot td{font-weight:800;border-top:2px solid #132436;background:#f1f5f1}.rp .kp{display:flex;gap:10px;margin:8px 0}.rp .kp div{flex:1;border:1px solid #ccc;border-left:5px solid #888;border-radius:6px;padding:6px 10px}.rp .kp b{display:block;font-size:20px}.rp .kp small{color:#555}.rp .sec{page-break-after:always}.rp .sec:last-child{page-break-after:auto}.rp .bar{display:flex;align-items:center;gap:6px;margin:2px 0}.rp .bar span.l{width:70px}.rp .bar i{display:block;height:8px;border-radius:3px}.rp .nota{font-size:9.5px;color:#555;margin-top:6px}</style>';
+  const hist = indMesesDisponiveis().filter(function(m){ return m.p <= periodo; }).slice(-6);
+  const logo = '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">Indicadores de Manutenção — ' + mesTxt + '<small>' + (contrato ? mtEsc(contrato) : 'Todos os contratos') + ' · Comprex Máquinas e Serviços</small></div></div>';
+  let secoes = '';
+  if (!contrato) {
+    const g = indMediaGeral(linhas, indVersao);
+    secoes += '<div class="sec">' + '<h2>Resumo por contrato</h2><table><thead><tr><th>Contrato</th><th></th><th></th><th>Equip.</th><th>PM (h)</th><th>MTTR</th><th>MTBF</th><th>HP (h)</th><th>DM</th><th>EO</th><th>IU</th></tr></thead><tbody>' +
+      nomes.map(function(n){ const m = indMetricas(grupos[n], indVersao); return '<tr><td colspan="3">' + mtEsc(n) + '</td><td>' + new Set(grupos[n].map(function(l){ return l.eq; })).size + '</td><td>' + indN(m.PM, 0) + '</td><td>' + indN(m.MTTR, 1) + '</td><td>' + indN(m.MTBF, 0) + '</td><td>' + indN(m.HP, 0) + '</td><td style="color:' + cor('DM', m.DM) + '">' + pc(m.DM) + '</td><td style="color:' + cor('EO', m.EO) + '">' + pc(m.EO) + '</td><td style="color:' + cor('IU', m.IU) + '">' + pc(m.IU) + '</td></tr>'; }).join('') +
+      '<tr class="tot"><td colspan="3">MÉDIA GERAL (média dos contratos)</td><td></td><td></td><td></td><td></td><td></td><td>' + pc(g.DM) + '</td><td>' + pc(g.EO) + '</td><td>' + pc(g.IU) + '</td></tr></tbody></table>' +
+      '<div class="nota">Metas: DM ≥ ' + meta.DM + '% · EO ≥ ' + meta.EO + '% · IU ≥ ' + meta.IU + '%. DM = (HP − PM) / HP · EO = HO / (HP − PM) · IU = HO / HP (médias ponderadas pelas horas).</div></div>';
+  }
+  nomes.forEach(function(n){
+    const ls = grupos[n].slice().sort(function(a, b){ return a.eq < b.eq ? -1 : 1; });
+    const m = indMetricas(ls, indVersao);
+    const kp = ['DM', 'EO', 'IU'].map(function(ch){ return '<div style="border-left-color:' + cor(ch, m[ch]) + '"><small>' + ({ DM: 'Disponibilidade mecânica', EO: 'Eficiência operacional', IU: 'Índice de utilização' })[ch] + ' (meta ' + meta[ch] + '%)</small><b style="color:' + cor(ch, m[ch]) + '">' + pc(m[ch]) + '</b></div>'; }).join('');
+    const hs = hist.map(function(h){
+      const lh = h.linhas.filter(function(l){ return !indSemOuClass(l) && (indAgrup === 'grupo' ? indGrupoDe(l) : l.contrato) === n; });
+      if (!lh.length) return '';
+      const x = indMetricas(lh, indVersao);
+      return '<tr><td colspan="3">' + indNomeMes(h.p) + '</td><td></td><td>' + indN(x.PM, 0) + '</td><td>' + indN(x.MTTR, 1) + '</td><td>' + indN(x.MTBF, 0) + '</td><td>' + indN(x.HP, 0) + '</td><td style="color:' + cor('DM', x.DM) + '">' + pc(x.DM) + '</td><td style="color:' + cor('EO', x.EO) + '">' + pc(x.EO) + '</td><td style="color:' + cor('IU', x.IU) + '">' + pc(x.IU) + '</td></tr>';
+    }).join('');
+    const barras = ls.map(function(l){ const x = indMetricas([l], indVersao); return '<div class="bar"><span class="l">' + mtEsc(l.eq) + '</span><span style="width:46px">' + pc(x.DM) + '</span><i style="width:' + Math.round((x.DM || 0) * 220) + 'px;background:' + cor('DM', x.DM) + '"></i></div>'; }).join('');
+    secoes += '<div class="sec"><h2>INDICADORES DE MANUTENÇÃO — ' + mtEsc(n) + '</h2><div class="sub">' + mesTxt + (indVersao === 'prod' ? ' · só horas produtivas' : '') + '</div><div class="kp">' + kp + '</div>' +
+      '<table><thead><tr><th>Item</th><th>Equipamento</th><th>Descrição</th><th></th><th>PM (h)</th><th>MTTR (h)</th><th>MTBF (h)</th><th>HP (h)</th><th>DM</th><th>EO</th><th>IU</th></tr></thead><tbody>' +
+      ls.map(function(l, i){ const x = indMetricas([l], indVersao); return '<tr><td>' + (i + 1) + '</td><td><b>' + mtEsc(l.eq) + '</b></td><td>' + mtEsc(String(l.desc || '').toUpperCase().slice(0, 38)) + '</td><td></td><td>' + indN(l.pm, 1) + '</td><td>' + indN(l.mttr, 1) + '</td><td>' + indN(l.mtbf, 0) + '</td><td>' + indN(l.hp, 0) + '</td><td style="color:' + cor('DM', x.DM) + '">' + pc(x.DM) + '</td><td style="color:' + cor('EO', x.EO) + '">' + pc(x.EO) + '</td><td style="color:' + cor('IU', x.IU) + '">' + pc(x.IU) + '</td></tr>'; }).join('') +
+      '<tr class="tot"><td colspan="3">TOTAL / MÉDIA PONDERADA</td><td></td><td>' + indN(m.PM, 1) + '</td><td>' + indN(m.MTTR, 1) + '</td><td>' + indN(m.MTBF, 0) + '</td><td>' + indN(m.HP, 0) + '</td><td>' + pc(m.DM) + '</td><td>' + pc(m.EO) + '</td><td>' + pc(m.IU) + '</td></tr></tbody></table>' +
+      '<div class="nota">DM = (HP − PM) / HP · EO = HO / (HP − PM) · IU = HO / HP. Média do contrato ponderada pelas horas planejadas.</div>' +
+      '<h2 style="font-size:12px;margin-top:10px">Disponibilidade mecânica por equipamento</h2>' + barras +
+      (hs ? '<h2 style="font-size:12px;margin-top:12px">Evolução do contrato (últimos meses)</h2><table><thead><tr><th colspan="3">Mês</th><th></th><th>PM (h)</th><th>MTTR</th><th>MTBF</th><th>HP (h)</th><th>DM</th><th>EO</th><th>IU</th></tr></thead><tbody>' + hs + '</tbody></table>' : '') + '</div>';
+  });
+  return '<div class="rp">' + css + logo + secoes + '</div>';
+}
+function indModalRelatorio(){
+  const meses = indMesesDisponiveis();
+  if (!meses.length) { alert('Ainda não há meses para o relatório. Calcule e salve um mês, ou importe o histórico (📚).'); return; }
+  const pers = meses.map(function(m){ return m.p; }).reverse();
+  const inicial = indDados ? indDados.periodo : pers[0];
+  const opcoesCt = function(p){
+    const m = meses.find(function(x){ return x.p === p; });
+    const g = indAgrupar((m ? m.linhas : []).filter(function(l){ return !indSemOuClass(l); }), function(l){ return indAgrup === 'grupo' ? indGrupoDe(l) : l.contrato; });
+    return ['(Todos os contratos)'].concat(Object.keys(g).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); }));
+  };
+  const campos = [
+    { id: 'mes', label: 'Mês', tipo: 'select', opcoes: pers.map(function(p){ return indNomeMes(p); }), valor: indNomeMes(inicial) },
+    { id: 'ct', label: 'Contrato', tipo: 'select', opcoes: opcoesCt(inicial), valor: '(Todos os contratos)' }
+  ];
+  const pegar = function(){
+    const nome = document.getElementById('mtm-mes').value, p = pers.find(function(x){ return indNomeMes(x) === nome; });
+    const ct = document.getElementById('mtm-ct').value;
+    const m = meses.find(function(x){ return x.p === p; });
+    return { p: p, linhas: m.linhas, ct: ct === '(Todos os contratos)' ? '' : ct };
+  };
+  mtAbrirModal('Relatório mensal por contrato', campos, '🖨 Gerar PDF (imprimir)', async function(){
+    const r = pegar();
+    document.getElementById('hist-print-area').innerHTML = indRelatorioHtml(r.p, r.linhas, r.ct);
+    document.getElementById('mt-modal-overlay') && 0;
+    setTimeout(function(){ window.print(); }, 200);
+  }, '<div class="ind-nota" style="margin-bottom:8px">Gera o relatório do mês (um contrato ou todos) no formato das suas abas: indicadores por equipamento, média ponderada, gráfico de DM e evolução. No PDF escolha "Salvar como PDF" na janela de impressão. <button type="button" class="rel-btn-secundario" id="ind-rel-xls" style="padding:3px 10px;font-size:12px">📊 Baixar em Excel</button></div>');
+  setTimeout(function(){
+    const sm = document.getElementById('mtm-mes'), sc = document.getElementById('mtm-ct');
+    if (sm) sm.onchange = function(){ const p = pers.find(function(x){ return indNomeMes(x) === sm.value; }); sc.innerHTML = opcoesCt(p).map(function(o){ return '<option>' + mtEsc(o) + '</option>'; }).join(''); };
+    const bx = document.getElementById('ind-rel-xls');
+    if (bx) bx.onclick = function(){ const r = pegar(); indExportarExcel({ periodo: r.p, linhas: r.linhas, alertas: (indSalvos[r.p] ? indSalvos[r.p].alertas : (indDados && indDados.periodo === r.p ? indDados.alertas : [])) }, r.ct); };
+  }, 50);
 }
 
 /* ---------- salvar / configurar / exportar ---------- */
@@ -9387,10 +9746,11 @@ function indNomeAba(n, usados){
   while (usados[c]) c = b.slice(0, 28) + '_' + (i++);
   usados[c] = 1; return c;
 }
-function indExportarExcel(){
-  if (!indDados) return;
+function indExportarExcel(dadosOpt, soContrato){
+  const DX = dadosOpt || indDados;
+  if (!DX) return;
   const wb = XLSX.utils.book_new(), usados = {};
-  const mesTxt = indNomeMes(indDados.periodo).toUpperCase().replace('/', ' DE ');
+  const mesTxt = indNomeMes(DX.periodo).toUpperCase().replace('/', ' DE ');
   const f = function(v){ return v === null || v === undefined ? '' : v; };
   const add = function(nome, aoa, pct, larguras, merges){
     const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -9402,12 +9762,12 @@ function indExportarExcel(){
   };
   const cab = ['Item', 'Equipamento', 'Descrição do Equipamento', 'Tempo de máquina Parada em Manutenção (PM)', 'Tempo Médio de Reparo (MTTR)', 'Tempo Médio entre Falhas ou entre Reparo (MTBF)', 'Regime Planejado (HP)', 'Disponibilidade Mecânica (DM)', 'Eficiência Operacional (EO)', 'Índice de Utilização (IU)'];
   const larg = [6, 12, 46, 20, 16, 20, 14, 16, 16, 16];
-  const porCt = indAgrupar(indDados.linhas, indChave);
-  const nomes = Object.keys(porCt).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
+  const porCt = indAgrupar(DX.linhas, indChave);
+  const nomes = (soContrato ? [soContrato] : Object.keys(porCt)).filter(function(n){ return porCt[n]; }).sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
   const resumo = [['INDICADORES DE MANUTENÇÃO — ' + mesTxt + (indVersao === 'prod' ? ' (só horas produtivas)' : '')], [''], ['Localidade', 'Equipamentos', 'PM', 'MTTR', 'MTBF', 'HP', 'DM', 'EO', 'IU']];
   nomes.forEach(function(c){ const m = indMetCtr(porCt[c]); resumo.push([c, new Set(porCt[c].map(function(l){ return l.eq; })).size, indR2(m.PM), f(m.MTTR === null ? null : indR2(m.MTTR)), f(m.MTBF === null ? null : indR2(m.MTBF)), indR2(m.HP), f(m.DM), f(m.EO), f(m.IU)]); });
-  const tm = indMetricas(indDados.linhas.filter(function(l){ return !indSemOuClass(l); }), indVersao);
-  const gm = indMediaGeral(indDados.linhas, indVersao);
+  const tm = indMetricas(DX.linhas.filter(function(l){ return !indSemOuClass(l); }), indVersao);
+  const gm = indMediaGeral(DX.linhas, indVersao);
   resumo.push(['MÉDIA GERAL (média dos contratos)', '', '', '', '', '', f(gm.DM), f(gm.EO), f(gm.IU)]);
   resumo.push(['TOTAL PONDERADO (todos os equipamentos)', '', indR2(tm.PM), f(tm.MTTR === null ? null : indR2(tm.MTTR)), f(tm.MTBF === null ? null : indR2(tm.MTBF)), indR2(tm.HP), f(tm.DM), f(tm.EO), f(tm.IU)]);
   add('Resumo', resumo, [6, 7, 8], [44, 13, 12, 12, 12, 12, 12, 12, 12], [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }]);
@@ -9419,8 +9779,8 @@ function indExportarExcel(){
     aoa.push(['', '', 'TOTAL / MÉDIA PONDERADA', indR2(m.PM), f(m.MTTR === null ? null : indR2(m.MTTR)), f(m.MTBF === null ? null : indR2(m.MTBF)), indR2(m.HP), f(m.DM), f(m.EO), f(m.IU)]);
     add(c, aoa, [7, 8, 9], larg, [{ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }]);
   });
-  add('Alertas', [['Equipamento', 'Tipo', 'Detalhe']].concat(indDados.alertas.map(function(a){ return [a.eq, IND_ROTULO_ALERTA[a.tipo] || a.tipo, a.texto]; })), [], [14, 26, 120]);
-  XLSX.writeFile(wb, 'Indicadores_Manutencao_' + indDados.periodo + (indVersao === 'prod' ? '_produtivas' : '') + '.xlsx');
+  add('Alertas', [['Equipamento', 'Tipo', 'Detalhe']].concat(DX.alertas.map(function(a){ return [a.eq, IND_ROTULO_ALERTA[a.tipo] || a.tipo, a.texto]; })), [], [14, 26, 120]);
+  XLSX.writeFile(wb, 'Indicadores_Manutencao_' + (soContrato ? soContrato.replace(/[^A-Za-z0-9]+/g, '_') + '_' : '') + DX.periodo + (indVersao === 'prod' ? '_produtivas' : '') + '.xlsx');
 }
 
 /* ---------- entrada da tela ---------- */
@@ -9432,6 +9792,9 @@ async function carregarIndicadoresManut(){
     document.getElementById('ind-btn-salvar').onclick = indSalvarMes;
     document.getElementById('ind-btn-excel').onclick = indExportarExcel;
     document.getElementById('ind-btn-config').onclick = indModalConfig;
+    document.getElementById('ind-btn-rel').onclick = indModalRelatorio;
+    document.getElementById('ind-btn-hist').onclick = function(){ document.getElementById('ind-arq-hist').value = ''; document.getElementById('ind-arq-hist').click(); };
+    document.getElementById('ind-arq-hist').onchange = function(){ if (this.files && this.files.length) indImportarHistorico(Array.prototype.slice.call(this.files)); };
     document.getElementById('ind-sel-mes').onchange = indMudouMes;
     document.querySelectorAll('[data-ind-versao]').forEach(function(b){ b.onclick = function(){ indVersao = b.dataset.indVersao; indRender(); }; });
     document.querySelectorAll('[data-ind-agrup]').forEach(function(b){ b.onclick = function(){ indAgrup = b.dataset.indAgrup; indFiltroContrato = ''; indFiltroEq = ''; indAbertos = {}; indRender(); }; });
