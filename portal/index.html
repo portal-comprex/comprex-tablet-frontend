@@ -1880,6 +1880,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   #view-manut-indic.ind-apres .ind-apres-sair{display:block}
   #view-manut-indic.ind-apres .ind-barra,#view-manut-indic.ind-apres #ind-abas,#view-manut-indic.ind-apres #ind-kpis,#view-manut-indic.ind-apres #ind-importacao,#view-manut-indic.ind-apres #ind-aviso,#view-manut-indic.ind-apres .ex-chips,#view-manut-indic.ind-apres .ex-acoes{display:none}
   #view-manut-indic.ind-apres .ex-card .val{font-size:52px}
+  body.tv #view-manut-indic .ind-barra,body.tv #view-manut-indic #ind-abas,body.tv #view-manut-indic .ex-chips,body.tv #view-manut-indic .ex-acoes,body.tv #view-manut-indic #ind-importacao,body.tv #view-manut-indic #ind-aviso,body.tv #view-manut-indic #ind-kpis{display:none !important}
   @media(max-width:900px){.ex-cards{grid-template-columns:1fr}.ex-grid2{grid-template-columns:1fr}.ex-rank{grid-template-columns:90px 1fr 54px 70px 10px}}
 
   /* ---- mapa de calor / pareto / histórico importado ---- */
@@ -2029,7 +2030,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 93</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 94</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3441,6 +3442,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <button type="button" class="rel-btn-secundario" id="ind-btn-excel">📊 Exportar Excel</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-rel" title="Relatório do mês por contrato, em PDF (imprimir) ou Excel">📄 Relatório por contrato</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-hist" title="Carrega o histórico das suas planilhas KPIs POR OBRA (um arquivo por mês)">📚 Importar histórico (planilhas)</button>
+      <button type="button" class="rel-btn-secundario" id="ind-btn-excluir" title="Remove do histórico o mês escolhido no seletor">🗑 Excluir mês</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-apres" title="Tela cheia, com troca automática entre as telas (Esc para sair)">📺 Apresentar</button>
       <button type="button" class="rel-btn-secundario" id="ind-btn-config">⚙ Configurar</button>
     </div>
@@ -3456,6 +3458,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <button type="button" class="topo-toggle-opt" data-ind-aba="equipamentos">🚜 Equipamentos</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="alertas">⚠️ Alertas <span id="ind-badge-alertas"></span></button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="historico">📈 Histórico</button>
+    <button type="button" class="topo-toggle-opt" data-ind-aba="diretoria">🎯 Resumo diretoria</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="comparar">⚖ Comparar meses</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="mapa">🔥 Mapa de calor</button>
     <button type="button" class="topo-toggle-opt" data-ind-aba="pareto">📉 Pareto de paradas</button>
@@ -9171,23 +9174,25 @@ function indRender(){
   aviso.innerHTML = indMsgListas;
   document.getElementById('ind-btn-salvar').disabled = !(indDados && indDados.origem === 'calculo');
   document.getElementById('ind-btn-excel').disabled = !indDados;
+  document.getElementById('ind-btn-excluir').disabled = !indSalvos[(document.getElementById('ind-sel-mes') || {}).value];
   document.querySelectorAll('[data-ind-agrup]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indAgrup === indAgrup); });
   document.querySelectorAll('[data-ind-versao]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indVersao === indVersao); });
   document.querySelectorAll('[data-ind-aba]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.indAba === indAba); });
   const nAl = indDados ? indDados.alertas.length : 0;
   document.getElementById('ind-badge-alertas').textContent = nAl ? '(' + nAl + ')' : '';
   const k = document.getElementById('ind-kpis'), corpo = document.getElementById('ind-corpo');
-  const indSemDados = ['historico', 'mapa', 'pareto', 'exec', 'comparar'].indexOf(indAba) >= 0;
+  const indSemDados = ['historico', 'mapa', 'pareto', 'exec', 'comparar', 'diretoria'].indexOf(indAba) >= 0;
   if (!indDados && !indSemDados) {
     k.innerHTML = '';
     corpo.innerHTML = '<div class="ind-painel" style="text-align:center;padding:36px 16px"><div style="font-size:34px">📥</div><b>Importe as planilhas do mês</b><div class="ind-nota">Clique em <b>Importar planilhas</b> e escolha de uma vez só: a(s) extração(ões) do SAP, a parte diária e, se quiser conferir os regimes, a planilha de indicadores do mês anterior. O portal reconhece cada arquivo sozinho.</div></div>';
     return;
   }
-  if (indDados && indAba !== 'exec' && indAba !== 'comparar') indRenderKpis(k); else k.innerHTML = '';
+  if (indDados && indAba !== 'exec' && indAba !== 'comparar' && indAba !== 'diretoria') indRenderKpis(k); else k.innerHTML = '';
   if (indAba === 'contratos') corpo.innerHTML = indHtmlContratos();
   else if (indAba === 'equipamentos') indRenderEquipamentos(corpo);
   else if (indAba === 'alertas') corpo.innerHTML = indHtmlAlertas();
   else if (indAba === 'exec') corpo.innerHTML = indHtmlExec();
+  else if (indAba === 'diretoria') corpo.innerHTML = indHtmlDiretoria();
   else if (indAba === 'comparar') corpo.innerHTML = indHtmlComparar();
   else if (indAba === 'mapa') corpo.innerHTML = indHtmlMapa();
   else if (indAba === 'pareto') corpo.innerHTML = indHtmlPareto();
@@ -9521,7 +9526,7 @@ function indValidarLinhas(periodo, linhas, prev){
   (prev || []).forEach(function(l){ (prevEq[l.eq] = prevEq[l.eq] || []).push(l); });
   Object.keys(porEq).forEach(function(eq){
     const ls = porEq[eq];
-    const abas = Array.from(new Set(ls.map(function(l){ return l.contrato; })));
+    const abas = Array.from(new Set(ls.filter(function(l){ return l.contrato !== IND_SEM_CONTRATO; }).map(function(l){ return l.contrato; })));
     if (abas.length > 1 && ls.every(function(l){ return l.origem === 'planilha'; })) add(eq, 'duas-abas', 'Aparece em mais de um contrato no mesmo mês (' + abas.join(' e ') + '). Se não trocou de obra, o HP está sendo contado duas vezes.');
     ls.forEach(function(l){
       if (l.hp && !regs.some(function(r){ return Math.abs(r - l.hp) < 0.5; }) && ls.length === 1) add(eq, 'hp-fora', 'Regime planejado de ' + l.hp + ' h não é 176, 330 nem 660 — provável erro de digitação.');
@@ -9819,10 +9824,10 @@ function indSvgLinhas(meses, series){
   });
   return t + '</svg><div class="ind-legenda"><span><i style="background:var(--ind-s1)"></i>DM</span><span><i style="background:var(--ind-s2)"></i>EO</span><span><i style="background:var(--ind-s3)"></i>IU</span><span>tracejado = meta</span></div>';
 }
-function indCardInd(ch, m, mAnt, serie, foco, clicavel){
+function indCardInd(ch, m, mAnt, serie, foco, clicavel, extra){
   const v = m[ch], est = indEstado(ch, v);
   const tag = clicavel ? 'button' : 'div';
-  return '<' + tag + ' type="button" class="ex-card e-' + est + (foco ? ' foco' : '') + '"' + (clicavel ? ' data-exec-foco="' + ch + '"' : '') + ' title="' + (clicavel ? 'Clique para ordenar o ranking por ' + ch : '') + '"><div class="rot">' + IND_NOMES_IND[ch] + ' · ' + ch + '</div><div class="val">' + indPct(v) + '</div><div class="meta">meta ' + indMetas()[ch] + '% ' + (v === null ? '' : (v >= indMetas()[ch] / 100 ? '✔ atingida' : '✖ abaixo')) + '</div><div style="margin-top:6px">' + indDeltaHtml(v, mAnt ? mAnt[ch] : null) + (mAnt ? ' <span class="meta">vs período anterior</span>' : '') + '</div>' + indSpark(serie, ch) + '</' + tag + '>';
+  return '<' + tag + ' type="button" class="ex-card e-' + est + (foco ? ' foco' : '') + '"' + (clicavel ? ' data-exec-foco="' + ch + '"' : '') + ' title="' + (clicavel ? 'Clique para ordenar o ranking por ' + ch : '') + '"><div class="rot">' + IND_NOMES_IND[ch] + ' · ' + ch + '</div><div class="val">' + indPct(v) + '</div><div class="meta">meta ' + indMetas()[ch] + '% ' + (v === null ? '' : (v >= indMetas()[ch] / 100 ? '✔ atingida' : '✖ abaixo')) + '</div>' + (extra ? '<div class="meta" title="Todas as máquinas juntas, ponderadas pelo regime (HP). Contratos maiores pesam mais.">' + extra + '</div>' : '') + '<div style="margin-top:6px">' + indDeltaHtml(v, mAnt ? mAnt[ch] : null) + (mAnt ? ' <span class="meta">vs período anterior</span>' : '') + '</div>' + indSpark(serie, ch) + '</' + tag + '>';
 }
 function indCruzeta(){
   let h = '<div class="ex-cruz"><button type="button" data-nav-n="geral">🏠 Visão geral</button>';
@@ -9846,9 +9851,9 @@ function indHtmlExec(){
   const sub = indRotuloPeriodo(J) + ' · EO e IU sem os equipamentos "sem parte diária"';
   if (indNav.n === 'contrato') return indHtmlExecContrato(ref, J, sub);
   if (indNav.n === 'equip') return indHtmlExecEquip(ref, J, sub);
-  const g = indMediaJ(lAt), gAnt = lAnt.length ? indMediaJ(lAnt) : null;
+  const g = indMediaJ(lAt), gAnt = lAnt.length ? indMediaJ(lAnt) : null, pond = indMetJ(lAt);
   const serie = function(ch){ return J.todos.slice(-8).map(function(m){ const x = indMediaJ(indJuntar([m])); return x[ch]; }); };
-  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, g, gAnt, serie(ch), indFoco === ch, true); }).join('') + '</div>';
+  const cards = '<div class="ex-cards">' + ['DM', 'EO', 'IU'].map(function(ch){ return indCardInd(ch, g, gAnt, serie(ch), indFoco === ch, true, 'ponderada (todas as máquinas): <b>' + indPct(pond[ch]) + '</b>'); }).join('') + '</div>' + indHtmlDisponiveis(J);
   // ranking de contratos
   const porCt = indAgrupar(lAt, indChave), porCtAnt = indAgrupar(lAnt, indChave), meta = indMetas()[indFoco] / 100;
   const rk = Object.keys(porCt).map(function(c){ const m = indMetJ(porCt[c]); const ma = porCtAnt[c] ? indMetJ(porCtAnt[c]) : null; return { c: c, v: m[indFoco], a: ma ? ma[indFoco] : null, n: new Set(porCt[c].map(function(l){ return l.eq; })).size }; });
@@ -9940,12 +9945,90 @@ function indHtmlComparar(){
     '<div class="ind-painel"><div class="ind-wrap"><table class="ex-tab"><thead><tr><th class="esq" rowspan="2">Contrato</th><th colspan="3" style="text-align:center">DM</th><th colspan="3" style="text-align:center">EO</th><th colspan="3" style="text-align:center">IU</th></tr><tr>' + ['DM', 'EO', 'IU'].map(function(){ return '<th>' + indNomeMes(indCmpA).slice(0, 3) + '</th><th>' + indNomeMes(indCmpB).slice(0, 3) + '</th><th>Δ</th>'; }).join('') + '</tr></thead><tbody>' + lin.map(function(x){ return x.h; }).join('') +
     '<tr style="font-weight:800"><td class="esq">MÉDIA GERAL</td>' + ['DM', 'EO', 'IU'].map(function(ch){ return '<td>' + indPct(tA[ch], 1) + '</td><td>' + indPct(tB[ch], 1) + '</td><td>' + indDeltaHtml(tB[ch], tA[ch]) + '</td>'; }).join('') + '</tr></tbody></table></div><div class="ind-nota">Clique em um contrato para abrir o detalhe. EO e IU ignoram equipamentos sem parte diária.</div></div>';
 }
+
+/** Equipamentos "Disponível - Manutenção" (sem contrato) que NÃO aparecem em nenhum contrato no mesmo mês. */
+function indHtmlDisponiveis(J){
+  const eqs = {}, ls = [];
+  J.atual.forEach(function(m){
+    const emContrato = new Set(m.linhas.filter(function(l){ return !indSemOuClass(l); }).map(function(l){ return l.eq; }));
+    m.linhas.filter(function(l){ return l.contrato === IND_SEM_CONTRATO; }).forEach(function(l){ if (!emContrato.has(l.eq)) { eqs[l.eq] = 1; ls.push(l); } });
+  });
+  const n = Object.keys(eqs).length;
+  if (!n) return '';
+  const x = indMetricas(ls, indVersao);
+  return '<div class="ind-painel" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><div><h4 style="margin:0">🅿 Disponíveis na manutenção (sem contrato)</h4><div class="ind-nota" style="margin:2px 0 0">Ficam fora da média geral. Equipamentos que já aparecem em um contrato no mesmo mês são contados só no contrato.</div></div>' +
+    '<div class="ex-tile" style="cursor:default;min-width:120px"><b>' + n + '</b><span>equipamentos</span></div><div class="ex-tile" style="cursor:default;min-width:120px"><b>' + indN(x.PM, 0) + ' h</b><span>de parada</span></div><div class="ex-tile" style="cursor:default;min-width:120px"><b class="ex-txt-' + indEstado('DM', x.DM) + '">' + indPct(x.DM, 0) + '</b><span>disponibilidade (DM)</span></div></div>';
+}
+function indReincidentes(todos, ch){
+  const meta = indMetas()[ch] / 100, pe = {}, ct = {};
+  todos.forEach(function(m){ const por = indAgrupar(m.linhas.filter(function(l){ return !indSemOuClass(l); }), 'eq'); Object.keys(por).forEach(function(e){ const v = indMetricas(por[e], indVersao)[ch]; ct[e] = indChave(por[e][0]); if (v !== null && v < meta) pe[e] = (pe[e] || 0) + 1; }); });
+  return Object.keys(pe).filter(function(e){ return pe[e] >= 3; }).map(function(e){ return { eq: e, ct: ct[e], n: pe[e] }; }).sort(function(a, b){ return b.n - a.n; });
+}
+function indResumoHtml(){
+  const meses = indMesesDisponiveis();
+  if (!meses.length) return '<div class="ind-painel">Ainda não há meses no histórico.</div>';
+  const ref = indRefMes(), J = indJanelas(ref), lAt = indJuntar(J.atual), lAnt = indJuntar(J.ant);
+  const per = indRotuloPeriodo(J), meta = indMetas();
+  const g = indMediaJ(lAt), gA = lAnt.length ? indMediaJ(lAnt) : null, pd = indMetJ(lAt);
+  const cor = function(ch, v){ if (v === null || v === undefined) return '#555'; const m = meta[ch] / 100; return v >= m ? '#1b7a43' : (v >= m - 0.05 ? '#9a6b00' : '#b3453a'); };
+  const dlt = function(a, b){ if (a === null || b === null || a === undefined || b === undefined) return ''; const d = (a - b) * 100; return Math.abs(d) < 0.05 ? '= igual' : (d > 0 ? '▲ +' : '▼ −') + Math.abs(d).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' pp'; };
+  const porCt = indAgrupar(lAt, indChave), porCtA = indAgrupar(lAnt, indChave);
+  const rk = Object.keys(porCt).map(function(c){ const m = indMetJ(porCt[c]), a = porCtA[c] ? indMetJ(porCtA[c]) : null; return { c: c, DM: m.DM, EO: m.EO, IU: m.IU, d: a ? dlt(m.DM, a.DM) : '' }; }).sort(function(a, b){ return (a.DM === null) - (b.DM === null) || a.DM - b.DM; });
+  const porEq = indAgrupar(lAt, 'eq');
+  const eqs = Object.keys(porEq).map(function(e){ const m = indMetJ(porEq[e]); return { e: e, ct: indChave(porEq[e][0]), DM: m.DM, h: Math.min(m.PM, m.HP) }; });
+  const piores = eqs.filter(function(x){ return x.DM !== null; }).sort(function(a, b){ return a.DM - b.DM; }).slice(0, 5);
+  const porH = eqs.slice().sort(function(a, b){ return b.h - a.h; }), totH = eqs.reduce(function(a, x){ return a + x.h; }, 0);
+  let ac = 0, k = 0; porH.forEach(function(x){ if (ac / (totH || 1) < 0.8) { ac += x.h; k++; } });
+  const rein = indReincidentes(J.todos, 'DM');
+  const nSem = Object.keys(porEq).filter(function(e){ return porEq[e].every(indSemPD); }).length;
+  const f = function(ch){ const v = g[ch], at = v !== null && v >= meta[ch] / 100; return IND_NOMES_IND[ch].toLowerCase() + ' (' + ch + ') de <b>' + indPct(v) + '</b>, ' + (v === null ? 'sem dados' : (at ? 'acima' : 'abaixo') + ' da meta de ' + meta[ch] + '%') + (gA && gA[ch] !== null && v !== null ? ' (' + dlt(v, gA[ch]) + ' frente ao período anterior)' : ''); };
+  const bons = rk.filter(function(x){ return x.DM !== null; });
+  const txt = '<p>No período <b>' + per + '</b>, a frota fechou com ' + f('DM') + '; ' + f('EO') + '; e ' + f('IU') + '.</p>' +
+    (bons.length > 1 ? '<p>Em disponibilidade, o melhor contrato foi <b>' + mtEsc(bons[bons.length - 1].c) + '</b> (' + indPct(bons[bons.length - 1].DM, 1) + ') e o mais baixo foi <b>' + mtEsc(bons[0].c) + '</b> (' + indPct(bons[0].DM, 1) + ').</p>' : '') +
+    '<p>' + (rein.length ? '<b>' + rein.length + '</b> equipamento(s) estiveram abaixo da meta de DM em 3 ou mais meses' + (rein.length ? ', com destaque para ' + rein.slice(0, 3).map(function(x){ return '<b>' + mtEsc(x.eq) + '</b> (' + x.n + ' meses)'; }).join(', ') : '') + '. ' : 'Nenhum equipamento reincidente abaixo da meta de DM. ') +
+    'As paradas somaram <b>' + indN(totH, 0) + ' h</b>' + (porH.length ? ', e <b>' + k + '</b> equipamento(s) concentram 80% delas, a começar por ' + mtEsc(porH[0].e) + ' (' + indN(porH[0].h, 0) + ' h).' : '.') + '</p>';
+  const kp = ['DM', 'EO', 'IU'].map(function(ch){ return '<div class="kb" style="border-left-color:' + cor(ch, g[ch]) + '"><small>' + IND_NOMES_IND[ch] + ' · meta ' + meta[ch] + '%</small><b style="color:' + cor(ch, g[ch]) + '">' + indPct(g[ch]) + '</b><em>' + (gA ? dlt(g[ch], gA[ch]) : '') + '</em><small>ponderada: ' + indPct(pd[ch]) + '</small></div>'; }).join('');
+  const css = '<style>.rd{font-family:Arial,sans-serif;color:#111;font-size:12px;background:#fff;padding:18px 22px;border-radius:12px;border:1px solid #ddd;max-width:960px;margin:0 auto}.rd h2{font-size:18px;margin:0 0 2px}.rd h3{font-size:12px;text-transform:uppercase;letter-spacing:.4px;margin:14px 0 6px;color:#1b6b3a}.rd .sub{color:#555;margin-bottom:10px}.rd .kg{display:flex;gap:10px}.rd .kb{flex:1;border:1px solid #ccc;border-left:6px solid #888;border-radius:8px;padding:8px 12px}.rd .kb b{display:block;font-size:26px}.rd .kb em{font-style:normal;font-size:11px;color:#444}.rd .kb small{display:block;color:#555;font-size:10px}.rd p{line-height:1.5;margin:6px 0}.rd table{width:100%;border-collapse:collapse}.rd th{background:#1b6b3a;color:#fff;font-size:10px;padding:4px 6px;text-align:right}.rd th:first-child{text-align:left}.rd td{padding:3px 6px;border-bottom:1px solid #e3e3e3;text-align:right}.rd td:first-child{text-align:left}.rd .duas{display:flex;gap:16px}.rd .duas>div{flex:1}.rd .nota{font-size:10px;color:#555;margin-top:8px}</style>';
+  const tabCt = '<table><thead><tr><th>Contrato</th><th>DM</th><th>EO</th><th>IU</th><th>Δ DM</th></tr></thead><tbody>' + rk.map(function(x){ return '<tr><td>' + mtEsc(x.c) + '</td><td style="color:' + cor('DM', x.DM) + '"><b>' + indPct(x.DM, 1) + '</b></td><td style="color:' + cor('EO', x.EO) + '">' + indPct(x.EO, 1) + '</td><td style="color:' + cor('IU', x.IU) + '">' + indPct(x.IU, 1) + '</td><td>' + x.d + '</td></tr>'; }).join('') + '</tbody></table>';
+  const tabEq = '<table><thead><tr><th>Equipamento</th><th>Contrato</th><th>DM</th></tr></thead><tbody>' + piores.map(function(x){ return '<tr><td><b>' + mtEsc(x.e) + '</b></td><td>' + mtEsc(x.ct) + '</td><td style="color:' + cor('DM', x.DM) + '"><b>' + indPct(x.DM, 0) + '</b></td></tr>'; }).join('') + '</tbody></table>';
+  return '<div class="rd">' + css + '<h2>Resumo de Manutenção</h2><div class="sub">' + per + ' · Comprex Máquinas e Serviços</div><div class="kg">' + kp + '</div><h3>Leitura do período</h3>' + txt +
+    '<div class="duas"><div><h3>Contratos (do menor para o maior DM)</h3>' + tabCt + '</div><div><h3>Equipamentos com menor DM</h3>' + tabEq + '</div></div>' +
+    '<div class="nota">Média geral = média dos contratos (cada contrato ponderado pelas horas). "Ponderada" = todas as máquinas juntas, ponderadas pelo regime. EO e IU não consideram ' + nSem + ' equipamento(s) sem parte diária. Metas: DM ≥ ' + meta.DM + '% · EO ≥ ' + meta.EO + '% · IU ≥ ' + meta.IU + '%.</div></div>';
+}
+function indHtmlDiretoria(){
+  return '<div class="ex-topo"><div><h3>Resumo para a diretoria</h3><div class="sub">Uma folha com o que importa. Use os botões de período acima para mudar o recorte.</div></div><div class="ex-chips">' +
+    [['mes', 'Mês'], ['3m', '3 meses'], ['6m', '6 meses'], ['ytd', 'Ano até agora']].map(function(c){ return '<button type="button" class="ex-chip' + (indPeriodo === c[0] ? ' ativo' : '') + '" data-per="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div></div>' +
+    '<div class="ex-acoes"><button type="button" class="rel-btn-primario" id="ind-btn-pdf-dir">📄 Gerar PDF (1 página)</button></div>' + indResumoHtml();
+}
+function indImprimirResumo(){
+  const logo = '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">Resumo de Manutenção<small>Comprex Máquinas e Serviços</small></div></div>';
+  document.getElementById('hist-print-area').innerHTML = logo + indResumoHtml();
+  setTimeout(function(){ window.print(); }, 200);
+}
+async function indExcluirMes(){
+  if (!mtExigirEdicao()) return;
+  const p = (document.getElementById('ind-sel-mes') || {}).value;
+  if (!p || !indSalvos[p]) { alert('Escolha, no seletor "Mês", um mês que esteja salvo (✔ salvo).'); return; }
+  if (!confirm('Excluir o mês ' + indNomeMes(p) + ' do histórico?\n\nOs dados desse mês saem do SharePoint e dos gráficos. Isso não pode ser desfeito (você poderá importar de novo depois).')) return;
+  try {
+    const id = await indResolverLista();
+    for (const it of (indSalvos[p].itemIds || [])) { await apagarItemSimples(id, it); }
+    delete indSalvos[p];
+    if (indDados && indDados.periodo === p) indDados = null;
+    indPrepararMeses();
+    const ult = Object.keys(indSalvos).sort().pop();
+    if (ult) { document.getElementById('ind-sel-mes').value = ult; indDados = { periodo: ult, linhas: indSalvos[ult].linhas, alertas: indSalvos[ult].alertas, origem: 'salvo' }; }
+    mtToast('Mês ' + indNomeMes(p) + ' excluído do histórico.');
+  } catch (e) { alert('⚠️ Não consegui excluir: ' + e.message); await indCarregarSalvos(); indPrepararMeses(); }
+  indRender();
+}
+
 function indApresentar(){
   const el = document.getElementById('view-manut-indic');
   if (el.classList.contains('ind-apres')) { indSairApres(); return; }
   el.classList.add('ind-apres');
   try { if (el.requestFullscreen) el.requestFullscreen(); } catch (e) {}
-  const seq = ['exec', 'historico', 'mapa', 'pareto', 'comparar'];
+  const seq = ['exec', 'diretoria', 'historico', 'mapa', 'pareto', 'comparar'];
   let i = 0; indAba = 'exec'; indNav = { n: 'geral', ct: '', eq: '' }; indRender();
   indApresTimer = setInterval(function(){ i = (i + 1) % seq.length; indAba = seq[i]; indNav = { n: 'geral', ct: '', eq: '' }; indRender(); }, 20000);
 }
@@ -9964,6 +10047,7 @@ function indLigarExec(){
   document.querySelectorAll('[data-per]').forEach(function(b){ b.onclick = function(){ indPeriodo = b.dataset.per; indRender(); }; });
   document.querySelectorAll('[data-exec-foco]').forEach(function(b){ b.onclick = function(){ indFoco = b.dataset.execFoco; indRender(); }; });
   document.querySelectorAll('[data-go]').forEach(function(b){ b.onclick = function(){ indAba = b.dataset.go; if (indAba === 'mapa') { indHmIndicador = indFoco; indHmSoRein = !!b.dataset.goRein; } indFiltroTxt = ''; indFiltroContrato = ''; indFiltroEq = ''; indRender(); }; });
+  const pdfd = document.getElementById('ind-btn-pdf-dir'); if (pdfd) pdfd.onclick = indImprimirResumo;
   const ca = document.getElementById('ind-cmp-a'); if (ca) ca.onchange = function(){ indCmpA = ca.value; indRender(); };
   const cb = document.getElementById('ind-cmp-b'); if (cb) cb.onchange = function(){ indCmpB = cb.value; indRender(); };
   document.querySelectorAll('[data-rel-ct]').forEach(function(b){ b.onclick = function(){ const ref = indRefMes(), m = indMesesDisponiveis().find(function(x){ return x.p === ref; }); document.getElementById('hist-print-area').innerHTML = indRelatorioHtml(ref, m.linhas, b.dataset.relCt); setTimeout(function(){ window.print(); }, 200); }; });
@@ -10073,6 +10157,7 @@ async function carregarIndicadoresManut(){
     document.getElementById('ind-btn-excel').onclick = indExportarExcel;
     document.getElementById('ind-btn-config').onclick = indModalConfig;
     document.getElementById('ind-btn-apres').onclick = indApresentar;
+    document.getElementById('ind-btn-excluir').onclick = indExcluirMes;
     document.getElementById('ind-apres-sair').onclick = indSairApres;
     document.getElementById('ind-btn-rel').onclick = indModalRelatorio;
     document.getElementById('ind-btn-hist').onclick = function(){ document.getElementById('ind-arq-hist').value = ''; document.getElementById('ind-arq-hist').click(); };
@@ -12328,21 +12413,22 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') sinoAb
 const TV_TELAS = [
   { id: 'painel', nome: 'Painel de Checklist', view: 'painel' },
   { id: 'manut', nome: 'Manutenção — Visão Geral', view: 'manut' },
-  { id: 'dashboard-mov', nome: 'Local de Instalação — Movimentações no período', view: 'status-equipamentos', depois: function(){
-      const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=periodo]'); if (b) b.click(); } },
-  { id: 'status-equipamentos', nome: 'Local de Instalação — Dashboard', view: 'status-equipamentos', depois: function(){
-      const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=dashboard]'); if (b) b.click(); } },
-  { id: 'localizacao-atual', nome: 'Local de Instalação — Lista', view: 'status-equipamentos', depois: function(){
-      const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=lista]'); if (b) b.click(); } },
+  { id: 'local-arvore', nome: 'Local de Instalação — Árvore', view: 'status-equipamentos', depois: function(){
+      const b = document.querySelector('#status-eq-visao-toggle [data-status-eq-visao=arvore]'); if (b) b.click(); } },
+  { id: 'ind-exec', nome: 'Indicadores de Manutenção — Visão executiva', view: 'manut-indic', depois: function(){
+      indAba = 'exec'; indNav = { n: 'geral', ct: '', eq: '' }; if (typeof indRender === 'function') indRender(); } },
   { id: 'dashboard', nome: 'Dashboard de Checklists', view: 'dashboard' },
   { id: 'indicadores', nome: 'Indicadores de Checklist', view: 'indicadores' }
 ];
-const TV_PADRAO = { telas: ['painel', 'manut', 'dashboard-mov', 'status-equipamentos'], seg: 30, atu: 5, fit: 1, full: 1 };
+const TV_PADRAO = { telas: ['painel', 'manut', 'local-arvore'], seg: 30, atu: 5, fit: 1, full: 1 };
 const tv = { ativo: false, telas: [], idx: 0, pausado: false, inicio: 0, cfg: null, ultimaCarga: {}, timer: null, viewAntes: 'painel', usouFull: false, wake: null, tickerI: 0, tickerT: 0, mouseT: 0, scrollRaf: 0 };
 function tvLerCfg(){
   let c = {};
   try { c = JSON.parse(localStorage.getItem('comprexTvCfg') || '{}') || {}; } catch (e) {}
-  return Object.assign({}, TV_PADRAO, c);
+  const r = Object.assign({}, TV_PADRAO, c);
+  // painéis antigos (Lista / Dashboard / Movimentações) viraram a Árvore
+  r.telas = Array.from(new Set((r.telas || []).map(function(t){ return (t === 'dashboard-mov' || t === 'status-equipamentos' || t === 'localizacao-atual') ? 'local-arvore' : t; })));
+  return r;
 }
 function tvGravarCfg(c){ try { localStorage.setItem('comprexTvCfg', JSON.stringify(c)); } catch (e) {} }
 function tvTelaPermitida(t){
