@@ -1913,7 +1913,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 86</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 13/10/2026 · 88</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -2249,7 +2249,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     <span id="raiox-resumo" style="font-size:12.5px;color:var(--cinza)"></span>
     <div style="margin-left:auto"><button type="button" class="painel-btn-ghost" id="raiox-imprimir">🖨️ Imprimir</button></div>
   </div>
-  <div class="raiox-legenda">Aderência = % da frota operacional da obra que fez o checklist <b>hoje</b>. Conformidade e itens = últimos <b>30 dias</b>.</div>
+  <div class="raiox-legenda">Aderência = % da frota em operação da obra que fez o checklist <b>hoje</b>. Conformidade e itens = últimos <b>30 dias</b>.</div>
   <div class="dash-row" style="grid-template-columns:1fr 1fr;align-items:stretch;margin-bottom:16px">
     <div class="dash-card" style="display:flex;flex-direction:column">
       <h3>Aderência de hoje por obra</h3>
@@ -2551,7 +2551,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="campo">
         <label>Novo status</label>
         <select id="mov-novo-status">
-          <option value="OPERACIONAL">OPERACIONAL</option>
+          <option value="EM OPERAÇÃO">EM OPERAÇÃO</option>
           <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
           <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
           <option value="DISPONÍVEL">DISPONÍVEL</option>
@@ -2674,7 +2674,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <label>Status</label>
         <select id="status-eq-filtro-status">
           <option value="">Todos</option>
-          <option value="OPERACIONAL">OPERACIONAL</option>
+          <option value="EM OPERAÇÃO">EM OPERAÇÃO</option>
           <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
           <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
           <option value="DISPONÍVEL">DISPONÍVEL</option>
@@ -2871,7 +2871,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <label>Status</label>
       <select id="frota-filtro-status">
         <option value="">Todos</option>
-        <option value="OPERACIONAL">OPERACIONAL</option>
+        <option value="EM OPERAÇÃO">EM OPERAÇÃO</option>
         <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
         <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
         <option value="DISPONÍVEL">DISPONÍVEL</option>
@@ -3650,7 +3650,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="campo" style="margin-top:12px">
         <label>Status</label>
         <select id="loc-mover-status">
-          <option value="OPERACIONAL">OPERACIONAL</option>
+          <option value="EM OPERAÇÃO">EM OPERAÇÃO</option>
           <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
           <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
           <option value="DISPONÍVEL">DISPONÍVEL</option>
@@ -3747,7 +3747,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="modal-campo">
         <label>Status inicial</label>
         <select id="input-equip-status">
-          <option value="OPERACIONAL">OPERACIONAL</option>
+          <option value="EM OPERAÇÃO">EM OPERAÇÃO</option>
           <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
           <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
           <option value="DISPONÍVEL">DISPONÍVEL</option>
@@ -3805,7 +3805,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="modal-campo">
         <label>Status inicial</label>
         <select id="input-implemento-status">
-          <option value="OPERACIONAL">OPERACIONAL</option>
+          <option value="EM OPERAÇÃO">EM OPERAÇÃO</option>
           <option value="EM MANUTENÇÃO">EM MANUTENÇÃO</option>
           <option value="EM USO NO PÁTIO">EM USO NO PÁTIO</option>
           <option value="DISPONÍVEL">DISPONÍVEL</option>
@@ -3982,6 +3982,7 @@ async function carregarConfiguracoes(){
         const locaisDaPessoa = par.slice(idx + 1).split(',').map(function(s){ return s.trim(); }).filter(Boolean);
         if (email && locaisDaPessoa.length) novoMapaLocais[email] = locaisDaPessoa;
       });
+      Object.keys(novoMapaLocais).forEach(function(e){ novoMapaLocais[e] = normLocaisLista(novoMapaLocais[e]); });
       CONFIG.localidadesPorUsuario = novoMapaLocais; // pode ficar {} se ninguém tiver restrição
     }
     if (porChave['TIPOS_PARADA']) {
@@ -4010,17 +4011,10 @@ function usuarioEhAdmin(conta){
  *  configurada também pode (comportamento de sempre); só bloqueia quem tem
  *  uma lista de localidades e esse local não está nela. */
 /** Local de instalação (nível acima da obra) como no SAP: AMT -> COMPREX-AMT. */
-const LOCAL_INSTALACAO_SAP = {
-  AMB: { cod: 'COMPREX-AMB', nome: 'Obras - Fora do Estado ArcelorMittal' },
-  AMT: { cod: 'COMPREX-AMT', nome: 'Obras - ArcelorMittal Tubarão' },
-  DIVERSOS: { cod: 'COMPREX-DIV', nome: 'Obras - Diversas' },
-  COMPREX: { cod: 'COMPREX-PAT', nome: 'Comprex - Pátio de Manutenção' },
-  SIMEC: { cod: 'COMPREX-SIM', nome: 'Obras - Simec Cariacica' },
-  VALE: { cod: 'COMPREX-VAL', nome: 'Obras - Vale' }
-};
 function localInstalacaoDe(local){
-  const pref = String(local || '').split(/\s*-\s*/)[0].trim().toUpperCase();
-  const m = LOCAL_INSTALACAO_SAP[pref];
+  const pref = sapSemAcento(String(local || '').split(/\s*-\s*/)[0].trim());
+  const chave = pref === 'DIVERSOS' ? 'DIVERSAS' : (pref === 'PATIO' || pref === 'COMPREX' ? 'PÁTIO' : pref);
+  const m = SAP_LOCAIS_INSTALACAO[chave];
   return m ? m : { cod: 'COMPREX-' + pref.slice(0, 3), nome: pref };
 }
 function usuarioPodeEditarLocal(local){
@@ -4373,7 +4367,8 @@ async function iniciarAplicacao(){
       lerListaOperadores(),
       carregarConfiguracoes()
     ]);
-    inicializarListas(equipamentos, locais);
+    Object.keys(locaisIds).slice().forEach(function(k){ const n = normLocal(k); if (n !== k && !locaisIds[n]) locaisIds[n] = locaisIds[k]; });
+    inicializarListas(equipamentos, normLocaisLista(locais));
     operadores = listaOperadores.sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
     // Reavalia o acesso admin e os tipos de parada agora que a lista Configuracoes
     // (se existir) já carregou — pode ter mudado o padrão fixo do código.
@@ -4508,6 +4503,73 @@ let ultimoHorimetro = {};
 /* =====================================================================
    INICIALIZAÇÃO — carrega listas (Apps Script ou localStorage+padrão)
    ===================================================================== */
+/* =====================================================================
+   NOMES DOS LOCAIS = ÁRVORE DO SAP (Local de instalação › Obra)
+   Os registros antigos do SharePoint continuam como estão: aqui eles são
+   "traduzidos" ao ler (pelo prefixo + número da ordem) e tudo que for
+   gravado daqui pra frente já usa o nome SAP.
+   ===================================================================== */
+const SAP_LOCAIS_INSTALACAO = {
+  'AMB': { cod: 'COMPREX-AMB', nome: 'OBRAS - FORA DO ESTADO ARCELORMITTAL' },
+  'AMT': { cod: 'COMPREX-AMT', nome: 'OBRAS - ARCELORMITTAL TUBARÃO' },
+  'DIVERSAS': { cod: 'COMPREX-DIV', nome: 'OBRAS - DIVERSAS' },
+  'PÁTIO': { cod: 'COMPREX-PAT', nome: 'COMPREX - PATIO DE MANUTENÇÃO' },
+  'SIMEC': { cod: 'COMPREX-SIM', nome: 'OBRAS - SIMEC CARIACICA' },
+  'VALE': { cod: 'COMPREX-VAL', nome: 'OBRAS - VALE' }
+};
+const SAP_OBRAS_TXT = {
+  'AMB': '500004=JOÃO MONLEVADE/MG - SUCATA|500005=JOÃO MONLEVADE/MG - PENEIRAMENTO|500019=ARCELORMITTAL SETE LAGOAS/MG|500020=JUIZ DE FORA/MG - SUCATA|500021=JUIZ DE FORA/MG - PRENSA|500022=PIRACICABA/SP - SUCATA|500023=PIRACICABA/SP - PENEIRAMENTO|500025=RESENDE/RJ - SUCATA|500026=RESENDE/RJ - PENEIRAMENTO|500029=RIBEIRÃO PRETO|500056=ARCELOR MITTAL MACAÉ/RJ|500100=JUIZ DE FORA/MG - BOLEAMENTO',
+  'AMT': '500000=CARVÃO|500006=ACIARIA|500007=PENEIRA|500008=BOLEAMENTO|500009=TESOURA DE TARUGO|500010=CORTE DE SUCATA DIVERSAS/BOBINA|500011=BF3 GUSA|500012=CARREGAMENTO|500013=GARRA|500014=PÁ CARREGADEIRA|500033=FUNDIÇÃO (MINI)|500034=BRITADOR|500054=DEMOLIÇÃO|500842=DRY PITT',
+  'DIVERSAS': '500001=AMG ENGENHARIA|500015=AÇO VERDE DO BRASIL/MA|500018=ARCELORMITTAL ALAGOINHAS/BA|500028=VILFER VIX|500030=CONSORCIO CONSTRAL|500031=JAMA NORDESTE ENGENHARIA|500032=CHAGAS METAIS E SERVIÇOS|500035=IPÊ CONSTRUÇÃO E SERVIÇOS|500037=CARBONVIX|500038=TECHNIPFMC DO BRASIL|500039=COFERVIL INDUSTRIA|500041=ENGEFORM ENGENHARIA|500042=FORTES ENGENHARIA|500043=VITÓRIA STONE|500044=CONSIGMA ENGENHARIA|500045=VALE MINA DE FÁBRICA|500046=ECOLÓGIKA AMBIENTAL|500047=PREMONALI|500050=BASE EMPREENDIMENTOS|500053=SIGNUS CONSTRUTORA|500055=HARSCO METALS|500057=TERVAP|500058=DOME SERVIÇOS INTEGRADOS|500060=NAZCA|500080=UNIBRAS|500081=CONSERVASOLO|500082=VLI MULTIMODAL S.A.|500083=INOVA TS ENGENHARIA|500101=DURHAN ENGENHARIA|500102=ZUCCHI|500103=APPOGI CONSTRUTORA|500105=PRYSMIAN CABOS E SISTEMAS|500120=VPORTS AUTORIDADE PORTUARIA|501145=SUZANO ARACRUZ',
+  'SIMEC': '500002=GARRA|500003=MINI CARREGADEIRA|500024=VLI|500040=SERVIÇO COM ELETROIMÃ|500059=ABERTURA DE PACOTES',
+  'VALE': '500000=PENEIRAMENTO - VIX|500016=VARGEM GRANDE|500017=SÃO LUIS/MA|500027=MASCARENHAS - VIX|500052=MINA DE GONGO SOCO|500084=ITABIRA/MG MINA DE CAUÊ|500104=HEMATITINHA|500105=SÃO LUIS/MA DESCOM. DE ATIVOS|500280=AMS'
+};
+const SAP_PATIOS = [
+  { cod: '000001', nome: 'PÁTIO - MANUTENÇÃO' },
+  { cod: '000002', nome: 'PÁTIO - DISPONIBILIDADE' },
+  { cod: '000003', nome: 'PÁTIO - EM USO NA MANUTENÇÃO' }
+];
+const SAP_OBRA_POR_CHAVE = {};   // 'AMT|500008' -> 'AMT - BOLEAMENTO - 500008'
+const SAP_OBRA_POR_ORDEM = {};   // '500055' -> nome (só quando a ordem é única na árvore)
+(function(){
+  const cont = {};
+  Object.keys(SAP_OBRAS_TXT).forEach(function(g){
+    SAP_OBRAS_TXT[g].split('|').forEach(function(par){
+      const i = par.indexOf('='), o = par.slice(0, i), d = par.slice(i + 1);
+      const nome = g + ' - ' + d + ' - ' + o;
+      SAP_OBRA_POR_CHAVE[g + '|' + o] = nome;
+      cont[o] = (cont[o] || 0) + 1; SAP_OBRA_POR_ORDEM[o] = nome;
+    });
+  });
+  Object.keys(cont).forEach(function(o){ if (cont[o] > 1) delete SAP_OBRA_POR_ORDEM[o]; });
+})();
+function sapSemAcento(t){ return String(t == null ? '' : t).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase(); }
+/** Traduz o nome de um local (antigo ou já SAP) para o nome da árvore do SAP. Se não reconhecer, devolve como veio. */
+function normLocal(nome){
+  const orig = String(nome == null ? '' : nome).trim();
+  if (!orig) return orig;
+  const t = sapSemAcento(orig).replace(/\s+/g, ' ');
+  const m = /(?:^|[^0-9])([0-9]{6})(?![0-9])/.exec(t);
+  if (m) {
+    const pref = t.split(/\s*-\s*/)[0].trim();
+    const g = pref === 'DIVERSOS' ? 'DIVERSAS' : pref;
+    if (SAP_OBRA_POR_CHAVE[g + '|' + m[1]]) return SAP_OBRA_POR_CHAVE[g + '|' + m[1]];
+    if (SAP_OBRA_POR_ORDEM[m[1]]) return SAP_OBRA_POR_ORDEM[m[1]];
+    return orig.replace(/\s+/g, ' ');
+  }
+  if (/^(COMPREX|PATIO)\b/.test(t) || /^PATIO\b/.test(t)) {
+    if (/USO/.test(t) && /MANUT/.test(t)) return SAP_PATIOS[2].nome;
+    if (/DISPONIB/.test(t)) return SAP_PATIOS[1].nome;
+    if (/MANUT/.test(t)) return SAP_PATIOS[0].nome;
+  }
+  return orig;
+}
+/** normLocal em uma lista, sem repetidos */
+function normLocaisLista(arr){
+  const out = [], vistos = {};
+  (arr || []).forEach(function(l){ const n = normLocal(l); if (n && !vistos[n]) { vistos[n] = 1; out.push(n); } });
+  return out;
+}
 function lerExtras(chave) {
   try { return JSON.parse(localStorage.getItem(chave) || '[]'); } catch(e){ return []; }
 }
@@ -4541,7 +4603,7 @@ function inicializarListas(equipamentosServidor, locaisServidor) {
   } else {
     locais = [];
   }
-  extraLocal.forEach(function(l){ if(locais.indexOf(l) < 0) locais.push(l); });
+  normLocaisLista(extraLocal).forEach(function(l){ if(locais.indexOf(l) < 0) locais.push(l); });
   // Ordena as duas listas em ordem alfabética (afeta selects, modal e Relatórios)
   frotas.sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
   locais.sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); });
@@ -5610,7 +5672,7 @@ function renderizarListaModal(tipo) {
           if (tipo === 'equip') {
             frotaItemVinculado[novoValor] = novoImplemento || '';
             frotaLocalAtual[novoValor] = frotaLocalAtual[antigoValor] || '';
-            frotaStatusAtual[novoValor] = frotaStatusAtual[antigoValor] || 'OPERACIONAL';
+            frotaStatusAtual[novoValor] = frotaStatusAtual[antigoValor] || 'EM OPERAÇÃO';
             frotaRegimeTrabalho[novoValor] = novoRegime || '8h';
             frotaTipoItem[novoValor] = novoTipoItem || 'equipamento';
             delete frotaItemVinculado[antigoValor];
@@ -5704,7 +5766,7 @@ try {
     document.getElementById('input-equip-implemento').value = '';
     document.getElementById('input-equip-local').value = '';
     document.getElementById('input-equip-data').value = '';
-    document.getElementById('input-equip-status').value = 'OPERACIONAL';
+    document.getElementById('input-equip-status').value = 'EM OPERAÇÃO';
     document.getElementById('input-equip-regime').value = '8h';
     document.getElementById('input-equip-descricao').value = '';
     document.getElementById('input-equip-foto').value = '';
@@ -5778,7 +5840,7 @@ document.getElementById('btn-salvar-implemento').onclick = async function(){
     document.getElementById('input-implemento-equip').value = '';
     document.getElementById('input-implemento-local').value = '';
     document.getElementById('input-implemento-data').value = '';
-    document.getElementById('input-implemento-status').value = 'OPERACIONAL';
+    document.getElementById('input-implemento-status').value = 'EM OPERAÇÃO';
     document.getElementById('input-implemento-descricao').value = '';
     document.getElementById('input-implemento-foto').value = '';
     document.getElementById('input-implemento-foto-preview').style.display = 'none';
@@ -5817,7 +5879,7 @@ document.getElementById('btn-salvar-local').onclick = async function(){
 let frotaExtraCarregada = false;
 let frotaLocalAtual = {};    // equipamento -> local atual
 let frotaItemVinculado = {}; // equipamento principal -> código do subitem
-let frotaStatusAtual = {};   // equipamento -> OPERACIONAL / EM MANUTENÇÃO / EM DISPONIBILIDADE
+let frotaStatusAtual = {};   // equipamento -> EM OPERAÇÃO / EM MANUTENÇÃO / EM DISPONIBILIDADE
 let frotaRegimeTrabalho = {}; // equipamento -> 8h / 12h / 24h
 let frotaTipoItem = {};      // nome -> 'equipamento' ou 'implemento'
 let frotaIdsExtra = {};      // equipamento -> id do item na lista Frota
@@ -5826,10 +5888,10 @@ let frotaObservacaoManutencao = {}; // equipamento -> motivo da manutenção (te
 let frotaPrevisaoReparo = {};       // equipamento -> data prevista de reparo (AAAA-MM-DD)
 let frotaTipoManutencao = {};       // equipamento -> 'Preventiva' / 'Corretiva' (enquanto em manutenção)
 let frotaResponsavelTecnico = {};   // equipamento -> nome do responsável técnico (enquanto em manutenção)
-const STATUS_EQUIPAMENTO = ['OPERACIONAL', 'EM MANUTENÇÃO', 'EM USO NO PÁTIO', 'DISPONÍVEL', 'AGUARDANDO OM'];
-const STATUS_COR = { 'OPERACIONAL': '#1b7a43', 'EM MANUTENÇÃO': '#b3453a', 'EM USO NO PÁTIO': '#2f6fb5', 'DISPONÍVEL': '#c79a3a', 'AGUARDANDO OM': '#7b4fa8' };
+const STATUS_EQUIPAMENTO = ['EM OPERAÇÃO', 'EM MANUTENÇÃO', 'EM USO NO PÁTIO', 'DISPONÍVEL', 'AGUARDANDO OM'];
+const STATUS_COR = { 'EM OPERAÇÃO': '#1b7a43', 'EM MANUTENÇÃO': '#b3453a', 'EM USO NO PÁTIO': '#2f6fb5', 'DISPONÍVEL': '#c79a3a', 'AGUARDANDO OM': '#7b4fa8' };
 /** "EM DISPONIBILIDADE" (nome antigo) passou a ser "DISPONÍVEL". */
-function normStatus(s){ return s === 'EM DISPONIBILIDADE' ? 'DISPONÍVEL' : (s || ''); }
+function normStatus(s){ return s === 'EM DISPONIBILIDADE' ? 'DISPONÍVEL' : (s === 'OPERACIONAL' ? 'EM OPERAÇÃO' : (s || '')); }
 function statusZeros(){ const o = {}; STATUS_EQUIPAMENTO.forEach(function(k){ o[k] = 0; }); return o; }
 const REGIMES_TRABALHO = ['8h', '12h', '24h'];
 async function garantirDadosFrotaExtra(forcar){
@@ -5839,9 +5901,9 @@ async function garantirDadosFrotaExtra(forcar){
     const f = item.fields;
     const nome = (f.Title || '').trim();
     if (!nome) return;
-    frotaLocalAtual[nome] = f.LocalAtual || '';
+    frotaLocalAtual[nome] = normLocal(f.LocalAtual || '');
     frotaItemVinculado[nome] = f.ItemVinculado || '';
-    frotaStatusAtual[nome] = normStatus(f.StatusAtual) || 'OPERACIONAL';
+    frotaStatusAtual[nome] = normStatus(f.StatusAtual) || 'EM OPERAÇÃO';
     frotaRegimeTrabalho[nome] = f.RegimeTrabalho || '8h';
     // Cadastros antigos (antes dessa coluna existir) não têm TipoItem —
     // tratamos como "equipamento" por padrão, pra não sumir da lista principal.
@@ -5903,7 +5965,7 @@ function movAtualizarPreviaDeParaEVinculo(){
         ? '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px">'
         : '🚜';
     });
-    document.getElementById('mov-novo-status').value = frotaStatusAtual[eq] || 'OPERACIONAL';
+    document.getElementById('mov-novo-status').value = frotaStatusAtual[eq] || 'EM OPERAÇÃO';
     document.getElementById('mov-ultimas-equip').innerHTML = movMontarUltimasLista(eq, '📦 ' + eq);
   } else {
     cardFoto.style.display = 'none';
@@ -5999,7 +6061,7 @@ document.getElementById('mov-salvar').onclick = async function(){
     async function moverItem(nomeItem, vinculoDoItem){
       const idItem = frotaIdsExtra[nomeItem] || frotasIds[nomeItem];
       const origemItem = frotaLocalAtual[nomeItem] || '—';
-      const statusAntesItem = frotaStatusAtual[nomeItem] || 'OPERACIONAL';
+      const statusAntesItem = frotaStatusAtual[nomeItem] || 'EM OPERAÇÃO';
       await atualizarCamposItem(LISTA_FROTA_ID, idItem, { LocalAtual: novoLocalInformado, StatusAtual: novoStatus });
       frotaLocalAtual[nomeItem] = novoLocalInformado;
       frotaStatusAtual[nomeItem] = novoStatus;
@@ -6050,8 +6112,8 @@ async function locCarregarDias(){
   });
 }
 function locBadgeStatus(status){
-  const s = status || 'OPERACIONAL';
-  const classe = s === 'OPERACIONAL' ? 'ok' : (s === 'EM MANUTENÇÃO' ? 'parar' : 'at');
+  const s = status || 'EM OPERAÇÃO';
+  const classe = s === 'EM OPERAÇÃO' ? 'ok' : (s === 'EM MANUTENÇÃO' ? 'parar' : 'at');
   return '<span class="hist-st ' + classe + '">' + s + '</span>';
 }
 function locAtualizarCard(n, f){
@@ -6078,7 +6140,7 @@ function locObterLinhasAtuais(){
   const linhas = frotas.filter(function(eq){
     if (f.busca && eq.toUpperCase().indexOf(f.busca) === -1 && (frotaItemVinculado[eq] || '').toUpperCase().indexOf(f.busca) === -1) return false;
     if (f.local && frotaLocalAtual[eq] !== f.local) return false;
-    if (f.status && (frotaStatusAtual[eq] || 'OPERACIONAL') !== f.status) return false;
+    if (f.status && (frotaStatusAtual[eq] || 'EM OPERAÇÃO') !== f.status) return false;
     if (f.de || f.ate) {
       const chegada = statusEqDataChegada(eq);
       if (!chegada) return false;
@@ -6129,7 +6191,7 @@ document.getElementById('loc-atual-imprimir').onclick = function(){
     const diasTxt = (typeof dias === 'number') ? (dias + (dias === 1 ? ' dia' : ' dias')) : '—';
     return '<tr><td>' + eq + '</td><td>' + (frotaItemVinculado[eq] || '—') + '</td>' +
       '<td>' + (frotaLocalAtual[eq] || 'Sem registro') + '</td>' +
-      '<td>' + (frotaStatusAtual[eq] || 'OPERACIONAL') + '</td><td>' + diasTxt + '</td></tr>';
+      '<td>' + (frotaStatusAtual[eq] || 'EM OPERAÇÃO') + '</td><td>' + diasTxt + '</td></tr>';
   }).join('');
   document.getElementById('hist-print-area').innerHTML =
     '<div class="rel-print-titulo"><img class="rel-print-logo" src="' + LOGO_COMPREX_B64 + '" alt="Comprex"><div class="rel-print-titulo-texto">Local de Instalação dos Equipamentos<small>' + linhas.length + ' equipamento(s) — Comprex Máquinas e Serviços</small></div></div>' +
@@ -6145,7 +6207,7 @@ document.getElementById('loc-atual-exportar-excel').onclick = function(){
       'Equipamento': eq,
       'Implemento': frotaItemVinculado[eq] || '',
       'Local atual': frotaLocalAtual[eq] || '',
-      'Status': frotaStatusAtual[eq] || 'OPERACIONAL',
+      'Status': frotaStatusAtual[eq] || 'EM OPERAÇÃO',
       'Há quantos dias': (typeof dias === 'number') ? dias : ''
     };
   });
@@ -6174,7 +6236,7 @@ function locAbrirModalMover(eq){
   document.getElementById('loc-mover-local-atual').value = frotaLocalAtual[eq] || 'Sem local registrado';
   const sel = document.getElementById('loc-mover-novo-local');
   sel.innerHTML = locais.map(function(l){ return '<option value="'+l+'" '+(frotaLocalAtual[eq]===l?'selected':'')+'>'+l+'</option>'; }).join('');
-  document.getElementById('loc-mover-status').value = frotaStatusAtual[eq] || 'OPERACIONAL';
+  document.getElementById('loc-mover-status').value = frotaStatusAtual[eq] || 'EM OPERAÇÃO';
   const hoje = new Date();
   document.getElementById('loc-mover-data').value = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
   document.getElementById('loc-mover-erro').style.display = 'none';
@@ -6226,7 +6288,7 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
   const novoLocal = document.getElementById('loc-mover-novo-local').value;
   const novoStatus = document.getElementById('loc-mover-status').value;
   const dataInformada = document.getElementById('loc-mover-data').value;
-  const statusAtual = frotaStatusAtual[eq] || 'OPERACIONAL';
+  const statusAtual = frotaStatusAtual[eq] || 'EM OPERAÇÃO';
   const erroEl = document.getElementById('loc-mover-erro');
   const novoTipoManut = mtTiposLer('loc-mover-manut-tipo') || '';
   const novoResponsavelManut = document.getElementById('loc-mover-manut-responsavel').value.trim();
@@ -6335,8 +6397,8 @@ async function garantirDadosMovimentacoes(forcar){
       criado: f.Data || item.createdDateTime, // usa a data informada, se houver; senão a data de criação do registro
       equipamento: f.Equipamento || '',
       itemVinculado: f.ItemVinculado || '',
-      localOrigem: f.LocalOrigem || '',
-      localDestino: f.LocalDestino || '',
+      localOrigem: normLocal(f.LocalOrigem || ''),
+      localDestino: normLocal(f.LocalDestino || ''),
       status: normStatus(f.Status),
       usuario: f.Usuario || '',
       observacao: f.Observacao || '',
@@ -6686,7 +6748,7 @@ function dashMovRenderizarQtdPorLocal(){
     const idGrupo = 'qg:' + grupo;
     const itens = porGrupo[grupo].sort(function(a,b){ return b.equips.length - a.equips.length; });
     const totalGrupo = itens.reduce(function(s,x){ return s+x.equips.length; }, 0);
-    html += noQtd(idGrupo, 1, '🏭 ' + grupo, totalGrupo, Math.max(4, Math.round(totalGrupo/totalGeral*100)));
+    html += noQtd(idGrupo, 1, '🏭 ' + (itens.length ? localInstalacaoDe(itens[0].local).cod : grupo), totalGrupo, Math.max(4, Math.round(totalGrupo/totalGeral*100)));
     html += '<div class="qtd-arv-filhos'+(dashQtdColapsados.has(idGrupo)?' colapsado':'')+'" data-filhos-de="'+idGrupo+'">';
     itens.forEach(function(x){
       const idLocal = 'ql:' + x.local;
@@ -6733,7 +6795,9 @@ let statusEqEditandoManut = null; // código do equip. cuja obs./previsão de re
  *  Não depende de nenhum cadastro novo — é só o primeiro pedaço do nome do local. */
 function statusEqGrupoDoLocal(local){
   const partes = String(local).split(/\s*-\s*/);
-  return (partes[0] || local).trim();
+  const g = (partes[0] || local).trim();
+  const u = sapSemAcento(g);
+  return (u === 'DIVERSOS' || u === 'DIVERSAS') ? 'DIVERSAS' : (u === 'PATIO' || u === 'COMPREX') ? 'PÁTIO' : g;
 }
 /** Remove o prefixo do grupo do nome do local, só pra exibição na árvore —
  *  já que o grupo aparece como "pai" e não precisa ser repetido no filho.
@@ -6795,8 +6859,8 @@ function statusEqTotaisPorStatus(eq){
   return somarDiasPorStatus(movimentacoesItens.filter(function(m){ return m.equipamento === eq; }));
 }
 function statusEqBadge(status){
-  const s = status || 'OPERACIONAL';
-  const classe = s === 'OPERACIONAL' ? 'ok' : (s === 'EM MANUTENÇÃO' ? 'parar' : 'at');
+  const s = status || 'EM OPERAÇÃO';
+  const classe = s === 'EM OPERAÇÃO' ? 'ok' : (s === 'EM MANUTENÇÃO' ? 'parar' : 'at');
   return '<span class="hist-st ' + classe + '">' + s + '</span>';
 }
 /** Data em que o equipamento chegou no local atual (data da movimentação
@@ -6854,7 +6918,7 @@ function statusEqRenderizar(){
   const equipsFiltrados = frotas.filter(function(eq){
     if (frotaTipoItem[eq] === 'implemento' && implementosVinculados.has(eq)) return false;
     if (filtroLocal && frotaLocalAtual[eq] !== filtroLocal) return false;
-    if (filtroStatus && (frotaStatusAtual[eq] || 'OPERACIONAL') !== filtroStatus) return false;
+    if (filtroStatus && (frotaStatusAtual[eq] || 'EM OPERAÇÃO') !== filtroStatus) return false;
     if (filtroBusca && eq.toUpperCase().indexOf(filtroBusca) === -1 && (frotaItemVinculado[eq]||'').toUpperCase().indexOf(filtroBusca) === -1) return false;
     if (filtroChegadaDe || filtroChegadaAte) {
       const chegada = statusEqDataChegada(eq);
@@ -6870,11 +6934,11 @@ function statusEqRenderizar(){
   // ---- KPIs ----
   const total = equipsFiltrados.length;
   const cont = statusZeros();
-  equipsFiltrados.forEach(function(eq){ const s = frotaStatusAtual[eq] || 'OPERACIONAL'; if (cont.hasOwnProperty(s)) cont[s]++; });
+  equipsFiltrados.forEach(function(eq){ const s = frotaStatusAtual[eq] || 'EM OPERAÇÃO'; if (cont.hasOwnProperty(s)) cont[s]++; });
   const pct = function(n){ return total > 0 ? Math.round(n/total*100) : 0; };
   document.getElementById('status-eq-kpis').innerHTML = [
     ['📦', 'TOTAL DE EQUIPAMENTOS', total, '100% do total', 'azul', ''],
-    ['✅', 'OPERACIONAIS', cont['OPERACIONAL'], pct(cont['OPERACIONAL'])+'% do total', null, 'OPERACIONAL'],
+    ['✅', 'EM OPERAÇÃO', cont['EM OPERAÇÃO'], pct(cont['EM OPERAÇÃO'])+'% do total', null, 'EM OPERAÇÃO'],
     ['🔧', 'EM MANUTENÇÃO', cont['EM MANUTENÇÃO'], pct(cont['EM MANUTENÇÃO'])+'% do total', 'tan', 'EM MANUTENÇÃO'],
     ['🛠️', 'EM USO NO PÁTIO', cont['EM USO NO PÁTIO'], pct(cont['EM USO NO PÁTIO'])+'% do total', null, 'EM USO NO PÁTIO'],
     ['🅿️', 'DISPONÍVEL', cont['DISPONÍVEL'], pct(cont['DISPONÍVEL'])+'% do total', null, 'DISPONÍVEL'],
@@ -6946,7 +7010,7 @@ function statusEqRenderizar(){
     const chegada = statusEqDataChegada(eq);
     const chegadaTxt = chegada ? formatarDataHist(chegada).split(' ')[0] : '—';
     const totais = statusEqTotaisPorStatus(eq);
-    const subTxt = totais['OPERACIONAL'] + 'd op. / ' + totais['EM MANUTENÇÃO'] + 'd manut. / ' + (totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM']) + 'd disp.';
+    const subTxt = totais['EM OPERAÇÃO'] + 'd op. / ' + totais['EM MANUTENÇÃO'] + 'd manut. / ' + (totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM']) + 'd disp.';
     const podeEditar = usuarioEhAdmin(contaAtual);
     const estiloFolha = podeEditar ? 'cursor:pointer' : 'cursor:default;opacity:.6';
     const dicaFolha = podeEditar ? 'Clique para mudar o status ou mover este equipamento' : 'Somente leitura — apenas administradores podem mover por aqui';
@@ -6978,10 +7042,10 @@ function statusEqRenderizar(){
     const ehImplemento = frotaTipoItem[eq] === 'implemento';
     return '<div class="hpt-titulo">' + (ehImplemento ? '🔧' : '🚜') + ' ' + eq + '</div>' +
       '<div class="hpt-linha"><span>Local atual</span><b>' + (frotaLocalAtual[eq] || '—') + '</b></div>' +
-      '<div class="hpt-linha"><span>Status</span><b>' + (frotaStatusAtual[eq] || 'OPERACIONAL') + '</b></div>' +
+      '<div class="hpt-linha"><span>Status</span><b>' + (frotaStatusAtual[eq] || 'EM OPERAÇÃO') + '</b></div>' +
       '<div class="hpt-linha"><span>Dias no local</span><b>' + diasTxt + '</b></div>' +
       '<div class="hpt-linha"><span>Chegada</span><b>' + chegadaTxt + '</b></div>' +
-      '<div class="hpt-linha"><span>Histórico</span><b>' + totais['OPERACIONAL'] + 'd op / ' + totais['EM MANUTENÇÃO'] + 'd manut / ' + (totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM']) + 'd disp</b></div>' +
+      '<div class="hpt-linha"><span>Histórico</span><b>' + totais['EM OPERAÇÃO'] + 'd op / ' + totais['EM MANUTENÇÃO'] + 'd manut / ' + (totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM']) + 'd disp</b></div>' +
       '<div class="hpt-dica">Clique para mover · use 📊 para o histórico completo</div>';
   }
   function noExpansor(id, nivel, icone, nome, col2, extraClasse){
@@ -7001,7 +7065,7 @@ function statusEqRenderizar(){
   gruposOrdenados.forEach(function(grupo){
     const idGrupo = 'g:' + grupo;
     const totalEquipGrupo = porGrupo[grupo].reduce(function(s,l){ return s + porLocal[l].length; }, 0);
-    html += noExpansor(idGrupo, 1, '🏭', grupo, totalEquipGrupo + ' equipamento(s)');
+    html += noExpansor(idGrupo, 1, '🏭', localInstalacaoDe(porGrupo[grupo][0]).cod + ' <span style="font-weight:400;opacity:.75">· ' + localInstalacaoDe(porGrupo[grupo][0]).nome + '</span>', totalEquipGrupo + ' equipamento(s)');
     html += '<div class="arv-filhos'+(statusEqColapsados.has(idGrupo)?' colapsado':'')+'" data-filhos-de="'+idGrupo+'">';
     porGrupo[grupo].forEach(function(local){
       const idLocal = 'l:' + local;
@@ -7013,7 +7077,7 @@ function statusEqRenderizar(){
         if (pesoA !== pesoB) return pesoA - pesoB;
         return a.localeCompare(b, 'pt-BR');
       });
-      html += noExpansor(idLocal, 2, '📍', statusEqLocalSemPrefixo(local), eqs.length + ' equipamento(s)');
+      html += noExpansor(idLocal, 2, '📍', local, eqs.length + ' equipamento(s)');
       html += '<div class="arv-filhos'+(statusEqColapsados.has(idLocal)?' colapsado':'')+'" data-filhos-de="'+idLocal+'">';
       eqs.forEach(function(eq){ html += linhaFolha(eq, local); });
       html += '</div>';
@@ -7098,7 +7162,7 @@ function statusEqRenderizar(){
   if (modoManutencao) {
     const foraCount = frotas.filter(function(eq){
       if (frotaTipoItem[eq] === 'implemento' && implementosVinculados.has(eq)) return false;
-      return (frotaStatusAtual[eq] || 'OPERACIONAL') !== 'EM MANUTENÇÃO';
+      return (frotaStatusAtual[eq] || 'EM OPERAÇÃO') !== 'EM MANUTENÇÃO';
     }).length;
     if (!btnFora) {
       btnFora = document.createElement('button');
@@ -7209,7 +7273,7 @@ function statusEqRenderizarDashboard(equipsFiltrados){
   // ---- Painel de manutenção: só o que interessa de quem ESTÁ em manutenção
   // agora — o resto da frota (operacional/disponível) fica de fora daqui de
   // propósito (a pedido do Lucas, set/2026) — pra ver tudo, é a Árvore. ----
-  const emManutTodos = equipsFiltrados.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'EM MANUTENÇÃO'; });
+  const emManutTodos = equipsFiltrados.filter(function(eq){ return (frotaStatusAtual[eq] || 'EM OPERAÇÃO') === 'EM MANUTENÇÃO'; });
   const diasDosAtuais = emManutTodos.map(function(eq){ return frotaDiasNoLocal[eq]; }).filter(function(d){ return typeof d === 'number'; });
   const tempoMedioAtual = diasDosAtuais.length ? Math.round(diasDosAtuais.reduce(function(s,d){ return s+d; }, 0) / diasDosAtuais.length) : null;
   const hojeYMD = new Date().toISOString().slice(0,10);
@@ -7374,7 +7438,7 @@ function statusEqRenderizarDashboard(equipsFiltrados){
 /** Mostra, no painel da direita, um cartão de resumo PARA CADA LOCAL visível
  *  na árvore — sem precisar clicar, igual ao modelo de referência. */
 function statusEqRenderizarResumoTodos(locaisOrdenados){
-  const cores = Object.assign({}, STATUS_COR, { 'OPERACIONAL': 'var(--ok)', 'EM MANUTENÇÃO': 'var(--ru)' });
+  const cores = Object.assign({}, STATUS_COR, { 'EM OPERAÇÃO': 'var(--ok)', 'EM MANUTENÇÃO': 'var(--ru)' });
   document.getElementById('status-eq-resumo').innerHTML = locaisOrdenados.map(function(local){
     const registrosDoLocal = movimentacoesItens.filter(function(m){ return m.localDestino === local && m.status; });
     const totais = somarDiasPorStatus(registrosDoLocal);
@@ -7720,7 +7784,7 @@ async function garantirDadosPartesDiarias(forcar){
       criado: item.createdDateTime,
       equipamento: f.Equipamento || '',
       operador: f.Operador || '',
-      local: f.Local || '',
+      local: normLocal(f.Local || ''),
       data: f.Data || item.createdDateTime,
       observacoes: f.Observacoes || '',
       trabalhadas: parseFloat(String(f.TotalTrabalhadas || '0').replace(',', '.')) || 0,
@@ -8384,7 +8448,7 @@ function indContratoPadrao(texto, aceitaDiversos, cliente){
   if (/RESENDE/.test(t)) return 'AMB RESENDE';
   if (/JUIZ DE FORA/.test(t)) return 'AMB JUIZ DE FORA';
   if (/MONLEVADE/.test(t)) return 'AMB JOÃO MONLEVADE';
-  if (/VALE/.test(t)) {
+  if (/VALE/.test(t) && !/^DIVERS[OA]S/.test(t)) {
     if (/PENEIRA/.test(t)) return 'VALE - PENEIRAMENTO';
     if (/MASCARENHAS/.test(t)) return 'VALE - MASCARENHAS';
     if (/VARGEM|FABRICA/.test(t)) return 'VALE - VARGEM GRANDE';
@@ -8409,7 +8473,7 @@ function indContratoDaOrdem(ordem, cliente, desc, cfg){
 function indContratoDoLocal(loc, cfg){
   const l = String(loc || '').trim();
   if (!l) return null;
-  if (/^COMPREX\b/i.test(indSemAcento(l))) return null;
+  if (/^(COMPREX|PATIO)\b/i.test(indSemAcento(l))) return null;
   const ord = indOrdemDoLocal(l);
   if (ord) return (cfg.ordemContrato && cfg.ordemContrato[ord]) || l.replace(/\s+/g, ' ');
   return indContratoPadrao(l, false);
@@ -8796,7 +8860,7 @@ async function indCalcular(periodo){
   const ordens = {};
   (typeof locais !== 'undefined' ? locais : []).forEach(function(nome){ const o = indOrdemDoLocal(nome); if (o && !ordens[o]) ordens[o] = String(nome).trim().replace(/\s+/g, ' '); });
   Object.assign(ordens, indCfg.ordemContrato || {});
-  const cfg = { regimeHP: indCfg.regimeHP || {}, trocaModo: indCfg.trocaModo || 'proporcional', ordemContrato: ordens, eqContrato: Object.assign({}, indCfg.eqContrato || {}, indAjustes[periodo] || {}), eqContratoSug: eqSug };
+  const cfg = { regimeHP: indCfg.regimeHP || {}, trocaModo: indCfg.trocaModo || 'proporcional', ordemContrato: ordens, eqContrato: (function(){ const o = Object.assign({}, indCfg.eqContrato || {}, indAjustes[periodo] || {}); Object.keys(o).forEach(function(k){ if (o[k] !== '__EXCLUIR__') o[k] = normLocal(o[k]); }); return o; })(), eqContratoSug: eqSug };
   const pdMes = indArq.pd.filter(function(l){ return l.data.slice(0, 7) === periodo; });
   const r = indCalcularMes({ ano: ano, mes: mes, sap: indArq.sap, pd: pdMes, equips: equips, movs: movs, cfg: cfg });
   indDados = { periodo: periodo, linhas: r.linhas, alertas: r.alertas, origem: 'calculo' };
@@ -9823,7 +9887,7 @@ var manutOcorrenciasFull = null;   // lista completa enquanto a tela está filtr
 function manutEquipsSemFicha(){
   const base = manutOcorrenciasFull || manutOcorrencias;
   return frotas.filter(function(eq){
-    return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'EM MANUTENÇÃO' && !base.some(function(o){ return o.equipamento === eq && mtAberta(o); });
+    return (frotaStatusAtual[eq] || 'EM OPERAÇÃO') === 'EM MANUTENÇÃO' && !base.some(function(o){ return o.equipamento === eq && mtAberta(o); });
   });
 }
 /* Equipamentos x Implementos */
@@ -9916,7 +9980,7 @@ function manutRenderTudoBase(){
   const hoje = mtHoje();
   const nAt = abertas.filter(function(o){ return mtStatusPrazo(o).chave === 'atrasado'; }).length;
   const nRet = abertas.filter(function(o){ return o.previsao && o.previsao >= hoje && o.previsao <= mtSoma(hoje, 15); }).length;
-  const nOp = frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL' && mtTipoVisDe(eq) === manutVis; }).length;
+  const nOp = frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'EM OPERAÇÃO') === 'EM OPERAÇÃO' && mtTipoVisDe(eq) === manutVis; }).length;
   const nFrota = frotas.filter(function(eq){ return mtTipoVisDe(eq) === manutVis; }).length || 1;
   const pendAll = [];
   abertas.forEach(function(o){ mtPendentes(o).forEach(function(p){ pendAll.push({ p: p, oc: o }); }); });
@@ -11146,7 +11210,7 @@ function manutModalConcluir(oc){
     { id: 'quando', label: 'Liberação (data e hora)', tipo: 'datetime-local', valor: mtAgoraLocal(), obrig: true },
     { id: 'destino', label: 'Para onde vai depois de liberado?', tipo: 'select', opcoes: ['Disponível na manutenção', 'Enviado para contrato'], valor: 'Disponível na manutenção', larga: true },
     { id: 'envio', label: 'Enviado ao contrato em (data e hora)', tipo: 'datetime-local', valor: mtAgoraLocal() },
-    { id: 'status', label: 'Novo status', tipo: 'select', opcoes: ['OPERACIONAL', 'DISPONÍVEL', 'EM USO NO PÁTIO', 'AGUARDANDO OM'], valor: 'DISPONÍVEL' },
+    { id: 'status', label: 'Novo status', tipo: 'select', opcoes: ['EM OPERAÇÃO', 'DISPONÍVEL', 'EM USO NO PÁTIO', 'AGUARDANDO OM'], valor: 'DISPONÍVEL' },
     { id: 'local', label: 'Fica no local', tipo: 'select', opcoes: locais.slice(), valor: frotaLocalAtual[eq] || locais[0], larga: true },
     { id: 'horim', label: 'Horímetro na liberação (h)', tipo: 'number', valor: '', dica: oc.horimetroEntrada !== null ? 'Horímetro na entrada: ' + mtFmtHorim(oc.horimetroEntrada) : '' },
     { id: 'lib', label: 'Liberação do equipamento', tipo: 'select', opcoes: ['Sem pendência', 'Com pendência'], valor: 'Sem pendência', larga: true },
@@ -11192,7 +11256,7 @@ function manutModalConcluir(oc){
     const c = selDest.value === 'Enviado para contrato';
     document.getElementById('mtm-envio').closest('.campo').style.display = c ? '' : 'none';
     const lb = document.getElementById('mtm-local').closest('.campo').querySelector('label'); if (lb) lb.textContent = c ? 'Contrato / local de destino' : 'Fica no local';
-    document.getElementById('mtm-status').value = c ? 'OPERACIONAL' : 'DISPONÍVEL';
+    document.getElementById('mtm-status').value = c ? 'EM OPERAÇÃO' : 'DISPONÍVEL';
     if (c) { const alvo = locais.find(function(l){ return !locDestinoEhManutencao(l) && l !== (frotaLocalAtual[eq] || ''); }); if (alvo) document.getElementById('mtm-local').value = alvo; }
     else document.getElementById('mtm-local').value = frotaLocalAtual[eq] || locais[0];
   };
@@ -11209,10 +11273,10 @@ function manutModalEnviarContrato(oc){
     const q = mtDTsplit(v.envio);
     if (mtDT(q.d, q.h) < mtDT(oc.dataSaida, oc.horaSaida)) throw new Error('O envio não pode ser antes da liberação (' + mtFmtDT(oc.dataSaida, oc.horaSaida) + ').');
     const idEquip = frotaIdsExtra[eq] || frotasIds[eq], antes = frotaLocalAtual[eq] || '';
-    await mtAtualizarFrota(idEquip, { LocalAtual: v.local, StatusAtual: 'OPERACIONAL' });
-    frotaLocalAtual[eq] = v.local; frotaStatusAtual[eq] = 'OPERACIONAL';
+    await mtAtualizarFrota(idEquip, { LocalAtual: v.local, StatusAtual: 'EM OPERAÇÃO' });
+    frotaLocalAtual[eq] = v.local; frotaStatusAtual[eq] = 'EM OPERAÇÃO';
     await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', { fields: {
-      Equipamento: eq, ItemVinculado: frotaItemVinculado[eq] || '', LocalOrigem: antes || '—', LocalDestino: v.local, Status: 'OPERACIONAL',
+      Equipamento: eq, ItemVinculado: frotaItemVinculado[eq] || '', LocalOrigem: antes || '—', LocalDestino: v.local, Status: 'EM OPERAÇÃO',
       Data: q.d + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Enviado ao contrato após a manutenção' + (v.obs ? ' · ' + v.obs : '') } });
     movimentacoesCarregadas = false;
     await manutAtualizar('ocorrencias', oc.id, { DestinoLiberacao: 'Enviado para contrato', ContratoDestino: v.local, DataEnvioContrato: q.d, HoraEnvioContrato: q.h === '00:00' ? '' : q.h });
@@ -11246,7 +11310,7 @@ async function manutNovaIniciar(){
   const sugerido = locais.find(function(l){ return /manuten|oficina/i.test(l); });
   if (sugerido) selLocal.value = sugerido;
   if (!manutNovaPronta) {
-    configurarComboBusca('mtn-equip', function(){ return frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') !== 'EM MANUTENÇÃO' || !mtOcAbertaDe(eq); }); });
+    configurarComboBusca('mtn-equip', function(){ return frotas.filter(function(eq){ return (frotaStatusAtual[eq] || 'EM OPERAÇÃO') !== 'EM MANUTENÇÃO' || !mtOcAbertaDe(eq); }); });
     document.getElementById('mtn-cond').onchange = function(){
       const c = this.value;
       ['terceiro', 'tecnico', 'comprada'].forEach(function(k){ document.getElementById('mtn-cond-' + k).style.display = c === k ? '' : 'none'; });
@@ -11727,7 +11791,7 @@ async function garantirDadosHistorico(forcar){
       equipamento: f['Equipamento'] || '',
       operador: f['Operador'] || '',
       horimetro: f['Horimetro'] || '',
-      local: f['Local'] || '',
+      local: normLocal(f['Local'] || ''),
       observacao: f['Observacao'] || '',
       campos: f,
       status: statusDoChecklist(f),
@@ -12467,7 +12531,7 @@ function renderizarSecaoCadastroEquip(){
       '<div class="oc-edit-campo"><label>Status atual</label>' +
         '<select id="mov-edit-status">' +
           STATUS_EQUIPAMENTO.map(function(s){
-            return '<option value="' + s + '" ' + ((frotaStatusAtual[equip] || 'OPERACIONAL') === s ? 'selected' : '') + '>' + s + '</option>';
+            return '<option value="' + s + '" ' + ((frotaStatusAtual[equip] || 'EM OPERAÇÃO') === s ? 'selected' : '') + '>' + s + '</option>';
           }).join('') +
         '</select></div>' +
       '<div class="oc-edit-campo"><label>Regime de trabalho</label>' +
@@ -12510,7 +12574,7 @@ function renderizarSecaoCadastroEquip(){
     const campos = {};
     if (novoTipo !== (ehImplemento ? 'implemento' : 'equipamento')) campos.TipoItem = novoTipo;
     if (novaDescricao !== (frotaDescricao[equip] || '')) campos.Descricao = novaDescricao;
-    if (novoStatus !== (frotaStatusAtual[equip] || 'OPERACIONAL')) campos.StatusAtual = novoStatus;
+    if (novoStatus !== (frotaStatusAtual[equip] || 'EM OPERAÇÃO')) campos.StatusAtual = novoStatus;
     if (novoRegime !== (frotaRegimeTrabalho[equip] || '8h')) campos.RegimeTrabalho = novoRegime;
     if (novoVinculo !== vinculadoAtual) campos.ItemVinculado = novoVinculo;
     if (!Object.keys(campos).length) { movEquipEditando = false; renderizarSecaoCadastroEquip(); return; }
@@ -12581,7 +12645,7 @@ function renderizarViewFrota(){
     const descricao = (frotaDescricao[nome] || '').toUpperCase();
     if (busca && nome.toUpperCase().indexOf(busca) === -1 && descricao.indexOf(busca) === -1) return false;
     if (filtroLocal && (frotaLocalAtual[nome] || '') !== filtroLocal) return false;
-    if (filtroStatus && (frotaStatusAtual[nome] || 'OPERACIONAL') !== filtroStatus) return false;
+    if (filtroStatus && (frotaStatusAtual[nome] || 'EM OPERAÇÃO') !== filtroStatus) return false;
     return true;
   });
   const equipamentos = visiveis.filter(function(n){ return frotaTipoItem[n] !== 'implemento'; }).sort();
@@ -13074,7 +13138,7 @@ function renderizarPainelPendentes(frotasEquip){
     chip.onclick = function(){ painelIrParaHistoricoDoEquip(chip.dataset.painelPendChip); };
   });
 }
-/** Ranking dos equipamentos que estão OPERACIONAIS mas estão sem checklist —
+/** Ranking dos equipamentos que estão EM OPERAÇÃO mas estão sem checklist —
  *  ou nunca tiveram nenhum, ou o último é muito antigo. Quem está há mais
  *  tempo sem checklist fica no topo. */
 function renderizarPainelRankingSemChecklist(){
@@ -13083,7 +13147,7 @@ function renderizarPainelRankingSemChecklist(){
   const ranking = painelLinhasAtual
     .filter(function(l){
       if (l.tipoItem === 'implemento') return false;
-      if ((frotaStatusAtual[l.equipamento] || 'OPERACIONAL') !== 'OPERACIONAL') return false;
+      if ((frotaStatusAtual[l.equipamento] || 'EM OPERAÇÃO') !== 'EM OPERAÇÃO') return false;
       if (!l.ultimo) return true; // nunca fez checklist
       const dataUltimo = new Date(l.ultimo.criado); dataUltimo.setHours(0, 0, 0, 0);
       return dataUltimo < hoje; // não fez o de hoje
@@ -13101,7 +13165,7 @@ function renderizarPainelRankingSemChecklist(){
       return b.diasSemChecklist - a.diasSemChecklist;
     });
   if (!ranking.length) {
-    cont.innerHTML = '<div class="lista-vazia-dash">Todos os equipamentos operacionais estão com o checklist de hoje em dia. ✅</div>';
+    cont.innerHTML = '<div class="lista-vazia-dash">Todos os equipamentos em operação estão com o checklist de hoje em dia. ✅</div>';
     return;
   }
   cont.innerHTML = ranking.slice(0, 15).map(function(l, i){
@@ -13262,7 +13326,7 @@ async function montarSecaoMovimentacoesEquip(equip){
       }).join('') + '</div>' : '');
   const statusHtml =
     '<div class="oc-conform-tipos" style="grid-template-columns:repeat(3,1fr);margin-top:10px">' +
-      '<div class="oc-conform-tipo ok"><div class="n">'+totais['OPERACIONAL']+'</div><div class="l">Dias operacional</div></div>' +
+      '<div class="oc-conform-tipo ok"><div class="n">'+totais['EM OPERAÇÃO']+'</div><div class="l">Dias em operação</div></div>' +
       '<div class="oc-conform-tipo imp"><div class="n">'+totais['EM MANUTENÇÃO']+'</div><div class="l">Dias em manutenção</div></div>' +
       '<div class="oc-conform-tipo min"><div class="n">'+(totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM'])+'</div><div class="l">Dias disponível / pátio / aguardando OM</div></div>' +
     '</div>';
@@ -14899,7 +14963,7 @@ var PAINEL_METAS = { conformidade: 100, aderencia: 100, impeditivos: 0, ruinsDia
 function painelSerie14(){
   const hist = (typeof historicoItens !== 'undefined' ? historicoItens : []);
   const frotasEquip = frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; });
-  const operSet = new Set(frotasEquip.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL'; }));
+  const operSet = new Set(frotasEquip.filter(function(eq){ return (frotaStatusAtual[eq] || 'EM OPERAÇÃO') === 'EM OPERAÇÃO'; }));
   const operTot = operSet.size || 1;
   const arr = [];
   for (let i = 13; i >= 0; i--) {
@@ -14939,7 +15003,7 @@ function painelTendencia(serie, campo, menorMelhor){
 function painelMetasHoje(){
   const hist = (typeof historicoItens !== 'undefined' ? historicoItens : []);
   const frotasEquip = frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; });
-  const operacionais = frotasEquip.filter(function(eq){ return (frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL'; });
+  const operacionais = frotasEquip.filter(function(eq){ return (frotaStatusAtual[eq] || 'EM OPERAÇÃO') === 'EM OPERAÇÃO'; });
   const hoje0 = new Date(); hoje0.setHours(0,0,0,0);
   const amanha = new Date(hoje0.getTime() + 86400000);
   const doDia = hist.filter(function(h){ const d = new Date(h.criado); return d >= hoje0 && d < amanha; });
@@ -15167,7 +15231,7 @@ async function carregarRaioXObra(){
       const g = grupoDe(eq);
       if (!obras[g]) obras[g] = { obra: g, equips: [], oper: [], feitosHoje: 0, chk30: 0, conf30: 0, imp: [], reinc: [], itens: {} };
       obras[g].equips.push(eq);
-      if ((frotaStatusAtual[eq] || 'OPERACIONAL') === 'OPERACIONAL') obras[g].oper.push(eq);
+      if ((frotaStatusAtual[eq] || 'EM OPERAÇÃO') === 'EM OPERAÇÃO') obras[g].oper.push(eq);
     });
     hist.forEach(function(h){
       if (new Date(h.criado) < d30) return;
@@ -15207,7 +15271,7 @@ async function carregarRaioXObra(){
         options: opcoesBase({ scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(v){ return v + '%'; } } }, x: { grid: { display: false } } },
           plugins: { tooltip: { callbacks: { label: function(c){ const o = comAder[c.dataIndex]; return c.parsed.y + '% (' + o.feitosHoje + ' de ' + o.oper.length + ')'; } } } } })
       });
-    } else document.getElementById('raiox-chart-aderencia').innerHTML = '<div class="lista-vazia-dash">Sem equipamentos operacionais.</div>';
+    } else document.getElementById('raiox-chart-aderencia').innerHTML = '<div class="lista-vazia-dash">Sem equipamentos em operação.</div>';
     const comConf = lista.filter(function(o){ return o.confPct !== null; });
     if (chartOk() && comConf.length){
       const metaOk = cssVar('--ok','#2e7d46'), metaRu = cssVar('--ru','#c0392b');
