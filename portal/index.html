@@ -490,9 +490,13 @@
   .oc-edit-salvar:disabled{opacity:.6;cursor:not-allowed}
   .oc-edit-feedback{font-size:12px;margin-top:2px}
   body.tema-escuro .oc-edit-campo input, body.tema-escuro .oc-edit-campo select{background:#1a222b;border-color:#2a3540;color:#e8edf1}
-  #status-eq-filtros .grid{grid-template-columns:minmax(150px,1.3fr) minmax(150px,1.3fr) minmax(130px,1fr) auto minmax(130px,.9fr) minmax(130px,.9fr);align-items:end}
-  #status-eq-filtros .grid .campo:nth-child(4) button{width:auto !important}
-  @media(max-width:1180px){ #status-eq-filtros .grid{grid-template-columns:repeat(2,1fr)} }
+  #status-eq-filtros .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 14px;align-items:end}
+  #status-eq-filtros .grid .campo select,#status-eq-filtros .grid .campo input{width:100%;min-width:0}
+  #status-eq-filtros .grid .campo:nth-child(5){grid-column:3 / span 2;grid-row:2;flex-direction:row;justify-content:flex-end}
+  #status-eq-filtros .grid .campo:nth-child(5) button{width:auto !important;flex:0 0 auto}
+  #status-eq-filtros .grid .campo:nth-child(6){grid-column:1;grid-row:2}
+  #status-eq-filtros .grid .campo:nth-child(7){grid-column:2;grid-row:2}
+  @media(max-width:1000px){ #status-eq-filtros .grid{grid-template-columns:repeat(2,minmax(0,1fr))} #status-eq-filtros .grid .campo:nth-child(n+5){grid-column:auto;grid-row:auto} }
   /* ---- Status dos Equipamentos: árvore + resumo ---- */
   .arv-linha-local{display:grid;grid-template-columns:1fr 140px 120px;gap:10px;align-items:center;
     padding:10px 12px;background:var(--cream);border-radius:8px;margin-top:10px;cursor:pointer;font-weight:700;font-size:12.5px}
@@ -940,6 +944,10 @@
   .arv-nivel-2 .arv-no-nome{padding-left:36px}
   .arv-filhos{overflow:hidden}
   .arv-filhos.colapsado{display:none}
+  .arv-obs-lib{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;margin-top:3px;line-height:1.35;white-space:normal}
+  .arv-obs-lib.ok{background:#e4f3e8;color:#1b7a43}
+  .arv-obs-lib.pend{background:#fdeedd;color:#a85a10}
+  .arv-obs-lib u{margin-left:4px;font-weight:700}
   .arv-folha{display:grid;grid-template-columns:1fr 140px 100px 130px 140px;gap:10px;align-items:center;
     padding:8px 10px 8px 54px;border-bottom:1px solid var(--linha);font-size:12.5px}
   .arv-folha:last-child{border-bottom:none}
@@ -2027,7 +2035,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 14/10/2026 · 98</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 14/10/2026 · 101</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3663,7 +3671,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
 <div class="hist-detalhe-overlay oc-painel-lateral" id="oc-equip-overlay">
   <div class="hist-detalhe-modal oc-painel-modal">
     <div class="hist-detalhe-header">
-      <h3>🚜 Histórico do Equipamento — <span id="oc-equip-titulo"></span></h3>
+      <h3>🚜 Ficha do Equipamento — <span id="oc-equip-titulo"></span></h3>
       <div style="display:flex;align-items:center;gap:4px">
         <button class="painel-lateral-imprimir" id="oc-equip-imprimir" title="Imprimir / Salvar em PDF">🖨️</button>
         <button class="modal-fechar" id="oc-equip-fechar" style="color:#1a2430">✕</button>
@@ -7076,7 +7084,26 @@ function formatarDataBR(iso){
   const p = String(iso).split('-');
   return p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : iso;
 }
+/** Observação de liberação (última manutenção concluída do equipamento): com ou sem pendência, com texto breve. */
+let statusEqManutPedida = false;
+function locObsLiberacao(eq){
+  if (!manutCarregado) return '';
+  const todas = manutOcorrencias.filter(function(o){ return o.equipamento === eq; });
+  if (!todas.length || todas.some(mtAberta)) return '';
+  const ult = todas.slice().sort(function(a, b){ return String(b.dataSaida || b.dataEntrada).localeCompare(String(a.dataSaida || a.dataEntrada)); })[0];
+  const p = mtPendenciaDe(ult);
+  const breve = function(t){ t = String(t || '').replace(/\s+/g, ' ').trim(); return t.length > 70 ? t.slice(0, 67) + '…' : t; };
+  let cls, txt;
+  if (p && !p.resolvida) { cls = 'pend'; txt = '⚠️ Liberado com pendência: ' + breve(p.texto); }
+  else if (p && p.resolvida) { cls = 'ok'; txt = '✔ Pendência resolvida: ' + breve(p.texto); }
+  else {
+    if (ult.dataSaida && mtDias(ult.dataSaida, mtHoje()) > 30) return '';
+    cls = 'ok'; txt = '✅ Liberado sem pendência' + (ult.dataSaida ? ' em ' + mtBR(ult.dataSaida) : '');
+  }
+  return '<span class="arv-obs-lib ' + cls + '" data-obs-lib="' + frotaEsc(eq) + '" title="Clique para abrir a ficha completa de manutenção">' + frotaEsc(txt) + ' <u>ver ficha</u></span>';
+}
 function statusEqRenderizar(){
+  if (!manutCarregado && !statusEqManutPedida) { statusEqManutPedida = true; manutCarregarDados().then(function(){ if (document.getElementById('view-status-equipamentos').classList.contains('ativo')) statusEqRenderizar(); }).catch(function(){}); }
   const filtroLocal = document.getElementById('status-eq-filtro-local').value;
   const filtroLI = document.getElementById('status-eq-filtro-li').value;
   const filtroBusca = document.getElementById('status-eq-filtro-busca').value.trim().toUpperCase();
@@ -7200,7 +7227,7 @@ function statusEqRenderizar(){
       '<div>'+(isAdminArvore ? '<button type="button" class="arv-manut-editar-btn" data-editar-manut="'+eq+'" title="Editar observação / previsão de reparo">✏️</button>' : '')+'</div>'
       : '';
     return '<div class="arv-folha" data-equip="'+eq+'" style="'+estiloFolha+'" title="'+dicaFolha+'">' +
-      '<div class="arv-no-nome">'+iconeFolha+' '+nome+(podeEditar?'':' 🔒')+'<br><span class="arv-sub" style="font-weight:400;margin-left:20px">'+local+'</span></div>' +
+      '<div class="arv-no-nome">'+iconeFolha+' '+nome+(podeEditar?'':' 🔒')+'<br><span class="arv-sub" style="font-weight:400;margin-left:20px">'+local+'</span>'+'</div>' +
       '<div>'+diasTxt+'</div>' +
       '<div class="arv-sub">'+chegadaTxt+'</div>' +
       '<div>'+statusEqBadge(frotaStatusAtual[eq])+'</div>' +
@@ -7208,6 +7235,7 @@ function statusEqRenderizar(){
         '<button type="button" class="arv-btn-detalhe" data-ver-detalhe="'+eq+'" title="Ver histórico detalhado com gráfico">📊</button>' +
       '</div>' +
       colunasManut +
+      (function(){ const o = locObsLiberacao(eq); return o ? '<div style="grid-column:1 / -1;margin:-6px 0 0 20px">'+o+'</div>' : ''; })() +
     '</div>';
   }
   function montarPreviaFrotaLinha(eq){
@@ -7276,6 +7304,9 @@ function statusEqRenderizar(){
   arv.querySelectorAll('.arv-folha').forEach(function(el){
     el.onclick = function(){ locAbrirModalMover(el.dataset.equip); };
     ativarPreviaHover(el, function(){ return montarPreviaFrotaLinha(el.dataset.equip); });
+  });
+  arv.querySelectorAll('[data-obs-lib]').forEach(function(el){
+    el.onclick = function(e){ e.stopPropagation(); manutAbrirFicha(el.dataset.obsLib); };
   });
   arv.querySelectorAll('[data-ver-detalhe]').forEach(function(btn){
     btn.onclick = function(e){
@@ -12026,6 +12057,10 @@ function manutModalEditar(oc){
     { id: 'pecaForn', label: 'Fornecedor / terceiro', valor: '', lista: mtDestinosConhecidos() },
     { id: 'pecaEnvio', label: 'Data da solicitação e/ou envio', tipo: 'date', valor: '' },
     { id: 'pecaRetorno', label: 'Data de retorno e/ou chegada (prevista)', tipo: 'date', valor: '' },
+    { id: 'terServ', label: '🏭 Serviço especializado de terceiro', valor: '', larga: true, dica: 'Ex.: retífica do cilindro, usinagem, recondicionamento de bomba. Preencha só para acrescentar um serviço novo; os já lançados aparecem na aba Componentes / Peças.' },
+    { id: 'terEmpresa', label: 'Empresa / prestador', valor: '', lista: mtDestinosConhecidos() },
+    { id: 'terEnvio', label: 'Data de envio ao terceiro', tipo: 'date', valor: '' },
+    { id: 'terRetorno', label: 'Retorno previsto do terceiro', tipo: 'date', valor: '' },
     { id: 'tipo', label: 'Tipo de manutenção (pode marcar mais de um)', tipo: 'tipos', valor: oc.tipo, larga: true },
     { id: 'responsavel', label: 'Responsável técnico', valor: oc.responsavel },
     { id: 'parou', label: 'Parou em (data e hora)', tipo: 'datetime-local', valor: mtDT(oc.dataParada, oc.horaParada) },
@@ -12036,6 +12071,12 @@ function manutModalEditar(oc){
     { id: 'observacao', label: 'Observação', tipo: 'textarea', linhas: 5, valor: oc.observacao, larga: true }
   ]), '💾 Salvar ficha', async function(v){
     const temPeca = !!(v.pecaNome || v.pecaForn || v.pecaEnvio || v.pecaRetorno);
+    const temTer = !!(v.terServ || v.terEmpresa || v.terEnvio || v.terRetorno);
+    if (temTer) {
+      if (!v.terServ) throw new Error('Descreva o serviço especializado de terceiro.');
+      if (!v.terEmpresa) throw new Error('Informe a empresa / prestador do serviço de terceiro.');
+      if (v.terEnvio && v.terRetorno && v.terRetorno < v.terEnvio) throw new Error('O retorno do terceiro não pode ser antes do envio.');
+    }
     const etapaPeca = v.etapa === 'Aguardando peça' || v.etapa === 'Reparo externo';
     if (temPeca && etapaPeca) {
       if (!v.pecaNome) throw new Error('Informe qual é a peça (ou serviço) aguardada.');
@@ -12069,9 +12110,16 @@ function manutModalEditar(oc){
       try { await mtPerguntarPrevisao(oc); } catch (e) {}
       manutAba = 'pecas';
     }
+    if (temTer) {
+      await manutCriar('pecas', { Title: v.terServ, OcorrenciaId: oc.id, Equipamento: oc.equipamento, Situacao: 'Em reparo externo', TipoPeca: 'Conserto/reparo', Destino: v.terEmpresa,
+        DataEnvio: v.terEnvio || null, PrevisaoOriginal: v.terRetorno || null, PrevisaoRetorno: v.terRetorno || null, Custo: 0 });
+      await manutRecarregar('pecas');
+      await manutReavaliarEtapa(oc);
+      manutAba = 'pecas';
+    }
     if (mtAberta(oc)) await mtSyncFrota(oc);
     manutRenderTudo();
-    mtToast(temPeca && etapaPeca ? '✅ Ficha atualizada e peça lançada' : '✅ Ficha atualizada');
+    mtToast(temTer ? '✅ Ficha atualizada e serviço de terceiro lançado' : (temPeca && etapaPeca ? '✅ Ficha atualizada e peça lançada' : '✅ Ficha atualizada'));
   });
   /* os campos da peça só aparecem quando a etapa é "Aguardando peça" ou "Reparo externo" */
   const selEt = document.getElementById('mtm-etapa');
@@ -14347,7 +14395,125 @@ async function montarSecaoMovimentacoesEquip(equip){
     '<h4 style="margin-top:14px">🕒 Linha do tempo de movimentações</h4>' +
     (timelineHtml || '<div class="lista-vazia-dash">Nenhuma movimentação registrada.</div>');
 }
+/** Ficha do equipamento (painel lateral) — informações de operação/manutenção: situação atual, local,
+ *  manutenção em aberto e histórico, indicadores do mês (DM/EO/IU/PM/MTTR/MTBF), tempo por status e movimentações. */
+async function abrirFichaEquipamentoPainel(equip){
+  ocEquipAtual = equip;
+  document.getElementById('oc-equip-titulo').textContent = equip;
+  const g = function(m, k){ try { return (typeof m !== 'undefined' && m[k]) ? m[k] : ''; } catch(e){ return ''; } };
+  const desc = g(typeof frotaDescricao !== 'undefined' ? frotaDescricao : {}, equip);
+  const regime = g(typeof frotaRegimeTrabalho !== 'undefined' ? frotaRegimeTrabalho : {}, equip);
+  const implemento = g(typeof frotaItemVinculado !== 'undefined' ? frotaItemVinculado : {}, equip);
+  const localAtual = g(typeof frotaLocalAtual !== 'undefined' ? frotaLocalAtual : {}, equip) || '—';
+  const statusAtual = g(typeof frotaStatusAtual !== 'undefined' ? frotaStatusAtual : {}, equip);
+  const diasLocal = (typeof frotaDiasNoLocal !== 'undefined' && typeof frotaDiasNoLocal[equip] === 'number') ? frotaDiasNoLocal[equip] : null;
+  const totais = statusEqTotaisPorStatus(equip);
+  const badge = statusAtual ? statusEqBadge(statusAtual) : '';
+  document.getElementById('oc-equip-corpo').innerHTML =
+    '<div class="oc-equip-header">' +
+      '<div class="oc-equip-foto" id="oc-equip-foto">🚜</div>' +
+      '<div class="oc-equip-header-info">' +
+        '<div class="oc-equip-nome-grande">' + mtEsc(equip) + '</div>' +
+        (desc ? '<div style="font-size:12.5px;font-weight:600;margin:-2px 0 4px">' + mtEsc(desc) + '</div>' : '') +
+        '<div class="oc-equip-header-meta">' + badge + ' &nbsp; 📍 ' + mtEsc(localAtual) +
+          '<br>' + (regime ? 'Regime de trabalho: <b>' + mtEsc(regime) + '</b>' : '') +
+          (implemento ? (regime ? ' &nbsp;·&nbsp; ' : '') + '🔧 Implemento: <b>' + mtEsc(implemento) + '</b>' : '') + '</div>' +
+        '<div class="oc-equip-kpi-mini">' +
+          '<div class="caixa"><div class="num">' + (diasLocal === null ? '—' : diasLocal) + '</div><div class="lbl">Dias no local atual</div></div>' +
+          '<div class="caixa"><div class="num">' + totais['EM MANUTENÇÃO'] + '</div><div class="lbl">Dias em manutenção (acumulado)</div></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+          '<button type="button" class="oc-equip-cta" id="oc-equip-ir-manut">🔧 Ficha de manutenção</button>' +
+          '<button type="button" class="oc-equip-cta" id="oc-equip-ir-mover" style="background:#2f6fb5">🚚 Mover equipamento</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="oc-equip-secao" id="oc-equip-manut-secao"><div class="lista-vazia-dash">Carregando manutenção…</div></div>' +
+    '<div class="oc-equip-secao" id="oc-equip-ind-secao"><div class="lista-vazia-dash">Carregando indicadores…</div></div>' +
+    '<div class="oc-equip-secao" id="oc-equip-mov-secao"><div class="lista-vazia-dash">Carregando movimentações…</div></div>';
+  document.getElementById('oc-equip-overlay').classList.add('aberto');
+  document.getElementById('oc-equip-ir-manut').onclick = function(){ document.getElementById('oc-equip-overlay').classList.remove('aberto'); manutAbrirFicha(equip); };
+  document.getElementById('oc-equip-ir-mover').onclick = function(){ document.getElementById('oc-equip-overlay').classList.remove('aberto'); locAbrirModalMover(equip); };
+  const fotoEl = document.getElementById('oc-equip-foto');
+  buscarUrlFotoEquipamento(equip).then(function(url){ if (url) fotoEl.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:16px">'; }).catch(function(){});
+  const vivo = function(){ return ocEquipAtual === equip; };
+  /* ---- manutenção ---- */
+  (async function(){
+    let html;
+    try {
+      await manutCarregarDados();
+      const todas = manutOcorrencias.filter(function(o){ return o.equipamento === equip; }).sort(function(a, b){ return String(b.dataEntrada).localeCompare(String(a.dataEntrada)); });
+      const aberta = todas.find(mtAberta);
+      const feitas = todas.filter(function(o){ return !mtAberta(o); });
+      const diasFeitas = feitas.map(mtDiasParados);
+      const totalDias = todas.reduce(function(s, o){ return s + mtDiasParados(o); }, 0);
+      const mttr = diasFeitas.length ? diasFeitas.reduce(function(s, x){ return s + x; }, 0) / diasFeitas.length : null;
+      let blocoAberta;
+      if (aberta) {
+        const atraso = aberta.previsao && aberta.previsao < mtHoje() ? mtDias(aberta.previsao, mtHoje()) : 0;
+        const pend = mtPendentes(aberta).length;
+        blocoAberta = '<div style="border:1px solid #e8c9c4;background:#fdf3f1;border-radius:12px;padding:12px 14px;margin-bottom:10px">' +
+          '<div style="font-weight:800;color:#b3453a;margin-bottom:6px">🔧 Em manutenção agora — ' + mtEsc(aberta.etapa) + (atraso ? ' <span style="color:#b3453a">· ⏰ ' + atraso + ' dia(s) além da previsão</span>' : '') + '</div>' +
+          '<div style="font-size:12.5px;line-height:1.6">' +
+            '<b>Motivo:</b> ' + mtEsc(aberta.motivo || '—') + '<br>' +
+            '<b>Entrada:</b> ' + mtBR(aberta.dataEntrada) + ' (' + mtDiasParados(aberta) + ' dia(s) parado)' +
+            ' &nbsp;·&nbsp; <b>Previsão de retorno:</b> ' + mtBR(aberta.previsao) + '<br>' +
+            '<b>Tipo:</b> ' + mtEsc(aberta.tipo || '—') + ' &nbsp;·&nbsp; <b>Responsável:</b> ' + mtEsc(aberta.responsavel || '—') + ' &nbsp;·&nbsp; <b>Prioridade:</b> ' + mtEsc(aberta.prioridade) +
+            (pend ? '<br>📦 <b>' + pend + '</b> peça(s) ainda não recebida(s)' : '') +
+          '</div></div>';
+      } else {
+        blocoAberta = '<div style="font-size:12.5px;color:#1b7a43;margin-bottom:10px">✅ Sem manutenção em aberto.</div>';
+      }
+      const kpis = '<div class="oc-conform-tipos" style="grid-template-columns:repeat(3,1fr)">' +
+        '<div class="oc-conform-tipo imp"><div class="n">' + todas.length + '</div><div class="l">Entradas na manutenção</div></div>' +
+        '<div class="oc-conform-tipo crit"><div class="n">' + totalDias + '</div><div class="l">Dias parado (total)</div></div>' +
+        '<div class="oc-conform-tipo min"><div class="n">' + (mttr === null ? '—' : mtFmtDias(mttr).replace(' d', '')) + '</div><div class="l">Tempo médio de reparo (dias)</div></div></div>';
+      const lista = feitas.slice(0, 5).map(function(o){
+        return '<div style="padding:5px 0;border-bottom:1px solid var(--linha);font-size:12px"><b>' + mtBR(o.dataEntrada) + ' → ' + mtBR(o.dataSaida) + '</b> · ' + mtDiasParados(o) + ' dia(s)' +
+          '<div style="font-size:11px;color:var(--cinza)">' + mtEsc(o.motivo || '—') + (o.tipo ? ' · ' + mtEsc(o.tipo) : '') + '</div></div>';
+      }).join('');
+      html = '<h4>🔧 Manutenção</h4>' + blocoAberta + kpis +
+        (lista ? '<h4 style="font-size:11.5px;margin:12px 0 4px">Últimas manutenções concluídas</h4>' + lista : (todas.length ? '' : '<div class="lista-vazia-dash">Nenhuma manutenção registrada para este equipamento.</div>'));
+    } catch (e) { html = '<h4>🔧 Manutenção</h4><div class="lista-vazia-dash">Não foi possível carregar a manutenção agora.</div>'; }
+    const el = document.getElementById('oc-equip-manut-secao'); if (el && vivo()) el.innerHTML = html;
+  })();
+  /* ---- indicadores (meses salvos) ---- */
+  (async function(){
+    let html;
+    try {
+      if (!Object.keys(indSalvos).length) await indCarregarSalvos();
+      const pct = function(x){ return x === null || x === undefined ? '—' : (x * 100).toFixed(1).replace('.', ',') + '%'; };
+      const num = function(x){ return x === null || x === undefined || x === '' ? '—' : String(Math.round(x * 100) / 100).replace('.', ','); };
+      const meses = Object.keys(indSalvos).sort().reverse().map(function(p){
+        const l = (indSalvos[p].linhas || []).find(function(x){ return x.eq === equip; });
+        return l ? { p: p, l: l, m: indMetricas([l]) } : null;
+      }).filter(Boolean);
+      if (!meses.length) html = '<h4>📊 Indicadores</h4><div class="lista-vazia-dash">Este equipamento ainda não está em nenhum mês salvo nos Indicadores de Manutenção.</div>';
+      else {
+        const u = meses[0], semPD = u.m.EO === null;
+        const nomeMes = function(p){ return p.slice(5) + '/' + p.slice(0, 4); };
+        html = '<h4>📊 Indicadores de ' + nomeMes(u.p) + '</h4>' +
+          '<div class="oc-conform-tipos" style="grid-template-columns:repeat(3,1fr)">' +
+            '<div class="oc-conform-tipo ok"><div class="n">' + pct(u.m.DM) + '</div><div class="l">Disponibilidade (DM)</div></div>' +
+            '<div class="oc-conform-tipo imp"><div class="n">' + pct(u.m.EO) + '</div><div class="l">Eficiência (EO)</div></div>' +
+            '<div class="oc-conform-tipo min"><div class="n">' + pct(u.m.IU) + '</div><div class="l">Utilização (IU)</div></div></div>' +
+          (semPD ? '<div style="font-size:11.5px;color:var(--cinza);margin-top:6px">Sem parte diária neste mês: EO e IU não foram calculados.</div>' : '') +
+          '<div style="font-size:12.5px;margin-top:10px;line-height:1.7">Horas planejadas (HP): <b>' + num(u.l.hp) + ' h</b> &nbsp;·&nbsp; Parada em manutenção (PM): <b>' + num(u.l.pm) + ' h</b><br>' +
+            'MTTR: <b>' + num(u.l.mttr) + ' h</b> &nbsp;·&nbsp; MTBF: <b>' + num(u.l.mtbf) + ' h</b></div>' +
+          (meses.length > 1 ? '<h4 style="font-size:11.5px;margin:12px 0 4px">Histórico mensal</h4>' +
+            '<table style="width:100%;font-size:12px;border-collapse:collapse"><tr style="color:var(--cinza);text-align:left"><th>Mês</th><th>DM</th><th>EO</th><th>IU</th><th>PM (h)</th></tr>' +
+            meses.slice(0, 6).map(function(x){ return '<tr style="border-top:1px solid var(--linha)"><td>' + nomeMes(x.p) + '</td><td>' + pct(x.m.DM) + '</td><td>' + pct(x.m.EO) + '</td><td>' + pct(x.m.IU) + '</td><td>' + num(x.l.pm) + '</td></tr>'; }).join('') + '</table>' : '');
+      }
+    } catch (e) { html = '<h4>📊 Indicadores</h4><div class="lista-vazia-dash">Não foi possível carregar os indicadores agora.</div>'; }
+    const el = document.getElementById('oc-equip-ind-secao'); if (el && vivo()) el.innerHTML = html;
+  })();
+  /* ---- movimentações e tempo por status ---- */
+  montarSecaoMovimentacoesEquip(equip).then(function(html){
+    const el = document.getElementById('oc-equip-mov-secao'); if (el && vivo()) el.innerHTML = html;
+  });
+}
 function abrirHistoricoEquipamentoOcorrencias(equip, soImpeditivos){
+  if (!soImpeditivos) { abrirFichaEquipamentoPainel(equip); return; }
   ocEquipAtual = equip;
   document.getElementById('oc-equip-titulo').textContent = equip + (soImpeditivos ? ' — itens impeditivos' : '');
   let todasDoEquip = ocorrenciasItens.filter(function(h){ return h.equipamento === equip; })
