@@ -2035,7 +2035,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 28/10/2026 · 103</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 28/10/2026 · 104</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -6027,6 +6027,24 @@ let frotaLocalAtual = {};    // equipamento -> local atual
 let frotaItemVinculado = {}; // equipamento principal -> código do subitem
 let frotaStatusAtual = {};   // equipamento -> EM OPERAÇÃO / EM MANUTENÇÃO / EM DISPONIBILIDADE
 let frotaRegimeTrabalho = {}; // equipamento -> 8h / 12h / 24h
+let frotaLinhas = {};         // equipamento -> "ROMPEDOR, TESOURA 4TON, CONCHA" (implementos com que o equipamento pode trabalhar)
+/** Valores iniciais (planilha da sede): valem até alguém salvar a coluna "Linhas" daquele equipamento na lista Frota. */
+const FROTA_LINHAS_SEED = {
+  ESC0034: 'ROMPEDOR, TESOURA', ESC0041: 'TESOURA 4TON, CONCHA', ESC0044: 'BRITADOR, ROMPEDOR, CONCHA', ESC0046: 'BRITADOR, ROMPEDOR, CONCHA',
+  ESC0048: 'TESOURA 4TON, CONCHA', ESC0064: 'ROMPEDOR 2000, TESOURA CONCRETO, CONCHA', ESC0067: 'TESOURA 7TON', ESC0068: 'TESOURA 7TON',
+  Z001: 'CONCHA, TESOURA 5TON', ESC0070: 'CONCHA, ROMPEDOR 2000KG', ESC0074: 'TESOURA 7TON, 9TON, 17TON, CONCHA, ROMPEDOR 4700KG',
+  ESC0075: 'CONCHA, ROMPEDOR 2000KG', ESC0076: 'TESOURA 7TON', ESC0091: 'CONCHA, ROMPEDOR 4700KG, TESOURA 9TON',
+  ESC0093: 'CONCHA, ROMPEDOR 4700KG, TESOURA 9TON', ESC0094: 'CONCHA, ROMPEDOR 4700KG, TESOURA 9TON',
+  MHS0001: 'GARRA', MHS0002: 'GARRA', MHS0003: 'GARRA', MHS0004: 'GARRA', MHS0005: 'GARRA', MHS0006: 'GARRA', MHS0007: 'GARRA', MHS0008: 'GARRA',
+  MHS0009: 'GARRA', MHS0010: 'GARRA, ELETROÍMÃ', MHS0011: 'GARRA', MHS0012: 'GARRA', MHS0013: 'GARRA', MHS0014: 'GARRA', MHS0015: 'GARRA', MHS0016: 'GARRA'
+};
+function frotaLinhasDe(eq){ return (frotaLinhas[eq] || FROTA_LINHAS_SEED[eq] || '').trim(); }
+function frotaLinhasLista(eq){ return frotaLinhasDe(eq).split(/\s*,\s*/).filter(Boolean); }
+/** Linha pequena "Opera com: …" (HTML) — vazia quando o equipamento não tem linhas cadastradas. */
+function frotaLinhasHtml(eq){
+  const l = frotaLinhasLista(eq);
+  return l.length ? '<span style="font-size:11px;color:#1b6b34;font-weight:600">⚙️ Opera com: ' + l.map(function(x){ return frotaEsc(x); }).join(' · ') + '</span>' : '';
+}
 let frotaTipoItem = {};      // nome -> 'equipamento' ou 'implemento'
 let frotaIdsExtra = {};      // equipamento -> id do item na lista Frota
 let frotaDescricao = {};     // nome -> descrição curta (ex.: "ESCAVADEIRA HIDRA. DOOSAN DX530LC")
@@ -6051,6 +6069,7 @@ async function garantirDadosFrotaExtra(forcar){
     frotaItemVinculado[nome] = f.ItemVinculado || '';
     frotaStatusAtual[nome] = normStatus(f.StatusAtual) || 'EM OPERAÇÃO';
     frotaRegimeTrabalho[nome] = f.RegimeTrabalho || '8h';
+    frotaLinhas[nome] = f.Linhas || '';
     // Cadastros antigos (antes dessa coluna existir) não têm TipoItem —
     // tratamos como "equipamento" por padrão, pra não sumir da lista principal.
     frotaTipoItem[nome] = (f.TipoItem === 'implemento') ? 'implemento' : 'equipamento';
@@ -6416,6 +6435,18 @@ function emMontarHtml(de, ate){
       nomes.map(function(c){ return '<tr><td ' + td + '>' + frotaEsc(c) + '</td><td ' + tdn + '>' + res[c].e + '</td><td ' + tdn + '>' + res[c].s + '</td><td ' + tdn + '>' + (atual[c] || 0) + '</td></tr>'; }).join('') + '</table>';
   } else h += '<div>Nenhuma entrada ou saída de contrato no período.</div>';
   h += '<p style="margin:6px 0 10px 0">Equipamentos na sede agora: <b>' + naSede + '</b> de ' + totalFrota + ' no total.</p>';
+  /* equipamentos na sede e as linhas (implementos) com que podem trabalhar */
+  const naSedeLista = Object.keys(frotaLocalAtual).filter(function(eq){ return frotaTipoItem[eq] !== 'implemento' && emEhSede(normLocal(frotaLocalAtual[eq] || '')); })
+    .sort(function(a, b){ return a.localeCompare(b, 'pt-BR', { numeric: true }); });
+  if (naSedeLista.length) {
+    const t0 = 'style="border:1px solid #c9d3cf;padding:3px 10px"';
+    h += '<p style="margin:10px 0 4px 0"><b>Equipamentos na sede e linhas em que podem trabalhar</b></p>' +
+      '<table style="border-collapse:collapse;font-size:10.5pt"><tr><th ' + th + '>Equipamento</th><th ' + th + '>Descrição</th><th ' + th + '>Situação</th><th ' + th + '>Linhas (opera com)</th></tr>' +
+      naSedeLista.map(function(eq){
+        const st = frotaStatusAtual[eq] || '';
+        return '<tr><td ' + t0 + '><b>' + frotaEsc(emEquip(eq)) + '</b></td><td ' + t0 + '>' + frotaEsc(frotaDescricao[eq] || '') + '</td><td ' + t0 + '>' + frotaEsc(st ? st.charAt(0) + st.slice(1).toLowerCase() : '') + '</td><td ' + t0 + '>' + (frotaLinhasDe(eq) ? frotaEsc(frotaLinhasLista(eq).join(', ')) : '—') + '</td></tr>';
+      }).join('') + '</table>';
+  }
   /* 3) manutenção */
   if (manutCarregado) {
     const hoje = emYMD(new Date());
@@ -7394,7 +7425,7 @@ function statusEqRenderizar(){
         '<button type="button" class="arv-btn-detalhe" data-ver-detalhe="'+eq+'" title="Ver histórico detalhado com gráfico">📊</button>' +
       '</div>' +
       colunasManut +
-      (function(){ const o = locObsLiberacao(eq); return o ? '<div style="grid-column:1 / -1;margin:-6px 0 0 20px">'+o+'</div>' : ''; })() +
+      (function(){ const o = locObsLiberacao(eq); const ln = (!ehImplemento && emEhSede(frotaLocalAtual[eq] || '')) ? frotaLinhasHtml(eq) : ''; return (o || ln) ? '<div style="grid-column:1 / -1;margin:-6px 0 0 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'+ln+o+'</div>' : ''; })() +
     '</div>';
   }
   function montarPreviaFrotaLinha(eq){
@@ -13708,6 +13739,7 @@ function renderizarSecaoCadastroEquip(){
         '<div class="oc-info-item"><label>Status atual</label><div class="valor">' + statusEqBadge(frotaStatusAtual[equip]) + '</div></div>' +
         '<div class="oc-info-item"><label>Local atual</label><div class="valor">' + frotaEsc(frotaLocalAtual[equip] || '—') + '</div></div>' +
         '<div class="oc-info-item"><label>Regime de trabalho</label><div class="valor">' + frotaEsc(frotaRegimeTrabalho[equip] || '8h') + '</div></div>' +
+        (ehImplemento ? '' : '<div class="oc-info-item" style="grid-column:1 / -1"><label>Linhas (opera com)</label><div class="valor">' + (frotaLinhasDe(equip) ? frotaLinhasLista(equip).map(function(x){ return '<span style="display:inline-block;background:#e4f3e8;color:#1b6b34;border-radius:10px;padding:2px 9px;margin:0 4px 4px 0;font-size:12px">' + frotaEsc(x) + '</span>'; }).join('') : '<i style="opacity:.6;font-weight:400">Não informado — clique em Editar</i>') + '</div></div>') +
         '<div class="oc-info-item"><label>' + vinculadoLabel + '</label><div class="valor" style="text-transform:uppercase">' + (vinculado ? frotaEsc(vinculado) : '—') + '</div></div>' +
         '<div class="oc-info-item"><label>Descrição</label><div class="valor" style="text-transform:uppercase">' + (frotaDescricao[equip] ? frotaEsc(frotaDescricao[equip]) : '<i style="opacity:.6;font-weight:400;text-transform:none">Sem descrição cadastrada</i>') + '</div></div>' +
       '</div>';
@@ -13740,6 +13772,9 @@ function renderizarSecaoCadastroEquip(){
             return '<option value="' + r + '" ' + ((frotaRegimeTrabalho[equip] || '8h') === r ? 'selected' : '') + '>' + r + '</option>';
           }).join('') +
         '</select></div>' +
+      (ehImplemento ? '' : '<div class="oc-edit-campo"><label>Linhas (implementos com que o equipamento pode trabalhar)</label>' +
+        '<input type="text" id="mov-edit-linhas" value="' + frotaLinhasDe(equip).replace(/"/g, '&quot;') + '" placeholder="Ex: ROMPEDOR 2000KG, TESOURA 7TON, CONCHA">' +
+        '<div class="modal-dica" style="margin-top:4px">Separe com vírgula. Aparece no e-mail do dia e na árvore para os equipamentos na sede.</div></div>') +
       '<div class="oc-edit-campo"><label>' + (ehImplemento ? 'Vincular a um equipamento' : 'Implemento vinculado') + '</label>' +
         '<select id="mov-edit-vinculo"><option value="">Nenhum</option>' +
           opcoesVinculo.map(function(f){ return '<option value="' + f + '" ' + (vinculadoAtual === f ? 'selected' : '') + '>' + f.toUpperCase() + '</option>'; }).join('') +
@@ -13769,6 +13804,8 @@ function renderizarSecaoCadastroEquip(){
     const novoStatus = document.getElementById('mov-edit-status').value;
     const novoRegime = document.getElementById('mov-edit-regime').value;
     const novoVinculo = document.getElementById('mov-edit-vinculo').value;
+    const campoLin = document.getElementById('mov-edit-linhas');
+    const novasLinhas = campoLin ? campoLin.value.replace(/\s*,\s*/g, ', ').replace(/^[,\s]+|[,\s]+$/g, '').toUpperCase() : null;
     const itemId = frotaIdsExtra[equip] || frotasIds[equip];
     if (!itemId) { fb.style.color = 'var(--ru)'; fb.textContent = '⚠️ Não foi possível localizar este item no SharePoint.'; return; }
     const campos = {};
@@ -13777,6 +13814,7 @@ function renderizarSecaoCadastroEquip(){
     if (novoStatus !== (frotaStatusAtual[equip] || 'EM OPERAÇÃO')) campos.StatusAtual = novoStatus;
     if (novoRegime !== (frotaRegimeTrabalho[equip] || '8h')) campos.RegimeTrabalho = novoRegime;
     if (novoVinculo !== vinculadoAtual) campos.ItemVinculado = novoVinculo;
+    if (novasLinhas !== null && novasLinhas !== frotaLinhasDe(equip)) campos.Linhas = novasLinhas;
     if (!Object.keys(campos).length) { movEquipEditando = false; renderizarSecaoCadastroEquip(); return; }
     btn.disabled = true; btn.textContent = 'Salvando…'; fb.textContent = '';
     atualizarCamposItem(LISTA_FROTA_ID, itemId, campos).then(function(){
@@ -13785,12 +13823,13 @@ function renderizarSecaoCadastroEquip(){
       if (campos.StatusAtual !== undefined) frotaStatusAtual[equip] = campos.StatusAtual;
       if (campos.RegimeTrabalho !== undefined) frotaRegimeTrabalho[equip] = campos.RegimeTrabalho;
       if (campos.ItemVinculado !== undefined) frotaItemVinculado[equip] = campos.ItemVinculado;
+      if (campos.Linhas !== undefined) frotaLinhas[equip] = campos.Linhas;
       if (typeof frotaViewCarregada !== 'undefined' && frotaViewCarregada) renderizarViewFrota();
       if (typeof painelCarregado !== 'undefined' && painelCarregado) carregarPainelGeral(true);
       abrirHistoricoMovimentacaoEquipamento(equip);
     }).catch(function(err){
       btn.disabled = false; btn.textContent = '💾 Salvar';
-      fb.style.color = 'var(--ru)'; fb.textContent = '⚠️ Erro ao salvar: ' + err.message;
+      fb.style.color = 'var(--ru)'; fb.textContent = (campos.Linhas !== undefined && /Linhas|field|campo|column/i.test(err.message)) ? '⚠️ A lista Frota ainda não tem a coluna "Linhas". Crie no SharePoint uma coluna de texto chamada Linhas (uma linha de texto) e salve de novo.' : '⚠️ Erro ao salvar: ' + err.message;
     });
   };
 }
@@ -14579,6 +14618,7 @@ async function abrirFichaEquipamentoPainel(equip){
         (desc ? '<div style="font-size:12.5px;font-weight:600;margin:-2px 0 4px">' + mtEsc(desc) + '</div>' : '') +
         '<div class="oc-equip-header-meta">' + badge + ' &nbsp; 📍 ' + mtEsc(localAtual) +
           '<br>' + (regime ? 'Regime de trabalho: <b>' + mtEsc(regime) + '</b>' : '') +
+          (frotaLinhasDe(equip) ? '<br>⚙️ Opera com: <b>' + frotaLinhasLista(equip).map(function(x){ return mtEsc(x); }).join(', ') + '</b>' : '') +
           (implemento ? (regime ? ' &nbsp;·&nbsp; ' : '') + '🔧 Implemento: <b>' + mtEsc(implemento) + '</b>' : '') + '</div>' +
         '<div class="oc-equip-kpi-mini">' +
           '<div class="caixa"><div class="num">' + (diasLocal === null ? '—' : diasLocal) + '</div><div class="lbl">Dias no local atual</div></div>' +
