@@ -313,12 +313,13 @@
         <div id="mnt-resumo" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
         <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
-        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v12 · 29/10/2026</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v13 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
           <h2 id="mnt-acao-titulo" style="margin-bottom:4px">—</h2>
           <div id="mnt-acao-sub" style="font-size:12.5px;color:var(--cinza);margin-bottom:12px"></div>
+          <div id="mnt-acao-probs" style="display:none;background:#fff8e1;border:1px solid #f0d58a;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13.5px"></div>
           <div class="campo">
             <label>O que você quer fazer?</label>
             <select id="mnt-acao-tipo">
@@ -1569,7 +1570,7 @@ function mntDesenharAbertas(){
     const c = mntCorEtapa(p.etapa);
     html += '<button type="button" data-i="' + i + '" style="display:block;width:100%;text-align:left;background:' + c.fundo + ';border:1px solid ' + c.borda + ';border-left:7px solid ' + c.borda + ';border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer">' +
       '<div style="font-weight:800;font-size:14px">' + mntEsc(String(p.equipamento).toUpperCase()) + (p.descricao ? ' — ' + mntEsc(String(p.descricao).toUpperCase()) : '') + '</div>' +
-      '<div style="font-size:12.5px;color:var(--cinza);margin-top:3px">' + mntEsc(p.motivo || '') + '</div>' +
+      '<div style="font-size:12.5px;color:var(--cinza);margin-top:3px">' + mntEsc(p.motivo || '') + '</div>' + ((p.problemas || []).length ? '<div style="font-size:12px;color:#8a6d00;margin-top:3px">📋 ' + p.problemas.length + ' problema(s) apontado(s) pelo gestor</div>' : '') +
       ((p.atuando && p.atuando.length) ? '<div style="font-size:12px;margin-top:3px;font-weight:700;color:#1f6f43">🔧 Atuando agora: ' + p.atuando.map(function(a){ return mntEsc(a.mecanico) + ' (desde ' + new Date(a.desde).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ')'; }).join(', ') + '</div>' : '') +
       (p.peca ? '<div style="font-size:12px;margin-top:3px">📦 Aguardando: <b>' + mntEsc(p.peca) + '</b>' + (p.previsao ? ' · previsão ' + mntEsc(p.previsao.split('-').reverse().join('/')) : '') + '</div>' : '') +
       '<div style="font-size:12px;margin-top:5px;color:' + c.cor + '"><b>' + c.ic + ' ' + mntEsc(p.etapa || 'Diagnóstico') + '</b> · parado há ' + mntEsc(mntTempo(p.paradaEm)) + (p.mecanico ? ' · ' + mntEsc(p.mecanico) : '') + '</div></button>';
@@ -1613,6 +1614,13 @@ function mntAbrirAcao(p){
   mntAcaoAtual = p;
   document.getElementById('mnt-acao-titulo').textContent = String(p.equipamento).toUpperCase();
   document.getElementById('mnt-acao-sub').textContent = (p.motivo || '') + ' · ' + (p.etapa || 'Diagnóstico');
+  const pb = document.getElementById('mnt-acao-probs'), lista = p.problemas || [], obs = String(p.observacao || '').trim();
+  if (lista.length || obs) {
+    pb.innerHTML = '<b>📋 Problemas apontados pelo gestor do contrato</b>' +
+      (lista.length ? '<ul style="margin:6px 0 0 18px;padding:0">' + lista.map(function(i){ const feito = i.status === 'Feito'; return '<li style="' + (feito ? 'text-decoration:line-through;color:#888' : '') + '">' + mntEsc(i.texto) + (i.status && i.status !== 'Pendente' ? ' <small>(' + mntEsc(i.status) + ')</small>' : '') + '</li>'; }).join('') + '</ul>' : '') +
+      (obs ? '<div style="margin-top:6px;color:#5c4a00"><b>Observação:</b> ' + mntEsc(obs) + '</div>' : '');
+    pb.style.display = '';
+  } else { pb.style.display = 'none'; pb.innerHTML = ''; }
   document.getElementById('mnt-acao-tipo').value = 'iniciar';
   document.getElementById('mnt-acao-mecanico').innerHTML = '<option value="">Selecione…</option>' + mntMecanicos().map(function(m){ return '<option value="' + m[0] + '">' + m[1] + ' - ' + m[0] + '</option>'; }).join('') + '<option value="__terceiro">PRESTADOR DE SERVIÇO / TERCEIRO (digitar)</option>';
   document.getElementById('mnt-acao-motivo').innerHTML = '<option value="">Selecione…</option>' + MOTIVOS_PARADA.map(function(m){ return '<option>' + m + '</option>'; }).join('');
