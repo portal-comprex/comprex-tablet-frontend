@@ -65,6 +65,16 @@
   /* Parte Diária fica ao lado do Checklist, como qualquer outra aba — sem
      sobrepor o cabeçalho/abas em tela cheia (removido a pedido). */
   main{max-width:640px;margin:0 auto;padding:18px 16px 60px}
+  /* Aba Manutenção em computador (tela larga, ex.: 24"): formulário à esquerda, paradas em aberto à direita */
+  @media (min-width:1100px){
+    main.largo{max-width:1680px;padding:26px 36px 60px}
+    main.largo #aba-manutencao{display:grid;grid-template-columns:minmax(440px,5fr) minmax(0,7fr);column-gap:28px;align-items:start}
+    main.largo #aba-manutencao > .card:first-child,main.largo #mnt-enviar,main.largo #mnt-erro,main.largo #mnt-ok{grid-column:1}
+    main.largo #mnt-card-abertas{grid-column:2;grid-row:1 / span 4;margin-top:0 !important}
+    main.largo #mnt-abertas-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+    main.largo #mnt-abertas-lista button{margin-bottom:0 !important}
+    main.largo #aba-manutencao input,main.largo #aba-manutencao select,main.largo #aba-manutencao textarea{font-size:15px}
+  }
   .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px;margin-bottom:16px}
   .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--navy);margin:0 0 14px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -277,15 +287,14 @@
       <button class="btn-primario" id="mnt-enviar" style="margin-top:6px">🔧 Registrar parada</button>
       <div class="erro-msg" id="mnt-erro"></div>
       <div class="ok-msg" id="mnt-ok"></div>
-    </div>
-      <div class="card" style="margin-top:14px">
+      <div class="card" id="mnt-card-abertas" style="margin-top:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <h2 style="margin:0">Paradas em aberto</h2>
           <button type="button" class="btn-header" id="mnt-abertas-atualizar" style="background:var(--navy);color:#fff">↻ Atualizar</button>
         </div>
         <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
-        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v9 · 29/10/2026</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v10 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
@@ -341,6 +350,7 @@
           <button type="button" class="btn-header" id="mnt-acao-cancelar" style="background:#e5e7eb;color:#111;width:100%;margin-top:8px;padding:12px">Cancelar</button>
         </div>
       </div>
+    </div>
     <!-- -------- APROPRIAÇÃO --------
          Tela de lançamento do sistema de controladoria, servida do nosso
          próprio site (apropriacao.html) e já autenticada pelo login do tablet.
@@ -1309,7 +1319,8 @@ document.querySelectorAll('.abas button').forEach(function(btn){
     document.getElementById('aba-checklist').style.display = btn.dataset.aba === 'checklist' ? 'block' : 'none';
     document.getElementById('aba-partediaria').style.display = btn.dataset.aba === 'partediaria' ? 'block' : 'none';
     document.getElementById('aba-apropriacao').style.display = btn.dataset.aba === 'apropriacao' ? '' : 'none';
-    document.getElementById('aba-manutencao').style.display = btn.dataset.aba === 'manutencao' ? 'block' : 'none';
+    document.getElementById('aba-manutencao').style.display = btn.dataset.aba === 'manutencao' ? '' : 'none';
+    document.querySelector('main').classList.toggle('largo', btn.dataset.aba === 'manutencao');
     if (btn.dataset.aba === 'apropriacao') { carregarApropriacao(); pedirAbaLancar(); }
     if (btn.dataset.aba === 'manutencao') {
       mntCarregarAbertas();
