@@ -144,6 +144,7 @@
   <div class="abas">
     <button class="ativa" data-aba="checklist">✅ Checklist</button>
     <button data-aba="apropriacao">🧮 Parte Diária</button>
+    <button data-aba="manutencao">🔧 Manutenção</button>
     <button data-aba="partediaria" style="display:none" aria-hidden="true">📋 TESTE</button>
   </div>
   <main>
@@ -230,6 +231,49 @@
       <button class="btn-primario" id="pd-enviar">Salvar parte diária</button>
       <div class="erro-msg" id="pd-erro"></div>
       <div class="ok-msg" id="pd-ok"></div>
+    </div>
+    <!-- -------- MANUTENÇÃO (parada do equipamento) -------- -->
+    <div id="aba-manutencao" style="display:none">
+      <div class="card">
+        <h2>Parada para manutenção</h2>
+        <div class="equip-cabecalho">
+          <div class="equip-foto-mini" id="mnt-equip-foto">🚜</div>
+          <div class="campo" style="margin-bottom:0">
+            <label>Equipamento</label>
+            <select id="mnt-equipamento"><option value="">Selecione…</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="campo">
+            <label>Horímetro</label>
+            <input type="text" id="mnt-horimetro" inputmode="numeric" placeholder="ex: 1024,5">
+          </div>
+          <div class="campo">
+            <label>Local</label>
+            <select id="mnt-local"><option value="">Selecione…</option></select>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Mecânico responsável</label>
+          <select id="mnt-mecanico"><option value="">Selecione…</option></select>
+        </div>
+        <div class="campo">
+          <label>Motivo da parada</label>
+          <select id="mnt-motivo"><option value="">Selecione…</option></select>
+        </div>
+        <div class="campo" id="mnt-outros-box" style="display:none">
+          <label>Descreva o motivo</label>
+          <input type="text" id="mnt-outros" autocomplete="off" placeholder="Escreva o motivo da parada">
+        </div>
+        <div class="campo">
+          <label>Observação (opcional)</label>
+          <textarea id="mnt-observacao" placeholder="Ex.: ruído anormal e perda de pressão…"></textarea>
+        </div>
+        <div style="font-size:12px;color:var(--cinza);font-weight:600">A data e a hora da parada são registradas automaticamente.</div>
+      </div>
+      <button class="btn-primario" id="mnt-enviar" style="margin-top:6px">🔧 Registrar parada</button>
+      <div class="erro-msg" id="mnt-erro"></div>
+      <div class="ok-msg" id="mnt-ok"></div>
     </div>
     <!-- -------- APROPRIAÇÃO --------
          Tela de lançamento do sistema de controladoria, servida do nosso
@@ -1199,6 +1243,7 @@ document.querySelectorAll('.abas button').forEach(function(btn){
     document.getElementById('aba-checklist').style.display = btn.dataset.aba === 'checklist' ? 'block' : 'none';
     document.getElementById('aba-partediaria').style.display = btn.dataset.aba === 'partediaria' ? 'block' : 'none';
     document.getElementById('aba-apropriacao').style.display = btn.dataset.aba === 'apropriacao' ? '' : 'none';
+    document.getElementById('aba-manutencao').style.display = btn.dataset.aba === 'manutencao' ? 'block' : 'none';
     if (btn.dataset.aba === 'apropriacao') { carregarApropriacao(); pedirAbaLancar(); }
   };
 });
@@ -1260,6 +1305,85 @@ function abrirAbaChecklist(){
 }
 document.getElementById('apr-voltar-btn').onclick = abrirAbaChecklist;
 
+
+/* =====================================================================
+   MANUTENÇÃO — registro de parada pelo mecânico
+   Lista de mecânicos (nº pessoal do SAP, centro MANUT/1020) e motivos
+   mais comuns ficam fixos aqui, para o mecânico só escolher.
+   ===================================================================== */
+const MECANICOS = [
+  ['10280','FABIO PEREIRA DOS SANTOS DA NATIVIDADE'],['10022','PAULO CEZAR ROMUALDO'],['10111','REGINALDO DE OLIVEIRA'],
+  ['10461','REINA GOMES SANTOS'],['10478','RAMON ROCHA CATALUNA'],['10535','WEVERTON XAVIER SILVA'],
+  ['10609','FLAVIANO JOSE HENRIQUE'],['10625','LUCIANO DUARTE EMILIANO'],['10639','ADEILSON SILVA GOMES'],
+  ['10643','LUIS GUILHERME LEANDRO PEDROSA'],['10670','YAGO DA CONCEICAO CIRILO'],['10717','RONILDO FERREIRA'],
+  ['10758','PAULO HENRIQUE DO AMOR DIVINO CALDAS'],['10760','WILTON GONCALVES CHAVE'],['10762','ELIMAR TIETZ'],
+  ['10790','PEDRO HENRIQUE ALVES VIANA'],['10819','CARLOS ALESANDRO DA CONCEICAO SANTANA'],
+  ['10824','MARLON BRENO DE SOUZA VIEIRA'],['10857','GABRIEL SOUZA DUARTE'],['10876','KEVIN PEREIRA DE SOUZA VIEIRA'],
+  ['10932','PEDRO LUIZ DOS SANTOS VAZ'],['10986','MARCELO DE OLIVEIRA PAULA'],['11044','CICERO JOSE JUNIOR DUARTE DA SILVA'],
+  ['11048','RAYNER DA SILVA BORGES'],['11093','RODRIGO BENTO DA SILVA'],['11158','WELBERTON LUIZ LOPES'],
+  ['11168','RENATO LUIS GOMES'],['11176','GABRIEL FERNANDES PENHA'],['11190','VALCI FRANCISCO VIEIRA FILHO'],
+  ['11204','ERICA CRISTINA ROSA'],['11634','EMERSON SILVA DOS SANTOS']
+].sort(function(a, b){ return a[1].localeCompare(b[1], 'pt-BR'); });
+const MOTIVOS_PARADA = ['SISTEMA HIDRÁULICO', 'PARTE ELÉTRICA', 'MATERIAL RODANTE', 'ESTABILIZADORES', 'AR CONDICIONADO',
+  'CILINDROS HIDRÁULICOS', 'LANTERNAS E FARÓIS', 'SISTEMA DE TRANSMISSÃO', 'OUTROS'];
+function mntPreencher(){
+  const frotas = (dadosIniciais && dadosIniciais.frotas) || [];
+  const locais = (dadosIniciais && dadosIniciais.locais) || [];
+  const vazio = '<option value="">Selecione…</option>';
+  document.getElementById('mnt-equipamento').innerHTML = vazio + frotas.map(function(f){
+    return '<option value="' + f.nome + '">' + f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : '') + '</option>';
+  }).join('');
+  const selLocal = document.getElementById('mnt-local');
+  selLocal.innerHTML = vazio + locais.map(function(l){ return '<option value="' + l + '">' + l + '</option>'; }).join('');
+  document.getElementById('mnt-mecanico').innerHTML = vazio + MECANICOS.map(function(m){
+    return '<option value="' + m[0] + '">' + m[1] + ' - ' + m[0] + '</option>';
+  }).join('');
+  document.getElementById('mnt-motivo').innerHTML = vazio + MOTIVOS_PARADA.map(function(m){ return '<option>' + m + '</option>'; }).join('');
+  document.getElementById('mnt-equipamento').onchange = function(){
+    const f = frotas.find(function(x){ return x.nome === this.value; }.bind(this));
+    if (f && f.local) selLocal.value = f.local;
+    atualizarFotoEquipamento('mnt-equip-foto', 'mnt-equipamento', this.value);
+  };
+}
+document.getElementById('mnt-horimetro').addEventListener('input', function(){ aplicarMascaraHorimetro(this); });
+document.getElementById('mnt-motivo').addEventListener('change', function(){
+  document.getElementById('mnt-outros-box').style.display = this.value === 'OUTROS' ? '' : 'none';
+});
+function mntLimpar(){
+  ['mnt-equipamento', 'mnt-horimetro', 'mnt-local', 'mnt-mecanico', 'mnt-motivo', 'mnt-outros', 'mnt-observacao'].forEach(function(i){ document.getElementById(i).value = ''; });
+  document.getElementById('mnt-outros-box').style.display = 'none';
+  atualizarFotoEquipamento('mnt-equip-foto', 'mnt-equipamento', '');
+}
+document.getElementById('mnt-enviar').onclick = async function(){
+  const erroEl = document.getElementById('mnt-erro'), okEl = document.getElementById('mnt-ok');
+  erroEl.style.display = 'none'; okEl.style.display = 'none';
+  function falha(t){ erroEl.textContent = t; erroEl.style.display = 'block'; }
+  const gv = function(i){ return document.getElementById(i).value.trim(); };
+  const motivo = gv('mnt-motivo'), outros = gv('mnt-outros'), mat = gv('mnt-mecanico');
+  if (!gv('mnt-equipamento')) return falha('Escolha o equipamento.');
+  if (!gv('mnt-local')) return falha('Escolha o local.');
+  if (!mat) return falha('Escolha o mecânico responsável.');
+  if (!motivo) return falha('Escolha o motivo da parada.');
+  if (motivo === 'OUTROS' && !outros) return falha('Descreva o motivo da parada.');
+  const mec = MECANICOS.find(function(m){ return m[0] === mat; });
+  const payload = {
+    equipamento: gv('mnt-equipamento'), local: gv('mnt-local'), horimetro: gv('mnt-horimetro'),
+    mecanicoNome: mec ? mec[1] : '', mecanicoMatricula: mat,
+    motivo: motivo === 'OUTROS' ? 'OUTROS: ' + outros : motivo,
+    observacao: gv('mnt-observacao'), paradaEm: new Date().toISOString()
+  };
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  const resultado = await enviarOuEnfileirar('manutencao', payload);
+  btn.disabled = false; btn.textContent = '🔧 Registrar parada';
+  if (resultado.ok) {
+    okEl.textContent = resultado.online ? '✅ Parada registrada com sucesso!' : '💾 Sem internet — parada salva no tablet e será enviada automaticamente quando a conexão voltar.';
+    okEl.style.display = 'block';
+    mntLimpar();
+    setTimeout(function(){ okEl.style.display = 'none'; }, 6000);
+  } else falha(resultado.erro);
+};
+
 /* =====================================================================
    INICIALIZAÇÃO
    ===================================================================== */
@@ -1273,6 +1397,7 @@ async function iniciarApp(){
   atualizarStatusApropriacao();
   await carregarDadosIniciais();
   preencherSelects();
+  mntPreencher();
   renderizarItensChecklist();
   pdInicializarTab();
   // Ao entrar, a primeira tela é sempre o Checklist — a Parte Diária só abre quando o operador
