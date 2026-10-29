@@ -293,12 +293,18 @@
             <label>O que você quer fazer?</label>
             <select id="mnt-acao-tipo">
               <option value="etapa">Atualizar situação</option>
-              <option value="concluir">Concluir manutenção</option>
+              <option value="intervencao">Concluir intervenção (equipamento continua parado)</option>
+              <option value="novo">Novo problema encontrado</option>
+              <option value="concluir">Liberar equipamento (encerra a parada)</option>
             </select>
           </div>
           <div class="campo">
-            <label>Mecânico</label>
+            <label>Responsável</label>
             <select id="mnt-acao-mecanico"></select>
+          </div>
+          <div class="campo" id="mnt-acao-terc-box" style="display:none">
+            <label>Prestador de serviço (empresa e/ou técnico)</label>
+            <input type="text" id="mnt-acao-terc" autocomplete="off" placeholder="Ex.: Hidrasul - João">
           </div>
           <div id="mnt-acao-etapa-box">
             <div class="campo">
@@ -309,6 +315,14 @@
               <div class="campo"><label>Peça aguardada</label><input type="text" id="mnt-acao-peca" autocomplete="off" placeholder="Ex.: bomba hidráulica"></div>
               <div class="campo"><label>Previsão de chegada</label><input type="date" id="mnt-acao-previsao"></div>
             </div>
+          </div>
+          <div id="mnt-acao-interv-box" style="display:none">
+            <div class="campo"><label>Concluída em (data e hora)</label><input type="datetime-local" id="mnt-acao-fim"></div>
+            <div class="campo"><label>Serviço executado</label><textarea id="mnt-acao-servico-i" placeholder="O que foi feito…"></textarea></div>
+          </div>
+          <div id="mnt-acao-novo-box" style="display:none">
+            <div class="campo"><label>Motivo do novo problema</label><select id="mnt-acao-motivo"></select></div>
+            <div class="campo" id="mnt-acao-motivo-outros-box" style="display:none"><label>Descreva o motivo</label><input type="text" id="mnt-acao-motivo-outros" autocomplete="off"></div>
           </div>
           <div id="mnt-acao-concluir-box" style="display:none">
             <div class="campo"><label>Liberado em (data e hora)</label><input type="datetime-local" id="mnt-acao-quando"></div>
@@ -1495,6 +1509,10 @@ function mntAlternarAcao(){
   const tipo = document.getElementById('mnt-acao-tipo').value, etapa = document.getElementById('mnt-acao-etapa').value;
   document.getElementById('mnt-acao-etapa-box').style.display = tipo === 'etapa' ? '' : 'none';
   document.getElementById('mnt-acao-concluir-box').style.display = tipo === 'concluir' ? '' : 'none';
+  document.getElementById('mnt-acao-interv-box').style.display = tipo === 'intervencao' ? '' : 'none';
+  document.getElementById('mnt-acao-novo-box').style.display = tipo === 'novo' ? '' : 'none';
+  document.getElementById('mnt-acao-motivo-outros-box').style.display = tipo === 'novo' && document.getElementById('mnt-acao-motivo').value === 'OUTROS' ? '' : 'none';
+  document.getElementById('mnt-acao-terc-box').style.display = document.getElementById('mnt-acao-mecanico').value === '__terceiro' ? '' : 'none';
   document.getElementById('mnt-acao-peca-box').style.display = tipo === 'etapa' && etapa === 'Aguardando peça' ? '' : 'none';
   document.getElementById('mnt-acao-pend-box').style.display = document.getElementById('mnt-acao-pend').value === 'com' ? '' : 'none';
 }
@@ -1503,7 +1521,10 @@ function mntAbrirAcao(p){
   document.getElementById('mnt-acao-titulo').textContent = String(p.equipamento).toUpperCase();
   document.getElementById('mnt-acao-sub').textContent = (p.motivo || '') + ' · ' + (p.etapa || 'Diagnóstico');
   document.getElementById('mnt-acao-tipo').value = 'etapa';
-  document.getElementById('mnt-acao-mecanico').innerHTML = '<option value="">Selecione…</option>' + mntMecanicos().map(function(m){ return '<option value="' + m[0] + '">' + m[1] + ' - ' + m[0] + '</option>'; }).join('');
+  document.getElementById('mnt-acao-mecanico').innerHTML = '<option value="">Selecione…</option>' + mntMecanicos().map(function(m){ return '<option value="' + m[0] + '">' + m[1] + ' - ' + m[0] + '</option>'; }).join('') + '<option value="__terceiro">PRESTADOR DE SERVIÇO / TERCEIRO (digitar)</option>';
+  document.getElementById('mnt-acao-motivo').innerHTML = '<option value="">Selecione…</option>' + MOTIVOS_PARADA.map(function(m){ return '<option>' + m + '</option>'; }).join('');
+  document.getElementById('mnt-acao-fim').value = mntAgoraLocal();
+  ['mnt-acao-terc', 'mnt-acao-servico-i', 'mnt-acao-motivo-outros'].forEach(function(i){ document.getElementById(i).value = ''; });
   document.getElementById('mnt-acao-etapa').innerHTML = ETAPAS_MANUT.map(function(e){ return '<option' + (e === p.etapa ? ' selected' : '') + '>' + e + '</option>'; }).join('');
   ['mnt-acao-peca', 'mnt-acao-previsao', 'mnt-acao-horimetro', 'mnt-acao-servico', 'mnt-acao-pend-txt'].forEach(function(i){ document.getElementById(i).value = ''; });
   document.getElementById('mnt-acao-pend').value = 'sem';
@@ -1512,7 +1533,7 @@ function mntAbrirAcao(p){
   mntAlternarAcao();
   document.getElementById('mnt-acao-overlay').style.display = 'flex';
 }
-['mnt-acao-tipo', 'mnt-acao-etapa', 'mnt-acao-pend'].forEach(function(i){ document.getElementById(i).addEventListener('change', mntAlternarAcao); });
+['mnt-acao-tipo', 'mnt-acao-etapa', 'mnt-acao-pend', 'mnt-acao-mecanico', 'mnt-acao-motivo'].forEach(function(i){ document.getElementById(i).addEventListener('change', mntAlternarAcao); });
 document.getElementById('mnt-acao-horimetro').addEventListener('input', function(){ aplicarMascaraHorimetro(this); });
 document.getElementById('mnt-acao-cancelar').onclick = function(){ document.getElementById('mnt-acao-overlay').style.display = 'none'; };
 document.getElementById('mnt-abertas-atualizar').onclick = mntCarregarAbertas;
@@ -1522,15 +1543,29 @@ document.getElementById('mnt-acao-salvar').onclick = async function(){
   erroEl.style.display = 'none';
   const gv = function(i){ return document.getElementById(i).value.trim(); };
   const p = mntAcaoAtual, tipo = gv('mnt-acao-tipo'), mat = gv('mnt-acao-mecanico');
+  const terc = mat === '__terceiro';
   const mec = mntMecanicos().find(function(m){ return m[0] === mat; });
-  if (!mat) return falha('Escolha o mecânico.');
-  const base = { ocorrenciaId: p.id, equipamento: p.equipamento, mecanicoNome: mec ? mec[1] : '', mecanicoMatricula: mat };
+  if (!mat) return falha('Escolha o responsável.');
+  if (terc && !gv('mnt-acao-terc')) return falha('Digite o nome do prestador de serviço.');
+  const base = { ocorrenciaId: p.id, equipamento: p.equipamento, mecanicoNome: terc ? gv('mnt-acao-terc') : (mec ? mec[1] : ''), mecanicoMatricula: terc ? '' : mat, terceiro: terc };
   let rota, payload;
   if (tipo === 'etapa') {
     const etapa = gv('mnt-acao-etapa');
     if (etapa === 'Aguardando peça' && !gv('mnt-acao-peca')) return falha('Informe a peça que está sendo aguardada.');
     rota = 'manutencao/etapa';
     payload = Object.assign(base, { etapa: etapa, peca: etapa === 'Aguardando peça' ? gv('mnt-acao-peca') : '', previsao: etapa === 'Aguardando peça' ? gv('mnt-acao-previsao') : '', quando: new Date().toISOString() });
+  } else if (tipo === 'intervencao') {
+    if (!gv('mnt-acao-fim')) return falha('Informe a data e a hora.');
+    if (new Date(gv('mnt-acao-fim')) > new Date(Date.now() + 5 * 60000)) return falha('A data e a hora não podem ser no futuro.');
+    if (!gv('mnt-acao-servico-i')) return falha('Descreva o serviço executado.');
+    rota = 'manutencao/intervencao';
+    payload = Object.assign(base, { fimEm: new Date(gv('mnt-acao-fim')).toISOString(), servico: gv('mnt-acao-servico-i') });
+  } else if (tipo === 'novo') {
+    const mot = gv('mnt-acao-motivo'), outros = gv('mnt-acao-motivo-outros');
+    if (!mot) return falha('Escolha o motivo do novo problema.');
+    if (mot === 'OUTROS' && !outros) return falha('Descreva o motivo.');
+    rota = 'manutencao/novo-problema';
+    payload = Object.assign(base, { motivo: mot === 'OUTROS' ? 'OUTROS: ' + outros : mot, quando: new Date().toISOString() });
   } else {
     if (!gv('mnt-acao-quando')) return falha('Informe a data e a hora da liberação.');
     if (new Date(gv('mnt-acao-quando')) > new Date(Date.now() + 5 * 60000)) return falha('A liberação não pode ser no futuro.');
@@ -1547,10 +1582,10 @@ document.getElementById('mnt-acao-salvar').onclick = async function(){
   document.getElementById('mnt-acao-overlay').style.display = 'none';
   // reflete na lista na hora (mesmo offline); ao reabrir a lista o servidor confirma
   if (tipo === 'concluir') mntAbertas = mntAbertas.filter(function(x){ return x.id !== p.id; });
-  else mntAbertas.forEach(function(x){ if (x.id === p.id) x.etapa = payload.etapa; });
+  else mntAbertas.forEach(function(x){ if (x.id === p.id) { if (tipo === 'etapa') x.etapa = payload.etapa; else if (tipo === 'novo') { x.etapa = 'Em manutenção'; x.motivo = payload.motivo; x.mecanico = payload.mecanicoNome; } } });
   try { localStorage.setItem('mntAbertasCache', JSON.stringify(mntAbertas)); } catch (e) {}
   mntDesenharAbertas();
-  mostrarToastMsg(resultado.online ? '✅ ' + (tipo === 'concluir' ? 'Manutenção concluída.' : 'Situação atualizada.') : '💾 Sem internet — salvo no tablet e será enviado depois.');
+  mostrarToastMsg(resultado.online ? '✅ ' + (tipo === 'concluir' ? 'Equipamento liberado.' : tipo === 'intervencao' ? 'Intervenção registrada.' : tipo === 'novo' ? 'Novo problema registrado.' : 'Situação atualizada.') : '💾 Sem internet — salvo no tablet e será enviado depois.');
 };
 
 /* =====================================================================
