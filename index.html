@@ -250,7 +250,9 @@
           <div class="equip-foto-mini" id="mnt-equip-foto">🚜</div>
           <div class="campo" style="margin-bottom:0">
             <label>Equipamento</label>
+            <input type="search" id="mnt-busca-eq" autocomplete="off" placeholder="🔍 Pesquisar equipamento (código ou modelo)…" style="margin-bottom:6px">
             <select id="mnt-equipamento"><option value="">Selecione…</option></select>
+            <div id="mnt-busca-eq-info" style="display:none;font-size:12px;margin-top:4px;font-weight:700;color:#b42318"></div>
           </div>
         </div>
         <div class="campo">
@@ -310,10 +312,11 @@
           <h2 style="margin:0">Paradas em aberto</h2>
           <button type="button" class="btn-header" id="mnt-abertas-atualizar" style="background:var(--navy);color:#fff">↻ Atualizar</button>
         </div>
+        <input type="search" id="mnt-busca-par" autocomplete="off" placeholder="🔍 Pesquisar nas paradas (código, modelo, motivo, mecânico)…" style="margin-top:12px">
         <div id="mnt-resumo" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
         <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
-        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v13 · 29/10/2026</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v14 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
@@ -1457,11 +1460,21 @@ function mntPreencher(){
   const locais = (dadosIniciais && dadosIniciais.locais) || [];
   const vazio = '<option value="">Selecione…</option>';
   // Equipamentos e implementos em grupos separados (o servidor marca os implementos com tipo: 'implemento')
+  const nat = function(a, b){ return String(a.nome).localeCompare(String(b.nome), 'pt-BR', { numeric: true, sensitivity: 'base' }); };
   const opFrota = function(f){ return '<option value="' + f.nome + '">' + f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : '') + '</option>'; };
-  const eqs = frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() !== 'implemento'; });
-  const imps = frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() === 'implemento'; });
-  document.getElementById('mnt-equipamento').innerHTML = vazio +
-    (imps.length ? '<optgroup label="EQUIPAMENTOS">' + eqs.map(opFrota).join('') + '</optgroup><optgroup label="IMPLEMENTOS">' + imps.map(opFrota).join('') + '</optgroup>' : eqs.map(opFrota).join(''));
+  const norm = function(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); };
+  const montarEquip = function(){
+    const q = norm(document.getElementById('mnt-busca-eq').value).trim();
+    const sel = document.getElementById('mnt-equipamento'), atual = sel.value;
+    const ok = function(f){ return !q || norm(f.nome + ' ' + (f.descricao || '')).indexOf(q) !== -1; };
+    const eqs = frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() !== 'implemento' && ok(f); }).sort(nat);
+    const imps = frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() === 'implemento' && ok(f); }).sort(nat);
+    sel.innerHTML = vazio + (eqs.length ? '<optgroup label="EQUIPAMENTOS">' + eqs.map(opFrota).join('') + '</optgroup>' : '') + (imps.length ? '<optgroup label="IMPLEMENTOS">' + imps.map(opFrota).join('') + '</optgroup>' : '');
+    if (atual && Array.prototype.some.call(sel.options, function(o){ return o.value === atual; })) sel.value = atual;
+    if (q && eqs.length + imps.length === 1) { sel.value = (eqs[0] || imps[0]).nome; sel.dispatchEvent(new Event('change')); }
+  };
+  document.getElementById('mnt-busca-eq').oninput = montarEquip;
+  montarEquip();
   const selLocal = document.getElementById('mnt-local');
   selLocal.innerHTML = vazio + locais.map(function(l){ return '<option value="' + l + '">' + l + '</option>'; }).join('');
   document.getElementById('mnt-mecanico').innerHTML = vazio + mntMecanicos().map(function(m){
@@ -1473,6 +1486,10 @@ function mntPreencher(){
   document.getElementById('mnt-equipamento').onchange = function(){
     const f = frotas.find(function(x){ return x.nome === this.value; }.bind(this));
     atualizarFotoEquipamento('mnt-equip-foto', 'mnt-equipamento', this.value);
+    const info = document.getElementById('mnt-busca-eq-info');
+    const jaP = this.value && mntAbertas.find(function(p){ return String(p.equipamento).toUpperCase() === String(this.value).toUpperCase(); }.bind(this));
+    info.style.display = jaP ? '' : 'none';
+    info.textContent = jaP ? '⚠ Este equipamento já está em parada (' + (jaP.etapa || 'Diagnóstico') + '). Procure o cartão na lista ao lado.' : '';
   };
 }
 function mntAgoraLocal(){
@@ -1564,7 +1581,16 @@ function mntDesenharAbertas(){
   }).join('');
   Array.prototype.forEach.call(resumo.querySelectorAll('button'), function(b){ b.onclick = function(){ mntFiltro = b.dataset.f; mntDesenharAbertas(); }; });
   let html = '';
-  mntAbertas.forEach(function(p, i){
+  const nrm = function(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); };
+  const qb = nrm((document.getElementById('mnt-busca-par') || {}).value || '').trim();
+  const cmp = function(a, b){ return String(a.equipamento).localeCompare(String(b.equipamento), 'pt-BR', { numeric: true, sensitivity: 'base' }); };
+  const ordem = mntAbertas.map(function(p, i){ return i; }).sort(function(x, y){
+    const ax = MNT_AMARELAS.indexOf(mntAbertas[x].etapa) !== -1 ? 1 : 0, ay = MNT_AMARELAS.indexOf(mntAbertas[y].etapa) !== -1 ? 1 : 0;
+    return ax - ay || cmp(mntAbertas[x], mntAbertas[y]);
+  });
+  ordem.forEach(function(i){
+    const p = mntAbertas[i];
+    if (qb && nrm([p.equipamento, p.descricao, p.motivo, p.mecanico, p.etapa, p.peca].join(' ')).indexOf(qb) === -1) return;
     const amar = MNT_AMARELAS.indexOf(p.etapa) !== -1;
     if (mntFiltro === 'disponiveis' || (mntFiltro === 'parados' && amar) || (mntFiltro === 'aguardando' && !amar)) return;
     const c = mntCorEtapa(p.etapa);
@@ -1576,13 +1602,14 @@ function mntDesenharAbertas(){
       '<div style="font-size:12px;margin-top:5px;color:' + c.cor + '"><b>' + c.ic + ' ' + mntEsc(p.etapa || 'Diagnóstico') + '</b> · parado há ' + mntEsc(mntTempo(p.paradaEm)) + (p.mecanico ? ' · ' + mntEsc(p.mecanico) : '') + '</div></button>';
   });
   if (mntFiltro === 'todos' || mntFiltro === 'disponiveis') {
-    mntDisponiveis.forEach(function(d){
+    mntDisponiveis.slice().sort(cmp).forEach(function(d){
+      if (qb && nrm([d.equipamento, d.descricao].join(' ')).indexOf(qb) === -1) return;
       html += '<div style="background:#e9f7ef;border:1px solid #1e8a4c;border-left:7px solid #1e8a4c;border-radius:12px;padding:12px;margin-bottom:8px">' +
         '<div style="font-weight:800;font-size:14px">' + mntEsc(String(d.equipamento).toUpperCase()) + (d.descricao ? ' — ' + mntEsc(String(d.descricao).toUpperCase()) : '') + '</div>' +
         '<div style="font-size:12px;margin-top:5px;color:#1e8a4c"><b>🟢 Disponível na manutenção</b>' + (d.liberadoEm ? ' · liberado há ' + mntEsc(mntTempo(d.liberadoEm)) : '') + (d.comPendencia ? ' · <span style="color:#b7791f">com pendência</span>' : '') + '</div></div>';
     });
   }
-  el.innerHTML = html || '<div style="color:var(--cinza);font-size:13px">Nenhum equipamento nesta situação.</div>';
+  el.innerHTML = html || '<div style="color:var(--cinza);font-size:13px">' + (qb ? 'Nenhuma parada encontrada para essa pesquisa.' : 'Nenhum equipamento nesta situação.') + '</div>';
   Array.prototype.forEach.call(el.querySelectorAll('button[data-i]'), function(b){ b.onclick = function(){ mntAbrirAcao(mntAbertas[Number(b.dataset.i)]); }; });
 }
 async function mntCarregarAbertas(){
@@ -1636,6 +1663,7 @@ function mntAbrirAcao(p){
 }
 ['mnt-acao-tipo', 'mnt-acao-etapa', 'mnt-acao-pend', 'mnt-acao-mecanico', 'mnt-acao-motivo'].forEach(function(i){ document.getElementById(i).addEventListener('change', mntAlternarAcao); });
 document.getElementById('mnt-acao-horimetro').addEventListener('input', function(){ aplicarMascaraHorimetro(this); });
+document.getElementById('mnt-busca-par').oninput = mntDesenharAbertas;
 document.getElementById('mnt-acao-cancelar').onclick = function(){ document.getElementById('mnt-acao-overlay').style.display = 'none'; };
 document.getElementById('mnt-abertas-atualizar').onclick = mntCarregarAbertas;
 document.getElementById('mnt-acao-salvar').onclick = async function(){
