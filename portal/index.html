@@ -2035,7 +2035,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 29/10/2026 · 106</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 29/10/2026 · 107</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3557,6 +3557,26 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="mt-form-erro" id="mtn-erro"></div>
     <button type="button" class="rel-btn-primario" id="mtn-salvar" style="margin-top:16px">🔧 Registrar entrada na manutenção</button>
+  </div>
+</div>
+<div class="hist-detalhe-overlay" id="mt-ta-overlay" style="z-index:750">
+  <div class="hist-detalhe-modal" style="max-width:1180px;width:96vw;background:var(--card)">
+    <div class="hist-detalhe-header">
+      <h3>⏱ Tempo de atuação — equipamento × mecânico</h3>
+      <button class="modal-fechar" id="mt-ta-fechar" style="color:var(--tinta)">✕</button>
+    </div>
+    <div class="hist-detalhe-corpo">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+        <div class="campo" style="margin:0"><label>De</label><input type="date" id="mt-ta-de"></div>
+        <div class="campo" style="margin:0"><label>Até</label><input type="date" id="mt-ta-ate"></div>
+        <div class="campo" style="margin:0;min-width:170px"><label>Equipamento</label><select id="mt-ta-eq"></select></div>
+        <div class="campo" style="margin:0;min-width:210px"><label>Mecânico</label><select id="mt-ta-mec"></select></div>
+        <button type="button" class="rel-btn-secundario" id="mt-ta-pdf">🖨 PDF</button>
+        <button type="button" class="rel-btn-secundario" id="mt-ta-xls">📊 Excel</button>
+      </div>
+      <div class="mt-aviso" style="background:#eef6ff;border-color:#bcd7f5;color:#1b3a5c;margin-bottom:12px">As horas do mecânico são <b>horas úteis</b> (descontam almoço, noite e fim de semana, conforme o Expediente). O <b>tempo parado</b> do equipamento aparece em horas corridas e em horas úteis, sem pausa. Períodos esquecidos abertos fecham no fim do expediente do dia em que começaram.</div>
+      <div id="mt-ta-corpo"></div>
+    </div>
   </div>
 </div>
 <div class="hist-detalhe-overlay" id="mt-modal-overlay" style="z-index:760">
@@ -10561,14 +10581,14 @@ async function carregarIndicadoresManut(){
    Tudo se liga ao que já existe: Frota (status/previsão), Movimentações
    (entrada e saída) e as telas Localização Atual / Status dos Equipamentos.
    ===================================================================== */
-const MANUT_NOMES_LISTAS = { ocorrencias: 'ManutOcorrencias', pecas: 'ManutPecas', eventos: 'ManutEventos', itens: 'ManutItens' };
+const MANUT_NOMES_LISTAS = { ocorrencias: 'ManutOcorrencias', pecas: 'ManutPecas', eventos: 'ManutEventos', itens: 'ManutItens', apontamentos: 'ManutApontamentos' };
 const MANUT_PRIORIDADES = ['Normal', 'Alta', 'Crítica'];
 const MANUT_STATUS_ITEM = ['Pendente', 'Fazendo', 'Feito'];
 const MANUT_ETAPAS = ['Diagnóstico', 'Em manutenção', 'Aguardando peça', 'Reparo externo', 'Serviço Téc Especializado', 'Montagem/Testes'];
 const MANUT_SITUACOES_PECA = ['Aguardando', 'Em trânsito', 'Em reparo externo', 'Recebida'];
 const MANUT_DIAS_MONTAGEM = 7; // prazo padrão (montagem + testes) somado à chegada da última peça
 let manutListaIds = null;
-let manutOcorrencias = [], manutPecas = [], manutEventos = [], manutItens = [];
+let manutOcorrencias = [], manutPecas = [], manutEventos = [], manutItens = [], manutApontamentos = [];
 let manutCarregado = false;
 let manutFiltro = 'todos';   // todos | em | aguardando | externo | atrasados | retorno15 | historico
 let manutSelId = null;       // id da ocorrência aberta no painel de detalhe
@@ -10612,7 +10632,7 @@ async function manutResolverListas(){
   const ids = {}, faltam = [];
   Object.keys(MANUT_NOMES_LISTAS).forEach(function(k){
     const id = porNome[MANUT_NOMES_LISTAS[k].toLowerCase()];
-    if (id) ids[k] = id; else if (k !== 'itens') faltam.push(MANUT_NOMES_LISTAS[k]);
+    if (id) ids[k] = id; else if (k !== 'itens' && k !== 'apontamentos') faltam.push(MANUT_NOMES_LISTAS[k]);
   });
   if (faltam.length) { const e = new Error('Listas não encontradas: ' + faltam.join(', ')); e.faltam = faltam; throw e; }
   manutListaIds = ids;
@@ -10625,7 +10645,8 @@ const MANUT_COLUNAS = {
   ocorrencias: ['Title', 'DataEntrada', 'Etapa', 'Motivo', 'Tipo', 'Responsavel', 'PrevisaoRetorno', 'DataSaida', 'Situacao', 'Observacao'],
   pecas: ['Title', 'OcorrenciaId', 'Equipamento', 'Situacao', 'Destino', 'DataEnvio', 'PrevisaoOriginal', 'PrevisaoRetorno', 'RetornoReal', 'Documento', 'Custo'],
   eventos: ['Title', 'OcorrenciaId', 'Equipamento', 'Data', 'Responsavel', 'Realizado'],
-  itens: ['Title', 'OcorrenciaId', 'Equipamento', 'Status', 'DataConclusao']
+  itens: ['Title', 'OcorrenciaId', 'Equipamento', 'Status', 'DataConclusao'],
+  apontamentos: ['Title', 'OcorrenciaId', 'Mecanico', 'Matricula', 'Terceiro', 'Inicio', 'Fim']
 };
 /* colunas OPCIONAIS: recursos novos; se não existirem, o portal continua funcionando sem eles */
 const MANUT_TIPOS_PECA = ['Compra', 'Conserto/reparo'];
@@ -10724,11 +10745,17 @@ function mtMapItem(i){
   return { id: String(i.id), texto: f.Title || '', ocId: String(f.OcorrenciaId || ''), equipamento: f.Equipamento || '',
     status: MANUT_STATUS_ITEM.indexOf(f.Status) !== -1 ? f.Status : 'Pendente', dataConclusao: mtData(f.DataConclusao) };
 }
-const MT_MAPAS = { ocorrencias: mtMapOcorrencia, pecas: mtMapPeca, eventos: mtMapEvento, itens: mtMapItem };
+function mtMapApont(i){
+  const f = i.fields || {};
+  return { id: String(i.id), ocId: String(f.OcorrenciaId || ''), equipamento: (f.Title || '').trim(), mecanico: f.Mecanico || '', matricula: f.Matricula || '',
+    terceiro: String(f.Terceiro || '').toLowerCase() === 'sim', ini: Date.parse(f.Inicio || ''), fim: f.Fim ? Date.parse(f.Fim) : null };
+}
+const MT_MAPAS = { ocorrencias: mtMapOcorrencia, pecas: mtMapPeca, eventos: mtMapEvento, itens: mtMapItem, apontamentos: mtMapApont };
 function mtAtribuir(chave, lista){
   if (chave === 'ocorrencias') manutOcorrencias = lista;
   else if (chave === 'pecas') manutPecas = lista;
   else if (chave === 'itens') manutItens = lista;
+  else if (chave === 'apontamentos') manutApontamentos = lista;
   else manutEventos = lista;
 }
 async function manutRecarregar(chave){
@@ -10739,7 +10766,8 @@ async function manutRecarregar(chave){
 async function manutCarregarDados(forcar){
   if (manutCarregado && !forcar) return;
   const ids = await manutResolverListas();
-  const r = await Promise.all([manutLerLista(ids.ocorrencias), manutLerLista(ids.pecas), manutLerLista(ids.eventos), ids.itens ? manutLerLista(ids.itens) : Promise.resolve([])]);
+  const r = await Promise.all([manutLerLista(ids.ocorrencias), manutLerLista(ids.pecas), manutLerLista(ids.eventos), ids.itens ? manutLerLista(ids.itens) : Promise.resolve([]), ids.apontamentos ? manutLerLista(ids.apontamentos) : Promise.resolve([])]);
+  manutApontamentos = r[4].map(function(i){ return mtMapApont(mtLerCampos('apontamentos', i)); });
   manutItens = r[3].map(function(i){ return mtMapItem(mtLerCampos('itens', i)); });
   manutOcorrencias = r[0].map(function(i){ return mtMapOcorrencia(mtLerCampos('ocorrencias', i)); });
   manutPecas = r[1].map(function(i){ return mtMapPeca(mtLerCampos('pecas', i)); });
@@ -11260,6 +11288,8 @@ function manutRenderTudoBase(){
   }).join('');
   cc.insertAdjacentHTML('beforeend', '<button type="button" class="mt-chip" id="mt-btn-exp" title="Horário de trabalho usado para calcular as horas úteis">⚙ Expediente: ' + mtEsc(mtExpedienteTxt()) + '</button>');
   document.getElementById('mt-btn-exp').onclick = manutModalExpediente;
+  cc.insertAdjacentHTML('beforeend', '<button type="button" class="mt-chip" id="mt-btn-ta" title="Tempo parado do equipamento e horas de atuação dos mecânicos">⏱ Tempo de atuação</button>');
+  document.getElementById('mt-btn-ta').onclick = manutAbrirTempoAtuacao;
   cc.querySelectorAll('[data-mt-chip]').forEach(function(b){ b.onclick = function(){ manutDefinirFiltro(b.dataset.mtChip); }; });
   document.getElementById('mt-titulo-lista').textContent = manutFiltro === 'historico' ? 'Histórico de Manutenções' : manutFiltro === 'disponiveis' ? 'Equipamentos disponíveis na manutenção' : 'Equipamentos em Manutenção';
   document.getElementById('mt-th-prev').textContent = (manutFiltro === 'historico' || manutFiltro === 'disponiveis') ? 'Saída' : 'Previsão retorno';
@@ -11672,6 +11702,131 @@ function manutRelatorioExcel(){
   aba('Itens de serviço', dIt, [14, 50, 12, 14]);
   aba('Eventos', dEv, [14, 12, 44, 18, 10]);
   XLSX.writeFile(wb, 'Manutencao_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+
+/* ---------- Tempo de atuação: parada do equipamento × horas do mecânico ---------- */
+function mtFmtHM(h){
+  if (h === null || h === undefined || !isFinite(h)) return '—';
+  const min = Math.round(h * 60);
+  if (min <= 0) return '0 min';
+  return Math.floor(min / 60).toLocaleString('pt-BR') + ' h ' + String(min % 60).padStart(2, '0') + ' min';
+}
+/** Fim efetivo de um período: se ficou aberto, vale até agora, mas nunca depois do fim do expediente do dia em que começou. */
+function mtFimApont(ap){
+  if (ap.fim !== null && isFinite(ap.fim)) return ap.fim;
+  const d = new Date(ap.ini), lim = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).getTime() + mtMin(MT_EXP.fim) * 60000;
+  return Math.max(ap.ini, Math.min(Date.now(), lim));
+}
+function mtUniaoHU(intervalos){
+  const iv = intervalos.filter(function(x){ return x[1] > x[0]; }).sort(function(a, b){ return a[0] - b[0]; });
+  const m = [];
+  iv.forEach(function(x){ if (m.length && x[0] <= m[m.length - 1][1]) m[m.length - 1][1] = Math.max(m[m.length - 1][1], x[1]); else m.push([x[0], x[1]]); });
+  return m.reduce(function(s, x){ return s + mtHU(x[0], x[1]); }, 0);
+}
+function manutAbrirTempoAtuacao(){
+  const hoje = mtHoje();
+  document.getElementById('mt-ta-de').value = hoje.slice(0, 8) + '01';
+  document.getElementById('mt-ta-ate').value = hoje;
+  const eqs = Array.from(new Set(manutOcorrencias.map(function(o){ return o.equipamento; }))).sort();
+  document.getElementById('mt-ta-eq').innerHTML = '<option value="">Todos</option>' + eqs.map(function(e){ return '<option>' + mtEsc(e) + '</option>'; }).join('');
+  const mecs = Array.from(new Set(manutApontamentos.map(function(a){ return a.mecanico; }).filter(Boolean))).sort();
+  document.getElementById('mt-ta-mec').innerHTML = '<option value="">Todos</option>' + mecs.map(function(m){ return '<option>' + mtEsc(m) + '</option>'; }).join('');
+  ['mt-ta-de', 'mt-ta-ate', 'mt-ta-eq', 'mt-ta-mec'].forEach(function(i){ document.getElementById(i).onchange = mtTaRender; });
+  document.getElementById('mt-ta-fechar').onclick = function(){ document.getElementById('mt-ta-overlay').classList.remove('aberto'); };
+  document.getElementById('mt-ta-overlay').onclick = function(e){ if (e.target === this) this.classList.remove('aberto'); };
+  document.getElementById('mt-ta-pdf').onclick = mtTaPdf;
+  document.getElementById('mt-ta-xls').onclick = mtTaExcel;
+  document.getElementById('mt-ta-overlay').classList.add('aberto');
+  mtTaRender();
+}
+/** Calcula tudo do relatório para os filtros da tela. */
+function mtTaDados(){
+  const de = Date.parse(document.getElementById('mt-ta-de').value + 'T00:00:00'), ate = Date.parse(document.getElementById('mt-ta-ate').value + 'T23:59:59');
+  const fEq = document.getElementById('mt-ta-eq').value, fMec = document.getElementById('mt-ta-mec').value;
+  const cl = function(a, b){ const x = Math.max(a, de), y = Math.min(b, ate); return y > x ? [x, y] : null; };
+  const fichas = [], porMec = {}, cruz = {}, periodos = [];
+  manutOcorrencias.forEach(function(oc){
+    if (fEq && oc.equipamento !== fEq) return;
+    const dP = oc.dataParada || oc.dataEntrada; if (!dP) return;
+    const pIni = mtMs(dP, oc.dataParada ? oc.horaParada : oc.horaEntrada), pFim = oc.dataSaida ? mtMs(oc.dataSaida, oc.horaSaida) : Date.now();
+    const parado = cl(pIni, pFim);
+    const aps = manutApontamentos.filter(function(a){ return a.ocId === oc.id && isFinite(a.ini) && (!fMec || a.mecanico === fMec); });
+    const apsIv = [];
+    aps.forEach(function(a){
+      const iv = cl(a.ini, mtFimApont(a)); if (!iv) return;
+      const h = mtHU(iv[0], iv[1]);
+      apsIv.push({ a: a, iv: iv, h: h });
+    });
+    if (!parado && !apsIv.length) return;
+    if (fMec && !apsIv.length) return;
+    const homem = apsIv.reduce(function(s, x){ return s + x.h; }, 0);
+    const uniao = mtUniaoHU(apsIv.map(function(x){ return x.iv; }));
+    const pc = parado ? (parado[1] - parado[0]) / 3600000 : 0, pu = parado ? mtHU(parado[0], parado[1]) : 0;
+    const nomes = Array.from(new Set(apsIv.map(function(x){ return x.a.mecanico; })));
+    fichas.push({ oc: oc, ini: pIni, fim: oc.dataSaida ? pFim : null, parCorr: pc, parUtil: pu, homem: homem, uniao: uniao, espera: Math.max(0, pu - uniao), mecs: nomes });
+    apsIv.forEach(function(x){
+      const k = x.a.mecanico + '|' + (x.a.terceiro ? 1 : 0);
+      const pm = porMec[k] = porMec[k] || { mec: x.a.mecanico, terceiro: x.a.terceiro, h: 0, eqs: {}, n: 0 };
+      pm.h += x.h; pm.n++; pm.eqs[oc.equipamento] = true;
+      const kc = k + '|' + oc.equipamento;
+      const c = cruz[kc] = cruz[kc] || { mec: x.a.mecanico, terceiro: x.a.terceiro, eq: oc.equipamento, h: 0, n: 0, ini: x.iv[0], fim: x.iv[1], aberto: false };
+      c.h += x.h; c.n++; c.ini = Math.min(c.ini, x.iv[0]); c.fim = Math.max(c.fim, x.iv[1]);
+      periodos.push({ mec: x.a.mecanico, terceiro: x.a.terceiro, eq: oc.equipamento, ini: x.iv[0], fim: x.iv[1], aberto: x.a.fim === null, h: x.h });
+    });
+  });
+  fichas.sort(function(a, b){ return b.parCorr - a.parCorr; });
+  const mecs = Object.keys(porMec).map(function(k){ return porMec[k]; }).sort(function(a, b){ return b.h - a.h; });
+  const cr = Object.keys(cruz).map(function(k){ return cruz[k]; }).sort(function(a, b){ return a.mec.localeCompare(b.mec) || b.h - a.h; });
+  periodos.sort(function(a, b){ return a.ini - b.ini; });
+  return { fichas: fichas, mecs: mecs, cruz: cr, periodos: periodos, de: document.getElementById('mt-ta-de').value, ate: document.getElementById('mt-ta-ate').value, fEq: fEq, fMec: fMec };
+}
+function mtTaDT(ms){ const d = new Date(ms); return mtBR(d.getFullYear() + '-' + mtP2(d.getMonth() + 1) + '-' + mtP2(d.getDate())) + ' ' + mtP2(d.getHours()) + ':' + mtP2(d.getMinutes()); }
+function mtTaTabelas(D){
+  const th = function(l){ return '<th>' + l + '</th>'; }, td = function(v, alinhar){ return '<td' + (alinhar ? ' style="text-align:' + alinhar + '"' : '') + '>' + v + '</td>'; };
+  const totCorr = D.fichas.reduce(function(s, f){ return s + f.parCorr; }, 0), totUtil = D.fichas.reduce(function(s, f){ return s + f.parUtil; }, 0);
+  const totHomem = D.fichas.reduce(function(s, f){ return s + f.homem; }, 0), totUni = D.fichas.reduce(function(s, f){ return s + f.uniao; }, 0), totEsp = D.fichas.reduce(function(s, f){ return s + f.espera; }, 0);
+  const t1 = '<h3 style="margin:14px 0 6px;font-size:13px">1) Parada do equipamento × atuação dos mecânicos</h3><table class="hist-tabela"><thead><tr>' + ['Equipamento', 'Parou em', 'Liberado em', 'Parado (corrido)', 'Parado (úteis)', 'Horas dos mecânicos', 'Com alguém atuando', 'Espera (úteis)', 'Mecânicos'].map(th).join('') + '</tr></thead><tbody>' +
+    (D.fichas.length ? D.fichas.map(function(f){
+      return '<tr>' + td('<b>' + mtEsc(f.oc.equipamento) + '</b><br><small>' + mtEsc(frotaDescricao[f.oc.equipamento] || '') + '</small>') + td(mtTaDT(f.ini)) + td(f.fim ? mtTaDT(f.fim) : 'em aberto') + td(mtFmtHM(f.parCorr), 'right') + td(mtFmtHM(f.parUtil), 'right') + td(mtFmtHM(f.homem), 'right') + td(mtFmtHM(f.uniao), 'right') + td(mtFmtHM(f.espera), 'right') + td(f.mecs.length ? mtEsc(f.mecs.join(', ')) : '—') + '</tr>';
+    }).join('') + '<tr style="font-weight:800;background:#f1f5f9">' + td('Total') + td('') + td('') + td(mtFmtHM(totCorr), 'right') + td(mtFmtHM(totUtil), 'right') + td(mtFmtHM(totHomem), 'right') + td(mtFmtHM(totUni), 'right') + td(mtFmtHM(totEsp), 'right') + td('') + '</tr>' : '<tr><td colspan="9" style="text-align:center;color:#888">Nenhuma parada no período.</td></tr>') + '</tbody></table>';
+  const totM = D.mecs.reduce(function(s, m){ return s + m.h; }, 0);
+  const t2 = '<h3 style="margin:14px 0 6px;font-size:13px">2) Horas por mecânico (total)</h3><table class="hist-tabela"><thead><tr>' + ['Mecânico', 'Tipo', 'Horas atuando (úteis)', 'Equipamentos atendidos', 'Períodos', 'Média por equipamento'].map(th).join('') + '</tr></thead><tbody>' +
+    (D.mecs.length ? D.mecs.map(function(m){ const ne = Object.keys(m.eqs).length; return '<tr>' + td('<b>' + mtEsc(m.mec) + '</b>') + td(m.terceiro ? 'Prestador / terceiro' : 'Mecânico') + td(mtFmtHM(m.h), 'right') + td(ne, 'right') + td(m.n, 'right') + td(mtFmtHM(m.h / (ne || 1)), 'right') + '</tr>'; }).join('') + '<tr style="font-weight:800;background:#f1f5f9">' + td('Total') + td('') + td(mtFmtHM(totM), 'right') + td('') + td('') + td('') + '</tr>' : '<tr><td colspan="6" style="text-align:center;color:#888">Nenhuma atuação registrada no período.</td></tr>') + '</tbody></table>';
+  const t3 = '<h3 style="margin:14px 0 6px;font-size:13px">3) Horas do mecânico em cada equipamento</h3><table class="hist-tabela"><thead><tr>' + ['Mecânico', 'Equipamento', 'Horas atuando (úteis)', 'Períodos', 'Primeiro início', 'Último fim'].map(th).join('') + '</tr></thead><tbody>' +
+    (D.cruz.length ? D.cruz.map(function(c){ return '<tr>' + td('<b>' + mtEsc(c.mec) + '</b>' + (c.terceiro ? ' <small>(terceiro)</small>' : '')) + td(mtEsc(c.eq) + '<br><small>' + mtEsc(frotaDescricao[c.eq] || '') + '</small>') + td(mtFmtHM(c.h), 'right') + td(c.n, 'right') + td(mtTaDT(c.ini)) + td(mtTaDT(c.fim)) + '</tr>'; }).join('') : '<tr><td colspan="6" style="text-align:center;color:#888">Nenhuma atuação registrada no período.</td></tr>') + '</tbody></table>';
+  return t1 + t2 + t3;
+}
+function mtTaRender(){
+  if (!mtTaJaViuLista()) return;
+  document.getElementById('mt-ta-corpo').innerHTML = mtTaTabelas(mtTaDados());
+}
+function mtTaJaViuLista(){
+  if (manutListaIds && !manutListaIds.apontamentos) {
+    document.getElementById('mt-ta-corpo').innerHTML = '<div class="mt-aviso">⚠️ A lista <b>ManutApontamentos</b> ainda não existe no SharePoint. Crie-a (colunas de texto: <b>OcorrenciaId, Mecanico, Matricula, Terceiro, Inicio, Fim</b>) para registrar e ver as horas de atuação.</div>';
+    return false;
+  }
+  return true;
+}
+function mtTaPdf(){
+  if (!mtTaJaViuLista()) return;
+  const D = mtTaDados();
+  document.getElementById('hist-print-area').innerHTML = mtCabecalhoRel('Tempo de atuação — equipamento × mecânico', 'Período: ' + mtBR(D.de) + ' a ' + mtBR(D.ate) + (D.fEq ? ' · Equipamento: ' + mtEsc(D.fEq) : '') + (D.fMec ? ' · Mecânico: ' + mtEsc(D.fMec) : '')) +
+    '<div style="font-size:11px;margin-bottom:6px">Horas dos mecânicos em horas úteis (Expediente: ' + mtEsc(mtExpedienteTxt()) + '). Tempo parado do equipamento sem pausa.</div>' + mtTaTabelas(D);
+  window.print();
+}
+function mtTaExcel(){
+  if (!mtTaJaViuLista()) return;
+  const D = mtTaDados(), r2 = function(h){ return Math.round(h * 100) / 100; };
+  const wb = XLSX.utils.book_new();
+  function aba(nome, dados, cols){ const ws = XLSX.utils.json_to_sheet(dados.length ? dados : [{ 'Sem dados': '' }]); ws['!cols'] = cols.map(function(w){ return { wch: w }; }); XLSX.utils.book_append_sheet(wb, ws, nome); }
+  aba('Resumo', [{ 'Item': 'Período', 'Valor': mtBR(D.de) + ' a ' + mtBR(D.ate) }, { 'Item': 'Equipamento', 'Valor': D.fEq || 'Todos' }, { 'Item': 'Mecânico', 'Valor': D.fMec || 'Todos' }, { 'Item': 'Expediente (horas úteis)', 'Valor': mtExpedienteTxt() },
+    { 'Item': 'Horas parado (corridas)', 'Valor': r2(D.fichas.reduce(function(s, f){ return s + f.parCorr; }, 0)) }, { 'Item': 'Horas parado (úteis)', 'Valor': r2(D.fichas.reduce(function(s, f){ return s + f.parUtil; }, 0)) },
+    { 'Item': 'Horas dos mecânicos (úteis)', 'Valor': r2(D.fichas.reduce(function(s, f){ return s + f.homem; }, 0)) }], [30, 50]);
+  aba('Por equipamento', D.fichas.map(function(f){ return { 'Equipamento': f.oc.equipamento, 'Modelo': frotaDescricao[f.oc.equipamento] || '', 'Parou em': mtTaDT(f.ini), 'Liberado em': f.fim ? mtTaDT(f.fim) : 'em aberto', 'Parado corrido (h)': r2(f.parCorr), 'Parado úteis (h)': r2(f.parUtil), 'Horas dos mecânicos (h)': r2(f.homem), 'Com alguém atuando (h)': r2(f.uniao), 'Espera úteis (h)': r2(f.espera), 'Mecânicos': f.mecs.join(', ') }; }), [14, 28, 18, 18, 16, 16, 20, 20, 16, 40]);
+  aba('Por mecânico', D.mecs.map(function(m){ return { 'Mecânico': m.mec, 'Tipo': m.terceiro ? 'Prestador / terceiro' : 'Mecânico', 'Horas atuando úteis (h)': r2(m.h), 'Equipamentos atendidos': Object.keys(m.eqs).length, 'Períodos': m.n }; }), [34, 22, 22, 22, 10]);
+  aba('Mecânico x equipamento', D.cruz.map(function(c){ return { 'Mecânico': c.mec, 'Terceiro': c.terceiro ? 'Sim' : 'Não', 'Equipamento': c.eq, 'Horas atuando úteis (h)': r2(c.h), 'Períodos': c.n, 'Primeiro início': mtTaDT(c.ini), 'Último fim': mtTaDT(c.fim) }; }), [34, 10, 14, 22, 10, 18, 18]);
+  aba('Períodos', D.periodos.map(function(p){ return { 'Mecânico': p.mec, 'Terceiro': p.terceiro ? 'Sim' : 'Não', 'Equipamento': p.eq, 'Início': mtTaDT(p.ini), 'Fim': mtTaDT(p.fim) + (p.aberto ? ' (aberto)' : ''), 'Horas úteis (h)': r2(p.h) }; }), [34, 10, 14, 18, 22, 14]);
+  XLSX.writeFile(wb, 'Tempo_de_atuacao_' + D.de + '_a_' + D.ate + '.xlsx');
 }
 function manutRelatorioFicha(oc){
   const eq = oc.equipamento, aberta = mtAberta(oc), st = mtStatusPrazo(oc);
