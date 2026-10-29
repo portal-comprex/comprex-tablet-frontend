@@ -280,6 +280,24 @@
           <input type="text" id="mnt-outros" autocomplete="off" placeholder="Escreva o motivo da parada">
         </div>
         <div class="campo">
+          <label>Situação do equipamento</label>
+          <select id="mnt-situacao">
+            <option value="Diagnóstico">🔴 Parado — em diagnóstico</option>
+            <option value="Em manutenção">🔴 Parado — em manutenção</option>
+            <option value="Aguardando peça">🟡 Aguardando peça</option>
+            <option value="Serviço Téc Especializado">🟡 Aguardando técnico especializado</option>
+          </select>
+        </div>
+        <div id="mnt-sit-peca-box" style="display:none">
+          <div class="campo"><label>Peça aguardada</label><input type="text" id="mnt-sit-peca" autocomplete="off" placeholder="Ex.: bomba hidráulica"></div>
+          <div class="campo"><label>Previsão de chegada</label><input type="date" id="mnt-sit-previsao"></div>
+        </div>
+        <div id="mnt-sit-tec-box" style="display:none">
+          <div class="campo"><label>Serviço a ser feito</label><input type="text" id="mnt-sit-servico" autocomplete="off" placeholder="Ex.: reparo da válvula"></div>
+          <div class="campo"><label>Empresa / técnico especializado</label><input type="text" id="mnt-sit-empresa" autocomplete="off" placeholder="Ex.: Hidrasul - João"></div>
+          <div class="campo"><label>Previsão de retorno</label><input type="date" id="mnt-sit-previsao2"></div>
+        </div>
+        <div class="campo">
           <label>Observação (opcional)</label>
           <textarea id="mnt-observacao" placeholder="Ex.: ruído anormal e perda de pressão…"></textarea>
         </div>
@@ -292,9 +310,10 @@
           <h2 style="margin:0">Paradas em aberto</h2>
           <button type="button" class="btn-header" id="mnt-abertas-atualizar" style="background:var(--navy);color:#fff">↻ Atualizar</button>
         </div>
+        <div id="mnt-resumo" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
         <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
-        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v10 · 29/10/2026</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v11 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
@@ -1464,11 +1483,16 @@ function mntLocalPadrao(){
   sel.value = achado;
 }
 document.getElementById('mnt-horimetro').addEventListener('input', function(){ aplicarMascaraHorimetro(this); });
+document.getElementById('mnt-situacao').addEventListener('change', function(){
+  document.getElementById('mnt-sit-peca-box').style.display = this.value === 'Aguardando peça' ? '' : 'none';
+  document.getElementById('mnt-sit-tec-box').style.display = this.value === 'Serviço Téc Especializado' ? '' : 'none';
+});
 document.getElementById('mnt-motivo').addEventListener('change', function(){
   document.getElementById('mnt-outros-box').style.display = this.value === 'OUTROS' ? '' : 'none';
 });
 function mntLimpar(){
-  ['mnt-equipamento', 'mnt-horimetro', 'mnt-mecanico', 'mnt-motivo', 'mnt-outros', 'mnt-observacao'].forEach(function(i){ document.getElementById(i).value = ''; });
+  ['mnt-equipamento', 'mnt-horimetro', 'mnt-mecanico', 'mnt-motivo', 'mnt-outros', 'mnt-observacao', 'mnt-sit-peca', 'mnt-sit-previsao', 'mnt-sit-servico', 'mnt-sit-empresa', 'mnt-sit-previsao2'].forEach(function(i){ document.getElementById(i).value = ''; });
+  document.getElementById('mnt-situacao').value = 'Diagnóstico'; document.getElementById('mnt-situacao').dispatchEvent(new Event('change'));
   mntLocalPadrao();
   document.getElementById('mnt-quando').value = mntAgoraLocal();
   document.getElementById('mnt-outros-box').style.display = 'none';
@@ -1487,12 +1511,17 @@ document.getElementById('mnt-enviar').onclick = async function(){
   if (!mat) return falha('Escolha o mecânico responsável.');
   if (!motivo) return falha('Escolha o motivo da parada.');
   if (motivo === 'OUTROS' && !outros) return falha('Descreva o motivo da parada.');
+  const situacao = gv('mnt-situacao');
+  if (situacao === 'Aguardando peça' && !gv('mnt-sit-peca')) return falha('Informe a peça que está sendo aguardada.');
+  if (situacao === 'Serviço Téc Especializado' && (!gv('mnt-sit-servico') || !gv('mnt-sit-empresa'))) return falha('Informe o serviço e a empresa/técnico especializado.');
   const mec = mntMecanicos().find(function(m){ return m[0] === mat; });
   const payload = {
     equipamento: gv('mnt-equipamento'), local: gv('mnt-local'), horimetro: gv('mnt-horimetro'),
     mecanicoNome: mec ? mec[1] : '', mecanicoMatricula: mat,
     motivo: motivo === 'OUTROS' ? 'OUTROS: ' + outros : motivo,
-    observacao: gv('mnt-observacao'), paradaEm: new Date(gv('mnt-quando')).toISOString()
+    observacao: gv('mnt-observacao'), paradaEm: new Date(gv('mnt-quando')).toISOString(),
+    situacao: situacao, peca: gv('mnt-sit-peca'), servico: gv('mnt-sit-servico'), empresa: gv('mnt-sit-empresa'),
+    previsao: situacao === 'Aguardando peça' ? gv('mnt-sit-previsao') : situacao === 'Serviço Téc Especializado' ? gv('mnt-sit-previsao2') : ''
   };
   const btn = this;
   btn.disabled = true; btn.textContent = 'Enviando…';
@@ -1518,15 +1547,38 @@ function mntTempo(iso){
   const h = Math.floor(ms / 3600000), d = Math.floor(h / 24);
   return d >= 1 ? d + ' d ' + (h % 24) + ' h' : h + ' h';
 }
+const MNT_AMARELAS = ['Aguardando peça', 'Reparo externo', 'Serviço Téc Especializado'];
+let mntDisponiveis = [], mntFiltro = 'todos';
+function mntCorEtapa(etapa){ return MNT_AMARELAS.indexOf(etapa) !== -1 ? { cor: '#b7791f', borda: '#f5a524', fundo: '#fff8e6', ic: '🟡' } : { cor: '#b42318', borda: '#d92d20', fundo: '#fdecea', ic: '🔴' }; }
 function mntDesenharAbertas(){
-  const el = document.getElementById('mnt-abertas-lista');
-  if (!mntAbertas.length) { el.innerHTML = '<div style="color:var(--cinza);font-size:13px">Nenhum equipamento parado em manutenção.</div>'; return; }
-  el.innerHTML = mntAbertas.map(function(p, i){
-    return '<button type="button" data-i="' + i + '" style="display:block;width:100%;text-align:left;background:#f8fafc;border:1px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer">' +
+  const el = document.getElementById('mnt-abertas-lista'), resumo = document.getElementById('mnt-resumo');
+  const amarelas = mntAbertas.filter(function(p){ return MNT_AMARELAS.indexOf(p.etapa) !== -1; }).length;
+  const vermelhas = mntAbertas.length - amarelas;
+  const chips = [['todos', 'Todos', mntAbertas.length + mntDisponiveis.length, '#1f3a4d'], ['parados', '🔴 Parados', vermelhas, '#b42318'], ['aguardando', '🟡 Aguardando', amarelas, '#b7791f'], ['disponiveis', '🟢 Disponíveis', mntDisponiveis.length, '#1e8a4c']];
+  resumo.innerHTML = chips.map(function(c){
+    const ativo = mntFiltro === c[0];
+    return '<button type="button" data-f="' + c[0] + '" style="border:2px solid ' + c[3] + ';background:' + (ativo ? c[3] : '#fff') + ';color:' + (ativo ? '#fff' : c[3]) + ';border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer">' + c[1] + ' · ' + c[2] + '</button>';
+  }).join('');
+  Array.prototype.forEach.call(resumo.querySelectorAll('button'), function(b){ b.onclick = function(){ mntFiltro = b.dataset.f; mntDesenharAbertas(); }; });
+  let html = '';
+  mntAbertas.forEach(function(p, i){
+    const amar = MNT_AMARELAS.indexOf(p.etapa) !== -1;
+    if (mntFiltro === 'disponiveis' || (mntFiltro === 'parados' && amar) || (mntFiltro === 'aguardando' && !amar)) return;
+    const c = mntCorEtapa(p.etapa);
+    html += '<button type="button" data-i="' + i + '" style="display:block;width:100%;text-align:left;background:' + c.fundo + ';border:1px solid ' + c.borda + ';border-left:7px solid ' + c.borda + ';border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer">' +
       '<div style="font-weight:800;font-size:14px">' + mntEsc(String(p.equipamento).toUpperCase()) + (p.descricao ? ' — ' + mntEsc(String(p.descricao).toUpperCase()) : '') + '</div>' +
       '<div style="font-size:12.5px;color:var(--cinza);margin-top:3px">' + mntEsc(p.motivo || '') + '</div>' +
-      '<div style="font-size:12px;margin-top:5px"><b>' + mntEsc(p.etapa || 'Diagnóstico') + '</b> · parado há ' + mntEsc(mntTempo(p.paradaEm)) + (p.mecanico ? ' · ' + mntEsc(p.mecanico) : '') + '</div></button>';
-  }).join('');
+      (p.peca ? '<div style="font-size:12px;margin-top:3px">📦 Aguardando: <b>' + mntEsc(p.peca) + '</b>' + (p.previsao ? ' · previsão ' + mntEsc(p.previsao.split('-').reverse().join('/')) : '') + '</div>' : '') +
+      '<div style="font-size:12px;margin-top:5px;color:' + c.cor + '"><b>' + c.ic + ' ' + mntEsc(p.etapa || 'Diagnóstico') + '</b> · parado há ' + mntEsc(mntTempo(p.paradaEm)) + (p.mecanico ? ' · ' + mntEsc(p.mecanico) : '') + '</div></button>';
+  });
+  if (mntFiltro === 'todos' || mntFiltro === 'disponiveis') {
+    mntDisponiveis.forEach(function(d){
+      html += '<div style="background:#e9f7ef;border:1px solid #1e8a4c;border-left:7px solid #1e8a4c;border-radius:12px;padding:12px;margin-bottom:8px">' +
+        '<div style="font-weight:800;font-size:14px">' + mntEsc(String(d.equipamento).toUpperCase()) + (d.descricao ? ' — ' + mntEsc(String(d.descricao).toUpperCase()) : '') + '</div>' +
+        '<div style="font-size:12px;margin-top:5px;color:#1e8a4c"><b>🟢 Disponível na manutenção</b>' + (d.liberadoEm ? ' · liberado há ' + mntEsc(mntTempo(d.liberadoEm)) : '') + (d.comPendencia ? ' · <span style="color:#b7791f">com pendência</span>' : '') + '</div></div>';
+    });
+  }
+  el.innerHTML = html || '<div style="color:var(--cinza);font-size:13px">Nenhum equipamento nesta situação.</div>';
   Array.prototype.forEach.call(el.querySelectorAll('button[data-i]'), function(b){ b.onclick = function(){ mntAbrirAcao(mntAbertas[Number(b.dataset.i)]); }; });
 }
 async function mntCarregarAbertas(){
@@ -1534,12 +1586,12 @@ async function mntCarregarAbertas(){
   if (navigator.onLine && sessao) {
     try {
       const r = await fetch(API_BASE + '/manutencao/abertas', { headers: { Authorization: 'Bearer ' + sessao.token } });
-      if (r.ok) { const d = await r.json(); mntAbertas = d.abertas || []; localStorage.setItem('mntAbertasCache', JSON.stringify(mntAbertas)); mntErroAbertas(''); mntDesenharAbertas(); return; }
+      if (r.ok) { const d = await r.json(); mntAbertas = d.abertas || []; mntDisponiveis = d.disponiveis || []; localStorage.setItem('mntAbertasCache', JSON.stringify(mntAbertas)); localStorage.setItem('mntDisponiveisCache', JSON.stringify(mntDisponiveis)); mntErroAbertas(''); mntDesenharAbertas(); return; }
       const dErr = await r.json().catch(function(){ return {}; });
       mntErroAbertas(r.status === 404 ? 'O servidor ainda não tem a rota de manutenção (erro 404). Confirme que o servidor foi atualizado.' : r.status === 401 ? 'Sessão expirada — toque em Sair e entre de novo.' : 'Não foi possível carregar as paradas (erro ' + r.status + '): ' + (dErr.erro || ''));
     } catch (e) { mntErroAbertas('Sem resposta do servidor agora. Mostrando o que estava guardado.'); }
   } else mntErroAbertas('Sem internet. Mostrando o que estava guardado.');
-  try { mntAbertas = JSON.parse(localStorage.getItem('mntAbertasCache') || '[]'); } catch (e) { mntAbertas = []; }
+  try { mntAbertas = JSON.parse(localStorage.getItem('mntAbertasCache') || '[]'); mntDisponiveis = JSON.parse(localStorage.getItem('mntDisponiveisCache') || '[]'); } catch (e) { mntAbertas = []; mntDisponiveis = []; }
   mntDesenharAbertas();
 }
 function mntErroAbertas(t){ const el = document.getElementById('mnt-abertas-erro'); el.textContent = t; el.style.display = t ? 'block' : 'none'; }
