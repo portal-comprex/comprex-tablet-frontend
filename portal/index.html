@@ -2035,7 +2035,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 28/10/2026 · 104</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 29/10/2026 · 105</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3509,10 +3509,6 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <label>Motivo da parada <span class="obrig">*</span></label>
         <input type="text" id="mtn-motivo" placeholder="Ex.: Bomba hidráulica travada, vazamento no comando…" autocomplete="off">
       </div>
-      <div class="campo larga">
-        <label>Tipo de manutenção <span class="obrig">*</span> <span style="text-transform:none;letter-spacing:0;font-weight:400">(pode marcar mais de um)</span></label>
-        <div id="mtn-tipo-box"></div>
-      </div>
       <div class="campo">
         <label>Responsável técnico <span class="obrig">*</span></label>
         <input type="text" id="mtn-resp" placeholder="Quem está cuidando" autocomplete="off">
@@ -3541,14 +3537,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
           <div class="campo"><label>Data de chegada (prevista) <span class="obrig">*</span></label><input type="date" id="mtc-c-chegada"></div>
         </div>
       </div>
-      <div class="campo">
-        <label>Etapa inicial</label>
-        <select id="mtn-etapa"></select>
-      </div>
-      <div class="campo" id="mtn-prior-campo">
-        <label>Prioridade</label>
-        <select id="mtn-prior"><option>Normal</option><option>Alta</option><option>Crítica</option></select>
-      </div>
+      <input type="hidden" id="mtn-etapa" value="Diagnóstico"><input type="hidden" id="mtn-prior" value="Normal">
       <div class="campo">
         <label>Onde o equipamento ficará</label>
         <select id="mtn-local"></select>
@@ -12531,10 +12520,8 @@ async function manutNovaIniciar(){
   document.getElementById('mtn-data').value = mtAgoraLocal();
   document.getElementById('mtn-parou').value = '';
   document.getElementById('mtn-horim').value = '';
-  document.getElementById('mtn-prior-campo').style.display = mtTemColuna('ocorrencias', 'Prioridade') ? '' : 'none';
   document.getElementById('mtn-prior').value = 'Normal';
-  const selEtapa = document.getElementById('mtn-etapa');
-  selEtapa.innerHTML = MANUT_ETAPAS.map(function(e){ return '<option>' + e + '</option>'; }).join('');
+  document.getElementById('mtn-etapa').value = 'Diagnóstico';
   const selLocal = document.getElementById('mtn-local');
   selLocal.innerHTML = locais.map(function(l){ return '<option value="' + mtEsc(l) + '">' + mtEsc(l) + '</option>'; }).join('');
   const sugerido = locais.find(function(l){ return /manuten|oficina/i.test(l); });
@@ -12549,7 +12536,6 @@ async function manutNovaIniciar(){
     };
     manutNovaPronta = true;
   }
-  document.getElementById('mtn-tipo-box').innerHTML = mtTiposHtml('mtn-tipo', '');
   document.getElementById('mtn-cond').value = ''; document.getElementById('mtn-cond').onchange();
   ['mtc-t-peca', 'mtc-t-forn', 'mtc-t-ida', 'mtc-t-volta', 'mtc-k-tec', 'mtc-k-data', 'mtc-c-peca', 'mtc-c-forn', 'mtc-c-chegada'].forEach(function(i){ document.getElementById(i).value = ''; });
   if (manutNovaPreset) {
@@ -12570,7 +12556,7 @@ document.getElementById('mtn-salvar').onclick = async function(){
   const dtC = mtDTsplit(document.getElementById('mtn-data').value), data = dtC.d;
   const dtP = mtDTsplit(document.getElementById('mtn-parou').value);
   const motivo = document.getElementById('mtn-motivo').value.trim();
-  const tipoLido = mtTiposLer('mtn-tipo'), tipo = tipoLido || '';
+  const tipo = '';
   const cond = document.getElementById('mtn-cond').value;
   const gv = function(i){ return document.getElementById(i).value.trim(); };
   const resp = document.getElementById('mtn-resp').value.trim();
@@ -12585,8 +12571,6 @@ document.getElementById('mtn-salvar').onclick = async function(){
   if (dtP.d && mtDT(dtP.d, dtP.h) > mtDT(dtC.d, dtC.h)) return falha('O equipamento não pode ter parado depois de chegar na manutenção.');
   if (dtI.d && mtDT(dtI.d, dtI.h) < mtDT(dtC.d, dtC.h)) return falha('A manutenção não pode ter começado antes de o equipamento chegar.');
   if (!motivo) return falha('Informe o motivo da parada.');
-  if (tipoLido === null) return falha('Descreva o tipo no campo "Outros".');
-  if (!tipo) return falha('Marque pelo menos um tipo de manutenção.');
   if (!resp) return falha('Informe o responsável técnico.');
   if (cond === 'terceiro') {
     if (!gv('mtc-t-peca') || !gv('mtc-t-forn') || !gv('mtc-t-ida') || !gv('mtc-t-volta')) return falha('Aguardando peça de terceiros: informe a peça, o fornecedor, a data de ida e a data de volta.');
@@ -12627,7 +12611,6 @@ document.getElementById('mtn-salvar').onclick = async function(){
     }
     await garantirDadosMovimentacoes(true);
     ['mtn-equip', 'mtn-motivo', 'mtn-resp', 'mtn-inicio', 'mtn-parou', 'mtn-previsao', 'mtn-obs'].forEach(function(i){ document.getElementById(i).value = ''; });
-    document.getElementById('mtn-tipo-box').innerHTML = mtTiposHtml('mtn-tipo', '');
     document.getElementById('mtn-cond').value = ''; document.getElementById('mtn-cond').onchange();
     const nova = mtOcAbertaDe(eq);
     manutVis = mtTipoVisDe(eq); manutSelId = nova ? nova.id : null; manutFiltro = 'todos'; manutAba = 'timeline'; manutRolarParaFicha = true;
