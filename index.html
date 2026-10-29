@@ -283,7 +283,9 @@
           <h2 style="margin:0">Paradas em aberto</h2>
           <button type="button" class="btn-header" id="mnt-abertas-atualizar" style="background:var(--navy);color:#fff">↻ Atualizar</button>
         </div>
+        <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v9 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
@@ -496,7 +498,7 @@ document.getElementById('login-btn').onclick = async function(){
     });
     const dados = await r.json();
     if (!r.ok) throw new Error(dados.erro || 'Usuário ou senha inválidos.');
-    salvarSessao({ token: dados.token, nome: dados.nome, logadoEm: Date.now() });
+    salvarSessao({ token: dados.token, nome: dados.nome, abas: dados.abas, logadoEm: Date.now() });
     // A aba de Apropriação usa o MESMO token acima de saída (sem segunda
     // conta) — só precisa recarregar do zero pra pegar a sessão certa.
     resetarTelaApropriacao();
@@ -1309,7 +1311,10 @@ document.querySelectorAll('.abas button').forEach(function(btn){
     document.getElementById('aba-apropriacao').style.display = btn.dataset.aba === 'apropriacao' ? '' : 'none';
     document.getElementById('aba-manutencao').style.display = btn.dataset.aba === 'manutencao' ? 'block' : 'none';
     if (btn.dataset.aba === 'apropriacao') { carregarApropriacao(); pedirAbaLancar(); }
-    if (btn.dataset.aba === 'manutencao') mntCarregarAbertas();
+    if (btn.dataset.aba === 'manutencao') {
+      mntCarregarAbertas();
+      if (navigator.onLine && !document.getElementById('mnt-equipamento').value) carregarDadosIniciais().then(function(){ if (!document.getElementById('mnt-equipamento').value) mntPreencher(); }).catch(function(){});
+    }
   };
 });
 /* Sempre que o operador entra na Parte Diária, pede pro sistema de lançamento abrir na aba
@@ -1365,8 +1370,24 @@ async function carregarApropriacao(){
   }
 }
 function abrirAbaChecklist(){
-  const btnChecklist = document.querySelector('.abas button[data-aba="checklist"]');
-  if (btnChecklist) btnChecklist.click();
+  // abre a primeira aba liberada para este login (normalmente o Checklist)
+  const btn = document.querySelector('.abas button[data-aba="checklist"]:not([hidden])') || document.querySelector('.abas button:not([hidden]):not([aria-hidden="true"])');
+  if (btn) btn.click();
+}
+/* Abas liberadas para este login (definidas no Portal > Login Tablet):
+   checklist, partediaria, manutencao. Sem informação, vale Checklist + Parte Diária. */
+const ABA_POR_PERMISSAO = { checklist: 'checklist', partediaria: 'apropriacao', manutencao: 'manutencao' };
+function aplicarAbasDoLogin(){
+  const sessao = sessaoAtual();
+  let abas = (dadosIniciais && dadosIniciais.abas) || (sessao && sessao.abas) || ['checklist', 'partediaria'];
+  if (!abas.length) abas = ['checklist', 'partediaria'];
+  if (sessao && dadosIniciais && dadosIniciais.abas) { sessao.abas = dadosIniciais.abas; salvarSessao(sessao); }
+  const liberadas = abas.map(function(a){ return ABA_POR_PERMISSAO[a]; }).filter(Boolean);
+  document.querySelectorAll('.abas button').forEach(function(b){
+    if (b.getAttribute('aria-hidden') === 'true') return;
+    b.hidden = liberadas.indexOf(b.dataset.aba) === -1;
+    b.style.display = b.hidden ? 'none' : '';
+  });
 }
 document.getElementById('apr-voltar-btn').onclick = abrirAbaChecklist;
 
@@ -1502,12 +1523,15 @@ async function mntCarregarAbertas(){
   if (navigator.onLine && sessao) {
     try {
       const r = await fetch(API_BASE + '/manutencao/abertas', { headers: { Authorization: 'Bearer ' + sessao.token } });
-      if (r.ok) { const d = await r.json(); mntAbertas = d.abertas || []; localStorage.setItem('mntAbertasCache', JSON.stringify(mntAbertas)); mntDesenharAbertas(); return; }
-    } catch (e) { /* usa o que estiver guardado */ }
-  }
+      if (r.ok) { const d = await r.json(); mntAbertas = d.abertas || []; localStorage.setItem('mntAbertasCache', JSON.stringify(mntAbertas)); mntErroAbertas(''); mntDesenharAbertas(); return; }
+      const dErr = await r.json().catch(function(){ return {}; });
+      mntErroAbertas(r.status === 404 ? 'O servidor ainda não tem a rota de manutenção (erro 404). Confirme que o servidor foi atualizado.' : r.status === 401 ? 'Sessão expirada — toque em Sair e entre de novo.' : 'Não foi possível carregar as paradas (erro ' + r.status + '): ' + (dErr.erro || ''));
+    } catch (e) { mntErroAbertas('Sem resposta do servidor agora. Mostrando o que estava guardado.'); }
+  } else mntErroAbertas('Sem internet. Mostrando o que estava guardado.');
   try { mntAbertas = JSON.parse(localStorage.getItem('mntAbertasCache') || '[]'); } catch (e) { mntAbertas = []; }
   mntDesenharAbertas();
 }
+function mntErroAbertas(t){ const el = document.getElementById('mnt-abertas-erro'); el.textContent = t; el.style.display = t ? 'block' : 'none'; }
 function mntAlternarAcao(){
   const tipo = document.getElementById('mnt-acao-tipo').value, etapa = document.getElementById('mnt-acao-etapa').value;
   document.getElementById('mnt-acao-etapa-box').style.display = tipo === 'etapa' ? '' : 'none';
@@ -1603,6 +1627,7 @@ async function iniciarApp(){
   atualizarStatusConexao();
   atualizarStatusApropriacao();
   await carregarDadosIniciais();
+  aplicarAbasDoLogin();
   preencherSelects();
   mntPreencher();
   renderizarItensChecklist();
