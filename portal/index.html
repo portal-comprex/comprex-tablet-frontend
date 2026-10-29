@@ -2035,7 +2035,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 29/10/2026 · 105</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 29/10/2026 · 106</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3753,6 +3753,15 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <div class="campo" style="margin-bottom:10px">
           <label>Senha</label>
           <input type="text" id="tablet-novo-senha" placeholder="Mínimo 6 caracteres" autocomplete="off">
+        </div>
+        <div class="campo" style="margin-bottom:12px">
+          <label>Abas que este login pode usar no tablet</label>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:4px">
+            <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:600"><input type="checkbox" id="tablet-novo-ab-checklist" checked> ✅ Checklist</label>
+            <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:600"><input type="checkbox" id="tablet-novo-ab-partediaria" checked> 🧮 Parte Diária</label>
+            <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:600"><input type="checkbox" id="tablet-novo-ab-manutencao"> 🔧 Manutenção</label>
+          </div>
+          <div style="font-size:11px;color:var(--cinza);margin-top:4px">Operador: Checklist + Parte Diária. Mecânico: Manutenção. Quem faz as duas coisas pode ter as três.</div>
         </div>
         <button type="button" class="rel-btn-secundario" id="tablet-novo-criar" style="width:100%">Criar login</button>
       </div>
@@ -5529,6 +5538,13 @@ function tabletFormatarHaQuanto(ts){
   if (diffH < 24) return 'há ' + diffH + 'h';
   return 'há ' + Math.round(diffH / 24) + ' dia(s)';
 }
+const TABLET_ABAS = [['checklist', '✅ Checklist'], ['partediaria', '🧮 Parte Diária'], ['manutencao', '🔧 Manutenção']];
+function tabletAbasHtml(op){
+  const abas = op.abas || ['checklist', 'partediaria'];
+  return '<span style="display:inline-flex;gap:10px;flex-wrap:wrap;margin-top:4px">' + TABLET_ABAS.map(function(a){
+    return '<label style="display:inline-flex;gap:4px;align-items:center;font-size:11.5px;font-weight:600;text-transform:none;letter-spacing:0"><input type="checkbox" data-tablet-aba="' + a[0] + '" data-op="' + op.id + '"' + (abas.indexOf(a[0]) !== -1 ? ' checked' : '') + '> ' + a[1] + '</label>';
+  }).join('') + '</span>';
+}
 async function tabletLoginCarregarLista(){
   const cont = document.getElementById('tablet-login-lista');
   cont.innerHTML = '<div class="lista-vazia-dash">Carregando…</div>';
@@ -5543,13 +5559,24 @@ async function tabletLoginCarregarLista(){
       return '<div class="acessos-linha" style="align-items:center">' +
         '<span><b>' + frotaEsc(op.nome) + '</b> <span style="color:var(--cinza);font-size:11.5px">— usuário: ' + frotaEsc(op.usuario) + '</span>' +
         (op.ativo ? '' : ' <span style="color:var(--ru);font-weight:700;font-size:11px">(desativado)</span>') +
-        '<br>' + presenca + '</span>' +
+        '<br>' + presenca + '<br>' + tabletAbasHtml(op) + '</span>' +
         '<span style="display:flex;gap:6px">' +
           '<button type="button" class="rel-btn-secundario" data-tablet-redefinir="' + op.id + '" style="padding:6px 10px;font-size:11.5px">Redefinir senha</button>' +
           '<button type="button" class="rel-btn-secundario" data-tablet-toggle="' + op.id + '" data-ativo="' + op.ativo + '" style="padding:6px 10px;font-size:11.5px">' + (op.ativo ? 'Desativar' : 'Ativar') + '</button>' +
           '<button type="button" class="rel-btn-secundario" data-tablet-remover="' + op.id + '" data-nome="' + frotaEsc(op.nome) + '" style="padding:6px 10px;font-size:11.5px;color:var(--ru);border-color:var(--ru)">Remover</button>' +
         '</span></div>';
     }).join('');
+    cont.querySelectorAll('[data-tablet-aba]').forEach(function(cb){
+      cb.onchange = async function(){
+        const id = cb.dataset.op;
+        const marcadas = Array.prototype.map.call(cont.querySelectorAll('[data-tablet-aba][data-op="' + id + '"]'), function(x){ return x.checked ? x.dataset.tabletAba : null; }).filter(Boolean);
+        if (!marcadas.length) { cb.checked = true; alert('Deixe pelo menos uma aba marcada para este login.'); return; }
+        try {
+          await tabletFetchAdmin('/admin/operadores/' + id, { method: 'PATCH', body: JSON.stringify({ abas: marcadas }) });
+          mtToast('✅ Abas atualizadas — valem na próxima vez que o tablet abrir.');
+        } catch (err) { cb.checked = !cb.checked; alert('Erro: ' + err.message); }
+      };
+    });
     cont.querySelectorAll('[data-tablet-redefinir]').forEach(function(btn){
       btn.onclick = async function(){
         const novaSenha = prompt('Nova senha (mínimo 6 caracteres):');
@@ -5627,7 +5654,11 @@ document.getElementById('tablet-novo-criar').onclick = async function(){
   const btn = this;
   btn.disabled = true; btn.textContent = 'Criando…';
   try {
-    await tabletFetchAdmin('/admin/operadores', { method: 'POST', body: JSON.stringify({ nome: nome, usuario: usuario, senha: senha }) });
+    const abasNovas = TABLET_ABAS.map(function(a){ return document.getElementById('tablet-novo-ab-' + a[0]).checked ? a[0] : null; }).filter(Boolean);
+    if (!abasNovas.length) { erroEl.textContent = 'Marque pelo menos uma aba para este login.'; erroEl.style.display = 'block'; return; }
+    const resp = await tabletFetchAdmin('/admin/operadores', { method: 'POST', body: JSON.stringify({ nome: nome, usuario: usuario, senha: senha, abas: abasNovas }) });
+    if (resp && resp.aviso) alert(resp.aviso);
+    document.getElementById('tablet-novo-ab-checklist').checked = true; document.getElementById('tablet-novo-ab-partediaria').checked = true; document.getElementById('tablet-novo-ab-manutencao').checked = false;
     document.getElementById('tablet-novo-nome').value = '';
     document.getElementById('tablet-novo-usuario').value = '';
     document.getElementById('tablet-novo-senha').value = '';
