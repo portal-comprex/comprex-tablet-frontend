@@ -1402,9 +1402,12 @@ function mntPreencher(){
   const frotas = (dadosIniciais && dadosIniciais.frotas) || [];
   const locais = (dadosIniciais && dadosIniciais.locais) || [];
   const vazio = '<option value="">Selecione…</option>';
-  document.getElementById('mnt-equipamento').innerHTML = vazio + frotas.map(function(f){
-    return '<option value="' + f.nome + '">' + f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : '') + '</option>';
-  }).join('');
+  // Equipamentos e implementos em grupos separados (o servidor marca os implementos com tipo: 'implemento')
+  const opFrota = function(f){ return '<option value="' + f.nome + '">' + f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : '') + '</option>'; };
+  const eqs = frotas.filter(function(f){ return String(f.tipo || '').toLowerCase() !== 'implemento'; });
+  const imps = frotas.filter(function(f){ return String(f.tipo || '').toLowerCase() === 'implemento'; });
+  document.getElementById('mnt-equipamento').innerHTML = vazio +
+    (imps.length ? '<optgroup label="EQUIPAMENTOS">' + eqs.map(opFrota).join('') + '</optgroup><optgroup label="IMPLEMENTOS">' + imps.map(opFrota).join('') + '</optgroup>' : eqs.map(opFrota).join(''));
   const selLocal = document.getElementById('mnt-local');
   selLocal.innerHTML = vazio + locais.map(function(l){ return '<option value="' + l + '">' + l + '</option>'; }).join('');
   document.getElementById('mnt-mecanico').innerHTML = vazio + mntMecanicos().map(function(m){
