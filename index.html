@@ -250,8 +250,9 @@
           <div class="equip-foto-mini" id="mnt-equip-foto">🚜</div>
           <div class="campo" style="margin-bottom:0">
             <label>Equipamento</label>
-            <input type="search" id="mnt-busca-eq" autocomplete="off" placeholder="🔍 Pesquisar equipamento (código ou modelo)…" style="margin-bottom:6px">
-            <select id="mnt-equipamento"><option value="">Selecione…</option></select>
+            <input type="text" id="mnt-busca-eq" list="mnt-lista-eq" autocomplete="off" placeholder="🔍 Digite o código ou modelo, ou toque para escolher…">
+            <datalist id="mnt-lista-eq"></datalist>
+            <select id="mnt-equipamento" style="display:none"><option value="">Selecione…</option></select>
             <div id="mnt-busca-eq-info" style="display:none;font-size:12px;margin-top:4px;font-weight:700;color:#b42318"></div>
           </div>
         </div>
@@ -316,7 +317,7 @@
         <div id="mnt-resumo" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
         <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
-        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v14 · 29/10/2026</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v15 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
@@ -1463,18 +1464,21 @@ function mntPreencher(){
   const nat = function(a, b){ return String(a.nome).localeCompare(String(b.nome), 'pt-BR', { numeric: true, sensitivity: 'base' }); };
   const opFrota = function(f){ return '<option value="' + f.nome + '">' + f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : '') + '</option>'; };
   const norm = function(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); };
-  const montarEquip = function(){
-    const q = norm(document.getElementById('mnt-busca-eq').value).trim();
-    const sel = document.getElementById('mnt-equipamento'), atual = sel.value;
-    const ok = function(f){ return !q || norm(f.nome + ' ' + (f.descricao || '')).indexOf(q) !== -1; };
-    const eqs = frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() !== 'implemento' && ok(f); }).sort(nat);
-    const imps = frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() === 'implemento' && ok(f); }).sort(nat);
-    sel.innerHTML = vazio + (eqs.length ? '<optgroup label="EQUIPAMENTOS">' + eqs.map(opFrota).join('') + '</optgroup>' : '') + (imps.length ? '<optgroup label="IMPLEMENTOS">' + imps.map(opFrota).join('') + '</optgroup>' : '');
-    if (atual && Array.prototype.some.call(sel.options, function(o){ return o.value === atual; })) sel.value = atual;
-    if (q && eqs.length + imps.length === 1) { sel.value = (eqs[0] || imps[0]).nome; sel.dispatchEvent(new Event('change')); }
+  const rotulo = function(f){ return f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : ''); };
+  const todos = frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() !== 'implemento'; }).sort(nat)
+    .concat(frotas.filter(function(f){ return String(f.tipoItem || f.tipo || '').toLowerCase() === 'implemento'; }).sort(nat));
+  const sel = document.getElementById('mnt-equipamento'), busca = document.getElementById('mnt-busca-eq');
+  sel.innerHTML = vazio + todos.map(opFrota).join('');
+  document.getElementById('mnt-lista-eq').innerHTML = todos.map(function(f){ return '<option value="' + rotulo(f).replace(/"/g, '&quot;') + '"></option>'; }).join('');
+  const aplicar = function(){
+    const q = norm(busca.value).trim();
+    let ach = todos.find(function(f){ return norm(rotulo(f)) === q; });
+    if (!ach && q) { const cand = todos.filter(function(f){ return norm(rotulo(f)).indexOf(q) !== -1; }); if (cand.length === 1) ach = cand[0]; }
+    const novo = ach ? ach.nome : '';
+    if (sel.value !== novo) { sel.value = novo; sel.dispatchEvent(new Event('change')); }
   };
-  document.getElementById('mnt-busca-eq').oninput = montarEquip;
-  montarEquip();
+  busca.oninput = aplicar; busca.onchange = function(){ aplicar(); const v = sel.value && todos.find(function(f){ return f.nome === sel.value; }); if (v) busca.value = rotulo(v); };
+  busca.onfocus = function(){ busca.select(); };
   const selLocal = document.getElementById('mnt-local');
   selLocal.innerHTML = vazio + locais.map(function(l){ return '<option value="' + l + '">' + l + '</option>'; }).join('');
   document.getElementById('mnt-mecanico').innerHTML = vazio + mntMecanicos().map(function(m){
@@ -1511,7 +1515,7 @@ document.getElementById('mnt-motivo').addEventListener('change', function(){
   document.getElementById('mnt-outros-box').style.display = this.value === 'OUTROS' ? '' : 'none';
 });
 function mntLimpar(){
-  ['mnt-equipamento', 'mnt-horimetro', 'mnt-mecanico', 'mnt-motivo', 'mnt-outros', 'mnt-observacao', 'mnt-sit-peca', 'mnt-sit-previsao', 'mnt-sit-servico', 'mnt-sit-empresa', 'mnt-sit-previsao2'].forEach(function(i){ document.getElementById(i).value = ''; });
+  ['mnt-busca-eq', 'mnt-equipamento', 'mnt-horimetro', 'mnt-mecanico', 'mnt-motivo', 'mnt-outros', 'mnt-observacao', 'mnt-sit-peca', 'mnt-sit-previsao', 'mnt-sit-servico', 'mnt-sit-empresa', 'mnt-sit-previsao2'].forEach(function(i){ document.getElementById(i).value = ''; });
   document.getElementById('mnt-situacao').value = 'Diagnóstico'; document.getElementById('mnt-situacao').dispatchEvent(new Event('change'));
   mntLocalPadrao();
   document.getElementById('mnt-quando').value = mntAgoraLocal();
