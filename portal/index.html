@@ -2035,7 +2035,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 29/10/2026 · 107</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 03/11/2026 · 108</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3780,6 +3780,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
             <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:600"><input type="checkbox" id="tablet-novo-ab-checklist" checked> ✅ Checklist</label>
             <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:600"><input type="checkbox" id="tablet-novo-ab-partediaria" checked> 🧮 Parte Diária</label>
             <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:600"><input type="checkbox" id="tablet-novo-ab-manutencao"> 🔧 Manutenção</label>
+            <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:600"><input type="checkbox" id="tablet-novo-ab-partedodia"> 📋 Parte do Dia</label>
           </div>
           <div style="font-size:11px;color:var(--cinza);margin-top:4px">Operador: Checklist + Parte Diária. Mecânico: Manutenção. Quem faz as duas coisas pode ter as três.</div>
         </div>
@@ -5558,7 +5559,7 @@ function tabletFormatarHaQuanto(ts){
   if (diffH < 24) return 'há ' + diffH + 'h';
   return 'há ' + Math.round(diffH / 24) + ' dia(s)';
 }
-const TABLET_ABAS = [['checklist', '✅ Checklist'], ['partediaria', '🧮 Parte Diária'], ['manutencao', '🔧 Manutenção']];
+const TABLET_ABAS = [['checklist', '✅ Checklist'], ['partediaria', '🧮 Parte Diária'], ['manutencao', '🔧 Manutenção'], ['partedodia', '📋 Parte do Dia']];
 function tabletAbasHtml(op){
   const abas = op.abas || ['checklist', 'partediaria'];
   return '<span style="display:inline-flex;gap:10px;flex-wrap:wrap;margin-top:4px">' + TABLET_ABAS.map(function(a){
