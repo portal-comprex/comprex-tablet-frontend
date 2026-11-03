@@ -153,9 +153,8 @@
   </header>
   <div class="abas">
     <button class="ativa" data-aba="checklist">✅ Checklist</button>
-    <button data-aba="apropriacao">🧮 Parte Diária</button>
     <button data-aba="manutencao">🔧 Manutenção</button>
-    <button data-aba="partediaria">📋 Parte do Dia</button>
+    <button data-aba="partediaria">🧮 Parte Diária</button>
   </div>
   <main>
     <!-- -------- CHECKLIST -------- -->
@@ -317,7 +316,7 @@
         <div id="mnt-resumo" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
         <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
-        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v16 · 29/10/2026</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v17 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
@@ -1413,7 +1412,7 @@ function abrirAbaChecklist(){
 }
 /* Abas liberadas para este login (definidas no Portal > Login Tablet):
    checklist, partediaria, manutencao. Sem informação, vale Checklist + Parte Diária. */
-const ABA_POR_PERMISSAO = { checklist: 'checklist', partediaria: 'apropriacao', manutencao: 'manutencao', partedodia: 'partediaria' };
+const ABA_POR_PERMISSAO = { checklist: 'checklist', partediaria: 'partediaria', partedodia: 'partediaria', manutencao: 'manutencao' };
 function aplicarAbasDoLogin(){
   const sessao = sessaoAtual();
   let abas = (dadosIniciais && dadosIniciais.abas) || (sessao && sessao.abas) || ['checklist', 'partediaria'];
