@@ -199,6 +199,64 @@
     </div>
     <!-- -------- PARTE DIÁRIA -------- -->
     <div id="aba-partediaria" style="display:none">
+      <!-- Parte diária (lançamento do dia) -->
+      <div id="pdn-raiz">
+        <div class="card" style="background:#eef3fb;border-color:#d3def0">
+          <div class="equip-cabecalho">
+            <div class="equip-foto-mini" id="pdn-equip-foto">🚜</div>
+            <div class="campo" style="margin-bottom:0">
+              <label>Equipamento</label>
+              <input type="text" id="pdn-equip" list="pdn-lista-eq" autocomplete="off" placeholder="🔍 Digite o código ou modelo…">
+              <datalist id="pdn-lista-eq"></datalist>
+            </div>
+          </div>
+          <div class="grid2" style="margin-top:10px">
+            <div class="campo"><label>Nº Ordem</label><input type="text" id="pdn-num-ordem" inputmode="numeric" autocomplete="off" placeholder="Nº…"></div>
+            <div class="campo"><label>Descrição Ordem</label><input type="text" id="pdn-desc-ordem" list="pdn-lista-ordem" autocomplete="off" placeholder="Digite ou escolha…"><datalist id="pdn-lista-ordem"></datalist></div>
+          </div>
+          <div class="grid2">
+            <div class="campo"><label>Nº Cliente</label><input type="text" id="pdn-cliente" autocomplete="off" placeholder="Nº…"></div>
+            <div class="campo"><label>Escala</label><select id="pdn-escala"><option value="">Selecione a escala…</option></select></div>
+          </div>
+          <div class="grid2">
+            <div class="campo"><label>Data</label><input type="text" id="pdn-data" disabled><div style="font-size:11.5px;color:var(--cinza);margin-top:3px">Hoje. Pra alterar, peça ao Escritório.</div></div>
+            <div class="campo"><label>Operador (obrigatório)</label><input type="text" id="pdn-operador" disabled><div style="font-size:11.5px;color:var(--cinza);margin-top:3px">Identificado pelo seu login.</div></div>
+          </div>
+          <div id="pdn-bloco-inicio">
+            <div class="grid2">
+              <div class="campo"><label>Horímetro inicial</label><input type="text" id="pdn-hor-ini" inputmode="decimal" autocomplete="off" placeholder="ex: 5080,0"></div>
+              <div class="campo"><label>Começar em</label><select id="pdn-status-ini"><option>À disposição</option><option>Em operação</option></select></div>
+            </div>
+            <button class="btn-primario" id="pdn-iniciar" type="button">▶ Iniciar lançamento</button>
+          </div>
+        </div>
+        <div class="card" id="pdn-card-lanc" style="display:none">
+          <h2 style="font-size:13px;letter-spacing:.6px;text-transform:uppercase">Lançamento do dia</h2>
+          <div id="pdn-segmentos"></div>
+          <div id="pdn-atual" style="font-size:12.5px;color:var(--cinza);margin:8px 0"></div>
+          <div id="pdn-parada-aberta"></div>
+          <div class="campo"><label>Horímetro final</label><input type="text" id="pdn-hor-fim" inputmode="decimal" autocomplete="off" placeholder="horímetro agora"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <button type="button" id="pdn-salvar" style="padding:9px 16px;border:none;border-radius:10px;background:#c8641c;color:#fff;font-weight:800;font-size:13px;cursor:pointer">Salvar lançamento</button>
+            <button type="button" class="btn-secundario" id="pdn-add-parada" style="padding:9px 14px;font-size:13px">+ Adicionar parada</button>
+            <button type="button" class="btn-secundario" id="pdn-trocar" style="padding:9px 14px;font-size:13px">⇄ Trocar situação</button>
+            <button type="button" class="btn-secundario" id="pdn-finalizar" style="padding:9px 14px;font-size:13px">Finalizar lançamento</button>
+          </div>
+          <div id="pdn-form-parada" style="display:none;border:1.5px dashed #c8a24a;border-radius:12px;padding:10px;margin-bottom:10px;background:#fffdf5">
+            <div class="campo"><label>Motivo da parada</label><select id="pdn-parada-motivo"></select></div>
+            <div class="campo" id="pdn-parada-outros-box" style="display:none"><label>Descreva o motivo</label><input type="text" id="pdn-parada-outros" autocomplete="off"></div>
+            <div style="display:flex;gap:8px"><button type="button" class="btn-secundario" id="pdn-parada-ok" style="padding:9px 14px;font-size:13px">Iniciar parada agora</button><button type="button" class="btn-secundario" id="pdn-parada-cancelar" style="padding:9px 14px;font-size:13px">Cancelar</button></div>
+          </div>
+          <div style="border:1px solid var(--linha);border-radius:12px;padding:10px 12px;background:#f6f9fd;font-size:13px">
+            <div style="display:flex;justify-content:space-between"><span>Horas programadas</span><b id="pdn-t-prog">—</b></div>
+            <div style="display:flex;justify-content:space-between"><span>Horas de horímetro</span><b id="pdn-t-hor">—</b></div>
+            <div style="display:flex;justify-content:space-between"><span>Horas de parada</span><b id="pdn-t-par">0,00</b></div>
+          </div>
+        </div>
+        <div class="erro-msg" id="pdn-erro"></div>
+        <div class="ok-msg" id="pdn-ok"></div>
+      </div>
+      <div id="pd-legado" style="display:none">
       <div class="card">
         <h2>Dados do dia</h2>
         <div class="equip-cabecalho">
@@ -240,6 +298,7 @@
       <button class="btn-primario" id="pd-enviar">Salvar parte diária</button>
       <div class="erro-msg" id="pd-erro"></div>
       <div class="ok-msg" id="pd-ok"></div>
+      </div>
     </div>
     <!-- -------- MANUTENÇÃO (parada do equipamento) -------- -->
     <div id="aba-manutencao" style="display:none">
@@ -316,7 +375,7 @@
         <div id="mnt-resumo" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
         <div id="mnt-abertas-erro" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700;color:#b42318"></div>
         <div id="mnt-abertas-lista" style="margin-top:10px"></div>
-        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v17 · 29/10/2026</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--cinza);opacity:.7">Tablet · Manutenção v18 · 29/10/2026</div>
       </div>
       <div id="mnt-acao-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px">
         <div class="card" style="max-width:520px;width:100%;max-height:92vh;overflow:auto;margin:0">
@@ -1429,6 +1488,202 @@ document.getElementById('apr-voltar-btn').onclick = abrirAbaChecklist;
 
 
 /* =====================================================================
+   PARTE DIÁRIA — lançamento do dia (equipamento, ordem, escala,
+   períodos "À disposição" / "Em operação", horímetro e paradas)
+   ===================================================================== */
+const PDN_ESCALAS = ['ADM 07h00 às 17h00', '4x4 07h00 às 19h00', '4x4 19h00 às 07h00'];
+const PDN_STATUS = ['À disposição', 'Em operação'];
+let pdn = null; // estado do lançamento em andamento (ou null)
+function pdnCarregar(){ try { pdn = JSON.parse(localStorage.getItem('pdnEstado') || 'null'); } catch (e) { pdn = null; } }
+function pdnGuardar(){ try { if (pdn) localStorage.setItem('pdnEstado', JSON.stringify(pdn)); else localStorage.removeItem('pdnEstado'); } catch (e) {} }
+function pdnHoje(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function pdnBR(ymd){ return ymd ? ymd.split('-').reverse().join('/') : ''; }
+function pdnHora(ts){ const d = new Date(ts); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function pdnDur(ms){ const m = Math.max(0, Math.floor(ms / 60000)); return Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0'); }
+function pdnNum(v){
+  let t = String(v == null ? '' : v).trim().replace(/\s/g, '');
+  if (!t) return null;
+  if (t.indexOf(',') !== -1) t = t.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = parseFloat(t);
+  return isFinite(n) ? n : null;
+}
+function pdnFmtHor(n){ return n == null ? '—' : n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+function pdnFmtH(h){ return h == null ? '—' : h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function pdnNorm(t){ return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+function pdnNumDaOrdem(txt){ const m = /(\d{4,})\s*$/.exec(String(txt || '')); return m ? m[1] : ''; }
+function pdnLocais(){ return (dadosIniciais && dadosIniciais.locais) || []; }
+function pdnErro(msg){ const e = document.getElementById('pdn-erro'); e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
+function pdnOk(msg){ const e = document.getElementById('pdn-ok'); e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; if (msg) setTimeout(function(){ e.style.display = 'none'; }, 7000); }
+
+function pdnPreencher(){
+  const frotas = ((dadosIniciais && dadosIniciais.frotas) || []).slice().sort(function(a, b){ return String(a.nome).localeCompare(String(b.nome), 'pt-BR', { numeric: true, sensitivity: 'base' }); });
+  const rot = function(f){ return f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : ''); };
+  document.getElementById('pdn-lista-eq').innerHTML = frotas.map(function(f){ return '<option value="' + mntEsc(rot(f)) + '"></option>'; }).join('');
+  document.getElementById('pdn-lista-ordem').innerHTML = pdnLocais().map(function(l){ return '<option value="' + mntEsc(l) + '"></option>'; }).join('');
+  document.getElementById('pdn-escala').innerHTML = '<option value="">Selecione a escala…</option>' + PDN_ESCALAS.map(function(e){ return '<option>' + e + '</option>'; }).join('');
+  const tipos = (dadosIniciais && dadosIniciais.tiposParada && dadosIniciais.tiposParada.length) ? dadosIniciais.tiposParada : ['ALMOÇO', 'REVISÃO PREVENTIVA', 'MANUTENÇÃO CORRETIVA', 'PARADA TÉCNICA', 'EM DISPONIBILIDADE'];
+  document.getElementById('pdn-parada-motivo').innerHTML = '<option value="">Selecione…</option>' + tipos.map(function(t){ return '<option>' + mntEsc(t) + '</option>'; }).join('') + '<option>OUTROS</option>';
+  const sessao = sessaoAtual();
+  document.getElementById('pdn-operador').value = sessao ? sessao.nome : '';
+  pdnCarregar();
+  pdnDesenhar();
+}
+function pdnAchaEquip(texto){
+  const q = pdnNorm(texto); if (!q) return null;
+  const frotas = (dadosIniciais && dadosIniciais.frotas) || [];
+  const rot = function(f){ return pdnNorm(f.nome + (f.descricao ? ' — ' + f.descricao : '')); };
+  let r = frotas.find(function(f){ return rot(f) === q || pdnNorm(f.nome) === q; });
+  if (!r) { const c = frotas.filter(function(f){ return rot(f).indexOf(q) !== -1; }); if (c.length === 1) r = c[0]; }
+  return r || null;
+}
+function pdnAchaOrdemPorNome(txt){ const q = pdnNorm(txt); return q ? pdnLocais().find(function(l){ return pdnNorm(l) === q; }) || null : null; }
+function pdnAchaOrdemPorNum(n){ n = String(n || '').trim(); return n ? pdnLocais().find(function(l){ return pdnNumDaOrdem(l) === n; }) || null : null; }
+
+function pdnTotais(){
+  if (!pdn || !pdn.segs.length) return { prog: null, hor: null, par: 0 };
+  const fimGeral = pdn.fim || Date.now();
+  const prog = (fimGeral - pdn.segs[0].ini) / 3600000;
+  const ult = pdn.segs[pdn.segs.length - 1];
+  const horFim = ult.horFim != null ? ult.horFim : pdnNum(document.getElementById('pdn-hor-fim').value);
+  const hor = horFim != null && pdn.horIni != null ? Math.max(0, horFim - pdn.horIni) : null;
+  const par = pdn.paradas.reduce(function(s, p){ return s + ((p.fim || fimGeral) - p.ini); }, 0) / 3600000;
+  return { prog: prog, hor: hor, par: par };
+}
+function pdnDesenhar(){
+  const iniciado = !!(pdn && pdn.segs && pdn.segs.length);
+  document.getElementById('pdn-bloco-inicio').style.display = iniciado ? 'none' : '';
+  document.getElementById('pdn-card-lanc').style.display = iniciado ? '' : 'none';
+  ['pdn-equip', 'pdn-num-ordem', 'pdn-desc-ordem', 'pdn-cliente', 'pdn-escala'].forEach(function(id){ document.getElementById(id).disabled = iniciado; });
+  document.getElementById('pdn-data').value = pdnBR(iniciado ? pdn.data : pdnHoje());
+  if (iniciado) {
+    document.getElementById('pdn-equip').value = pdn.equipRotulo || pdn.equip;
+    document.getElementById('pdn-num-ordem').value = pdn.numOrdem; document.getElementById('pdn-desc-ordem').value = pdn.descOrdem;
+    document.getElementById('pdn-cliente').value = pdn.cliente; document.getElementById('pdn-escala').value = pdn.escala;
+    document.getElementById('pdn-segmentos').innerHTML = '<div style="border:1px solid var(--linha);border-radius:10px;padding:8px 10px;background:#f6f9fd">' + pdn.segs.map(function(s){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:4px 0">' +
+        '<span>' + (s.status === 'Em operação' ? '🔵 ' : '🟢 ') + mntEsc(s.status) + ' · ' + pdnHora(s.ini) + '–' + (s.fim ? pdnHora(s.fim) : '…') + '</span>' +
+        '<b style="font-family:monospace">' + pdnFmtHor(s.horIni) + ' → ' + (s.horFim != null ? pdnFmtHor(s.horFim) : '—') + '</b></div>';
+    }).join('') + '</div>';
+    const ult = pdn.segs[pdn.segs.length - 1];
+    document.getElementById('pdn-atual').innerHTML = (ult.status === 'Em operação' ? 'Em operação' : 'Em À disposição') + ' desde ' + pdnHora(ult.ini) + ' (horímetro ' + pdnFmtHor(ult.horIni) + ') · <b>' + pdnDur(Date.now() - ult.ini) + '</b>';
+    const pa = pdn.paradas.find(function(p){ return !p.fim; });
+    document.getElementById('pdn-parada-aberta').innerHTML = pa ? '<div style="border:1.5px solid #c8a24a;background:#fffdf5;border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:13px">⏸ <b>Parada:</b> ' + mntEsc(pa.motivo) + ' · desde ' + pdnHora(pa.ini) + ' · <b>' + pdnDur(Date.now() - pa.ini) + '</b> <button type="button" class="btn-secundario" id="pdn-encerrar-parada" style="padding:6px 12px;font-size:12px;margin-left:6px">Encerrar parada</button></div>' : '';
+    const bt = document.getElementById('pdn-encerrar-parada');
+    if (bt) bt.onclick = function(){ pa.fim = Date.now(); pdnGuardar(); pdnDesenhar(); };
+    document.getElementById('pdn-trocar').textContent = '⇄ Passar para ' + (ult.status === 'Em operação' ? 'À disposição' : 'Em operação');
+    document.getElementById('pdn-add-parada').disabled = !!pa;
+    const t = pdnTotais();
+    document.getElementById('pdn-t-prog').textContent = pdnFmtH(t.prog); document.getElementById('pdn-t-hor').textContent = t.hor == null ? '—' : pdnFmtH(t.hor); document.getElementById('pdn-t-par').textContent = pdnFmtH(t.par);
+  } else {
+    document.getElementById('pdn-num-ordem').value = document.getElementById('pdn-num-ordem').value;
+  }
+}
+function pdnValidarOrdemMsg(){
+  const n = document.getElementById('pdn-num-ordem').value.trim(), d = document.getElementById('pdn-desc-ordem').value.trim();
+  if (!n && !d) { pdnErro(''); return true; }
+  const ok = d ? pdnAchaOrdemPorNome(d) : pdnAchaOrdemPorNum(n);
+  pdnErro(ok ? '' : 'Ordem não reconhecida — digite o nome ou escolha uma da lista.');
+  return !!ok;
+}
+document.getElementById('pdn-equip').addEventListener('input', function(){
+  const f = pdnAchaEquip(this.value);
+  document.getElementById('pdn-equip').dataset.nome = f ? f.nome : '';
+  atualizarFotoEquipamento('pdn-equip-foto', 'pdn-equip-nome', f ? f.nome : '');
+  if (f) { const u = localStorage.getItem('pdnUlt_' + f.nome.toUpperCase()); const h = document.getElementById('pdn-hor-ini'); if (u && !h.value) h.value = u; }
+});
+(function(){ const h = document.createElement('input'); h.type = 'hidden'; h.id = 'pdn-equip-nome'; document.getElementById('pdn-raiz').appendChild(h);
+  document.getElementById('pdn-equip').addEventListener('input', function(){ h.value = this.dataset.nome || ''; }); })();
+document.getElementById('pdn-desc-ordem').addEventListener('input', function(){
+  const l = pdnAchaOrdemPorNome(this.value);
+  if (l) { this.value = l; document.getElementById('pdn-num-ordem').value = pdnNumDaOrdem(l); }
+  pdnValidarOrdemMsg();
+});
+document.getElementById('pdn-num-ordem').addEventListener('input', function(){
+  const l = pdnAchaOrdemPorNum(this.value);
+  document.getElementById('pdn-desc-ordem').value = l || '';
+  pdnValidarOrdemMsg();
+});
+document.getElementById('pdn-iniciar').onclick = function(){
+  pdnErro('');
+  const f = pdnAchaEquip(document.getElementById('pdn-equip').value);
+  if (!f) return pdnErro('Escolha o equipamento.');
+  const dTxt = document.getElementById('pdn-desc-ordem').value.trim();
+  const l = dTxt ? pdnAchaOrdemPorNome(dTxt) : pdnAchaOrdemPorNum(document.getElementById('pdn-num-ordem').value);
+  if (!l) return pdnErro('Ordem não reconhecida — digite o nome ou escolha uma da lista.');
+  const escala = document.getElementById('pdn-escala').value;
+  if (!escala) return pdnErro('Selecione a escala.');
+  const hor = pdnNum(document.getElementById('pdn-hor-ini').value);
+  if (hor == null) return pdnErro('Informe o horímetro inicial.');
+  const agora = Date.now();
+  pdn = { data: pdnHoje(), equip: f.nome, equipRotulo: f.nome.toUpperCase() + (f.descricao ? ' — ' + f.descricao.toUpperCase() : ''), numOrdem: pdnNumDaOrdem(l), descOrdem: l,
+    cliente: document.getElementById('pdn-cliente').value.trim(), escala: escala, horIni: hor, fim: null,
+    segs: [{ status: document.getElementById('pdn-status-ini').value, ini: agora, fim: null, horIni: hor, horFim: null }], paradas: [] };
+  document.getElementById('pdn-hor-fim').value = '';
+  pdnGuardar(); pdnDesenhar();
+};
+document.getElementById('pdn-salvar').onclick = function(){ pdnGuardar(); pdnErro(''); pdnOk('💾 Lançamento guardado neste tablet. Quando terminar, toque em "Finalizar lançamento".'); };
+document.getElementById('pdn-add-parada').onclick = function(){ document.getElementById('pdn-form-parada').style.display = ''; };
+document.getElementById('pdn-parada-cancelar').onclick = function(){ document.getElementById('pdn-form-parada').style.display = 'none'; };
+document.getElementById('pdn-parada-motivo').addEventListener('change', function(){ document.getElementById('pdn-parada-outros-box').style.display = this.value === 'OUTROS' ? '' : 'none'; });
+document.getElementById('pdn-parada-ok').onclick = function(){
+  const m = document.getElementById('pdn-parada-motivo').value, o = document.getElementById('pdn-parada-outros').value.trim();
+  if (!m) return pdnErro('Escolha o motivo da parada.');
+  if (m === 'OUTROS' && !o) return pdnErro('Descreva o motivo da parada.');
+  pdnErro('');
+  pdn.paradas.push({ motivo: m === 'OUTROS' ? 'OUTROS: ' + o : m, ini: Date.now(), fim: null });
+  document.getElementById('pdn-form-parada').style.display = 'none';
+  document.getElementById('pdn-parada-motivo').value = ''; document.getElementById('pdn-parada-outros').value = ''; document.getElementById('pdn-parada-outros-box').style.display = 'none';
+  pdnGuardar(); pdnDesenhar();
+};
+document.getElementById('pdn-trocar').onclick = function(){
+  pdnErro('');
+  const ult = pdn.segs[pdn.segs.length - 1], h = pdnNum(document.getElementById('pdn-hor-fim').value);
+  if (h == null) return pdnErro('Informe o horímetro de agora no campo "Horímetro final" para trocar a situação.');
+  if (h < ult.horIni) return pdnErro('O horímetro não pode ser menor que o do início do período (' + pdnFmtHor(ult.horIni) + ').');
+  const agora = Date.now();
+  ult.fim = agora; ult.horFim = h;
+  pdn.segs.push({ status: ult.status === 'Em operação' ? 'À disposição' : 'Em operação', ini: agora, fim: null, horIni: h, horFim: null });
+  document.getElementById('pdn-hor-fim').value = '';
+  pdnGuardar(); pdnDesenhar();
+};
+document.getElementById('pdn-finalizar').onclick = async function(){
+  pdnErro('');
+  const ult = pdn.segs[pdn.segs.length - 1], h = pdnNum(document.getElementById('pdn-hor-fim').value);
+  if (h == null) return pdnErro('Informe o horímetro final.');
+  if (h < ult.horIni) return pdnErro('O horímetro final não pode ser menor que o do início do período (' + pdnFmtHor(ult.horIni) + ').');
+  if (pdn.paradas.some(function(p){ return !p.fim; })) return pdnErro('Encerre a parada em andamento antes de finalizar.');
+  const agora = Date.now();
+  ult.fim = agora; ult.horFim = h; pdn.fim = agora;
+  const t = pdnTotais();
+  const iso = function(ts){ return ts ? new Date(ts).toISOString() : ''; };
+  const payload = {
+    data: pdn.data, equipamento: pdn.equip, numOrdem: pdn.numOrdem, descOrdem: pdn.descOrdem, numCliente: pdn.cliente, escala: pdn.escala,
+    horimetroInicial: pdnFmtHor(pdn.horIni), horimetroFinal: pdnFmtHor(h), inicio: iso(pdn.segs[0].ini), fim: iso(agora),
+    segmentos: pdn.segs.map(function(s){ return { status: s.status, inicio: iso(s.ini), fim: iso(s.fim), horimetroInicial: s.horIni, horimetroFinal: s.horFim }; }),
+    paradas: pdn.paradas.map(function(p){ return { motivo: p.motivo, inicio: iso(p.ini), fim: iso(p.fim) }; }),
+    totais: { programadas: t.prog, horimetro: t.hor, paradas: t.par }
+  };
+  const btn = this; btn.disabled = true; btn.textContent = 'Enviando…';
+  const r = await enviarOuEnfileirar('parte-diaria/lancamento', payload);
+  btn.disabled = false; btn.textContent = 'Finalizar lançamento';
+  if (r.ok) {
+    try { localStorage.setItem('pdnUlt_' + pdn.equip.toUpperCase(), pdnFmtHor(h)); } catch (e) {}
+    pdn = null; pdnGuardar();
+    ['pdn-equip', 'pdn-num-ordem', 'pdn-desc-ordem', 'pdn-cliente', 'pdn-hor-ini', 'pdn-hor-fim'].forEach(function(i){ document.getElementById(i).value = ''; });
+    document.getElementById('pdn-escala').value = ''; document.getElementById('pdn-equip').dataset.nome = ''; document.getElementById('pdn-equip-nome').value = '';
+    atualizarFotoEquipamento('pdn-equip-foto', 'pdn-equip-nome', '');
+    pdnDesenhar();
+    pdnOk(r.online ? '✅ Lançamento finalizado e enviado!' : '💾 Sem internet — lançamento guardado no tablet e será enviado quando a conexão voltar.');
+  } else {
+    ult.fim = null; ult.horFim = null; pdn.fim = null;
+    pdnErro(r.erro || 'Não foi possível enviar.');
+  }
+};
+setInterval(function(){ if (pdn && pdn.segs && document.getElementById('aba-partediaria').style.display !== 'none') pdnDesenhar(); }, 30000);
+document.getElementById('pdn-hor-fim').addEventListener('input', function(){ if (pdn) { const t = pdnTotais(); document.getElementById('pdn-t-hor').textContent = t.hor == null ? '—' : pdnFmtH(t.hor); } });
+
+/* =====================================================================
    MANUTENÇÃO — registro de parada pelo mecânico
    Lista de mecânicos (nº pessoal do SAP, centro MANUT/1020) e motivos
    mais comuns ficam fixos aqui, para o mecânico só escolher.
@@ -1746,6 +2001,7 @@ async function iniciarApp(){
   aplicarAbasDoLogin();
   preencherSelects();
   mntPreencher();
+  pdnPreencher();
   renderizarItensChecklist();
   pdInicializarTab();
   // Ao entrar, a primeira tela é sempre o Checklist — a Parte Diária só abre quando o operador
