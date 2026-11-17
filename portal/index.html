@@ -445,6 +445,12 @@
     margin-top:14px;max-height:160px;overflow-y:auto;
     border:1px solid #eef0f1;border-radius:9px
   }
+  /* "Editar" do card da Frota: o modal de cadastro mostra só o item em edição. */
+  .modal-overlay.modo-edicao .modal-tabs,
+  .modal-overlay.modo-edicao #painel-equip > .modal-campo,
+  .modal-overlay.modo-edicao #btn-salvar-equip,
+  .modal-overlay.modo-edicao #lista-equip .modal-lista-item:not(.mli-editando){display:none}
+  .modal-overlay.modo-edicao #lista-equip{max-height:none;margin-top:0;border:none}
   .modal-lista-item{
     display:flex;justify-content:space-between;align-items:center;
     padding:8px 12px;font-size:13px;border-bottom:1px solid #f3f3f1
@@ -1596,6 +1602,10 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
   .frota-item-meta{font-size:10.5px;color:var(--cinza);margin-top:2px;display:flex;align-items:center;gap:5px}
   .frota-item-vinc{font-size:10px;color:#a06800;background:#fdf3e3;border-radius:20px;padding:2px 8px;
     align-self:flex-start;margin-top:2px}
+  .frota-item-editar{align-self:flex-start;margin-top:6px;font-size:11px;font-weight:700;color:var(--navy);
+    background:none;border:1px solid var(--linha);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit}
+  .frota-item-editar:hover{background:var(--cream)}
+  body.tema-escuro .frota-item-editar{color:#dbe7ef;border-color:#2a3540}
   body.tema-escuro .frota-item{background:#1a222b;border-color:#2a3540}
   body.tema-escuro .frota-item-foto{background:#0f1720}
   body.tema-escuro .frota-secao-cont{background:#22303a;color:#9fb0b8}
@@ -4415,6 +4425,42 @@ async function atualizarCamposItem(listaId, itemId, campos){
   if (!r.ok) { const texto = await r.text(); throw new Error('Erro ' + r.status + ': ' + texto); }
   return r.json();
 }
+/** Troca o código de um equipamento/implemento nos registros que guardam o código como texto:
+ *  movimentações (Equipamento e ItemVinculado), vínculo de implemento na Frota e as listas da
+ *  Manutenção. Sem isso, corrigir um código errado no cadastro deixava o histórico com o antigo.
+ *  Checklists e Parte Diária ficam como foram lançados. Devolve quantos registros mudou. */
+async function renomearReferenciasEquipamento(antigo, novo){
+  const alvos = [
+    { listaId: LISTA_MOVIMENTACOES_ID, campos: ['Equipamento', 'ItemVinculado'] },
+    { listaId: LISTA_FROTA_ID, campos: ['ItemVinculado'] }
+  ];
+  try {
+    const ids = await manutResolverListas();
+    const col = function(chave, nome){ return (manutColMap[chave] || {})[nome] || nome; };
+    alvos.push({ listaId: ids.ocorrencias, campos: [col('ocorrencias', 'Title')] });
+    ['pecas', 'eventos', 'itens'].forEach(function(k){ if (ids[k]) alvos.push({ listaId: ids[k], campos: [col(k, 'Equipamento')] }); });
+    if (ids.apontamentos) alvos.push({ listaId: ids.apontamentos, campos: [col('apontamentos', 'Title')] });
+  } catch (e) { /* listas da Manutenção indisponíveis: segue com movimentações e frota */ }
+  const igual = function(v){ return String(v || '').trim().toUpperCase() === String(antigo).toUpperCase(); };
+  let alterados = 0;
+  for (const alvo of alvos) {
+    let url = GRAPH + '/sites/' + SITE_ID + '/lists/' + alvo.listaId + '/items?$expand=fields&$top=999';
+    while (url) {
+      const d = await graphGet(url);
+      for (const item of (d.value || [])) {
+        const f = item.fields || {}, campos = {};
+        alvo.campos.forEach(function(c){ if (igual(f[c])) campos[c] = novo; });
+        if (Object.keys(campos).length) { await atualizarCamposItem(alvo.listaId, item.id, campos); alterados++; }
+      }
+      url = d['@odata.nextLink'] || null;
+    }
+  }
+  if (alterados) {
+    movimentacoesCarregadas = false;
+    manutCarregado = false;
+  }
+  return alterados;
+}
 /** Remove (DELETE) um item de uma lista simples (Frota/Locais). */
 async function apagarItemSimples(listaId, itemId){
   const token = await graphToken();
@@ -5255,6 +5301,7 @@ document.querySelectorAll('.sn-toggle').forEach(function(cab){
 })();
 function abrirCadastroNaAba(aba){
   if (!usuarioEhAdmin(contaAtual)) { alert('Você não tem permissão para acessar esta área.'); return; }
+  fecharModoEdicao();
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('ativo', t.dataset.tab === aba); });
   tabAtiva = aba;
   document.getElementById('painel-equip').style.display = aba === 'equip' ? 'block' : 'none';
@@ -5264,6 +5311,22 @@ function abrirCadastroNaAba(aba){
   if (aba !== 'implemento') renderizarListaModal(aba);
   preencherSelectsCadastroEquip();
   garantirDadosFrotaExtra().then(function(){ if (aba !== 'implemento') renderizarListaModal(aba); preencherSelectsCadastroEquip(); });
+}
+/* Botão "Editar" do card da Frota: abre o cadastro de equipamentos em "modo edição", só com o
+   item escolhido (sem as abas e o formulário de cadastro novo). Salvar ou Cancelar fecha. */
+function abrirEdicaoFrota(nome){
+  abrirCadastroNaAba('equip');
+  editandoPorTipo.equip = nome;
+  overlay.classList.add('modo-edicao');
+  overlay.querySelector('.modal-header h2').textContent = '✏️ Editar cadastro — ' + nome;
+  renderizarListaModal('equip');
+}
+function fecharModoEdicao(){
+  if (!overlay.classList.contains('modo-edicao')) return false;
+  overlay.classList.remove('modo-edicao', 'aberto');
+  overlay.querySelector('.modal-header h2').textContent = '⚙ Cadastrar';
+  editandoPorTipo.equip = null;
+  return true;
 }
 document.getElementById('btn-abrir-cadastro-local').onclick = function(){ abrirCadastroNaAba('local'); };
 document.getElementById('btn-abrir-cadastro-equip').onclick = function(){ abrirCadastroNaAba('equip'); };
@@ -5793,6 +5856,7 @@ function renderizarListaModal(tipo) {
   });
   el.querySelectorAll('.mli-cancelar').forEach(function(btn){
     btn.onclick = function(){
+      if (tipo === 'equip' && fecharModoEdicao()) return;
       editandoPorTipo[tipo] = null;
       renderizarListaModal(tipo);
     };
@@ -5835,8 +5899,13 @@ function renderizarListaModal(tipo) {
         renderizarListaModal(tipo);
         return;
       }
+      if (nomeMudou && lista.indexOf(novoValor) >= 0) {
+        mostrarFeedback(tipo, false, '"' + novoValor + '" já existe na lista. Escolha outro código.');
+        return;
+      }
       const itemId = mapaIds[antigoValor];
       btn.disabled = true; btn.textContent = 'Salvando…';
+      let referenciasAtualizadas = 0;
       const promessa = nomeMudou ? editarItemSimples(cfg.listaId, itemId, novoValor) : Promise.resolve();
       promessa.then(function(){
         if (implementoMudou || regimeMudou || tipoItemMudou || descricaoMudou) {
@@ -5846,6 +5915,10 @@ function renderizarListaModal(tipo) {
           if (tipoItemMudou) campos.TipoItem = novoTipoItem;
           if (descricaoMudou) campos.Descricao = novaDescricao;
           return atualizarCamposItem(LISTA_FROTA_ID, itemId, campos);
+        }
+      }).then(function(){
+        if (nomeMudou && tipo === 'equip') {
+          return renomearReferenciasEquipamento(antigoValor, novoValor).then(function(n){ referenciasAtualizadas = n; });
         }
       }).then(function(){
         if (nomeMudou) {
@@ -5867,6 +5940,9 @@ function renderizarListaModal(tipo) {
             delete frotaRegimeTrabalho[antigoValor];
             delete frotaTipoItem[antigoValor];
             frotaIdsExtra[novoValor] = itemId;
+            Object.keys(frotaItemVinculado).forEach(function(k){
+              if (frotaItemVinculado[k] === antigoValor) frotaItemVinculado[k] = novoValor;
+            });
           }
           ordenarListas();
         } else {
@@ -5880,7 +5956,11 @@ function renderizarListaModal(tipo) {
         editandoPorTipo[tipo] = null;
         renderizarListaModal(tipo);
         preencherSelectsCadastroEquip();
-        mostrarFeedback(tipo, true, '✔ Atualizado com sucesso!');
+        if (frotaViewCarregada) renderizarViewFrota();
+        const msgOk = '✔ Atualizado com sucesso!' + (referenciasAtualizadas
+          ? ' ' + referenciasAtualizadas + ' registro(s) do histórico também passaram para ' + novoValor + '.' : '');
+        if (tipo === 'equip' && fecharModoEdicao()) mtToast(msgOk);
+        else mostrarFeedback(tipo, true, msgOk);
       }).catch(function(err){
         btn.disabled = false; btn.textContent = 'Salvar';
         mostrarFeedback(tipo, false, 'Erro: ' + err.message);
@@ -14077,6 +14157,7 @@ function desenharGradeFrota(idContainer, lista, tipo){
     return;
   }
   const icone = tipo === 'implemento' ? '🔧' : '🚜';
+  const podeEditar = usuarioEhAdmin(contaAtual);
   cont.innerHTML = lista.map(function(nome){
     const descricao = frotaDescricao[nome] || '';
     const local = frotaLocalAtual[nome] || '—';
@@ -14091,9 +14172,14 @@ function desenharGradeFrota(idContainer, lista, tipo){
         '<div class="frota-item-desc">' + (descricao ? frotaEsc(descricao) : '<i style="opacity:.6">Sem descrição cadastrada</i>') + '</div>' +
         '<div class="frota-item-meta">📍 ' + frotaEsc(local) + '</div>' +
         (vinculado ? '<span class="frota-item-vinc">🔗 ' + frotaEsc(vinculado) + '</span>' : '') +
+        (podeEditar ? '<button type="button" class="frota-item-editar" data-frota-editar="' + frotaEsc(nome) + '" title="Editar o cadastro (código, descrição, tipo, vínculo, regime)">✏️ Editar</button>' : '') +
       '</div>' +
     '</div>';
   }).join('');
+  // Editar abre o cadastro direto no item, sem abrir o histórico do card.
+  cont.querySelectorAll('[data-frota-editar]').forEach(function(btn){
+    btn.onclick = function(ev){ ev.stopPropagation(); abrirEdicaoFrota(btn.dataset.frotaEditar); };
+  });
   // Foto de cada item (carrega em paralelo, cada uma cai no seu card).
   cont.querySelectorAll('[data-frota-foto]').forEach(function(box){
     buscarUrlFotoEquipamento(box.dataset.frotaFoto).then(function(url){
