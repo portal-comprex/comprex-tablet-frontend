@@ -2046,7 +2046,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 17/11/2026 · 112</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 17/11/2026 · 113</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3814,15 +3814,13 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       </div>
       <div class="campo" id="loc-mover-impl-wrap" style="margin-top:12px">
         <label>Implemento acoplado</label>
-        <input type="text" id="loc-mover-impl" list="loc-mover-impl-lista" autocomplete="off" placeholder="Sem implemento — digite ou escolha um código" style="text-transform:uppercase">
-        <datalist id="loc-mover-impl-lista"></datalist>
-        <div class="modal-dica" id="loc-mover-impl-dica" style="margin-top:4px">O implemento vai junto para o novo local e status. Para tirar, apague o campo.</div>
+        <select id="loc-mover-impl"></select>
+        <div class="modal-dica" id="loc-mover-impl-dica" style="margin-top:4px">O implemento vai junto para o novo local e status. Para tirar, escolha "Sem implemento".</div>
       </div>
       <div class="campo" id="loc-mover-maq-wrap" style="margin-top:12px;display:none">
         <label>Acoplar na máquina</label>
-        <input type="text" id="loc-mover-maq" list="loc-mover-maq-lista" autocomplete="off" placeholder="Solto — digite ou escolha a máquina" style="text-transform:uppercase">
-        <datalist id="loc-mover-maq-lista"></datalist>
-        <div class="modal-dica" style="margin-top:4px">Acoplado, o implemento fica no local e no status da máquina. Para soltar, apague o campo.</div>
+        <select id="loc-mover-maq"></select>
+        <div class="modal-dica" style="margin-top:4px">Acoplado, o implemento fica no local e no status da máquina. Para soltar, escolha "Solto".</div>
       </div>
       <div class="campo" style="margin-top:12px">
         <label>Local atual</label>
@@ -6732,29 +6730,31 @@ function locAbrirModalMover(eq){
   // Implemento acoplado: só para máquinas. Lista os implementos com o local atual e,
   // se já estiver em outra máquina, avisa qual.
   const ehMaquina = frotaTipoItem[eq] !== 'implemento';
-  document.getElementById('loc-mover-impl-wrap').style.display = ehMaquina ? 'block' : 'none';
-  document.getElementById('loc-mover-impl').value = ehMaquina ? (frotaItemVinculado[eq] || '') : '';
-  if (ehMaquina) {
-    const donoDe = locDonosDeImplemento();
-    document.getElementById('loc-mover-impl-lista').innerHTML = frotas
-      .filter(function(f){ return frotaTipoItem[f] === 'implemento'; })
+  // Caixas de seleção simples (mesmo visual do "Novo local"): "código — local · observação".
+  const opcoesSelect = function(vazio, itens, extraDe){
+    return '<option value="">' + vazio + '</option>' + itens
       .sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); })
       .map(function(f){
-        const extra = (frotaLocalAtual[f] || 'sem local') + (donoDe[f] && donoDe[f] !== eq ? ' · acoplado em ' + donoDe[f] : '');
-        return '<option value="' + frotaEsc(f) + '">' + frotaEsc(extra) + '</option>';
+        return '<option value="' + frotaEsc(f) + '">' + frotaEsc(f + ' — ' + (frotaLocalAtual[f] || 'sem local') + extraDe(f)) + '</option>';
       }).join('');
+  };
+  document.getElementById('loc-mover-impl-wrap').style.display = ehMaquina ? 'block' : 'none';
+  if (ehMaquina) {
+    const donoDe = locDonosDeImplemento();
+    const selImpl = document.getElementById('loc-mover-impl');
+    selImpl.innerHTML = opcoesSelect('— Sem implemento —',
+      frotas.filter(function(f){ return frotaTipoItem[f] === 'implemento'; }),
+      function(f){ return donoDe[f] && donoDe[f] !== eq ? ' · acoplado em ' + donoDe[f] : ''; });
+    selImpl.value = frotaItemVinculado[eq] || '';
   }
   // Implemento: o caminho inverso — escolher a máquina em que ele será montado.
   document.getElementById('loc-mover-maq-wrap').style.display = ehMaquina ? 'none' : 'block';
-  document.getElementById('loc-mover-maq').value = ehMaquina ? '' : (locDonosDeImplemento()[eq] || '');
   if (!ehMaquina) {
-    document.getElementById('loc-mover-maq-lista').innerHTML = frotas
-      .filter(function(f){ return frotaTipoItem[f] !== 'implemento'; })
-      .sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); })
-      .map(function(f){
-        const extra = (frotaLocalAtual[f] || 'sem local') + (frotaItemVinculado[f] && frotaItemVinculado[f] !== eq ? ' · já tem ' + frotaItemVinculado[f] : '');
-        return '<option value="' + frotaEsc(f) + '">' + frotaEsc(extra) + '</option>';
-      }).join('');
+    const selMaq = document.getElementById('loc-mover-maq');
+    selMaq.innerHTML = opcoesSelect('— Solto (nenhuma máquina) —',
+      frotas.filter(function(f){ return frotaTipoItem[f] !== 'implemento'; }),
+      function(f){ return frotaItemVinculado[f] && frotaItemVinculado[f] !== eq ? ' · já tem ' + frotaItemVinculado[f] : ''; });
+    selMaq.value = locDonosDeImplemento()[eq] || '';
   }
   document.getElementById('loc-mover-local-atual').value = frotaLocalAtual[eq] || 'Sem local registrado';
   const sel = document.getElementById('loc-mover-novo-local');
