@@ -2046,7 +2046,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 17/11/2026 · 111</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 17/11/2026 · 112</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -3817,6 +3817,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
         <input type="text" id="loc-mover-impl" list="loc-mover-impl-lista" autocomplete="off" placeholder="Sem implemento — digite ou escolha um código" style="text-transform:uppercase">
         <datalist id="loc-mover-impl-lista"></datalist>
         <div class="modal-dica" id="loc-mover-impl-dica" style="margin-top:4px">O implemento vai junto para o novo local e status. Para tirar, apague o campo.</div>
+      </div>
+      <div class="campo" id="loc-mover-maq-wrap" style="margin-top:12px;display:none">
+        <label>Acoplar na máquina</label>
+        <input type="text" id="loc-mover-maq" list="loc-mover-maq-lista" autocomplete="off" placeholder="Solto — digite ou escolha a máquina" style="text-transform:uppercase">
+        <datalist id="loc-mover-maq-lista"></datalist>
+        <div class="modal-dica" style="margin-top:4px">Acoplado, o implemento fica no local e no status da máquina. Para soltar, apague o campo.</div>
       </div>
       <div class="campo" style="margin-top:12px">
         <label>Local atual</label>
@@ -6738,6 +6744,18 @@ function locAbrirModalMover(eq){
         return '<option value="' + frotaEsc(f) + '">' + frotaEsc(extra) + '</option>';
       }).join('');
   }
+  // Implemento: o caminho inverso — escolher a máquina em que ele será montado.
+  document.getElementById('loc-mover-maq-wrap').style.display = ehMaquina ? 'none' : 'block';
+  document.getElementById('loc-mover-maq').value = ehMaquina ? '' : (locDonosDeImplemento()[eq] || '');
+  if (!ehMaquina) {
+    document.getElementById('loc-mover-maq-lista').innerHTML = frotas
+      .filter(function(f){ return frotaTipoItem[f] !== 'implemento'; })
+      .sort(function(a, b){ return a.localeCompare(b, 'pt-BR'); })
+      .map(function(f){
+        const extra = (frotaLocalAtual[f] || 'sem local') + (frotaItemVinculado[f] && frotaItemVinculado[f] !== eq ? ' · já tem ' + frotaItemVinculado[f] : '');
+        return '<option value="' + frotaEsc(f) + '">' + frotaEsc(extra) + '</option>';
+      }).join('');
+  }
   document.getElementById('loc-mover-local-atual').value = frotaLocalAtual[eq] || 'Sem local registrado';
   const sel = document.getElementById('loc-mover-novo-local');
   sel.innerHTML = locais.map(function(l){ return '<option value="'+l+'" '+(frotaLocalAtual[eq]===l?'selected':'')+'>'+l+'</option>'; }).join('');
@@ -6765,6 +6783,20 @@ function locAtualizarVisibilidadeCamposManut(){
   document.getElementById('loc-mover-manut-wrap').style.display = emManut ? 'block' : 'none';
 }
 document.getElementById('loc-mover-status').addEventListener('change', locAtualizarVisibilidadeCamposManut);
+/** Ao escolher a máquina para acoplar o implemento, o local e o status passam a ser os dela. */
+document.getElementById('loc-mover-maq').addEventListener('change', function(){
+  const cod = this.value.trim().toUpperCase();
+  const maq = frotas.find(function(f){ return f.toUpperCase() === cod && frotaTipoItem[f] !== 'implemento'; });
+  if (!maq) return;
+  const sel = document.getElementById('loc-mover-novo-local');
+  if (frotaLocalAtual[maq]) sel.value = frotaLocalAtual[maq];
+  document.getElementById('loc-mover-status').value = frotaStatusAtual[maq] || 'EM OPERAÇÃO';
+  if (frotaStatusAtual[maq] === 'EM MANUTENÇÃO') {
+    document.getElementById('loc-mover-manut-tipo-box').innerHTML = mtTiposHtml('loc-mover-manut-tipo', frotaTipoManutencao[maq] || '');
+    document.getElementById('loc-mover-manut-responsavel').value = frotaResponsavelTecnico[maq] || '';
+  }
+  locAtualizarVisibilidadeCamposManut();
+});
 document.getElementById('loc-mover-fechar').onclick = function(){
   document.getElementById('loc-mover-overlay').classList.remove('aberto');
 };
@@ -6790,8 +6822,26 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
   const eq = locMoverEquipAlvo;
   if (locPrecisaEntrada(eq, document.getElementById('loc-mover-novo-local').value)) { locIrParaNovaEntrada(eq, document.getElementById('loc-mover-novo-local').value); return; }
   const localAtual = frotaLocalAtual[eq] || '';
-  const novoLocal = document.getElementById('loc-mover-novo-local').value;
-  const novoStatus = document.getElementById('loc-mover-status').value;
+  let novoLocal = document.getElementById('loc-mover-novo-local').value;
+  let novoStatus = document.getElementById('loc-mover-status').value;
+  // Implemento sendo acoplado numa máquina: local e status passam a ser os da máquina.
+  const ehImplAlvo = frotaTipoItem[eq] === 'implemento';
+  const maqAntiga = ehImplAlvo ? (locDonosDeImplemento()[eq] || '') : '';
+  const maqDigitada = ehImplAlvo ? document.getElementById('loc-mover-maq').value.trim().toUpperCase() : '';
+  const maqNova = maqDigitada ? (frotas.find(function(f){ return f.toUpperCase() === maqDigitada; }) || maqDigitada) : '';
+  const maqMudou = maqNova !== maqAntiga;
+  if (maqNova && (frotas.indexOf(maqNova) === -1 || frotaTipoItem[maqNova] === 'implemento')) {
+    const e0 = document.getElementById('loc-mover-erro');
+    e0.textContent = frotas.indexOf(maqNova) === -1 ? '⚠️ Máquina "' + maqNova + '" não encontrada — escolha um item da lista.' : '⚠️ "' + maqNova + '" é um implemento, não uma máquina.';
+    e0.style.display = 'block';
+    return;
+  }
+  if (maqNova) {
+    if (frotaLocalAtual[maqNova]) novoLocal = frotaLocalAtual[maqNova];
+    novoStatus = frotaStatusAtual[maqNova] || 'EM OPERAÇÃO';
+  }
+  if (maqMudou && maqNova && frotaItemVinculado[maqNova] && frotaItemVinculado[maqNova] !== eq &&
+      !confirm(maqNova + ' já tem o implemento ' + frotaItemVinculado[maqNova] + ' acoplado. Trocar por ' + eq + '? (' + frotaItemVinculado[maqNova] + ' fica solto, onde está.)')) return;
   const dataInformada = document.getElementById('loc-mover-data').value;
   const statusAtual = frotaStatusAtual[eq] || 'EM OPERAÇÃO';
   const erroEl = document.getElementById('loc-mover-erro');
@@ -6814,8 +6864,8 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
     erroEl.style.display = 'block';
     return;
   }
-  if (!maquinaMudou && !implMudou) {
-    erroEl.textContent = '⚠️ Nada mudou — troque o local, o status ou o implemento antes de confirmar.';
+  if (!maquinaMudou && !implMudou && !maqMudou) {
+    erroEl.textContent = '⚠️ Nada mudou — troque o local, o status, o implemento ou a máquina antes de confirmar.';
     erroEl.style.display = 'block';
     return;
   }
@@ -6862,10 +6912,21 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
       camposFrota.ObservacaoManutencao = '';
       camposFrota.PrevisaoReparo = null;
     }
-    await atualizarCamposItem(LISTA_FROTA_ID, idEquip, camposFrota);
+    if (Object.keys(camposFrota).length) await atualizarCamposItem(LISTA_FROTA_ID, idEquip, camposFrota);
     frotaLocalAtual[eq] = novoLocal;
     frotaStatusAtual[eq] = novoStatus;
     if (implMudou) frotaItemVinculado[eq] = implNovo;
+    // Implemento acoplado/solto pela janela dele: o vínculo fica gravado na máquina (ItemVinculado).
+    if (maqMudou) {
+      if (maqAntiga) {
+        await atualizarCamposItem(LISTA_FROTA_ID, frotaIdsExtra[maqAntiga] || frotasIds[maqAntiga], { ItemVinculado: '' });
+        frotaItemVinculado[maqAntiga] = '';
+      }
+      if (maqNova) {
+        await atualizarCamposItem(LISTA_FROTA_ID, frotaIdsExtra[maqNova] || frotasIds[maqNova], { ItemVinculado: eq });
+        frotaItemVinculado[maqNova] = eq;
+      }
+    }
     if (entrandoEmManut) {
       frotaTipoManutencao[eq] = novoTipoManut;
       frotaResponsavelTecnico[eq] = novoResponsavelManut;
@@ -6882,13 +6943,13 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
     if (maquinaMudou) await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', {
       fields: {
         Equipamento: eq,
-        ItemVinculado: frotaItemVinculado[eq] || '',
+        ItemVinculado: ehImplAlvo ? maqNova : (frotaItemVinculado[eq] || ''),
         LocalOrigem: localAtual || '—',
         LocalDestino: novoLocal,
         Status: novoStatus,
         Data: dataInformada + 'T12:00:00',
         Usuario: (contaAtual && (contaAtual.name || contaAtual.username)) || '',
-        Observacao: (semHistorico ? MARCADOR_SEM_HISTORICO + ' ' : '') + (saindoDaManut ? 'Manutenção concluída — movido via Localização Atual' : 'Movido via Localização Atual'),
+        Observacao: (semHistorico ? MARCADOR_SEM_HISTORICO + ' ' : '') + (saindoDaManut ? 'Manutenção concluída — movido via Localização Atual' : (maqMudou && maqNova ? 'Acoplado em ' + maqNova + ' via Local de Instalação' : 'Movido via Localização Atual')),
         TipoManutencao: tipoManutParaRegistro,
         ResponsavelTecnico: responsavelParaRegistro
       }
