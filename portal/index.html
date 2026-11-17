@@ -978,6 +978,57 @@
   .arv-manut-editar-btn{background:var(--cream);border:1px solid var(--linha);border-radius:6px;
     width:28px;height:28px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .arv-manut-editar-btn:hover{background:var(--impl-bg,#f1eafb)}
+  /* ---- Árvore v114: faixas por local de instalação, cartão por obra, uma linha por item ---- */
+  #status-eq-arvore.arv2 .arv-no{display:flex;align-items:center;gap:8px;grid-template-columns:none;font-size:13px;padding:9px 12px}
+  #status-eq-arvore.arv2 .arv-no .arv-seta{width:14px;flex:0 0 14px}
+  #status-eq-arvore.arv2 .arv2-icone{flex:0 0 auto}
+  #status-eq-arvore.arv2 .arv2-titulo{font-weight:800;color:var(--tinta);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #status-eq-arvore.arv2 .arv-nivel-0{background:none;padding-left:4px}
+  #status-eq-arvore.arv2 .arv-nivel-0 .arv2-titulo{color:var(--navy)}
+  #status-eq-arvore.arv2 .arv-nivel-1{background:var(--cream);border-radius:10px;margin-top:10px}
+  #status-eq-arvore.arv2 .arv-nivel-1:hover{filter:brightness(.98)}
+  #status-eq-arvore.arv2 .arv-nivel-2{border-radius:0;border-bottom:1px solid var(--linha)}
+  #status-eq-arvore.arv2 .arv-nivel-2 .arv2-titulo{font-weight:700}
+  #status-eq-arvore.arv2 .arv-nivel-2.colapsado{border-bottom:none}
+  #status-eq-arvore.arv2 .arv2-obra{border:1px solid var(--linha);border-radius:12px;margin:8px 0 0 22px;background:var(--card);overflow:hidden}
+  #status-eq-arvore.arv2 .arv2-chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;align-items:center;justify-content:flex-end}
+  #status-eq-arvore.arv2 .arv2-total{font-size:11.5px;color:var(--cinza);font-weight:600;margin-right:2px}
+  #status-eq-arvore.arv2 .arv2-chip{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  #status-eq-arvore.arv2 .arv2-chip-impl{background:var(--impl-bg,#f1eafb);color:var(--impl);cursor:pointer;margin-left:4px}
+  #status-eq-arvore.arv2 .arv2-chip-impl:hover{text-decoration:underline}
+  #status-eq-arvore.arv2 .arv2-chip-solto{background:var(--cream);color:var(--cinza);font-weight:600;margin-left:4px}
+  #status-eq-arvore.arv2 .arv-folha{grid-template-columns:12px minmax(150px,1fr) 56px 84px 104px 130px 30px;padding:7px 12px;font-size:12.5px;gap:10px}
+  #status-eq-arvore.arv2 .arv-folha:hover{background:var(--cream)}
+  #status-eq-arvore.arv2.arv-modo-manut .arv-folha,
+  #status-eq-arvore.arv2.arv-modo-manut .arv-cab-tabela{grid-template-columns:12px minmax(150px,1fr) 56px 84px 104px 130px 30px minmax(0,1.2fr) 96px 34px}
+  /* Telas menores: some a chegada e o texto do status (a bolinha já mostra o status). */
+  @media(max-width:1250px){
+    #status-eq-arvore.arv2 .arv-folha{grid-template-columns:12px minmax(140px,1fr) 52px 110px 30px}
+    #status-eq-arvore.arv2.arv-modo-manut .arv-folha,
+    #status-eq-arvore.arv2.arv-modo-manut .arv-cab-tabela{grid-template-columns:12px minmax(140px,1fr) 52px 110px 30px minmax(0,1.2fr) 90px 34px}
+    #status-eq-arvore.arv2 .arv2-cheg,
+    #status-eq-arvore.arv2 .arv2-st,
+    #status-eq-arvore.arv2 .arv-cab-tabela .cab-cheg,
+    #status-eq-arvore.arv2 .arv-cab-tabela .cab-st{display:none}
+    #status-eq-arvore.arv2 .arv2-legenda-dir{display:none}
+  }
+  #status-eq-arvore.arv2 .arv-cab-tabela{padding:0 34px 6px 36px}
+  #status-eq-arvore.arv2.arv-modo-manut .arv-no{grid-template-columns:none}
+  #status-eq-arvore.arv2 .arv2-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:0 0 10px}
+  #status-eq-arvore.arv2 .arv2-nome{min-width:0}
+  #status-eq-arvore.arv2 .arv2-cod{font-weight:800;color:var(--tinta)}
+  #status-eq-arvore.arv2 .arv2-cod-impl{font-weight:700;color:var(--impl)}
+  #status-eq-arvore.arv2 .arv2-extras{display:flex;gap:8px;flex-wrap:wrap;margin-top:3px}
+  #status-eq-arvore.arv2 .arv2-num{font-weight:700;color:var(--tinta)}
+  #status-eq-arvore.arv2 .arv2-mut{color:var(--cinza);font-weight:400;font-size:12px}
+  #status-eq-arvore.arv2 .arv2-st{font-size:12px;font-weight:700;white-space:nowrap}
+  #status-eq-arvore.arv2 .arv2-barra-wrap{display:flex;align-items:center;gap:6px}
+  #status-eq-arvore.arv2 .arv2-barra{flex:1;display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--linha)}
+  #status-eq-arvore.arv2 .arv2-barra i{display:block;height:100%}
+  #status-eq-arvore.arv2 .arv2-legenda{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--cinza);padding:2px 4px 8px;align-items:center}
+  #status-eq-arvore.arv2 .arv2-legenda>span{display:inline-flex;align-items:center;gap:5px}
+  #status-eq-arvore.arv2 .arv2-legenda-dir{margin-left:auto}
+  #status-eq-arvore.arv2 .arv-folha-edit-manut{padding-left:36px}
   .arv-folha-edit-manut{padding:12px 10px 14px 54px;border-bottom:1px solid var(--linha);background:var(--cream)}
   .arv-folha-edit-manut .aem-titulo{font-size:11.5px;font-weight:800;color:var(--navy);margin-bottom:8px}
   .arv-folha-edit-manut .aem-campo{margin-bottom:8px}
@@ -2046,7 +2097,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 17/11/2026 · 113</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 17/11/2026 · 114</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -7415,6 +7466,19 @@ let statusEqLocalSelecionado = null;
 let statusEqColapsados = new Set(); // guarda quais nós da árvore estão fechados
 let statusEqEditandoManut = null; // código do equip. cuja obs./previsão de reparo está em edição na árvore
 let statusEqFiltroTipo = ''; // '' | 'maquina' | 'implemento' — escolhido pelos cartões Máquinas / Implementos
+let statusEqColapsadosIniciado = false; // a árvore abre com os locais de instalação fechados só na 1ª vez
+function arv2StatusCurto(s){
+  return ({ 'EM OPERAÇÃO': 'Em operação', 'EM MANUTENÇÃO': 'Em manutenção', 'EM USO NO PÁTIO': 'Uso no pátio', 'DISPONÍVEL': 'Disponível', 'AGUARDANDO OM': 'Aguard. OM' })[s] || s;
+}
+/** Barra empilhada com os dias de cada status no histórico do local (passe o mouse para ver os números). */
+function arv2BarraHistorico(totais){
+  const total = STATUS_EQUIPAMENTO.reduce(function(s, k){ return s + (totais[k] || 0); }, 0);
+  const dica = STATUS_EQUIPAMENTO.filter(function(k){ return totais[k]; }).map(function(k){ return arv2StatusCurto(k) + ': ' + totais[k] + ' d'; }).join(' · ') || 'Sem histórico registrado';
+  const partes = total ? STATUS_EQUIPAMENTO.filter(function(k){ return totais[k]; }).map(function(k){
+    return '<i style="width:' + (totais[k] / total * 100).toFixed(1) + '%;background:' + STATUS_COR[k] + '"></i>';
+  }).join('') : '';
+  return '<div class="arv2-barra-wrap" title="' + dica + '"><div class="arv2-barra">' + partes + '</div></div>';
+}
 /** Extrai o "grupo" (prefixo) de um local, ex: "AMT - Sucata/Bobina - 500010" -> "AMT".
  *  Não depende de nenhum cadastro novo — é só o primeiro pedaço do nome do local. */
 function statusEqGrupoDoLocal(local){
@@ -7691,21 +7755,20 @@ function statusEqRenderizar(){
       '<div class="aem-feedback" id="aem-feedback-'+eq+'"></div>' +
     '</div>';
   }
+  /* Layout limpo (v114): uma linha por item — bolinha do status, código (+ implemento acoplado),
+     dias no local, chegada, status, barra do histórico no local e 📊. O nome da obra não se repete
+     na linha: já está no cabeçalho do cartão da obra. */
   function linhaFolha(eq, local){
     const vinc = frotaItemVinculado[eq];
     const ehImplemento = frotaTipoItem[eq] === 'implemento';
-    const codigoPrincipal = '<span class="' + (ehImplemento ? 'arv-cod-impl' : 'arv-cod-equip') + '">' + eq + '</span>';
-    const nome = codigoPrincipal + (vinc ? (' + <span class="arv-cod-impl">' + vinc + '</span>') : '');
+    const st = frotaStatusAtual[eq] || 'EM OPERAÇÃO';
+    const cor = STATUS_COR[st] || '#888';
     const dias = frotaDiasNoLocal[eq];
-    const diasTxt = (typeof dias === 'number') ? (dias + 'd') : '—';
+    const diasTxt = (typeof dias === 'number') ? (dias + ' d') : '—';
     const chegada = statusEqDataChegada(eq);
     const chegadaTxt = chegada ? formatarDataHist(chegada).split(' ')[0] : '—';
-    const totais = statusEqTotaisPorStatus(eq);
-    const subTxt = totais['EM OPERAÇÃO'] + 'd op. / ' + totais['EM MANUTENÇÃO'] + 'd manut. / ' + (totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM']) + 'd disp.';
     const podeEditar = usuarioEhAdmin(contaAtual);
-    const estiloFolha = podeEditar ? 'cursor:pointer' : 'cursor:default;opacity:.6';
-    const dicaFolha = podeEditar ? 'Clique para mudar o status ou mover este equipamento' : 'Somente leitura — apenas administradores podem mover por aqui';
-    const iconeFolha = frotaTipoItem[eq] === 'implemento' ? '🔧' : '🚜';
+    const dicaFolha = podeEditar ? 'Clique para mudar o status ou mover' : 'Somente leitura — apenas administradores podem mover por aqui';
     if (statusEqEditandoManut === eq) return linhaEdicaoManut(eq);
     const manutMeta = [tipoManutBadgeTexto(frotaTipoManutencao[eq]), frotaResponsavelTecnico[eq] ? ('👤 '+frotaEsc(frotaResponsavelTecnico[eq])) : ''].filter(Boolean).join(' · ');
     const colunasManut = modoManutencao ?
@@ -7713,17 +7776,28 @@ function statusEqRenderizar(){
       '<div class="arv-sub">'+(frotaPrevisaoReparo[eq] ? formatarDataBR(frotaPrevisaoReparo[eq]) : '—')+'</div>' +
       '<div>'+(isAdminArvore ? '<button type="button" class="arv-manut-editar-btn" data-editar-manut="'+eq+'" title="Editar observação / previsão de reparo">✏️</button>' : '')+'</div>'
       : '';
-    return '<div class="arv-folha" data-equip="'+eq+'" style="'+estiloFolha+'" title="'+dicaFolha+'">' +
-      '<div class="arv-no-nome">'+iconeFolha+' '+nome+(podeEditar?'':' 🔒')+'<br><span class="arv-sub" style="font-weight:400;margin-left:20px">'+local+'</span>'+'</div>' +
-      '<div>'+diasTxt+'</div>' +
-      '<div class="arv-sub">'+chegadaTxt+'</div>' +
-      '<div>'+statusEqBadge(frotaStatusAtual[eq])+'</div>' +
-      '<div class="arv-sub" style="display:flex;align-items:center;justify-content:space-between;gap:6px">'+subTxt+
-        '<button type="button" class="arv-btn-detalhe" data-ver-detalhe="'+eq+'" title="Ver histórico detalhado com gráfico">📊</button>' +
-      '</div>' +
+    const extras = (function(){ const o = locObsLiberacao(eq); const ln = (!ehImplemento && emEhSede(frotaLocalAtual[eq] || '')) ? frotaLinhasHtml(eq) : ''; return (o || ln) ? '<div class="arv2-extras">'+ln+o+'</div>' : ''; })();
+    const chipImpl = vinc ? ' <span class="arv2-chip arv2-chip-impl" data-ver-impl="'+frotaEsc(vinc)+'" title="Implemento acoplado — clique para abrir a ficha do '+frotaEsc(vinc)+'">🔗 '+frotaEsc(vinc)+'</span>' : '';
+    const chipSolto = ehImplemento ? ' <span class="arv2-chip arv2-chip-solto">'+(implementosVinculados.has(eq) ? 'implemento acoplado' : 'implemento solto')+'</span>' : '';
+    return '<div class="arv-folha" data-equip="'+eq+'" style="cursor:'+(podeEditar?'pointer':'default')+'" title="'+dicaFolha+'">' +
+      '<span class="arv2-dot" style="background:'+cor+'"></span>' +
+      '<div class="arv2-nome"><span class="'+(ehImplemento?'arv2-cod-impl':'arv2-cod')+'">'+eq+'</span>'+chipImpl+chipSolto+(podeEditar?'':' 🔒')+extras+'</div>' +
+      '<div class="arv2-num" title="Dias no local atual">'+diasTxt+'</div>' +
+      '<div class="arv2-mut arv2-cheg" title="Data de chegada no local">'+chegadaTxt+'</div>' +
+      '<div class="arv2-st" style="color:'+cor+'">'+arv2StatusCurto(st)+'</div>' +
+      arv2BarraHistorico(statusEqTotaisPorStatus(eq)) +
+      '<button type="button" class="arv-btn-detalhe" data-ver-detalhe="'+eq+'" title="Ficha e histórico detalhado">📊</button>' +
       colunasManut +
-      (function(){ const o = locObsLiberacao(eq); const ln = (!ehImplemento && emEhSede(frotaLocalAtual[eq] || '')) ? frotaLinhasHtml(eq) : ''; return (o || ln) ? '<div style="grid-column:1 / -1;margin:-6px 0 0 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'+ln+o+'</div>' : ''; })() +
     '</div>';
+  }
+  /** Contadores por status de uma lista de itens (para as faixas de local de instalação e obra). */
+  function chipsStatus(lista){
+    const c = statusZeros();
+    lista.forEach(function(eq){ const s = frotaStatusAtual[eq] || 'EM OPERAÇÃO'; if (c.hasOwnProperty(s)) c[s]++; });
+    return '<span class="arv2-chips"><span class="arv2-total">'+lista.length+(lista.length === 1 ? ' item' : ' itens')+'</span>' +
+      STATUS_EQUIPAMENTO.filter(function(s){ return c[s]; }).map(function(s){
+        return '<span class="arv2-chip" style="background:'+STATUS_COR[s]+'1f;color:'+STATUS_COR[s]+'" title="'+s+'">'+c[s]+' '+arv2StatusCurto(s).toLowerCase()+'</span>';
+      }).join('') + '</span>';
   }
   function montarPreviaFrotaLinha(eq){
     const dias = frotaDiasNoLocal[eq];
@@ -7740,44 +7814,68 @@ function statusEqRenderizar(){
       '<div class="hpt-linha"><span>Histórico</span><b>' + totais['EM OPERAÇÃO'] + 'd op / ' + totais['EM MANUTENÇÃO'] + 'd manut / ' + (totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM']) + 'd disp</b></div>' +
       '<div class="hpt-dica">Clique para mover · use 📊 para o histórico completo</div>';
   }
-  function noExpansor(id, nivel, icone, nome, col2, extraClasse){
+  function noExpansor(id, nivel, icone, nome, direita){
     const colapsado = statusEqColapsados.has(id);
-    return '<div class="arv-no arv-nivel-'+nivel+' '+(extraClasse||'')+(colapsado?' colapsado':'')+'" data-no="'+id+'">' +
-      '<div class="arv-no-nome"><span class="arv-seta">▾</span>'+icone+' '+nome+'</div>' +
-      '<div>'+(col2||'—')+'</div><div>—</div><div>—</div><div>—</div>' +
+    return '<div class="arv-no arv-nivel-'+nivel+(colapsado?' colapsado':'')+'" data-no="'+id+'">' +
+      '<span class="arv-seta">▾</span><span class="arv2-icone">'+icone+'</span><span class="arv2-titulo">'+nome+'</span>' + (direita || '') +
     '</div>';
+  }
+  /** "AMB - JUIZ DE FORA/MG - SUCATA - 500020" -> "JUIZ DE FORA/MG - SUCATA" + "500020" em cinza. */
+  function nomeObra(local){
+    const s = statusEqLocalSemPrefixo(local);
+    const m = /^(.*?)\s*-\s*(\d{5,})$/.exec(s);
+    return m ? frotaEsc(m[1]) + ' <span class="arv2-mut">' + m[2] + '</span>' : frotaEsc(s);
+  }
+  // Primeira vez na tela: locais de instalação fechados (só as faixas de resumo).
+  // Ao pesquisar por código, abre os grupos/obras onde ele aparece.
+  if (!statusEqColapsadosIniciado) {
+    statusEqColapsadosIniciado = true;
+    gruposOrdenados.forEach(function(g){ statusEqColapsados.add('g:' + g); });
+  }
+  if (filtroBusca) {
+    gruposOrdenados.forEach(function(g){ statusEqColapsados.delete('g:' + g); porGrupo[g].forEach(function(l){ statusEqColapsados.delete('l:' + l); }); });
   }
   document.getElementById('lista-tipos-manutencao').innerHTML =
     tiposManutencaoConhecidos().map(function(t){ return '<option value="'+t.replace(/"/g,'&quot;')+'">'; }).join('');
   arv.classList.toggle('arv-modo-manut', modoManutencao);
-  let html = '<div class="arv-cab-tabela"><span>EQUIPAMENTO / ACESSÓRIO</span><span>DIAS NO LOCAL</span><span>DATA DE CHEGADA</span><span>STATUS</span><span>HISTÓRICO NO LOCAL</span>' +
-    (modoManutencao ? '<span>OBSERVAÇÃO</span><span>PREVISÃO DE REPARO</span><span></span>' : '') + '</div>';
-  html += noExpansor('root', 0, '🏢', 'COMPREX', null, 'arv-nivel-0');
+  arv.classList.add('arv2');
+  const legendaCores = STATUS_EQUIPAMENTO.map(function(s){ return '<span><span class="arv2-dot" style="background:'+STATUS_COR[s]+'"></span>'+arv2StatusCurto(s)+'</span>'; }).join('');
+  let html = '<div class="arv2-legenda">' + legendaCores + '<span class="arv2-legenda-dir">Colunas: dias no local · chegada · status · barra = histórico no local</span></div>';
+  if (modoManutencao) html += '<div class="arv-cab-tabela"><span></span><span>EQUIPAMENTO</span><span>NO LOCAL</span><span class="cab-cheg">CHEGADA</span><span class="cab-st">STATUS</span><span>HISTÓRICO</span><span></span><span>OBSERVAÇÃO</span><span>PREVISÃO</span><span></span></div>';
+  html += noExpansor('root', 0, '🏢', 'COMPREX', chipsStatus(equipsFiltrados));
   html += '<div class="arv-filhos'+(statusEqColapsados.has('root')?' colapsado':'')+'" data-filhos-de="root">';
   gruposOrdenados.forEach(function(grupo){
     const idGrupo = 'g:' + grupo;
-    const totalEquipGrupo = porGrupo[grupo].reduce(function(s,l){ return s + porLocal[l].length; }, 0);
-    html += noExpansor(idGrupo, 1, '🏭', localInstalacaoDe(porGrupo[grupo][0]).cod + (localInstalacaoDe(porGrupo[grupo][0]).nome ? ' <span style="font-weight:400;opacity:.75">· ' + localInstalacaoDe(porGrupo[grupo][0]).nome + '</span>' : ''), totalEquipGrupo + ' equipamento(s)');
+    const li = localInstalacaoDe(porGrupo[grupo][0]);
+    const itensGrupo = porGrupo[grupo].reduce(function(s,l){ return s.concat(porLocal[l]); }, []);
+    html += noExpansor(idGrupo, 1, '🏭', frotaEsc(li.cod) + (li.nome ? ' <span class="arv2-mut">' + frotaEsc(li.nome) + '</span>' : ''), chipsStatus(itensGrupo));
     html += '<div class="arv-filhos'+(statusEqColapsados.has(idGrupo)?' colapsado':'')+'" data-filhos-de="'+idGrupo+'">';
     porGrupo[grupo].forEach(function(local){
       const idLocal = 'l:' + local;
-      // Dentro de cada local, equipamentos sempre vêm primeiro, implementos
-      // soltos (sem vínculo) ficam depois — mais fácil de escanear a lista.
+      // Dentro de cada obra, máquinas primeiro e implementos depois — mais fácil de escanear.
       const eqs = porLocal[local].slice().sort(function(a, b){
         const pesoA = frotaTipoItem[a] === 'implemento' ? 1 : 0;
         const pesoB = frotaTipoItem[b] === 'implemento' ? 1 : 0;
         if (pesoA !== pesoB) return pesoA - pesoB;
         return a.localeCompare(b, 'pt-BR');
       });
-      html += noExpansor(idLocal, 2, '📍', local, eqs.length + ' equipamento(s)');
+      html += '<div class="arv2-obra">';
+      html += noExpansor(idLocal, 2, '📍', nomeObra(local), chipsStatus(eqs));
       html += '<div class="arv-filhos'+(statusEqColapsados.has(idLocal)?' colapsado':'')+'" data-filhos-de="'+idLocal+'">';
       eqs.forEach(function(eq){ html += linhaFolha(eq, local); });
-      html += '</div>';
+      html += '</div></div>';
     });
     html += '</div>';
   });
   html += '</div>';
   arv.innerHTML = html;
+  arv.querySelectorAll('[data-ver-impl]').forEach(function(el){
+    el.onclick = function(e){
+      e.stopPropagation();
+      const im = el.dataset.verImpl;
+      garantirOcorrenciasCarregadas().then(function(){ abrirHistoricoEquipamentoOcorrencias(im); });
+    };
+  });
   arv.querySelectorAll('.arv-no').forEach(function(el){
     el.onclick = function(){
       const id = el.dataset.no;
@@ -14967,7 +15065,16 @@ let ocEquipAtual = null;
  *  outra lista do SharePoint) pra não atrasar a abertura do painel. */
 async function montarSecaoMovimentacoesEquip(equip){
   await Promise.all([garantirDadosMovimentacoes(), garantirDadosFrotaExtra()]);
-  const registros = movimentacoesItens.filter(function(m){ return m.equipamento === equip; })
+  const ehImpl = frotaTipoItem[equip] === 'implemento';
+  // Implemento: entram também as movimentações da máquina em que ele estava montado
+  // (antes de 11/2026 só a máquina ganhava registro), sem duplicar as que já têm registro próprio.
+  const proprios = movimentacoesItens.filter(function(m){ return m.equipamento === equip; });
+  const chaveMov = function(m){ return String(m.criado).slice(0, 10) + '|' + m.localDestino + '|' + m.status; };
+  const jaTem = {}; proprios.forEach(function(m){ jaTem[chaveMov(m)] = true; });
+  const daMaquina = ehImpl ? movimentacoesItens.filter(function(m){
+    return m.itemVinculado === equip && m.equipamento !== equip && frotaTipoItem[m.equipamento] !== 'implemento' && !jaTem[chaveMov(m)];
+  }) : [];
+  const registros = proprios.concat(daMaquina)
     .sort(function(a,b){ return new Date(b.criado) - new Date(a.criado); });
   if (!registros.length) {
     return '<h4>🚚 Movimentações</h4><div class="lista-vazia-dash">Nenhuma movimentação registrada para este equipamento.</div>';
@@ -15001,27 +15108,32 @@ async function montarSecaoMovimentacoesEquip(equip){
       '<div class="oc-conform-tipo imp"><div class="n">'+totais['EM MANUTENÇÃO']+'</div><div class="l">Dias em manutenção</div></div>' +
       '<div class="oc-conform-tipo min"><div class="n">'+(totais['DISPONÍVEL'] + totais['EM USO NO PÁTIO'] + totais['AGUARDANDO OM'])+'</div><div class="l">Dias disponível / pátio / aguardando OM</div></div>' +
     '</div>';
-  const implementoAtual = (typeof frotaItemVinculado !== 'undefined' && frotaItemVinculado[equip]) ? frotaItemVinculado[equip] : '';
+  // Máquina: qual implemento está montado. Implemento: em qual máquina está montado.
+  const implementoAtual = ehImpl ? (locDonosDeImplemento()[equip] || '') : ((typeof frotaItemVinculado !== 'undefined' && frotaItemVinculado[equip]) ? frotaItemVinculado[equip] : '');
   const ascendente = registros.slice().sort(function(a,b){ return new Date(a.criado) - new Date(b.criado); });
   const eventosVinculo = [];
   let vinculoAnterior = '';
   ascendente.forEach(function(m){
-    const v = m.itemVinculado || '';
+    const v = ehImpl ? (m.equipamento === equip ? (m.itemVinculado || '') : m.equipamento) : (m.itemVinculado || '');
     if (v !== vinculoAnterior) { eventosVinculo.push({ data: m.criado, de: vinculoAnterior, para: v }); vinculoAnterior = v; }
   });
-  const vinculoHtml = '<h4 style="font-size:11.5px;margin:10px 0 6px">🔧 Implemento montado</h4>' +
-    '<div style="font-size:12.5px;margin-bottom:6px">Atualmente: <b>'+(implementoAtual || 'nenhum implemento montado')+'</b></div>' +
+  const linkFicha = function(cod){ return '<a href="#" data-ficha-de="'+mtEsc(cod)+'" style="color:var(--impl);font-weight:800">'+mtEsc(cod)+'</a>'; };
+  const vinculoHtml = '<h4 style="font-size:11.5px;margin:10px 0 6px">'+(ehImpl ? '🚜 Máquina em que está montado' : '🔧 Implemento montado')+'</h4>' +
+    '<div style="font-size:12.5px;margin-bottom:6px">Atualmente: <b>'+(implementoAtual ? linkFicha(implementoAtual) : (ehImpl ? 'solto (nenhuma máquina)' : 'nenhum implemento montado'))+'</b></div>' +
     (eventosVinculo.length ? eventosVinculo.slice(-6).reverse().map(function(ev){
-        const txt = ev.para
-          ? (ev.de ? ('Trocou de <b>'+ev.de+'</b> para <b>'+ev.para+'</b>') : ('Montou <b>'+ev.para+'</b>'))
-          : ('Desmontou <b>'+ev.de+'</b>');
+        const txt = ehImpl
+          ? (ev.para ? (ev.de ? ('Passou de <b>'+ev.de+'</b> para <b>'+ev.para+'</b>') : ('Montado em <b>'+ev.para+'</b>')) : ('Desmontado de <b>'+ev.de+'</b>'))
+          : (ev.para
+            ? (ev.de ? ('Trocou de <b>'+ev.de+'</b> para <b>'+ev.para+'</b>') : ('Montou <b>'+ev.para+'</b>'))
+            : ('Desmontou <b>'+ev.de+'</b>'));
         return '<div style="font-size:11.5px;padding:2px 0">'+formatarDataHist(ev.data).split(' ')[0]+' — '+txt+'</div>';
       }).join('')
       : '<div style="font-size:11.5px;color:var(--cinza)">Sem trocas de implemento registradas.</div>');
   const timelineHtml = registros.slice(0, 20).map(function(m){
     return '<div style="padding:5px 0;border-bottom:1px solid var(--linha)">' +
       '<div style="font-size:12px"><b>'+formatarDataHist(m.criado)+'</b> — '+(m.localOrigem||'—')+' → <b>'+(m.localDestino||'—')+'</b> &nbsp; '+statusEqBadge(m.status)+'</div>' +
-      '<div style="font-size:11px;color:var(--cinza)">👤 '+(m.usuario||'—')+(m.observacao ? (' · 📝 '+m.observacao) : '')+(m.itemVinculado ? (' · 🔧 '+m.itemVinculado) : '')+'</div>' +
+      '<div style="font-size:11px;color:var(--cinza)">👤 '+(m.usuario||'—')+(m.observacao ? (' · 📝 '+m.observacao) : '')+
+        (ehImpl && m.equipamento !== equip ? (' · 🚜 junto com '+m.equipamento) : (m.itemVinculado ? (' · '+(ehImpl ? '🚜 ' : '🔧 ')+m.itemVinculado) : ''))+'</div>' +
     '</div>';
   }).join('');
   return '<h4>🚚 Movimentações — resumo de permanência</h4>' + resumoHtml + statusHtml + vinculoHtml +
@@ -15036,7 +15148,10 @@ async function abrirFichaEquipamentoPainel(equip){
   const g = function(m, k){ try { return (typeof m !== 'undefined' && m[k]) ? m[k] : ''; } catch(e){ return ''; } };
   const desc = g(typeof frotaDescricao !== 'undefined' ? frotaDescricao : {}, equip);
   const regime = g(typeof frotaRegimeTrabalho !== 'undefined' ? frotaRegimeTrabalho : {}, equip);
-  const implemento = g(typeof frotaItemVinculado !== 'undefined' ? frotaItemVinculado : {}, equip);
+  const ehImplFicha = typeof frotaTipoItem !== 'undefined' && frotaTipoItem[equip] === 'implemento';
+  const implemento = ehImplFicha ? '' : g(typeof frotaItemVinculado !== 'undefined' ? frotaItemVinculado : {}, equip);
+  const maquinaDoImpl = ehImplFicha ? (locDonosDeImplemento()[equip] || '') : '';
+  const linkOutraFicha = function(cod){ return '<a href="#" data-ficha-de="' + mtEsc(cod) + '" style="color:var(--impl);font-weight:800" title="Abrir a ficha de ' + mtEsc(cod) + '">' + mtEsc(cod) + '</a>'; };
   const localAtual = g(typeof frotaLocalAtual !== 'undefined' ? frotaLocalAtual : {}, equip) || '—';
   const statusAtual = g(typeof frotaStatusAtual !== 'undefined' ? frotaStatusAtual : {}, equip);
   const diasLocal = (typeof frotaDiasNoLocal !== 'undefined' && typeof frotaDiasNoLocal[equip] === 'number') ? frotaDiasNoLocal[equip] : null;
@@ -15044,21 +15159,23 @@ async function abrirFichaEquipamentoPainel(equip){
   const badge = statusAtual ? statusEqBadge(statusAtual) : '';
   document.getElementById('oc-equip-corpo').innerHTML =
     '<div class="oc-equip-header">' +
-      '<div class="oc-equip-foto" id="oc-equip-foto">🚜</div>' +
+      '<div class="oc-equip-foto" id="oc-equip-foto">' + (ehImplFicha ? '🔧' : '🚜') + '</div>' +
       '<div class="oc-equip-header-info">' +
-        '<div class="oc-equip-nome-grande">' + mtEsc(equip) + '</div>' +
+        '<div class="oc-equip-nome-grande">' + mtEsc(equip) + (ehImplFicha ? ' <span style="font-size:12px;font-weight:700;color:var(--impl)">implemento</span>' : '') + '</div>' +
         (desc ? '<div style="font-size:12.5px;font-weight:600;margin:-2px 0 4px">' + mtEsc(desc) + '</div>' : '') +
         '<div class="oc-equip-header-meta">' + badge + ' &nbsp; 📍 ' + mtEsc(localAtual) +
-          '<br>' + (regime ? 'Regime de trabalho: <b>' + mtEsc(regime) + '</b>' : '') +
-          (frotaLinhasDe(equip) ? '<br>⚙️ Opera com: <b>' + frotaLinhasLista(equip).map(function(x){ return mtEsc(x); }).join(', ') + '</b>' : '') +
-          (implemento ? (regime ? ' &nbsp;·&nbsp; ' : '') + '🔧 Implemento: <b>' + mtEsc(implemento) + '</b>' : '') + '</div>' +
+          (ehImplFicha
+            ? '<br>🚜 Acoplado em: <b>' + (maquinaDoImpl ? linkOutraFicha(maquinaDoImpl) : 'nenhuma máquina (solto)') + '</b>'
+            : '<br>' + (regime ? 'Regime de trabalho: <b>' + mtEsc(regime) + '</b>' : '') +
+              (frotaLinhasDe(equip) ? '<br>⚙️ Opera com: <b>' + frotaLinhasLista(equip).map(function(x){ return mtEsc(x); }).join(', ') + '</b>' : '') +
+              (implemento ? (regime ? ' &nbsp;·&nbsp; ' : '') + '🔧 Implemento: <b>' + linkOutraFicha(implemento) + '</b>' : '')) + '</div>' +
         '<div class="oc-equip-kpi-mini">' +
           '<div class="caixa"><div class="num">' + (diasLocal === null ? '—' : diasLocal) + '</div><div class="lbl">Dias no local atual</div></div>' +
           '<div class="caixa"><div class="num">' + totais['EM MANUTENÇÃO'] + '</div><div class="lbl">Dias em manutenção (acumulado)</div></div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
           '<button type="button" class="oc-equip-cta" id="oc-equip-ir-manut">🔧 Ficha de manutenção</button>' +
-          '<button type="button" class="oc-equip-cta" id="oc-equip-ir-mover" style="background:#2f6fb5">🚚 Mover equipamento</button>' +
+          '<button type="button" class="oc-equip-cta" id="oc-equip-ir-mover" style="background:#2f6fb5">🚚 ' + (ehImplFicha ? 'Mover / acoplar implemento' : 'Mover equipamento') + '</button>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -15068,6 +15185,12 @@ async function abrirFichaEquipamentoPainel(equip){
   document.getElementById('oc-equip-overlay').classList.add('aberto');
   document.getElementById('oc-equip-ir-manut').onclick = function(){ document.getElementById('oc-equip-overlay').classList.remove('aberto'); manutAbrirFicha(equip); };
   document.getElementById('oc-equip-ir-mover').onclick = function(){ document.getElementById('oc-equip-overlay').classList.remove('aberto'); locAbrirModalMover(equip); };
+  // Links máquina <-> implemento dentro da ficha abrem a ficha do outro item.
+  document.getElementById('oc-equip-corpo').onclick = function(e){
+    const a = e.target.closest('[data-ficha-de]'); if (!a) return;
+    e.preventDefault();
+    abrirFichaEquipamentoPainel(a.dataset.fichaDe);
+  };
   const fotoEl = document.getElementById('oc-equip-foto');
   buscarUrlFotoEquipamento(equip).then(function(url){ if (url) fotoEl.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:16px">'; }).catch(function(){});
   const vivo = function(){ return ocEquipAtual === equip; };
