@@ -2097,7 +2097,7 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </nav>
     <div class="sidebar-sair">
       <div class="sidebar-item" id="sidebar-sair"><i>↩️</i> Sair do sistema</div>
-      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 17/11/2026 · 114</div>
+      <div style="font-size:10px;opacity:.55;padding:2px 14px 8px;color:#fff" title="Se este número não mudar depois de atualizar, a página ainda está em cache: use Ctrl+F5">Versão 19/11/2026 · 115</div>
     </div>
     <div class="sidebar-tag">Gestão inteligente.<span>Operação segura.</span></div>
   </aside>
@@ -2750,6 +2750,11 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
     </div>
     <div class="mov-vinculo" id="mov-vinculo" style="display:none">
       <span>🔧 Implemento montado atualmente: <b id="mov-vinculo-nome">—</b></span>
+    </div>
+    <div class="campo" id="mov-solto-wrap" style="display:none;margin-top:12px;background:#fdf6ec;border:1px solid #e9d8ad;border-radius:8px;padding:10px 12px;max-width:520px">
+      <label id="mov-solto-label">Onde o implemento fica solto? <span class="obrig">*</span></label>
+      <select id="mov-solto"></select>
+      <div class="modal-dica" style="margin-top:4px">O implemento que sai da máquina não pode ficar sem contrato. Ele fica como DISPONÍVEL nesse local.</div>
     </div>
   </div>
   <div class="dash-row" style="align-items:flex-start;margin-top:14px">
@@ -3871,7 +3876,12 @@ body.tema-escuro .resumo-equip{color:#e5e7eb}
       <div class="campo" id="loc-mover-maq-wrap" style="margin-top:12px;display:none">
         <label>Acoplar na máquina</label>
         <select id="loc-mover-maq"></select>
-        <div class="modal-dica" style="margin-top:4px">Acoplado, o implemento fica no local e no status da máquina. Para soltar, escolha "Solto".</div>
+        <div class="modal-dica" style="margin-top:4px">Acoplado, o implemento fica no local e no status da máquina. Para soltar, escolha "Solto" e informe o contrato em "Novo local".</div>
+      </div>
+      <div class="campo" id="loc-mover-solto-wrap" style="margin-top:12px;display:none;background:#fdf6ec;border:1px solid #e9d8ad;border-radius:8px;padding:10px 12px">
+        <label id="loc-mover-solto-label">Onde o implemento fica solto? <span class="obrig">*</span></label>
+        <select id="loc-mover-solto"></select>
+        <div class="modal-dica" style="margin-top:4px">Implemento desmontado não pode ficar sem contrato. Ele fica como DISPONÍVEL nesse local.</div>
       </div>
       <div class="campo" style="margin-top:12px">
         <label>Local atual</label>
@@ -5854,19 +5864,11 @@ function renderizarListaModal(tipo) {
             '<option value="equipamento" '+(frotaTipoItem[v]!=='implemento'?'selected':'')+'>Equipamento</option>' +
             '<option value="implemento" '+(frotaTipoItem[v]==='implemento'?'selected':'')+'>Implemento</option>' +
           '</select>' +
-          '<label>Implemento vinculado</label>' +
-          '<select class="mli-select-extra" id="mli-edit-implemento">' +
-            '<option value="">Nenhum</option>' +
-            (function(){
-              // Garante que o implemento já vinculado apareça na lista e venha
-              // selecionado, mesmo que por algum motivo ele não esteja (ainda)
-              // na lista de equipamentos carregada em memória.
-              const vinculadoAtual = frotaItemVinculado[v] || '';
-              const opcoes = frotas.filter(function(f){ return f !== v && frotaTipoItem[f] === 'implemento'; });
-              if (vinculadoAtual && opcoes.indexOf(vinculadoAtual) === -1) opcoes.unshift(vinculadoAtual);
-              return opcoes.map(function(f){ return '<option value="'+f+'" '+(vinculadoAtual===f?'selected':'')+'>'+f.toUpperCase()+'</option>'; }).join('');
-            })() +
-          '</select>' +
+          // Montar/desmontar vai pela janela "Mover" (leva o implemento ao local da máquina e,
+          // ao desmontar, exige o contrato onde ele fica) — aqui só mostra e dá o atalho.
+          '<label>' + (frotaTipoItem[v] === 'implemento' ? 'Montado no equipamento' : 'Implemento vinculado') + '</label>' +
+          '<span style="font-weight:700;text-transform:uppercase">' + frotaEsc(vinculoDoItem(v) || '—') + '</span>' +
+          '<button type="button" class="mli-btn" id="mli-edit-vinculo-btn" data-equip="' + frotaEsc(v) + '">🔗 ' + (frotaTipoItem[v] === 'implemento' ? 'Montar / desmontar' : 'Trocar / tirar implemento') + '</button>' +
           '<label>Regime de trabalho</label>' +
           '<select class="mli-select-extra" id="mli-edit-regime">' +
             REGIMES_TRABALHO.map(function(r){ return '<option value="'+r+'" '+((frotaRegimeTrabalho[v]||'8h')===r?'selected':'')+'>'+r+'</option>'; }).join('') +
@@ -5916,6 +5918,13 @@ function renderizarListaModal(tipo) {
       renderizarListaModal(tipo);
     };
   });
+  const btnVinc = el.querySelector('#mli-edit-vinculo-btn');
+  if (btnVinc) btnVinc.onclick = function(){
+    const alvo = btnVinc.dataset.equip;
+    editandoPorTipo[tipo] = null;
+    if (!fecharModoEdicao()) { overlay.classList.remove('aberto'); renderizarListaModal(tipo); }
+    locAbrirModalMover(alvo);
+  };
   el.querySelectorAll('.mli-cancelar').forEach(function(btn){
     btn.onclick = function(){
       if (tipo === 'equip' && fecharModoEdicao()) return;
@@ -5947,7 +5956,7 @@ function renderizarListaModal(tipo) {
       const novoValor = document.getElementById('mli-input-'+tipo).value.trim().toUpperCase();
       const antigoValor = btn.dataset.antigo;
       if (!novoValor) return;
-      const novoImplemento = tipo === 'equip' ? document.getElementById('mli-edit-implemento').value : null;
+      const novoImplemento = tipo === 'equip' ? (frotaItemVinculado[antigoValor] || '') : null; // vínculo não muda por aqui
       const novoRegime = tipo === 'equip' ? document.getElementById('mli-edit-regime').value : null;
       const novoTipoItem = tipo === 'equip' ? document.getElementById('mli-edit-tipo').value : null;
       const novaDescricao = document.getElementById('mli-edit-descricao').value.trim();
@@ -6047,6 +6056,10 @@ document.getElementById('btn-salvar-equip').onclick = async function(){
   const dataInformada = document.getElementById('input-equip-data').value;
   const descricaoInicial = document.getElementById('input-equip-descricao').value.trim();
   const fotoInicial = document.getElementById('input-equip-foto').files[0] || null;
+  if (implemento && frotaTipoItem[implemento] !== 'implemento') { mostrarFeedback('equip', false, '"' + implemento + '" não é um implemento cadastrado.'); return; }
+  if (implemento && !localInicial) { mostrarFeedback('equip', false, 'Para montar o ' + implemento + ', informe o local inicial da máquina — o implemento vai para o mesmo local.'); return; }
+  const donoImplNovo = implemento ? (locDonosDeImplemento()[implemento] || '') : '';
+  if (donoImplNovo && !confirm('O ' + implemento + ' está montado no ' + donoImplNovo + '. Tirar de lá e montar no ' + val + '?')) return;
   const botao = document.getElementById('btn-salvar-equip');
   botao.disabled = true; botao.textContent = 'Salvando…';
 try {
@@ -6090,6 +6103,14 @@ try {
       });
       movimentacoesCarregadas = false;
     }
+    // Implemento montado no cadastro: sai da máquina anterior e vai para o local desta.
+    if (implemento) {
+      if (donoImplNovo && donoImplNovo !== val) {
+        await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(donoImplNovo), { ItemVinculado: '' });
+        frotaItemVinculado[donoImplNovo] = '';
+      }
+      await vincAcompanharMaquina(val, dataInformada, (donoImplNovo ? 'Tirado de ' + donoImplNovo + ' e montado em ' : 'Montado em ') + val + ' (cadastro da máquina)', true);
+    }
     document.getElementById('input-equip').value = '';
     document.getElementById('input-equip-implemento').value = '';
     document.getElementById('input-equip-local').value = '';
@@ -6112,8 +6133,15 @@ document.getElementById('btn-salvar-implemento').onclick = async function(){
   if (!val) { mostrarFeedback('implemento', false, 'Digite o código do implemento.'); return; }
   if (frotas.indexOf(val) >= 0) { mostrarFeedback('implemento', false, 'Esse código já existe na lista.'); return; }
   const equipVinculado = document.getElementById('input-implemento-equip').value.trim().toUpperCase();
-  const localInicial = document.getElementById('input-implemento-local').value.trim();
-  const statusInicial = document.getElementById('input-implemento-status').value;
+  if (equipVinculado && frotaItemVinculado[equipVinculado]) {
+    mostrarFeedback('implemento', false, equipVinculado + ' já tem o ' + frotaItemVinculado[equipVinculado] + ' montado. Desmonte-o antes (Local de Instalação ou Mover Equip./Implemento), informando o contrato onde ele fica.');
+    return;
+  }
+  // Montado numa máquina: o implemento nasce no local e no status dela.
+  const localInicial = (equipVinculado && frotaLocalAtual[equipVinculado]) || document.getElementById('input-implemento-local').value.trim();
+  const statusInicial = equipVinculado && frotaLocalAtual[equipVinculado]
+    ? vincStatusDoImpl(frotaStatusAtual[equipVinculado], 'EM OPERAÇÃO') : document.getElementById('input-implemento-status').value;
+  if (!localInicial) { mostrarFeedback('implemento', false, 'Informe o local (contrato) onde o implemento está.'); return; }
   const dataInformada = document.getElementById('input-implemento-data').value;
   const descricaoInicial = document.getElementById('input-implemento-descricao').value.trim();
   const fotoInicial = document.getElementById('input-implemento-foto').files[0] || null;
@@ -6146,7 +6174,7 @@ document.getElementById('btn-salvar-implemento').onclick = async function(){
       await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', {
         fields: {
           Equipamento: val,
-          ItemVinculado: '',
+          ItemVinculado: equipVinculado || '',
           LocalOrigem: 'Cadastro inicial',
           LocalDestino: localInicial,
           Status: statusInicial,
@@ -6248,7 +6276,9 @@ async function garantirDadosFrotaExtra(forcar){
     const nome = (f.Title || '').trim();
     if (!nome) return;
     frotaLocalAtual[nome] = normLocal(f.LocalAtual || '');
-    frotaItemVinculado[nome] = f.ItemVinculado || '';
+    // O vínculo máquina↔implemento vale só do lado da MÁQUINA (ItemVinculado dela).
+    // Valores antigos gravados no próprio implemento são ignorados (causavam divergência).
+    frotaItemVinculado[nome] = f.TipoItem === 'implemento' ? '' : (f.ItemVinculado || '');
     frotaStatusAtual[nome] = normStatus(f.StatusAtual) || 'EM OPERAÇÃO';
     frotaRegimeTrabalho[nome] = f.RegimeTrabalho || '8h';
     frotaLinhas[nome] = f.Linhas || '';
@@ -6290,6 +6320,16 @@ function movMontarUltimasLista(eq, titulo){
 // Guarda a última sugestão automática de implemento pra não sobrescrever
 // uma escolha manual do usuário (só reage à troca de equipamento).
 var movUltimaSugestaoImplemento = '';
+var movUltimoEqPrevia = '';
+/** Implemento montado no equipamento escolhido que NÃO vai junto (campo Implemento trocado ou vazio). */
+function movImplQueSai(){
+  const cod = document.getElementById('mov-equipamento').value.trim().toUpperCase();
+  const eq = frotas.find(function(x){ return x.toUpperCase() === cod; });
+  if (!eq || frotaTipoItem[eq] === 'implemento') return '';
+  const atual = frotaItemVinculado[eq] || '';
+  const impl = document.getElementById('mov-implemento').value.trim().toUpperCase();
+  return atual && impl !== atual.toUpperCase() ? atual : '';
+}
 function movAtualizarPreviaDeParaEVinculo(){
   const eq = document.getElementById('mov-equipamento').value.trim().toUpperCase();
   const implInput = document.getElementById('mov-implemento');
@@ -6323,10 +6363,15 @@ function movAtualizarPreviaDeParaEVinculo(){
   // automática (ou seja: não sobrescreve o que o usuário digitou na mão).
   const vinculado = (eq && frotaTipoItem[eq] !== 'implemento') ? (frotaItemVinculado[eq] || '') : '';
   const dicaImpl = document.getElementById('mov-implemento-dica');
-  if (vinculado && (impl === '' || impl === movUltimaSugestaoImplemento)) {
+  // Só sugere quando o equipamento muda — assim dá para apagar o implemento (desmontar) sem ele voltar sozinho.
+  const eqMudou = eq !== movUltimoEqPrevia;
+  movUltimoEqPrevia = eq;
+  if (vinculado && eqMudou && (impl === '' || impl === movUltimaSugestaoImplemento)) {
     implInput.value = vinculado;
     impl = vinculado;
     movUltimaSugestaoImplemento = vinculado;
+    dicaImpl.style.display = 'block';
+  } else if (vinculado && impl === vinculado) {
     dicaImpl.style.display = 'block';
   } else {
     if (impl !== movUltimaSugestaoImplemento) movUltimaSugestaoImplemento = '';
@@ -6344,6 +6389,19 @@ function movAtualizarPreviaDeParaEVinculo(){
   } else {
     boxVinculo.style.display = 'none';
     document.getElementById('mov-ultimas-implemento').innerHTML = '';
+  }
+  // Máquina com implemento montado e o campo Implemento trocado/apagado: o que sai precisa de um contrato.
+  const saiDaMaq = movImplQueSai();
+  const wrapSolto = document.getElementById('mov-solto-wrap');
+  wrapSolto.style.display = saiDaMaq ? 'block' : 'none';
+  if (saiDaMaq) {
+    document.getElementById('mov-solto-label').innerHTML = 'O ' + frotaEsc(saiDaMaq) + ' sai do ' + frotaEsc(eq) + '. Em qual contrato ele fica solto? <span class="obrig">*</span>';
+    const selS = document.getElementById('mov-solto');
+    if (selS.dataset.impl !== saiDaMaq) {
+      selS.dataset.impl = saiDaMaq;
+      selS.innerHTML = '<option value="">— escolha o contrato —</option>' +
+        vincLocaisSolto().map(function(l){ return '<option value="' + frotaEsc(l) + '">' + frotaEsc(l) + '</option>'; }).join('');
+    }
   }
   const setas = document.getElementById('mov-setas');
   if ((eq || impl) && novoLocal) {
@@ -6392,6 +6450,12 @@ document.getElementById('mov-salvar').onclick = async function(){
   if (impl && !frotas.includes(impl)) { movMostrarErro('Implemento "' + impl + '" não encontrado — escolha um item da lista.'); return; }
   if (!dataInformada) { movMostrarErro('Informe a data da movimentação.'); return; }
   if (!novoLocalInformado) { movMostrarErro('Selecione o novo local.'); return; }
+  const implQueSai = movImplQueSai();
+  const localSoltoMov = implQueSai ? document.getElementById('mov-solto').value : '';
+  if (implQueSai && !localSoltoMov) { movMostrarErro('O ' + implQueSai + ' vai sair do ' + eq + ': informe em qual contrato ele fica solto.'); return; }
+  const donoDoImpl = impl ? (locDonosDeImplemento()[impl] || '') : '';
+  if (eq && impl && donoDoImpl && donoDoImpl !== eq &&
+      !confirm('O ' + impl + ' está montado no ' + donoDoImpl + '. Tirar de lá e montar no ' + eq + '?')) return;
   const localItemPrincipal = frotaLocalAtual[eq || impl] || '';
   if (!usuarioPodeEditarLocal(localItemPrincipal)) {
     movMostrarErro('Você só pode mover equipamentos da sua localidade. "' + (localItemPrincipal || 'Sem local registrado') + '" é somente leitura para você.');
@@ -6431,6 +6495,20 @@ document.getElementById('mov-salvar').onclick = async function(){
     }
     if (eq) await moverItem(eq, impl);
     if (impl) await moverItem(impl, eq);
+    // Vínculo (gravado na máquina): segue o que foi movido junto.
+    if (eq && impl !== (frotaItemVinculado[eq] || '')) {
+      if (impl && donoDoImpl && donoDoImpl !== eq) {
+        await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(donoDoImpl), { ItemVinculado: '' });
+        frotaItemVinculado[donoDoImpl] = '';
+      }
+      await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(eq), { ItemVinculado: impl });
+      frotaItemVinculado[eq] = impl;
+    } else if (!eq && impl && donoDoImpl) {
+      // Implemento movido sozinho: saiu da máquina e fica solto no novo local.
+      await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(donoDoImpl), { ItemVinculado: '' });
+      frotaItemVinculado[donoDoImpl] = '';
+    }
+    if (implQueSai) await vincDesmontar(implQueSai, { local: localSoltoMov, status: 'DISPONÍVEL', data: dataInformada, de: eq, obs: impl ? 'trocado por ' + impl : 'máquina movida sem ele' });
     movimentacoesCarregadas = false; // força reconsulta na próxima vez que abrir o histórico
     const ok = document.getElementById('mov-ok-msg');
     ok.style.display = 'block';
@@ -6768,6 +6846,85 @@ function locDonosDeImplemento(){
   });
   return donos;
 }
+/* ---------------------------------------------------------------------
+   VÍNCULO MÁQUINA ↔ IMPLEMENTO — regra única (nov/2026):
+   • fica gravado só na máquina (ItemVinculado dela);
+   • montado, o implemento fica no local (contrato) da máquina e a acompanha;
+   • desmontado, é obrigatório informar em qual contrato ele fica solto.
+   --------------------------------------------------------------------- */
+/** Máquina: implemento montado nela. Implemento: máquina em que está montado. */
+function vinculoDoItem(cod){
+  if (!cod) return '';
+  return frotaTipoItem[cod] === 'implemento' ? (locDonosDeImplemento()[cod] || '') : (frotaItemVinculado[cod] || '');
+}
+function vincIdFrota(cod){ return frotaIdsExtra[cod] || frotasIds[cod]; }
+/** Locais onde um implemento pode ficar solto (tudo menos "COMPREX - Manutenção"). */
+function vincLocaisSolto(){ return locais.filter(function(l){ return !locDestinoEhManutencao(l); }); }
+/** Status do implemento montado: o da máquina; se a máquina foi para a manutenção, o implemento fica DISPONÍVEL. */
+function vincStatusDoImpl(statusMaq, statusImplAtual){
+  if (statusMaq === 'EM MANUTENÇÃO') return statusImplAtual === 'EM MANUTENÇÃO' ? 'EM MANUTENÇÃO' : 'DISPONÍVEL';
+  return statusMaq || 'EM OPERAÇÃO';
+}
+async function vincRegistrar(equip, vinc, origem, destino, status, data, obs){
+  await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', { fields: {
+    Equipamento: equip, ItemVinculado: vinc || '', LocalOrigem: origem || '—', LocalDestino: destino, Status: status,
+    Data: (data || new Date().toISOString().slice(0, 10)) + 'T12:00:00',
+    Usuario: (contaAtual && (contaAtual.name || contaAtual.username)) || '', Observacao: obs } });
+  movimentacoesCarregadas = false;
+}
+/** Desmonta o implemento (tira o vínculo da máquina, se ainda houver) e o deixa solto no contrato informado. */
+async function vincDesmontar(impl, o){
+  if (!impl) return;
+  if (!o.local) throw new Error('Informe em qual contrato o ' + impl + ' fica solto.');
+  const dono = locDonosDeImplemento()[impl] || '';
+  if (dono) {
+    await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(dono), { ItemVinculado: '' });
+    frotaItemVinculado[dono] = '';
+  }
+  const de = o.de || dono;
+  const origem = frotaLocalAtual[impl] || '';
+  const statusAntes = frotaStatusAtual[impl] || 'EM OPERAÇÃO';
+  const status = o.status || 'DISPONÍVEL';
+  await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(impl), { LocalAtual: o.local, StatusAtual: status });
+  frotaLocalAtual[impl] = o.local; frotaStatusAtual[impl] = status;
+  await vincRegistrar(impl, '', origem, o.local, status, o.data,
+    (de ? 'Desmontado de ' + de + ' — fica solto em ' + o.local : 'Solto em ' + o.local) + (o.obs ? ' · ' + o.obs : ''));
+  if (statusAntes === 'EM MANUTENÇÃO' && status !== 'EM MANUTENÇÃO' && typeof manutSincronizarAposMover === 'function') try {
+    await manutSincronizarAposMover(impl, { iniciou: false, saiu: true, data: o.data, tipo: '', responsavel: '', obs: '', previsao: null });
+  } catch (e) { console.warn('Ficha de manutenção do implemento não atualizada:', e); }
+}
+/** Monta o implemento na máquina: tira de onde estava, grava na máquina e leva o implemento para o local dela.
+ *  A máquina não pode ter outro implemento (quem chama desmonta antes, informando o contrato). */
+async function vincMontar(impl, maq, o){
+  o = o || {};
+  if (frotaItemVinculado[maq] && frotaItemVinculado[maq] !== impl) throw new Error(maq + ' já tem o ' + frotaItemVinculado[maq] + ' montado. Desmonte-o antes, informando onde ele fica.');
+  const donoAnt = locDonosDeImplemento()[impl] || '';
+  if (donoAnt && donoAnt !== maq) {
+    await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(donoAnt), { ItemVinculado: '' });
+    frotaItemVinculado[donoAnt] = '';
+  }
+  if (frotaItemVinculado[maq] !== impl) {
+    await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(maq), { ItemVinculado: impl });
+    frotaItemVinculado[maq] = impl;
+  }
+  await vincAcompanharMaquina(maq, o.data, (donoAnt && donoAnt !== maq ? 'Tirado de ' + donoAnt + ' e montado em ' : 'Montado em ') + maq + (o.obs ? ' · ' + o.obs : ''), true);
+}
+/** O implemento montado vai para o local da máquina (com registro no histórico, se mudou algo). */
+async function vincAcompanharMaquina(maq, data, obs, registrarSempre){
+  const impl = frotaItemVinculado[maq];
+  if (!impl || !maq || frotaTipoItem[maq] === 'implemento') return;
+  const destino = frotaLocalAtual[maq] || '';
+  if (!destino) return;
+  const origem = frotaLocalAtual[impl] || '';
+  const statusAntes = frotaStatusAtual[impl] || 'EM OPERAÇÃO';
+  const status = vincStatusDoImpl(frotaStatusAtual[maq], statusAntes);
+  if (origem === destino && statusAntes === status && !registrarSempre) return;
+  if (origem !== destino || statusAntes !== status) {
+    await atualizarCamposItem(LISTA_FROTA_ID, vincIdFrota(impl), { LocalAtual: destino, StatusAtual: status });
+    frotaLocalAtual[impl] = destino; frotaStatusAtual[impl] = status;
+  }
+  await vincRegistrar(impl, maq, origem, destino, status, data, obs || ('Acompanha a máquina ' + maq));
+}
 function locAbrirModalMover(eq){
   const localDoEquip = frotaLocalAtual[eq] || '';
   // Fora do menu "Mover Equip./Implemento", mover/editar por aqui (Localização Atual,
@@ -6809,8 +6966,12 @@ function locAbrirModalMover(eq){
   }
   document.getElementById('loc-mover-local-atual').value = frotaLocalAtual[eq] || 'Sem local registrado';
   const sel = document.getElementById('loc-mover-novo-local');
-  sel.innerHTML = locais.map(function(l){ return '<option value="'+l+'" '+(frotaLocalAtual[eq]===l?'selected':'')+'>'+l+'</option>'; }).join('');
+  // Sem local registrado: o campo começa vazio (antes caía no primeiro local da lista sem ninguém perceber).
+  sel.innerHTML = '<option value="">— escolha o local / contrato —</option>' +
+    locais.map(function(l){ return '<option value="'+frotaEsc(l)+'" '+(frotaLocalAtual[eq]===l?'selected':'')+'>'+frotaEsc(l)+'</option>'; }).join('');
   document.getElementById('loc-mover-status').value = frotaStatusAtual[eq] || 'EM OPERAÇÃO';
+  document.getElementById('loc-mover-solto').dataset.impl = '';
+  locAtualizarSolto();
   const hoje = new Date();
   document.getElementById('loc-mover-data').value = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
   document.getElementById('loc-mover-erro').style.display = 'none';
@@ -6835,10 +6996,45 @@ function locAtualizarVisibilidadeCamposManut(){
 }
 document.getElementById('loc-mover-status').addEventListener('change', locAtualizarVisibilidadeCamposManut);
 /** Ao escolher a máquina para acoplar o implemento, o local e o status passam a ser os dela. */
+/** Implemento que perde o lugar com a escolha atual da janela (e precisa de um contrato para ficar solto):
+ *  máquina → o implemento que estava nela, se foi trocado ou tirado;
+ *  implemento → o que estava na máquina escolhida, que vai sair de lá. */
+function locImplDesalojado(){
+  const eq = locMoverEquipAlvo;
+  if (!eq) return '';
+  if (frotaTipoItem[eq] !== 'implemento') {
+    const antigo = frotaItemVinculado[eq] || '';
+    return antigo && document.getElementById('loc-mover-impl').value !== antigo ? antigo : '';
+  }
+  const maq = document.getElementById('loc-mover-maq').value;
+  const x = maq ? (frotaItemVinculado[maq] || '') : '';
+  return x && x !== eq ? x : '';
+}
+function locAtualizarSolto(){
+  const x = locImplDesalojado();
+  document.getElementById('loc-mover-solto-wrap').style.display = x ? 'block' : 'none';
+  if (!x) return;
+  document.getElementById('loc-mover-solto-label').innerHTML = 'Onde o ' + frotaEsc(x) + ' fica solto? <span class="obrig">*</span>';
+  const sel = document.getElementById('loc-mover-solto');
+  if (sel.dataset.impl === x) return;
+  sel.dataset.impl = x;
+  sel.innerHTML = '<option value="">— escolha o contrato —</option>' +
+    vincLocaisSolto().map(function(l){ return '<option value="' + frotaEsc(l) + '">' + frotaEsc(l) + '</option>'; }).join('');
+}
+document.getElementById('loc-mover-impl').addEventListener('change', locAtualizarSolto);
 document.getElementById('loc-mover-maq').addEventListener('change', function(){
+  locAtualizarSolto();
   const cod = this.value.trim().toUpperCase();
   const maq = frotas.find(function(f){ return f.toUpperCase() === cod && frotaTipoItem[f] !== 'implemento'; });
-  if (!maq) return;
+  if (!maq) {
+    // Soltou o implemento que estava montado: obriga a escolher o contrato onde ele fica.
+    if (!cod && locDonosDeImplemento()[locMoverEquipAlvo]) {
+      document.getElementById('loc-mover-novo-local').value = '';
+      document.getElementById('loc-mover-status').value = 'DISPONÍVEL';
+      locAtualizarVisibilidadeCamposManut();
+    }
+    return;
+  }
   const sel = document.getElementById('loc-mover-novo-local');
   if (frotaLocalAtual[maq]) sel.value = frotaLocalAtual[maq];
   document.getElementById('loc-mover-status').value = frotaStatusAtual[maq] || 'EM OPERAÇÃO';
@@ -6891,8 +7087,23 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
     if (frotaLocalAtual[maqNova]) novoLocal = frotaLocalAtual[maqNova];
     novoStatus = frotaStatusAtual[maqNova] || 'EM OPERAÇÃO';
   }
+  // Implemento que sai do lugar com esta operação: precisa do contrato onde vai ficar solto.
+  const implDesalojado = locImplDesalojado();
+  const localSolto = implDesalojado ? document.getElementById('loc-mover-solto').value : '';
+  if (implDesalojado && !localSolto) {
+    const e1 = document.getElementById('loc-mover-erro');
+    e1.textContent = '⚠️ Informe em qual contrato o ' + implDesalojado + ' fica solto.';
+    e1.style.display = 'block';
+    return;
+  }
+  if (!novoLocal) {
+    const e2 = document.getElementById('loc-mover-erro');
+    e2.textContent = ehImplAlvo && !maqNova ? '⚠️ Informe em "Novo local" o contrato onde o ' + eq + ' fica solto.' : '⚠️ Selecione o novo local.';
+    e2.style.display = 'block';
+    return;
+  }
   if (maqMudou && maqNova && frotaItemVinculado[maqNova] && frotaItemVinculado[maqNova] !== eq &&
-      !confirm(maqNova + ' já tem o implemento ' + frotaItemVinculado[maqNova] + ' acoplado. Trocar por ' + eq + '? (' + frotaItemVinculado[maqNova] + ' fica solto, onde está.)')) return;
+      !confirm(maqNova + ' já tem o implemento ' + frotaItemVinculado[maqNova] + ' acoplado. Trocar por ' + eq + '? (' + frotaItemVinculado[maqNova] + ' fica solto em ' + localSolto + '.)')) return;
   const dataInformada = document.getElementById('loc-mover-data').value;
   const statusAtual = frotaStatusAtual[eq] || 'EM OPERAÇÃO';
   const erroEl = document.getElementById('loc-mover-erro');
@@ -6978,6 +7189,8 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
         frotaItemVinculado[maqNova] = eq;
       }
     }
+    // O implemento que estava na máquina escolhida sai de lá e fica solto no contrato informado.
+    if (ehImplAlvo && implDesalojado) await vincDesmontar(implDesalojado, { local: localSolto, status: 'DISPONÍVEL', data: dataInformada, de: maqNova, obs: 'trocado por ' + eq + ' via Local de Instalação' });
     if (entrandoEmManut) {
       frotaTipoManutencao[eq] = novoTipoManut;
       frotaResponsavelTecnico[eq] = novoResponsavelManut;
@@ -6991,7 +7204,7 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
     }
     const tipoManutParaRegistro = entrandoEmManut ? novoTipoManut : (saindoDaManut ? tipoManutAntigo : '');
     const responsavelParaRegistro = entrandoEmManut ? novoResponsavelManut : (saindoDaManut ? responsavelManutAntigo : '');
-    if (maquinaMudou) await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', {
+    if (maquinaMudou || maqMudou) await graphPost(GRAPH + '/sites/' + SITE_ID + '/lists/' + LISTA_MOVIMENTACOES_ID + '/items', {
       fields: {
         Equipamento: eq,
         ItemVinculado: ehImplAlvo ? maqNova : (frotaItemVinculado[eq] || ''),
@@ -7000,7 +7213,7 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
         Status: novoStatus,
         Data: dataInformada + 'T12:00:00',
         Usuario: (contaAtual && (contaAtual.name || contaAtual.username)) || '',
-        Observacao: (semHistorico ? MARCADOR_SEM_HISTORICO + ' ' : '') + (saindoDaManut ? 'Manutenção concluída — movido via Localização Atual' : (maqMudou && maqNova ? 'Acoplado em ' + maqNova + ' via Local de Instalação' : 'Movido via Localização Atual')),
+        Observacao: (semHistorico ? MARCADOR_SEM_HISTORICO + ' ' : '') + (saindoDaManut ? 'Manutenção concluída — movido via Localização Atual' : (maqMudou && maqNova ? 'Acoplado em ' + maqNova + ' via Local de Instalação' : (maqMudou && maqAntiga ? 'Desmontado de ' + maqAntiga + ' — fica solto em ' + novoLocal + ' (via Local de Instalação)' : 'Movido via Localização Atual'))),
         TipoManutencao: tipoManutParaRegistro,
         ResponsavelTecnico: responsavelParaRegistro
       }
@@ -7040,6 +7253,8 @@ document.getElementById('loc-mover-confirmar').onclick = async function(){
         });
       }
     }
+    // O implemento que estava na máquina (trocado ou tirado) fica solto no contrato informado.
+    if (!ehImplAlvo && implDesalojado) await vincDesmontar(implDesalojado, { local: localSolto, status: 'DISPONÍVEL', data: dataInformada, de: eq, obs: (implNovo ? 'trocado por ' + implNovo : 'retirado') + ' via Local de Instalação' });
     movimentacoesCarregadas = false;
     // Mantém a ficha da aba Manutenção em dia: abre quando entra, fecha quando sai.
     if ((entrandoEmManut && statusAtual !== 'EM MANUTENÇÃO') || saindoDaManut) try {
@@ -13000,6 +13215,7 @@ function manutModalConcluir(oc){
       Data: (paraContrato ? qEnv.d : v.data) + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Manutenção concluída — ficha de manutenção' + (paraContrato ? ' · enviado ao contrato' : ' · disponível na manutenção') + (comPend ? ' · liberado COM pendência: ' + v.pend : ' · liberado sem pendência') + (v.obs ? ' · ' + v.obs : ''),
       TipoManutencao: oc.tipo, ResponsavelTecnico: oc.responsavel } });
     movimentacoesCarregadas = false;
+    await vincAcompanharMaquina(eq, paraContrato ? qEnv.d : v.data, 'Acompanha ' + eq + ' — liberado da manutenção');
     await manutAtualizar('ocorrencias', oc.id, { Situacao: 'Concluída', DataSaida: v.data, HoraSaida: v.hora || '', HorimetroSaida: horimS, DestinoLiberacao: v.destino, ContratoDestino: paraContrato ? v.local : '', DataEnvioContrato: paraContrato ? qEnv.d : null, HoraEnvioContrato: paraContrato ? (qEnv.h === '00:00' ? '' : qEnv.h) : '', Observacao: [oc.observacao || '', v.obs ? 'Conclusão: ' + v.obs : '', comPend ? '[PENDÊNCIA] ' + v.pend.replace(/\n+/g, ' ') : ''].filter(Boolean).join('\n') });
     await manutRecarregar('ocorrencias');
     await garantirDadosMovimentacoes(true);
@@ -13039,6 +13255,7 @@ function manutModalEnviarContrato(oc){
       Equipamento: eq, ItemVinculado: frotaItemVinculado[eq] || '', LocalOrigem: antes || '—', LocalDestino: v.local, Status: 'EM OPERAÇÃO',
       Data: q.d + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Enviado ao contrato após a manutenção' + (v.obs ? ' · ' + v.obs : '') } });
     movimentacoesCarregadas = false;
+    await vincAcompanharMaquina(eq, q.d, 'Acompanha ' + eq + ' — enviado ao contrato após a manutenção');
     await manutAtualizar('ocorrencias', oc.id, { DestinoLiberacao: 'Enviado para contrato', ContratoDestino: v.local, DataEnvioContrato: q.d, HoraEnvioContrato: q.h === '00:00' ? '' : q.h });
     await manutRecarregar('ocorrencias');
     await garantirDadosMovimentacoes(true);
@@ -13133,6 +13350,7 @@ document.getElementById('mtn-salvar').onclick = async function(){
         Data: data + 'T12:00:00', Usuario: mtUsuario(), Observacao: 'Entrada na manutenção — ficha de manutenção', TipoManutencao: tipo, ResponsavelTecnico: resp } });
       movimentacoesCarregadas = false;
     }
+    await vincAcompanharMaquina(eq, data, 'Acompanha ' + eq + ' — entrada na manutenção');
     await manutCriar('ocorrencias', { Title: eq, DataEntrada: data, Etapa: etapa, Motivo: motivo, Tipo: tipo, Responsavel: resp, PrevisaoRetorno: previsao || null, Situacao: 'Aberta', Observacao: obs, DataInicio: inicio || null, Prioridade: document.getElementById('mtn-prior').value,
       HoraEntrada: dtC.h, DataParada: dtP.d || null, HoraParada: dtP.h, HoraInicio: dtI.h, HorimetroEntrada: document.getElementById('mtn-horim').value === '' ? null : Number(document.getElementById('mtn-horim').value) });
     await manutRecarregar('ocorrencias');
@@ -14254,8 +14472,8 @@ function renderizarSecaoCadastroEquip(){
   if (!cont || !equip) return;
   const ehImplemento = frotaTipoItem[equip] === 'implemento';
   if (!movEquipEditando) {
-    const vinculadoLabel = ehImplemento ? 'Vinculado ao equipamento' : 'Implemento vinculado';
-    const vinculado = frotaItemVinculado[equip] || '';
+    const vinculadoLabel = ehImplemento ? 'Montado no equipamento' : 'Implemento vinculado';
+    const vinculado = vinculoDoItem(equip);
     cont.innerHTML =
       '<h4>📋 Dados cadastrais</h4>' +
       '<div class="oc-info-grid">' +
@@ -14269,11 +14487,9 @@ function renderizarSecaoCadastroEquip(){
       '</div>';
     return;
   }
-  const opcoesVinculo = ehImplemento
-    ? frotas.filter(function(f){ return f !== equip && frotaTipoItem[f] !== 'implemento'; })
-    : frotas.filter(function(f){ return f !== equip && frotaTipoItem[f] === 'implemento'; });
-  const vinculadoAtual = frotaItemVinculado[equip] || '';
-  if (vinculadoAtual && opcoesVinculo.indexOf(vinculadoAtual) === -1) opcoesVinculo.unshift(vinculadoAtual);
+  // Montar/desmontar não é mais um campo solto do cadastro: vai pela janela "Mover", que leva o
+  // implemento para o local da máquina e exige o contrato quando ele fica solto.
+  const vinculadoAtual = vinculoDoItem(equip);
   cont.innerHTML =
     '<h4>✏️ Editando dados cadastrais</h4>' +
     '<div class="oc-edit-form">' +
@@ -14299,10 +14515,10 @@ function renderizarSecaoCadastroEquip(){
       (ehImplemento ? '' : '<div class="oc-edit-campo"><label>Linhas (implementos com que o equipamento pode trabalhar)</label>' +
         '<input type="text" id="mov-edit-linhas" value="' + frotaLinhasDe(equip).replace(/"/g, '&quot;') + '" placeholder="Ex: ROMPEDOR 2000KG, TESOURA 7TON, CONCHA">' +
         '<div class="modal-dica" style="margin-top:4px">Separe com vírgula. Aparece no e-mail do dia e na árvore para os equipamentos na sede.</div></div>') +
-      '<div class="oc-edit-campo"><label>' + (ehImplemento ? 'Vincular a um equipamento' : 'Implemento vinculado') + '</label>' +
-        '<select id="mov-edit-vinculo"><option value="">Nenhum</option>' +
-          opcoesVinculo.map(function(f){ return '<option value="' + f + '" ' + (vinculadoAtual === f ? 'selected' : '') + '>' + f.toUpperCase() + '</option>'; }).join('') +
-        '</select></div>' +
+      '<div class="oc-edit-campo"><label>' + (ehImplemento ? 'Montado no equipamento' : 'Implemento vinculado') + '</label>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="text-transform:uppercase">' + (vinculadoAtual ? frotaEsc(vinculadoAtual) : '—') + '</b>' +
+        '<button type="button" class="oc-equip-editar-btn" id="mov-edit-vinculo-btn">🔗 ' + (ehImplemento ? 'Montar / desmontar' : 'Trocar / tirar implemento') + '</button></div>' +
+        '<div class="modal-dica" style="margin-top:4px">Abre a janela de mover: o implemento vai para o local da máquina e, ao desmontar, é preciso informar o contrato onde ele fica.</div></div>' +
       '<div class="oc-edit-campo"><button type="button" class="oc-equip-editar-btn" id="mov-edit-trocar-foto">📷 Trocar foto</button>' +
         '<div class="modal-dica" style="margin-top:6px">Pra mudar o local, use "Mover Equip./Implemento" — assim fica registrado no histórico de movimentações.</div></div>' +
       '<div class="oc-edit-acoes">' +
@@ -14311,6 +14527,11 @@ function renderizarSecaoCadastroEquip(){
       '</div>' +
       '<div class="oc-edit-feedback" id="mov-edit-feedback"></div>' +
     '</div>';
+  document.getElementById('mov-edit-vinculo-btn').onclick = function(){
+    movEquipEditando = false;
+    document.getElementById('mov-equip-overlay').classList.remove('aberto');
+    locAbrirModalMover(equip);
+  };
   document.getElementById('mov-edit-trocar-foto').onclick = function(){
     equipFotoAlvo = equip;
     document.getElementById('input-foto-equip').click();
@@ -14327,7 +14548,6 @@ function renderizarSecaoCadastroEquip(){
     const novaDescricao = document.getElementById('mov-edit-descricao').value.trim();
     const novoStatus = document.getElementById('mov-edit-status').value;
     const novoRegime = document.getElementById('mov-edit-regime').value;
-    const novoVinculo = document.getElementById('mov-edit-vinculo').value;
     const campoLin = document.getElementById('mov-edit-linhas');
     const novasLinhas = campoLin ? campoLin.value.replace(/\s*,\s*/g, ', ').replace(/^[,\s]+|[,\s]+$/g, '').toUpperCase() : null;
     const itemId = frotaIdsExtra[equip] || frotasIds[equip];
@@ -14337,7 +14557,6 @@ function renderizarSecaoCadastroEquip(){
     if (novaDescricao !== (frotaDescricao[equip] || '')) campos.Descricao = novaDescricao;
     if (novoStatus !== (frotaStatusAtual[equip] || 'EM OPERAÇÃO')) campos.StatusAtual = novoStatus;
     if (novoRegime !== (frotaRegimeTrabalho[equip] || '8h')) campos.RegimeTrabalho = novoRegime;
-    if (novoVinculo !== vinculadoAtual) campos.ItemVinculado = novoVinculo;
     if (novasLinhas !== null && novasLinhas !== frotaLinhasDe(equip)) campos.Linhas = novasLinhas;
     if (!Object.keys(campos).length) { movEquipEditando = false; renderizarSecaoCadastroEquip(); return; }
     btn.disabled = true; btn.textContent = 'Salvando…'; fb.textContent = '';
@@ -14346,7 +14565,6 @@ function renderizarSecaoCadastroEquip(){
       if (campos.Descricao !== undefined) frotaDescricao[equip] = campos.Descricao;
       if (campos.StatusAtual !== undefined) frotaStatusAtual[equip] = campos.StatusAtual;
       if (campos.RegimeTrabalho !== undefined) frotaRegimeTrabalho[equip] = campos.RegimeTrabalho;
-      if (campos.ItemVinculado !== undefined) frotaItemVinculado[equip] = campos.ItemVinculado;
       if (campos.Linhas !== undefined) frotaLinhas[equip] = campos.Linhas;
       if (typeof frotaViewCarregada !== 'undefined' && frotaViewCarregada) renderizarViewFrota();
       if (typeof painelCarregado !== 'undefined' && painelCarregado) carregarPainelGeral(true);
@@ -14436,7 +14654,7 @@ function desenharGradeFrota(idContainer, lista, tipo){
   cont.innerHTML = lista.map(function(nome){
     const descricao = frotaDescricao[nome] || '';
     const local = frotaLocalAtual[nome] || '—';
-    const vinculado = frotaItemVinculado[nome] || '';
+    const vinculado = vinculoDoItem(nome);
     return '<div class="frota-item" data-frota-item="' + frotaEsc(nome) + '">' +
       '<div class="frota-item-foto" data-frota-foto="' + frotaEsc(nome) + '">' + icone + '</div>' +
       '<div class="frota-item-corpo">' +
